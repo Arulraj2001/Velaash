@@ -2,9 +2,9 @@
  * End-to-end PDP Verification Script (Non-browser)
  * Tests:
  * 1. HTTP SSR Rendering & Status Codes (Valid product vs 404)
- * 2. Open Graph & Twitter Card Meta Tags
+ * 2. Open Graph & Twitter Card Meta Tags (ensuring 'Velaash' only, not 'Velaash Boutique')
  * 3. JSON-LD Schema.org Structured Data
- * 4. PDP UI Content (Pricing, Gallery, WhatsApp, Accordion, Reviews)
+ * 4. PDP UI Content (Verified claims only, Quality Checked, dynamic policies)
  * 5. Review Submission Validation & Security Flow
  */
 
@@ -45,7 +45,11 @@ async function runTests() {
   if (!ogTitleMatch || !ogImageMatch) {
     throw new Error("Missing essential Open Graph meta tags!");
   }
-  console.log("✓ Open Graph meta tags verified!");
+
+  if (ogTitleMatch[1].includes("Velaash Boutique")) {
+    throw new Error("Found 'Velaash Boutique' in og:title, expected 'Velaash' only!");
+  }
+  console.log("✓ Open Graph meta tags verified ('Velaash' display name strictly enforced)!");
 
   // Test 3: Check Schema.org JSON-LD Structured Data
   console.log("\n[Test 3] Verifying Schema.org Product JSON-LD...");
@@ -58,10 +62,14 @@ async function runTests() {
   console.log("JSON-LD Name:", jsonLd.name);
   console.log("JSON-LD Price:", jsonLd.offers?.price, jsonLd.offers?.priceCurrency);
   console.log("JSON-LD Availability:", jsonLd.offers?.availability);
+  console.log("JSON-LD Seller:", jsonLd.offers?.seller?.name);
   console.log("JSON-LD AggregateRating:", jsonLd.aggregateRating);
 
   if (jsonLd["@type"] !== "Product" || !jsonLd.offers?.price) {
     throw new Error("Invalid Product JSON-LD schema!");
+  }
+  if (jsonLd.offers?.seller?.name !== "VELAASH TRADER'S") {
+    throw new Error("Seller legal name must be VELAASH TRADER'S");
   }
   console.log("✓ Schema.org Product JSON-LD valid and verified!");
 
@@ -76,10 +84,9 @@ async function runTests() {
     { name: "WhatsApp Phone Configured", pattern: /8508643832/ },
     { name: "Delivery Pincode Checker", pattern: /Check Delivery Serviceability/i },
     { name: "Size Guide Modal Trigger", pattern: /Size Guide/i },
-    {
-      name: "Product Details Accordion",
-      pattern: /Product Details &amp; Craftsmanship|Product Details & Craftsmanship/i,
-    },
+    { name: "Safe Trust Badge: Quality Checked", pattern: /Quality Checked/i },
+    { name: "Dynamic Policy: 7-Day Returns", pattern: /7(?:<!-- -->)?-Day Returns/i },
+    { name: "Product Details Accordion", pattern: /Product Details/i },
     { name: "Ratings & Reviews Section", pattern: /Ratings &amp; Reviews|Ratings & Reviews/i },
     { name: "Curated Complements / You May Also Like", pattern: /You May Also Like/i },
   ];
@@ -91,6 +98,15 @@ async function runTests() {
     console.log(`  ✓ ${snippet.name} present in rendered HTML`);
   }
 
+  // Ensure unconfirmed claims were purged
+  if (html.includes("100% Handcrafted Authenticity")) {
+    throw new Error("Disallowed claim '100% Handcrafted Authenticity' still present in HTML!");
+  }
+  if (html.includes("master tailor")) {
+    throw new Error("Disallowed claim 'master tailor' still present in HTML!");
+  }
+  console.log("  ✓ Confirmed absence of unverified manufacturing claims ('100% Handcrafted Authenticity', 'master tailor')");
+
   // Test 5: Verify 404 for invalid product slug
   console.log("\n[Test 5] Verifying 404 error handling for non-existent product...");
   const notFoundRes = await fetch(`${BASE_URL}/products/this-product-does-not-exist-xyz`);
@@ -100,7 +116,7 @@ async function runTests() {
   }
   console.log("✓ Proper 404 returned for non-existent product slug!");
 
-  console.log("\n=== ALL SSR, METADATA & CONTENT TESTS PASSED! ===");
+  console.log("\n=== ALL AUDIT & INTEGRITY CHECKS PASSED! ===");
 }
 
 runTests().catch((err) => {

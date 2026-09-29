@@ -190,7 +190,7 @@ export function CustomerLoginForm() {
         </CardTitle>
         <CardDescription className="text-brand-dark/70 mx-auto max-w-xs text-xs">
           {step === "PROFILE_NAME"
-            ? "Tell us how our master tailors and stylists should address you."
+            ? "Tell us your name so we can personalize your account."
             : step === "OTP"
               ? `We sent a 6-digit access code to ${email}`
               : "Instant access via mobile-friendly email OTP or Google. No password required."}

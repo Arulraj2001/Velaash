@@ -31,11 +31,11 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     };
   }
 
-  const title = category.seo_title || `${category.name} | Velaash Boutique`;
+  const title = category.seo_title || `${category.name} | Velaash`;
   const description =
     category.seo_description ||
     category.description ||
-    `Explore handcrafted ${category.name.toLowerCase()} at Velaash. Timeless style and breathable fabrics.`;
+    `Explore ${category.name.toLowerCase()} at Velaash. Refined style and breathable fabrics.`;
 
   return {
     title,

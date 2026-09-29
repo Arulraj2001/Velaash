@@ -5,6 +5,7 @@ import { ProductCard } from "@/features/products/components/product-card";
 import { ProductDetailView } from "@/features/products/components/product-detail-view";
 import { getProductBySlug } from "@/features/products/queries/get-product-by-slug";
 import { getRelatedProducts } from "@/features/products/queries/get-related-products";
+import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
 import { BRAND } from "@/lib/constants";
 
 interface ProductPageProps {
@@ -18,15 +19,15 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   if (!product) {
     return {
       title: "Product Not Found | Velaash",
-      description: "The requested luxury boutique garment could not be found.",
+      description: "The requested clothing item could not be found.",
     };
   }
 
-  const title = product.seo_title || `${product.name} | Velaash Boutique`;
+  const title = product.seo_title || `${product.name} | Velaash`;
   const description =
     product.seo_description ||
     product.description ||
-    `${product.name} - Handcrafted everyday luxury and contemporary clothing by Velaash.`;
+    `${product.name} - Contemporary everyday luxury clothing by Velaash.`;
 
   const primaryImage = product.images[0]?.image_url || "https://velaash.com/og-image.jpg";
 
@@ -78,8 +79,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  // Fetch 4 related products from the same category
-  const relatedProducts = await getRelatedProducts(product.id, product.category_id, 4);
+  // Concurrently fetch related products and site settings
+  const [relatedProducts, siteSettings] = await Promise.all([
+    getRelatedProducts(product.id, product.category_id, 4),
+    getSiteSettings(),
+  ]);
 
   // JSON-LD Schema.org Structured Data
   const jsonLd = {
@@ -132,7 +136,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       <div className="bg-brand-cream/30 min-h-screen py-8 sm:py-12">
         <Container size="xl">
           {/* Interactive PDP View (Gallery, Sizing, Cart Actions, Accordion, Reviews) */}
-          <ProductDetailView product={product} />
+          <ProductDetailView
+            product={product}
+            freeShippingThreshold={siteSettings.shippingPolicy.free_shipping_threshold}
+            returnWindowDays={siteSettings.returnsPolicy.return_window_days}
+          />
 
           {/* Related Products ("You May Also Like") Section */}
           {relatedProducts.length > 0 && (

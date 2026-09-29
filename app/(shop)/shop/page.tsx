@@ -16,7 +16,7 @@ import { BRAND } from "@/lib/constants";
 export const metadata: Metadata = {
   title: "Shop All Collections | Velaash",
   description:
-    "Explore the complete Velaash boutique catalog. Discover refined everyday kurtas, artisanal dresses, versatile co-ord sets, and relaxed loungewear.",
+    "Explore the complete Velaash catalog. Discover refined everyday kurtas, dresses, versatile co-ord sets, and relaxed loungewear.",
   alternates: {
     canonical: "https://velaash.com/shop",
   },

@@ -67,11 +67,11 @@ export function HeaderClient({ categories, whatsappNumber, whatsappUrl }: Header
               </button>
             </div>
 
-            {/* Boutique Logo Wordmark */}
+            {/* Logo Wordmark */}
             <div className="flex items-center">
               <Link
                 href="/"
-                className="group focus-visible:ring-brand-gold flex flex-col items-start rounded-sm px-1 focus-visible:ring-2 focus-visible:outline-none"
+                className="group focus-visible:ring-brand-gold flex items-center rounded-sm px-1 focus-visible:ring-2 focus-visible:outline-none"
                 aria-label={`${BRAND.name} Home`}
               >
                 <span
@@ -80,9 +80,6 @@ export function HeaderClient({ categories, whatsappNumber, whatsappUrl }: Header
                   }`}
                 >
                   {BRAND.name}
-                </span>
-                <span className="text-brand-accent -mt-0.5 text-[9px] font-medium tracking-[0.25em] uppercase">
-                  Boutique
                 </span>
               </Link>
             </div>

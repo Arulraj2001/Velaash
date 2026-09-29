@@ -27,9 +27,15 @@ import { ProductReviewsSection } from "@/features/reviews/components/product-rev
 
 interface ProductDetailViewProps {
   product: ProductDetailItem;
+  freeShippingThreshold?: number;
+  returnWindowDays?: number;
 }
 
-export function ProductDetailView({ product }: ProductDetailViewProps) {
+export function ProductDetailView({
+  product,
+  freeShippingThreshold = 999, // Placeholder default — MUST be confirmed with client before launch
+  returnWindowDays = 7, // Placeholder default — MUST be confirmed with client before launch
+}: ProductDetailViewProps) {
   const router = useRouter();
   const addItemToCart = useCartStore((state) => state.addItem);
 
@@ -246,7 +252,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               </>
             )}
             <div className="text-brand-dark/60 w-full text-[11px]">
-              Inclusive of all taxes & duties &bull; Free shipping over ₹999
+              Inclusive of all taxes & duties &bull; Free shipping over {formatCurrency(freeShippingThreshold)}
             </div>
           </div>
 
@@ -446,17 +452,17 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
             </div>
 
             {/* Delivery Pincode Checker */}
-            <PincodeChecker />
+            <PincodeChecker freeShippingThreshold={freeShippingThreshold} />
 
             {/* Trust Badges Row */}
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div className="border-brand-border/60 text-brand-dark/80 flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]">
                 <ShieldCheck className="text-brand-gold h-4 w-4 shrink-0" />
-                <span>100% Handcrafted Authenticity</span>
+                <span>Quality Checked</span>
               </div>
               <div className="border-brand-border/60 text-brand-dark/80 flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]">
                 <RotateCcw className="text-brand-gold h-4 w-4 shrink-0" />
-                <span>7-Day Easy Boutique Returns</span>
+                <span>{`${returnWindowDays}-Day Returns`}</span>
               </div>
             </div>
           </div>
@@ -465,7 +471,11 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
 
       {/* 3. Details Accordion (Below the fold) */}
       <div className="pt-6">
-        <ProductAccordion product={product} />
+        <ProductAccordion
+          product={product}
+          freeShippingThreshold={freeShippingThreshold}
+          returnWindowDays={returnWindowDays}
+        />
       </div>
 
       {/* 4. Reviews Section */}

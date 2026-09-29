@@ -2,8 +2,13 @@
 
 import * as React from "react";
 import { Truck, Check, AlertCircle, Loader2 } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
-export function PincodeChecker() {
+interface PincodeCheckerProps {
+  freeShippingThreshold?: number;
+}
+
+export function PincodeChecker({ freeShippingThreshold = 999 }: PincodeCheckerProps) {
   const [pincode, setPincode] = React.useState("");
   const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = React.useState<string | null>(null);
@@ -81,7 +86,7 @@ export function PincodeChecker() {
 
       {status === "idle" && (
         <p className="text-brand-dark/50 mt-2 text-[11px]">
-          Pre-paid orders above ₹999 qualify for complimentary express delivery.
+          Pre-paid orders above {formatCurrency(freeShippingThreshold)} qualify for free express delivery.
         </p>
       )}
     </div>

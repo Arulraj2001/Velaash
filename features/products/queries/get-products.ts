@@ -227,7 +227,7 @@ export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMe
         name: cat.name,
         slug: cat.slug,
         description: cat.description,
-        seo_title: `${cat.name} | Velaash Boutique`,
+        seo_title: `${cat.name} | Velaash`,
         seo_description: `Explore our collection of ${cat.name.toLowerCase()} at Velaash.`,
         parent_id: null,
       };

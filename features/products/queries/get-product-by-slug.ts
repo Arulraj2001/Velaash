@@ -21,38 +21,37 @@ const PDP_EXTENDED_METADATA: Record<
     care_instructions:
       "Dry clean recommended for first two washes. Subsequently, gentle hand wash in cold water using mild liquid detergent. Dry in shade. Warm iron inside out.",
     craftsmanship:
-      "Handcrafted by skilled artisanal weavers featuring delicate zari resham embroidery along the jewel neckline and hem border.",
+      "Delicate embroidery along the jewel neckline with coordinating hem border.",
     tips: ["True to size.", "Model is 5'8\" wearing size S."],
   },
   "raw-silk-festive-anarkali": {
-    fabric: "Premium South Raw Silk with Gold Tissue zari border and santoon lining",
-    care_instructions: "Professional dry clean only. Store wrapped in muslin cloth.",
+    fabric: "Raw Silk blend with tissue border and inner lining",
+    care_instructions: "Professional dry clean only. Store wrapped in protective cloth.",
     craftsmanship:
-      "24-kali flared Anarkali silhouette with intricate Marodi and sequin embellishments on yoke and cuffs.",
+      "Flared 24-kali silhouette with detailed embroidery along the yoke and cuffs.",
     tips: [
-      "Tailored fit at bust and waist, dramatic voluminous flare below.",
+      "Fitted silhouette at bust and waist with flared drape below.",
       "Model is 5'9\" wearing size M.",
     ],
   },
   "banarasi-georgette-lehenga": {
-    fabric: "Pure Banarasi Khaddi Georgette with gold and silver zari floral motifs",
-    care_instructions: "Strictly dry clean only. Do not iron directly on zari embroidery.",
+    fabric: "Georgette with metallic zari floral motifs",
+    care_instructions: "Dry clean only. Do not iron directly on zari detailing.",
     craftsmanship:
-      "Woven on traditional jacquard pit looms in Varanasi, completed with handcrafted latkan drawstrings.",
+      "Woven georgette with floral motifs and coordinating drawstring ties.",
     tips: [
-      "Lehenga skirt has a drawstring waist with 2-inch expansion allowance.",
+      "Lehenga skirt has an adjustable drawstring waist.",
       "Model is 5'7\" wearing size S.",
     ],
   },
 };
 
 const DEFAULT_METADATA = {
-  fabric: "Premium boutique fabric blend with soft, breathable inner lining",
+  fabric: "Comfortable fabric blend with soft, breathable inner lining",
   care_instructions:
     "Gentle dry clean or cold hand wash. Do not bleach. Dry flat in shade. Medium warm steam iron.",
-  craftsmanship:
-    "Hand-finished in our boutique workshop with reinforced French seams and master tailor detailing.",
-  tips: ["Standard boutique fit.", "Model is 5'8\" wearing size S."],
+  craftsmanship: "Finished with reinforced seams and quality detailing.",
+  tips: ["Standard fit.", "Model is 5'8\" wearing size S."],
 };
 
 export async function getProductBySlug(slug: string): Promise<ProductDetailItem | null> {
