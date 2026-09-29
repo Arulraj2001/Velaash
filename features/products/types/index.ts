@@ -220,3 +220,46 @@ export interface ProductDetailItem extends ProductListItem {
   reviews_breakdown: ProductReviewBreakdown;
   reviews: ProductReviewItem[];
 }
+
+/**
+ * Raw product row shape returned by Postgres queries before mapping
+ */
+export interface RawDbProduct {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  base_price: number | string;
+  compare_at_price: number | string | null;
+  created_at: string;
+  is_active: boolean;
+  is_featured: boolean;
+  stock_status: "in_stock" | "low_stock" | "out_of_stock";
+  category_id: string | null;
+  categories:
+    | { id: string; name: string; slug: string; parent_id: string | null }
+    | { id: string; name: string; slug: string; parent_id: string | null }[]
+    | null;
+  product_variants: {
+    id: string;
+    size: string;
+    color: string;
+    color_hex: string | null;
+    stock_quantity: number;
+    sku: string | null;
+    price_override: number | null;
+    is_active: boolean;
+  }[];
+  product_images: {
+    id: string;
+    image_url: string;
+    alt_text?: string | null;
+    display_order: number;
+    is_primary: boolean;
+    variant_id?: string | null;
+  }[];
+  reviews?: {
+    rating: number;
+    is_approved: boolean;
+  }[];
+}

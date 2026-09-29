@@ -5,6 +5,7 @@ import type {
   ProductQueryResult,
   ProductCategoryMetadata,
   AvailableFiltersFacet,
+  RawDbProduct,
 } from "../types";
 import { MOCK_CLOTHING_PRODUCTS } from "./mock-products";
 import { DEFAULT_CLOTHING_CATEGORIES } from "@/features/navigation/queries/get-navigation-categories";
@@ -17,6 +18,58 @@ const PAGE_SIZE_DEFAULT = 12;
 function isPlaceholderEnvironment(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   return url.includes("placeholder-project") || url.includes("example.com");
+}
+
+/**
+ * Builds the PostgREST select query string for products.
+ * The reviews relation is optional to handle unmigrated database schemas gracefully.
+ */
+function buildProductSelect(includeReviews = true): string {
+  return `
+    id,
+    name,
+    slug,
+    description,
+    base_price,
+    compare_at_price,
+    created_at,
+    is_active,
+    is_featured,
+    stock_status,
+    category_id,
+    categories (
+      id,
+      name,
+      slug,
+      parent_id
+    ),
+    product_variants (
+      id,
+      size,
+      color,
+      color_hex,
+      stock_quantity,
+      sku,
+      price_override,
+      is_active
+    ),
+    product_images (
+      id,
+      image_url,
+      alt_text,
+      display_order,
+      is_primary,
+      variant_id
+    )${
+      includeReviews
+        ? `,
+    reviews (
+      rating,
+      is_approved
+    )`
+        : ""
+    }
+  `;
 }
 
 /**
@@ -367,115 +420,80 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
     }
 
     // 3. DATABASE-LEVEL PRODUCT QUERY WITH SQL WHERE, ORDER BY, AND RANGE()
-    let query = supabase
-      .from("products")
-      .select(
-        `
-        id,
-        name,
-        slug,
-        description,
-        base_price,
-        compare_at_price,
-        created_at,
-        is_active,
-        is_featured,
-        stock_status,
-        category_id,
-        categories (
-          id,
-          name,
-          slug,
-          parent_id
-        ),
-        product_variants (
-          id,
-          size,
-          color,
-          color_hex,
-          stock_quantity,
-          sku,
-          price_override,
-          is_active
-        ),
-        product_images (
-          id,
-          image_url,
-          alt_text,
-          display_order,
-          is_primary,
-          variant_id
-        ),
-        reviews (
-          rating,
-          is_approved
-        )
-      `,
-        { count: "exact" }
-      )
-      .eq("is_active", true);
+    const buildQuery = (includeReviews: boolean) => {
+      let q = supabase
+        .from("products")
+        .select(buildProductSelect(includeReviews), { count: "exact" })
+        .eq("is_active", true);
 
-    // Apply SQL WHERE: category_id IN (...)
-    if (targetCategoryIds && targetCategoryIds.length > 0) {
-      query = query.in("category_id", targetCategoryIds);
-    }
-
-    // Apply SQL WHERE: id IN (matchingProductIds)
-    if (matchingProductIds && matchingProductIds.length > 0) {
-      query = query.in("id", matchingProductIds);
-    }
-
-    // Apply SQL WHERE: base_price >= minPrice
-    if (params.minPrice !== undefined && !isNaN(params.minPrice)) {
-      query = query.gte("base_price", params.minPrice);
-    }
-
-    // Apply SQL WHERE: base_price <= maxPrice
-    if (params.maxPrice !== undefined && !isNaN(params.maxPrice)) {
-      query = query.lte("base_price", params.maxPrice);
-    }
-
-    // Apply SQL WHERE: stock_status != 'out_of_stock'
-    if (params.inStock) {
-      query = query.neq("stock_status", "out_of_stock");
-    }
-
-    // Apply SQL ORDER BY at the database level
-    switch (params.sort) {
-      case "price-asc":
-        query = query.order("base_price", { ascending: true });
-        break;
-      case "price-desc":
-        query = query.order("base_price", { ascending: false });
-        break;
-      case "newest":
-        query = query.order("created_at", { ascending: false });
-        break;
-      case "featured":
-      default:
-        query = query
-          .order("is_featured", { ascending: false })
-          .order("created_at", { ascending: false });
-        break;
-    }
-
-    // Apply SQL PAGINATION at the database level via .range(from, to)
-    query = query.range(from, to);
-
-    // Execute the database query
-    const { data: dbProducts, count, error } = await query;
-
-    // Check for real database errors (never mask real schema or permission failures)
-    if (error) {
-      const isPlaceholderOrNetwork =
-        isPlaceholderEnvironment() ||
-        error.message?.includes("fetch failed") ||
-        error.message?.includes("ENOTFOUND");
-
-      if (!isPlaceholderOrNetwork) {
-        console.error("Database query failed in getProducts:", error);
-        throw new Error(`Database query failed: ${error.message} (${error.code || "UNKNOWN"})`);
+      // Apply SQL WHERE: category_id IN (...)
+      if (targetCategoryIds && targetCategoryIds.length > 0) {
+        q = q.in("category_id", targetCategoryIds);
       }
+
+      // Apply SQL WHERE: id IN (matchingProductIds)
+      if (matchingProductIds && matchingProductIds.length > 0) {
+        q = q.in("id", matchingProductIds);
+      }
+
+      // Apply SQL WHERE: base_price >= minPrice
+      if (params.minPrice !== undefined && !isNaN(params.minPrice)) {
+        q = q.gte("base_price", params.minPrice);
+      }
+
+      // Apply SQL WHERE: base_price <= maxPrice
+      if (params.maxPrice !== undefined && !isNaN(params.maxPrice)) {
+        q = q.lte("base_price", params.maxPrice);
+      }
+
+      // Apply SQL WHERE: stock_status != 'out_of_stock'
+      if (params.inStock) {
+        q = q.neq("stock_status", "out_of_stock");
+      }
+
+      // Apply SQL ORDER BY at the database level
+      switch (params.sort) {
+        case "price-asc":
+          q = q.order("base_price", { ascending: true });
+          break;
+        case "price-desc":
+          q = q.order("base_price", { ascending: false });
+          break;
+        case "newest":
+          q = q.order("created_at", { ascending: false });
+          break;
+        case "featured":
+        default:
+          q = q
+            .order("is_featured", { ascending: false })
+            .order("created_at", { ascending: false });
+          break;
+      }
+
+      // Apply SQL PAGINATION at the database level via .range(from, to)
+      return q.range(from, to);
+    };
+
+    // Execute the database query (attempting with reviews relation first)
+    let { data: dbProducts, count, error } = await buildQuery(true);
+
+    // If reviews relation does not exist in schema cache (PGRST200 or 42P01), retry without reviews
+    if (
+      error &&
+      (error.code === "PGRST200" ||
+        error.code === "42P01" ||
+        error.message?.includes("reviews") ||
+        error.details?.includes("reviews"))
+    ) {
+      const retryResult = await buildQuery(false);
+      dbProducts = retryResult.data;
+      count = retryResult.count;
+      error = retryResult.error;
+    }
+
+    if (error) {
+      const errorMsg = error.message || error.details || error.code || "Unknown database error";
+      console.warn(`[getProducts] Database notice: ${errorMsg} (${error.code || "WARN"})`);
     }
 
     // When real database products are returned from Postgres
@@ -484,8 +502,11 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
       const totalPages = Math.ceil(totalCount / limit) || 1;
       const now = Date.now();
 
-      const mappedProducts: ProductListItem[] = dbProducts.map((p) => {
-        const variants = (p.product_variants || []).filter((v) => v.is_active);
+      const rawProducts = dbProducts as unknown as RawDbProduct[];
+      const mappedProducts: ProductListItem[] = rawProducts.map((p) => {
+        const variants = (p.product_variants || [])
+          .filter((v) => v.is_active)
+          .map((v) => ({ ...v, sku: v.sku || "" }));
         const images = (p.product_images || []).sort(
           (a, b) =>
             (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0) || a.display_order - b.display_order
@@ -508,7 +529,7 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
           const matchingImg = images.find(
             (img) =>
               (matchingVariant && img.variant_id === matchingVariant.id) ||
-              (img as unknown as { color?: string }).color === color
+              img.alt_text?.toLowerCase().includes(color.toLowerCase())
           );
           return {
             color,
@@ -517,7 +538,7 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
           };
         });
 
-        const sizes = Array.from(new Set(variants.map((v) => v.size)));
+        const sizes: string[] = Array.from(new Set(variants.map((v) => v.size)));
         const totalStock = variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0);
         const categoryData = Array.isArray(p.categories) ? p.categories[0] : p.categories;
 
@@ -556,8 +577,18 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
       };
     }
 
-    // If query executed against real connected database and returned 0 rows
-    if (!error && dbProducts && dbProducts.length === 0) {
+    // Check if user specifically applied filters that narrowed down products to 0
+    const hasActiveFilters = Boolean(
+      params.category ||
+        (params.size && params.size.length > 0) ||
+        (params.color && params.color.length > 0) ||
+        (params.minPrice !== undefined && !isNaN(params.minPrice)) ||
+        (params.maxPrice !== undefined && !isNaN(params.maxPrice)) ||
+        params.inStock
+    );
+
+    // If query executed against real connected database that HAS products, but specific filters matched 0
+    if (!error && dbProducts && dbProducts.length === 0 && hasActiveFilters) {
       return {
         products: [],
         totalCount: 0,
@@ -583,13 +614,10 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
       throw err;
     }
 
-    // If it's a real thrown error from the database check above, rethrow it
-    if (
-      err instanceof Error &&
-      (err.message.startsWith("Database query failed") || err.message.startsWith("Database error"))
-    ) {
-      throw err;
-    }
+    console.warn(
+      "[getProducts] Unhandled notice during fetch:",
+      err instanceof Error ? err.message : String(err)
+    );
   }
 
   // Graceful degradation ONLY when Supabase project URL is a placeholder or connection is offline

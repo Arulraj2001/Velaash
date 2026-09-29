@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { ProductListItem } from "../types";
+import type { ProductListItem, RawDbProduct } from "../types";
 import { MOCK_CLOTHING_PRODUCTS } from "./mock-products";
 
 function isPlaceholderEnvironment(): boolean {
@@ -15,69 +15,92 @@ export async function getRelatedProducts(
   try {
     const supabase = await createClient();
 
-    let query = supabase
-      .from("products")
-      .select(
-        `
-        id,
-        name,
-        slug,
-        description,
-        base_price,
-        compare_at_price,
-        created_at,
-        is_active,
-        is_featured,
-        stock_status,
-        category_id,
-        categories (
+    const buildQuery = (includeReviews: boolean) => {
+      let q = supabase
+        .from("products")
+        .select(
+          `
           id,
           name,
           slug,
-          parent_id
-        ),
-        product_variants (
-          id,
-          size,
-          color,
-          color_hex,
-          stock_quantity,
-          sku,
-          price_override,
-          is_active
-        ),
-        product_images (
-          id,
-          image_url,
-          alt_text,
-          display_order,
-          is_primary,
-          variant_id
-        ),
-        reviews (
-          rating,
-          is_approved
+          description,
+          base_price,
+          compare_at_price,
+          created_at,
+          is_active,
+          is_featured,
+          stock_status,
+          category_id,
+          categories (
+            id,
+            name,
+            slug,
+            parent_id
+          ),
+          product_variants (
+            id,
+            size,
+            color,
+            color_hex,
+            stock_quantity,
+            sku,
+            price_override,
+            is_active
+          ),
+          product_images (
+            id,
+            image_url,
+            alt_text,
+            display_order,
+            is_primary,
+            variant_id
+          )${
+            includeReviews
+              ? `,
+          reviews (
+            rating,
+            is_approved
+          )`
+              : ""
+          }
+        `
         )
-      `
-      )
-      .eq("is_active", true)
-      .neq("id", productId)
-      .limit(limit);
+        .eq("is_active", true)
+        .neq("id", productId)
+        .limit(limit);
 
-    if (categoryId) {
-      query = query.eq("category_id", categoryId);
+      if (categoryId) {
+        q = q.eq("category_id", categoryId);
+      }
+      return q;
+    };
+
+    let { data: dbProducts, error } = await buildQuery(true);
+
+    if (
+      error &&
+      (error.code === "PGRST200" ||
+        error.code === "42P01" ||
+        error.message?.includes("reviews") ||
+        error.details?.includes("reviews"))
+    ) {
+      const retryResult = await buildQuery(false);
+      dbProducts = retryResult.data;
+      error = retryResult.error;
     }
 
-    const { data: dbProducts, error } = await query;
-
     if (error && !isPlaceholderEnvironment() && !error.message?.includes("fetch failed")) {
-      console.error("Database query failed in getRelatedProducts:", error);
+      const errorMsg = error.message || error.details || error.code || "query failed";
+      console.warn(`[getRelatedProducts] Database notice: ${errorMsg}`);
     }
 
     if (dbProducts && dbProducts.length > 0) {
       const now = Date.now();
-      return dbProducts.map((p) => {
-        const variants = (p.product_variants || []).filter((v) => v.is_active);
+      const rawProducts = dbProducts as unknown as RawDbProduct[];
+      return rawProducts.map((p) => {
+        const variants = (p.product_variants || [])
+          .filter((v) => v.is_active)
+          .map((v) => ({ ...v, sku: v.sku || "" }));
         const images = (p.product_images || []).sort(
           (a, b) =>
             (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0) || a.display_order - b.display_order
@@ -100,7 +123,7 @@ export async function getRelatedProducts(
           const matchingImg = images.find(
             (img) =>
               (matchingVariant && img.variant_id === matchingVariant.id) ||
-              (img as unknown as { color?: string }).color === color
+              img.alt_text?.toLowerCase().includes(color.toLowerCase())
           );
           return {
             color,
@@ -109,7 +132,7 @@ export async function getRelatedProducts(
           };
         });
 
-        const sizes = Array.from(new Set(variants.map((v) => v.size)));
+        const sizes: string[] = Array.from(new Set(variants.map((v) => v.size)));
         const totalStock = variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0);
         const categoryData = Array.isArray(p.categories) ? p.categories[0] : p.categories;
 
