@@ -18,3 +18,5 @@ export function formatCurrencyINR(amount: number): string {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+export const formatCurrency = formatCurrencyINR;
