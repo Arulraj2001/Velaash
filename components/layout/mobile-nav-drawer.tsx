@@ -11,9 +11,17 @@ interface MobileNavDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   categories: NavigationCategory[];
+  whatsappNumber?: string;
+  whatsappUrl?: string;
 }
 
-export function MobileNavDrawer({ isOpen, onClose, categories }: MobileNavDrawerProps) {
+export function MobileNavDrawer({
+  isOpen,
+  onClose,
+  categories,
+  whatsappNumber,
+  whatsappUrl,
+}: MobileNavDrawerProps) {
   const [expandedCategories, setExpandedCategories] = React.useState<Record<string, boolean>>({});
   const { user, isAuthenticated } = useAuth();
 
@@ -47,10 +55,9 @@ export function MobileNavDrawer({ isOpen, onClose, categories }: MobileNavDrawer
     }));
   };
 
-  const whatsappHref = `https://wa.me/${BRAND.whatsappNumber.replace(
-    /\D/g,
-    ""
-  )}?text=${encodeURIComponent(BRAND.whatsappMessage)}`;
+  const targetNumber = (whatsappNumber || BRAND.whatsappNumber).replace(/\D/g, "");
+  const baseWaUrl = whatsappUrl ? whatsappUrl.split("?")[0] : `https://wa.me/${targetNumber}`;
+  const whatsappHref = `${baseWaUrl}?text=${encodeURIComponent(BRAND.whatsappMessage)}`;
 
   return (
     <div

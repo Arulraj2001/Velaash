@@ -102,13 +102,15 @@ VALUES
     '{
       "name": "Velaash",
       "legal_name": "VELAASH TRADER''S",
-      "tagline": "Where Heritage Craft Meets Contemporary Elegance",
-      "email": "care@velaash.com",
-      "phone": "+91 98765 43210",
+      "tagline": "Contemporary Elegance, Timeless Style",
+      "email": "bestrchandra@gmail.com",
+      "phone": "+91 8508643832",
+      "whatsapp_number": "+91 8508643832",
+      "whatsapp_url": "https://wa.me/918508643832",
       "logo_url": "/brand/logo.svg",
       "favicon_url": "/favicon.ico"
     }'::jsonb,
-    'Core business and brand identity info',
+    'Core business and brand identity info (email: temporary bestrchandra@gmail.com until custom domain email is set up)',
     true
   ),
   (
@@ -169,9 +171,10 @@ VALUES
     '{
       "instagram": "https://instagram.com/velaash",
       "facebook": "https://facebook.com/velaash",
+      "whatsapp": "https://wa.me/918508643832",
       "pinterest": "https://pinterest.com/velaash"
     }'::jsonb,
-    'Official social media profiles',
+    'Official social media profiles (Instagram and Facebook are placeholders awaiting client handles)',
     true
   ),
   (

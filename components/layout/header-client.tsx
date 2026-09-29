@@ -14,9 +14,11 @@ import { AccountHeaderButton } from "./account-header-button";
 
 interface HeaderClientProps {
   categories: NavigationCategory[];
+  whatsappNumber?: string;
+  whatsappUrl?: string;
 }
 
-export function HeaderClient({ categories }: HeaderClientProps) {
+export function HeaderClient({ categories, whatsappNumber, whatsappUrl }: HeaderClientProps) {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -140,6 +142,8 @@ export function HeaderClient({ categories }: HeaderClientProps) {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         categories={categories}
+        whatsappNumber={whatsappNumber}
+        whatsappUrl={whatsappUrl}
       />
     </>
   );

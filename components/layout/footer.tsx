@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BRAND, CUSTOMER_SERVICE_LINKS, LEGAL_LINKS } from "@/lib/constants";
 import { Container } from "@/components/ui/container";
 import { getNavigationCategories } from "@/features/navigation";
+import { getSiteSettings } from "@/features/settings";
 import { FooterAccordionItem } from "./footer-accordion-item";
 import { NewsletterForm } from "./newsletter-form";
 import {
@@ -17,7 +18,10 @@ import {
 
 export async function Footer() {
   const currentYear = new Date().getFullYear();
-  const categories = await getNavigationCategories();
+  const [categories, { storeProfile, socialLinks }] = await Promise.all([
+    getNavigationCategories(),
+    getSiteSettings(),
+  ]);
 
   return (
     <footer className="border-brand-accent/20 bg-brand-dark text-brand-cream border-t font-sans">
@@ -29,10 +33,10 @@ export async function Footer() {
             <div className="space-y-4 md:col-span-4">
               <div className="space-y-1">
                 <span className="font-heading text-brand-gold text-3xl font-semibold tracking-wide">
-                  {BRAND.name}
+                  {storeProfile.name}
                 </span>
                 <p className="text-brand-cream/60 text-[11px] tracking-widest uppercase">
-                  {BRAND.tagline}
+                  {storeProfile.tagline}
                 </p>
               </div>
 
@@ -47,7 +51,7 @@ export async function Footer() {
                 </p>
                 <div className="flex items-center gap-3">
                   <a
-                    href={BRAND.socialLinks.instagram}
+                    href={socialLinks.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
@@ -56,7 +60,7 @@ export async function Footer() {
                     <Instagram className="h-4 w-4" />
                   </a>
                   <a
-                    href={BRAND.socialLinks.whatsapp}
+                    href={socialLinks.whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
@@ -65,7 +69,7 @@ export async function Footer() {
                     <MessageCircle className="h-4 w-4" />
                   </a>
                   <a
-                    href={BRAND.socialLinks.facebook}
+                    href={socialLinks.facebook}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
@@ -110,8 +114,9 @@ export async function Footer() {
                     </li>
                   ))}
                   <li className="text-brand-cream/50 space-y-0.5 pt-2 text-[11px]">
-                    <p>Support: {BRAND.supportPhone}</p>
-                    <p>Email: {BRAND.contactEmail}</p>
+                    <p>Support: {storeProfile.whatsapp_number || storeProfile.phone}</p>
+                    {/* Flag: Temporary contact email bestrchandra@gmail.com; to be replaced with a professional domain email (e.g. care@velaash.com) once provisioned by client */}
+                    <p>Email: {storeProfile.email}</p>
                   </li>
                 </ul>
               </FooterAccordionItem>
@@ -159,8 +164,8 @@ export async function Footer() {
           <div className="text-brand-cream/50 flex flex-col items-center justify-between gap-4 text-xs sm:flex-row">
             <p>
               &copy; {currentYear}{" "}
-              <span className="text-brand-gold font-medium">{BRAND.legalName}</span>. All rights
-              reserved.
+              <span className="text-brand-gold font-medium">{storeProfile.legal_name}</span>. All
+              rights reserved.
             </p>
 
             <div className="text-brand-cream/60 flex items-center gap-5 text-xs">

@@ -228,3 +228,50 @@ ON CONFLICT (id) DO UPDATE SET
   display_order = EXCLUDED.display_order,
   is_active = EXCLUDED.is_active,
   parent_id = EXCLUDED.parent_id;
+
+-- 3. Upsert Real Default Site Settings
+INSERT INTO public.site_settings (key, value, description, is_public)
+VALUES
+  (
+    'store_profile',
+    '{
+      "name": "Velaash",
+      "legal_name": "VELAASH TRADER''S",
+      "tagline": "Contemporary Elegance, Timeless Style",
+      "email": "bestrchandra@gmail.com",
+      "phone": "+91 8508643832",
+      "whatsapp_number": "+91 8508643832",
+      "whatsapp_url": "https://wa.me/918508643832",
+      "logo_url": "/brand/logo.svg",
+      "favicon_url": "/favicon.ico"
+    }'::jsonb,
+    'Core business and brand identity info (email: temporary bestrchandra@gmail.com until custom domain email is set up)',
+    true
+  ),
+  (
+    'social_links',
+    '{
+      "instagram": "https://instagram.com/velaash",
+      "facebook": "https://facebook.com/velaash",
+      "whatsapp": "https://wa.me/918508643832",
+      "pinterest": "https://pinterest.com/velaash"
+    }'::jsonb,
+    'Official social media profiles (Instagram and Facebook are placeholders awaiting client handles)',
+    true
+  ),
+  (
+    'announcement_bar',
+    '{
+      "is_enabled": true,
+      "text": "Complimentary express delivery on orders above ₹999 | Use code VELAASH10 for 10% off",
+      "link": "/collections/new-arrivals"
+    }'::jsonb,
+    'Top boutique notification banner text',
+    true
+  )
+ON CONFLICT (key) DO UPDATE SET
+  value = EXCLUDED.value,
+  description = EXCLUDED.description,
+  is_public = EXCLUDED.is_public,
+  updated_at = now();
+

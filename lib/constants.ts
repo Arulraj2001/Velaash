@@ -9,17 +9,20 @@ export const BRAND = {
   tagline: "Contemporary Elegance, Timeless Style",
   description:
     "An exclusive boutique celebrating thoughtful design, refined fabrics, and effortless contemporary silhouettes for your everyday and occasion wardrobe.",
-  contactEmail: "care@velaash.com",
-  supportPhone: "+91 98765 43210",
-  whatsappNumber: "+919876543210",
+  // Flag: Temporary contact email until a professional domain email (e.g. care@velaash.com) is provisioned by the client
+  contactEmail: "bestrchandra@gmail.com",
+  supportPhone: "+91 8508643832",
+  whatsappNumber: "+91 8508643832",
+  whatsappUrl: "https://wa.me/918508643832",
   whatsappMessage: "Hello Velaash! I would like to inquire about your clothing collection.",
   currency: "INR",
   currencySymbol: "₹",
   socialLinks: {
-    instagram: "https://instagram.com/velaash",
-    whatsapp: "https://wa.me/919876543210",
-    facebook: "https://facebook.com/velaash",
-    pinterest: "https://pinterest.com/velaash",
+    // Note: Official handles not yet provided by client - marked placeholders, editable via site_settings in admin panel
+    instagram: "https://instagram.com/velaash", // Placeholder - awaiting client handle
+    whatsapp: "https://wa.me/918508643832",
+    facebook: "https://facebook.com/velaash", // Placeholder - awaiting client handle
+    pinterest: "https://pinterest.com/velaash", // Placeholder
   },
 } as const;
 
