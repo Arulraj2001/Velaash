@@ -113,8 +113,8 @@ export function ProductAccordion({
               Delivery across India with free shipping on prepaid orders exceeding {formatCurrency(freeShippingThreshold)}.
             </p>
             <p>
-              <strong className="text-brand-dark">Estimated Timelines: </strong>
-              Metro locations typically receive shipments in 3 to 5 business days. Other destinations take 5 to 7 business days.
+              <strong className="text-brand-dark">Dispatch & Delivery: </strong>
+              Orders are dispatched via standard domestic courier services. Tracking details are shared via email and SMS upon dispatch.
             </p>
             <p>
               <strong className="text-brand-dark">{`${returnWindowDays}-Day Returns: `}</strong>
@@ -152,8 +152,8 @@ export function ProductAccordion({
               Designed for a standard, comfortable fit. Please consult the Size Guide for detailed garment measurements.
             </p>
             <p>
-              <strong className="text-brand-dark">Model Measurements: </strong>
-              Model is 5&apos;8&quot; wearing size S.
+              <strong className="text-brand-dark">Fit Note: </strong>
+              Garments are tailored for an effortless, regular fit. Refer to our Size Guide above for detailed measurements across sizes.
             </p>
           </div>
         )}

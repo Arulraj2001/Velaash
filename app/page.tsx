@@ -1,519 +1,389 @@
-import * as React from "react";
-import {
-  Button,
-  Input,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-  Badge,
-  Container,
-  Section,
-  SectionHeader,
-  SectionTitle,
-  SectionDescription,
-} from "@/components/ui";
+import type { Metadata } from "next";
+import Link from "next/link";
+import Image from "next/image";
+import { ArrowRight, Truck, RotateCcw, ShieldCheck, MessageCircle, Sparkles } from "lucide-react";
+import { Container } from "@/components/ui/container";
+import { Button } from "@/components/ui/button";
 import { BRAND } from "@/lib/constants";
-import {
-  Sparkles,
-  ShoppingBag,
-  ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
-  Layers,
-  Palette,
-  Type,
-  Code2,
-  Mail,
-  Search,
-  Lock,
-} from "lucide-react";
+import { getNavigationCategories } from "@/features/navigation";
+import { getProducts, ProductCard } from "@/features/products";
+import { getSiteSettings } from "@/features/settings";
+import { HomepageNewsletter } from "@/components/homepage/homepage-newsletter";
 
-export default function HomePage() {
-  const colorTokens = [
-    {
-      name: "Primary Gold",
-      hex: "#F2A900",
-      token: "brand.gold",
-      bgClass: "bg-brand-gold",
-      textClass: "text-brand-dark",
-      usage: "Primary actions, accents, active highlights",
-    },
-    {
-      name: "Deep Accent Gold",
-      hex: "#CC6F00",
-      token: "brand.accent",
-      bgClass: "bg-brand-accent",
-      textClass: "text-brand-cream",
-      usage: "Secondary buttons, premium badges, hover states",
-    },
-    {
-      name: "Dark Brand Brown",
-      hex: "#4D2A00",
-      token: "brand.dark",
-      bgClass: "bg-brand-dark",
-      textClass: "text-brand-cream",
-      usage: "Headings, body typography, dark sections & footer",
-    },
-    {
-      name: "Light Gold Background",
-      hex: "#F9E6A8",
-      token: "brand.light",
-      bgClass: "bg-brand-light",
-      textClass: "text-brand-dark",
-      usage: "Subtle backgrounds, notification chips, badge subtle",
-    },
-    {
-      name: "Near-White Cream",
-      hex: "#FFFBF0",
-      token: "brand.cream",
-      bgClass: "bg-brand-cream",
-      textClass: "text-brand-dark",
-      usage: "Default page background for calming luxury ambiance",
-    },
-    {
-      name: "Card Off-White",
-      hex: "#FFFFFF",
-      token: "brand.card",
-      bgClass: "bg-brand-card",
-      textClass: "text-brand-dark",
-      usage: "Product cards, elevated surfaces, modal dialogs",
-    },
-  ];
+// SEO: Generate homepage metadata using clean brand defaults
+export async function generateMetadata(): Promise<Metadata> {
+  const { storeProfile } = await getSiteSettings();
 
-  const featureDomains = [
-    {
-      name: "Products",
-      path: "features/products",
-      description: "Catalog, variants (size/color/sku), inventory filters, and luxury gallery",
+  const title = `${storeProfile.name || BRAND.name} | Modern Everyday Luxury & Contemporary Clothing`;
+  const description =
+    "Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe.";
+
+  return {
+    title,
+    description,
+    keywords: [
+      storeProfile.name || BRAND.name,
+      storeProfile.legal_name || BRAND.legalName,
+      "Contemporary Clothing",
+      "Kurtas & Sets",
+      "Dresses",
+      "Co-ord Sets",
+      "Indian Everyday Wear",
+    ],
+    openGraph: {
+      title,
+      description,
+      url: "https://velaash.com",
+      siteName: storeProfile.name || BRAND.name,
+      locale: "en_IN",
+      type: "website",
+      images: [
+        {
+          url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80",
+          width: 1200,
+          height: 630,
+          alt: `${storeProfile.name || BRAND.name} - Contemporary Clothing`,
+        },
+      ],
     },
-    {
-      name: "Cart",
-      path: "features/cart",
-      description: "Slide-over bag, subtotal calculation, promo discounts, tax handling",
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
     },
-    {
-      name: "Orders",
-      path: "features/orders",
-      description: "Razorpay checkout, Indian shipping address schema, delivery tracking",
-    },
-    {
-      name: "Auth",
-      path: "features/auth",
-      description: "Supabase SSR authentication, customer profiles, session refresh",
-    },
-    {
-      name: "Admin",
-      path: "features/admin",
-      description: "Revenue metrics, inventory alerts, order status management",
-    },
-    {
-      name: "Reviews",
-      path: "features/reviews",
-      description: "Verified boutique buyer reviews, ratings breakdown, photo testimonials",
-    },
-  ];
+  };
+}
+
+// Fallback images for category tiles if not configured in the database
+const DEFAULT_CATEGORY_IMAGES: Record<string, string> = {
+  "kurtas-sets":
+    "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",
+  dresses:
+    "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80",
+  "co-ord-sets":
+    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
+  "tops-tunics":
+    "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=800&q=80",
+  "pants-trousers":
+    "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80",
+};
+
+export default async function HomePage() {
+  // Fetch real categories and featured products concurrently
+  const [categories, { products: featuredProducts }, siteSettings] = await Promise.all([
+    getNavigationCategories(),
+    getProducts({ limit: 8, sort: "featured" }),
+    getSiteSettings(),
+  ]);
+
+  /**
+   * PLACEHOLDER HERO IMAGE:
+   * High-resolution editorial placeholder.
+   * NOTE: Real photography will be provided by the client and can be configured
+   * via site_settings in Supabase or the admin console before official store launch.
+   */
+  const placeholderHeroImage =
+    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85";
+
+  // Organization Schema.org JSON-LD using strictly verified business information
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: siteSettings.storeProfile.name || BRAND.name,
+    legalName: siteSettings.storeProfile.legal_name || BRAND.legalName,
+    url: "https://velaash.com",
+    email: siteSettings.storeProfile.email || BRAND.contactEmail,
+    telephone: siteSettings.storeProfile.whatsapp_number || BRAND.supportPhone,
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        telephone: siteSettings.storeProfile.whatsapp_number || BRAND.supportPhone,
+        contactType: "customer service",
+        areaServed: "IN",
+        availableLanguage: ["English", "Hindi"],
+      },
+    ],
+  };
 
   return (
-    <div className="w-full">
-      {/* Hero Welcome / System Foundation Header */}
-      <Section spacing="lg" background="cream">
-        <Container size="xl">
-          <div className="border-brand-border from-brand-cream via-brand-light/30 to-brand-cream shadow-luxury relative overflow-hidden rounded-2xl border bg-gradient-to-br p-8 sm:p-14">
-            <div className="max-w-3xl space-y-5">
-              <div className="border-brand-gold/50 bg-brand-light/40 text-brand-dark inline-flex items-center gap-2 rounded-full border px-3.5 py-1 text-xs font-semibold tracking-wider uppercase">
-                <Sparkles className="text-brand-accent h-3.5 w-3.5" />
-                Production Foundation & Design System Ready
+    <>
+      {/* 0. Organization Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
+
+      <div className="flex flex-col min-h-screen bg-brand-cream/30 text-brand-dark">
+        {/* =========================================================================
+            SECTION 1: HERO BANNER
+            Full-width image visual with headline and primary CTA linking to /shop.
+            ========================================================================= */}
+        <section className="relative w-full min-h-[75vh] sm:min-h-[85vh] flex items-center justify-center overflow-hidden bg-brand-dark">
+          {/* Background Image with subtle parallax feel */}
+          <div className="absolute inset-0 z-0">
+            <Image
+              src={placeholderHeroImage}
+              alt="Velaash Contemporary Clothing Collection"
+              fill
+              priority
+              className="object-cover object-center brightness-90 contrast-105"
+              sizes="100vw"
+            />
+            {/* Rich gradient overlays for depth and text legibility */}
+            <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/90 via-brand-dark/40 to-black/30" />
+            <div className="absolute inset-0 bg-brand-dark/20 backdrop-blur-[0.5px]" />
+          </div>
+
+          {/* Hero Content */}
+          <Container size="lg" className="relative z-10 py-16 text-center">
+            <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-700">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-gold/40 bg-brand-dark/60 text-brand-gold text-xs font-semibold tracking-widest uppercase backdrop-blur-md">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>New Season Arrivals</span>
               </div>
 
-              <h1 className="font-heading text-brand-dark text-4xl leading-[1.1] font-normal tracking-tight sm:text-6xl">
-                Welcome to <span className="text-brand-accent font-semibold">{BRAND.name}</span>
+              <h1 className="font-heading text-4xl sm:text-6xl md:text-7xl font-semibold text-white tracking-tight leading-[1.08]">
+                Modern Everyday Luxury
               </h1>
 
-              <p className="font-heading text-brand-accent text-xl font-normal italic sm:text-2xl">
-                &ldquo;{BRAND.tagline}&rdquo;
+              <p className="max-w-xl mx-auto text-brand-cream/85 font-sans text-sm sm:text-base md:text-lg leading-relaxed">
+                Effortless silhouettes, refined textures, and contemporary wardrobe essentials
+                designed for everyday elegance.
               </p>
 
-              <p className="text-brand-dark/80 max-w-2xl font-sans text-sm leading-relaxed sm:text-base">
-                This environment confirms the core architecture: Next.js 16 App Router, TypeScript
-                strict mode, Tailwind CSS design system tokens, Supabase SSR clients (browser,
-                server, middleware), and reusable UI primitives.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Button variant="primary" size="lg" rightIcon={<ArrowRight className="h-4 w-4" />}>
-                  Explore Design Tokens
-                </Button>
-                <Button variant="outline" size="lg">
-                  Verify Architecture
-                </Button>
-              </div>
-
-              <div className="text-brand-dark/70 border-brand-border/60 flex flex-wrap gap-4 border-t pt-4 font-sans text-xs">
-                <span className="inline-flex items-center gap-1.5 font-medium">
-                  <ShieldCheck className="text-brand-accent h-4 w-4" /> Legal Entity:{" "}
-                  {BRAND.legalName}
-                </span>
-                <span className="inline-flex items-center gap-1.5 font-medium">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-700" /> App Router + TypeScript
-                  Strict
-                </span>
-                <span className="inline-flex items-center gap-1.5 font-medium">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-700" /> Supabase SSR Configured
-                </span>
-              </div>
-            </div>
-          </div>
-        </Container>
-      </Section>
-
-      {/* Section 1: Color Palette Tokens */}
-      <Section spacing="md">
-        <Container size="xl">
-          <SectionHeader align="left">
-            <div className="text-brand-accent inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase">
-              <Palette className="h-4 w-4" /> Design System Tokens
-            </div>
-            <SectionTitle>Boutique Color Tokens</SectionTitle>
-            <SectionDescription>
-              Carefully calibrated luxury palette defined as semantic Tailwind tokens without
-              hardcoded inline values.
-            </SectionDescription>
-          </SectionHeader>
-
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {colorTokens.map((item) => (
-              <Card key={item.name} hoverEffect>
-                <div
-                  className={`h-28 w-full rounded-t-xl ${item.bgClass} border-brand-border/50 flex items-end border-b p-4`}
-                >
-                  <span
-                    className={`rounded bg-black/15 px-2 py-1 font-mono text-xs font-bold backdrop-blur-sm ${
-                      item.name === "Dark Brand Brown" ? "text-white" : "text-brand-dark"
-                    }`}
+              <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+                <Link href="/shop" className="w-full sm:w-auto">
+                  <Button variant="primary" size="lg" className="w-full sm:w-auto shadow-luxury">
+                    <span>Explore Collection</span>
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+                <Link href="/collections/kurtas-sets" className="w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="w-full sm:w-auto border-white/40 text-white hover:bg-white/10 hover:text-white"
                   >
-                    {item.hex}
-                  </span>
-                </div>
-                <CardHeader className="p-5 pb-2">
-                  <CardTitle className="text-lg">{item.name}</CardTitle>
-                  <CardDescription className="text-brand-accent font-mono text-[11px]">
-                    token: {item.token}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-brand-dark/70 p-5 pt-1 text-xs">
-                  {item.usage}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </Container>
-      </Section>
-
-      {/* Section 2: Typography System */}
-      <Section spacing="md" background="light">
-        <Container size="xl">
-          <SectionHeader align="left">
-            <div className="text-brand-accent inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase">
-              <Type className="h-4 w-4" /> Typography Pairing
+                    Kurtas & Sets
+                  </Button>
+                </Link>
+              </div>
             </div>
-            <SectionTitle>Serif Display & Modern Sans</SectionTitle>
-            <SectionDescription>
-              Cormorant Garamond captures regal Indian boutique tradition, balanced by Plus Jakarta
-              Sans for legible e-commerce interactions.
-            </SectionDescription>
-          </SectionHeader>
+          </Container>
+        </section>
 
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <Card className="space-y-6 p-6 sm:p-8">
-              <div className="border-brand-border/60 border-b pb-3">
-                <span className="text-brand-accent font-mono text-xs tracking-wider uppercase">
-                  Display / Heading: Cormorant Garamond
-                </span>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <span className="text-brand-dark/50 text-xs">H1 Display (48px - 60px)</span>
-                  <h1 className="font-heading text-brand-dark text-4xl font-semibold sm:text-5xl">
-                    Embroidered Co-ord Sets
-                  </h1>
-                </div>
-                <div>
-                  <span className="text-brand-dark/50 text-xs">
-                    H2 Section Heading (32px - 36px)
-                  </span>
-                  <h2 className="font-heading text-brand-dark text-2xl font-medium sm:text-3xl">
-                    Handcrafted Cotton & Linen Dresses
-                  </h2>
-                </div>
-                <div>
-                  <span className="text-brand-dark/50 text-xs">H3 Sub-heading (24px)</span>
-                  <h3 className="font-heading text-brand-dark text-xl font-normal sm:text-2xl">
-                    Artisanal Kurtas & Relaxed Silhouettes
-                  </h3>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="space-y-6 p-6 sm:p-8">
-              <div className="border-brand-border/60 border-b pb-3">
-                <span className="text-brand-accent font-mono text-xs tracking-wider uppercase">
-                  Body / UI: Plus Jakarta Sans
-                </span>
-              </div>
-              <div className="text-brand-dark space-y-4">
-                <div>
-                  <span className="text-brand-dark/50 text-xs">Lead Paragraph (16px)</span>
-                  <p className="text-brand-dark/90 text-base leading-relaxed">
-                    Every Velaash silhouette represents months of painstaking artisanal craft, woven
-                    with genuine metallic zari threads by master weavers.
-                  </p>
-                </div>
-                <div>
-                  <span className="text-brand-dark/50 text-xs">Standard UI Body (14px)</span>
-                  <p className="text-brand-dark/80 text-sm leading-normal">
-                    Complimentary custom sizing, personalized blouse stitching, and secure insured
-                    courier delivery across India and worldwide.
-                  </p>
-                </div>
-                <div>
-                  <span className="text-brand-dark/50 text-xs">
-                    Micro-copy / Badges / Nav (11px Uppercase)
-                  </span>
-                  <p className="text-brand-accent text-xs font-semibold tracking-widest uppercase">
-                    EXPLORE BESPOKE BRIDAL APPOINTMENTS • READY TO DISPATCH
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </Container>
-      </Section>
-
-      {/* Section 3: Reusable UI Primitives */}
-      <Section spacing="lg">
-        <Container size="xl">
-          <SectionHeader align="left">
-            <div className="text-brand-accent inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase">
-              <Layers className="h-4 w-4" /> Primitive Component Library
+        {/* =========================================================================
+            SECTION 2: CATEGORY TILES
+            Visual grid linking to each top-level category using categories query.
+            ========================================================================= */}
+        <section className="py-16 sm:py-24 border-b border-brand-border/60">
+          <Container size="xl">
+            {/* Section Header */}
+            <div className="max-w-2xl mx-auto text-center space-y-2 mb-10 sm:mb-14">
+              <span className="text-brand-accent text-xs font-semibold tracking-widest uppercase">
+                Curated Collections
+              </span>
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-brand-dark tracking-tight">
+                Explore by Category
+              </h2>
+              <p className="text-brand-dark/70 text-xs sm:text-sm font-sans">
+                Thoughtfully tailored pieces across modern everyday silhouettes.
+              </p>
             </div>
-            <SectionTitle>Accessible UI Primitives</SectionTitle>
-            <SectionDescription>
-              Pre-built reusable components located in <code>@/components/ui</code> with keyboard
-              focus states, ARIA attributes, and variant tokens.
-            </SectionDescription>
-          </SectionHeader>
 
-          {/* Button Variants */}
-          <div className="space-y-10">
-            <Card className="p-6 sm:p-8">
-              <CardTitle className="mb-2 text-xl">Button Primitives & States</CardTitle>
-              <CardDescription className="mb-6">
-                All button variants with full hover, active, focus-visible rings, and loading
-                states.
-              </CardDescription>
+            {/* Category Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+              {categories.map((category) => {
+                const categoryImage =
+                  category.image_url ||
+                  DEFAULT_CATEGORY_IMAGES[category.slug] ||
+                  "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80";
 
-              <div className="space-y-6">
-                <div>
-                  <p className="text-brand-dark/60 mb-3 text-xs font-semibold tracking-wider uppercase">
-                    Style Variants
-                  </p>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Button variant="primary">Primary Gold</Button>
-                    <Button variant="secondary">Secondary Accent</Button>
-                    <Button variant="dark">Dark Brown</Button>
-                    <Button variant="outline">Outline</Button>
-                    <Button variant="ghost">Ghost</Button>
-                    <Button variant="link">Link Style</Button>
-                  </div>
-                </div>
+                return (
+                  <Link
+                    key={category.id}
+                    href={`/collections/${category.slug}`}
+                    className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-xs hover:shadow-luxury transition-all duration-300 border border-brand-border/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
+                  >
+                    {/* Background Category Image with gentle zoom on hover */}
+                    <Image
+                      src={categoryImage}
+                      alt={category.name}
+                      fill
+                      className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    />
 
-                <div>
-                  <p className="text-brand-dark/60 mb-3 text-xs font-semibold tracking-wider uppercase">
-                    Sizes & Icon Slots
-                  </p>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Button size="sm" variant="primary">
-                      Small (sm)
-                    </Button>
-                    <Button size="md" variant="primary">
-                      Medium (md)
-                    </Button>
-                    <Button size="lg" variant="primary">
-                      Large (lg)
-                    </Button>
-                    <Button variant="primary" leftIcon={<ShoppingBag className="h-4 w-4" />}>
-                      With Left Icon
-                    </Button>
-                    <Button variant="outline" rightIcon={<ArrowRight className="h-4 w-4" />}>
-                      With Right Icon
-                    </Button>
-                    <Button variant="dark" isLoading>
-                      Processing
-                    </Button>
-                    <Button variant="primary" disabled>
-                      Disabled
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/85 via-brand-dark/25 to-transparent transition-opacity duration-300 group-hover:from-brand-dark/95" />
 
-            {/* Inputs & Badges */}
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              {/* Inputs */}
-              <Card className="space-y-5 p-6 sm:p-8">
-                <CardTitle className="text-xl">Accessible Input Fields</CardTitle>
-                <CardDescription>
-                  Inputs with floating labels, left/right icons, helper notes, and ARIA error
-                  states.
-                </CardDescription>
-
-                <div className="space-y-4">
-                  <Input
-                    label="Customer Full Name"
-                    placeholder="e.g. Radhika Sharma"
-                    helperText="As it should appear on custom tailor records"
-                  />
-
-                  <Input
-                    label="Email Address"
-                    type="email"
-                    placeholder="client@velaash.com"
-                    leftIcon={<Mail className="h-4 w-4" />}
-                  />
-
-                  <Input
-                    label="Search Vault"
-                    placeholder="Search kurtas, dresses, co-ords, tops..."
-                    leftIcon={<Search className="h-4 w-4" />}
-                  />
-
-                  <Input
-                    label="Account Password"
-                    type="password"
-                    placeholder="••••••••"
-                    leftIcon={<Lock className="h-4 w-4" />}
-                    error="Password must be at least 8 characters"
-                  />
-                </div>
-              </Card>
-
-              {/* Badges & Boutique Card Preview */}
-              <Card className="space-y-6 p-6 sm:p-8">
-                <CardTitle className="text-xl">Boutique Badges & Tags</CardTitle>
-                <CardDescription>
-                  Pill badges for product categorization, stock status, and boutique highlights.
-                </CardDescription>
-
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="default">Gold Default</Badge>
-                    <Badge variant="accent">Accent Deep</Badge>
-                    <Badge variant="subtle">Subtle Light</Badge>
-                    <Badge variant="outline">Outline</Badge>
-                    <Badge variant="dark">Dark Brown</Badge>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    <Badge variant="default" size="sm" icon={<Sparkles className="h-3 w-3" />}>
-                      Pure Linen
-                    </Badge>
-                    <Badge variant="accent" size="sm">
-                      Relaxed Fit
-                    </Badge>
-                    <Badge variant="subtle" size="sm">
-                      Mulberry Silk
-                    </Badge>
-                    <Badge variant="dark" size="sm">
-                      Only 2 Left
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="border-brand-border/60 border-t pt-4">
-                  <p className="text-brand-dark/70 mb-3 text-xs font-semibold tracking-wider uppercase">
-                    Sample Boutique Preview Card
-                  </p>
-                  <Card hoverEffect className="border-brand-border/80 overflow-hidden">
-                    <div className="from-brand-accent/20 via-brand-light/40 to-brand-cream flex h-40 items-center justify-center bg-gradient-to-tr p-4">
-                      <div className="space-y-1 text-center">
-                        <span className="font-heading text-brand-dark text-2xl font-semibold">
-                          Chanderi Embroidered Kurta Set
-                        </span>
-                        <p className="text-brand-dark/70 text-xs">
-                          Crafted with breathable cotton silk
-                        </p>
+                    {/* Content Card at Bottom */}
+                    <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 flex flex-col justify-end text-left">
+                      <h3 className="font-heading text-lg sm:text-2xl font-semibold text-white tracking-tight">
+                        {category.name}
+                      </h3>
+                      <div className="mt-1 flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-brand-gold group-hover:text-brand-gold/90 transition-colors">
+                        <span>Explore</span>
+                        <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
                       </div>
                     </div>
-                    <CardHeader className="p-4 pb-2">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="accent" size="sm">
-                          New Arrival
-                        </Badge>
-                        <span className="text-brand-dark text-base font-semibold">₹3,850</span>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="text-brand-dark/70 p-4 pt-1 text-xs">
-                      Featuring refined neck embroidery, coordinating palazzo, and soft dupatta.
-                    </CardContent>
-                    <CardFooter className="p-4 pt-0">
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        className="w-full"
-                        leftIcon={<ShoppingBag className="h-3.5 w-3.5" />}
-                      >
-                        Bespoke Inquiry
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </div>
-              </Card>
+                  </Link>
+                );
+              })}
             </div>
-          </div>
-        </Container>
-      </Section>
+          </Container>
+        </section>
 
-      {/* Section 4: Architecture & Domain Layout */}
-      <Section spacing="lg" background="cream">
-        <Container size="xl">
-          <SectionHeader align="left">
-            <div className="text-brand-accent inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase">
-              <Code2 className="h-4 w-4" /> Feature-Based Project Structure
+        {/* =========================================================================
+            SECTION 3: FEATURED / NEW ARRIVALS
+            Row of products where is_featured = true (or newest) using ProductCard.
+            ========================================================================= */}
+        <section className="py-16 sm:py-24 bg-brand-light/10 border-b border-brand-border/60">
+          <Container size="xl">
+            {/* Section Header with View All Link */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-10 sm:mb-12">
+              <div className="space-y-1">
+                <span className="text-brand-accent text-xs font-semibold tracking-widest uppercase">
+                  Handpicked Styles
+                </span>
+                <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-brand-dark tracking-tight">
+                  Featured Arrivals
+                </h2>
+              </div>
+              <Link
+                href="/shop"
+                className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-dark hover:text-brand-accent transition-colors"
+              >
+                <span>View Full Catalog</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
-            <SectionTitle>Clean Domain Boundaries</SectionTitle>
-            <SectionDescription>
-              Each domain is encapsulated inside its own feature folder containing dedicated
-              components, server actions, Zod schemas, and queries.
-            </SectionDescription>
-          </SectionHeader>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {featureDomains.map((feature) => (
-              <Card key={feature.name} hoverEffect className="space-y-3 p-6">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-heading text-brand-dark text-xl font-semibold">
-                    {feature.name} Domain
-                  </h4>
-                  <Badge variant="subtle" size="sm">
-                    Ready
-                  </Badge>
-                </div>
-                <p className="text-brand-accent font-mono text-xs">/{feature.path}</p>
-                <p className="text-brand-dark/70 font-sans text-xs leading-relaxed">
-                  {feature.description}
+            {/* Product Cards Grid */}
+            {featuredProducts.length > 0 ? (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+                {featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16 bg-white rounded-2xl border border-brand-border/70 p-8">
+                <p className="text-brand-dark/70 text-sm">
+                  Catalog updates in progress. Explore our collection categories above.
                 </p>
-                <div className="text-brand-dark/50 border-brand-border/40 border-t pt-2 font-mono text-[11px]">
-                  actions/ • components/ • queries/ • types/
+                <Link href="/shop" className="mt-4 inline-block">
+                  <Button variant="primary" size="sm">
+                    Browse All Products
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </Container>
+        </section>
+
+        {/* =========================================================================
+            SECTION 4: TRUST & VALUE STRIP
+            Generic 3-4 short items without unconfirmed claims or fabricated numbers.
+            ========================================================================= */}
+        <section className="py-12 sm:py-16 bg-white border-b border-brand-border/60">
+          <Container size="xl">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+              {/* Value 1: Pan-India Delivery */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3.5 p-4 rounded-xl transition-colors hover:bg-brand-cream/40">
+                <div className="w-12 h-12 rounded-full bg-brand-light/50 border border-brand-gold/30 flex items-center justify-center text-brand-dark shrink-0">
+                  <Truck className="w-5 h-5 text-brand-gold" />
                 </div>
-              </Card>
-            ))}
-          </div>
-        </Container>
-      </Section>
-    </div>
+                <div className="space-y-1">
+                  <h4 className="font-heading text-base sm:text-lg font-semibold text-brand-dark">
+                    Pan-India Delivery
+                  </h4>
+                  <p className="text-brand-dark/65 text-xs font-sans leading-relaxed">
+                    Reliable domestic shipping across all serviceable PIN codes.
+                  </p>
+                </div>
+              </div>
+
+              {/* Value 2: Easy Returns */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3.5 p-4 rounded-xl transition-colors hover:bg-brand-cream/40">
+                <div className="w-12 h-12 rounded-full bg-brand-light/50 border border-brand-gold/30 flex items-center justify-center text-brand-dark shrink-0">
+                  <RotateCcw className="w-5 h-5 text-brand-gold" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-heading text-base sm:text-lg font-semibold text-brand-dark">
+                    Easy Returns
+                  </h4>
+                  <p className="text-brand-dark/65 text-xs font-sans leading-relaxed">
+                    Hassle-free return and exchange assistance for unworn items.
+                  </p>
+                </div>
+              </div>
+
+              {/* Value 3: Secure Payments */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3.5 p-4 rounded-xl transition-colors hover:bg-brand-cream/40">
+                <div className="w-12 h-12 rounded-full bg-brand-light/50 border border-brand-gold/30 flex items-center justify-center text-brand-dark shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-brand-gold" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-heading text-base sm:text-lg font-semibold text-brand-dark">
+                    Secure Payments
+                  </h4>
+                  <p className="text-brand-dark/65 text-xs font-sans leading-relaxed">
+                    100% encrypted checkout with UPI, Cards, and Net Banking.
+                  </p>
+                </div>
+              </div>
+
+              {/* Value 4: WhatsApp Support */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3.5 p-4 rounded-xl transition-colors hover:bg-brand-cream/40">
+                <div className="w-12 h-12 rounded-full bg-brand-light/50 border border-brand-gold/30 flex items-center justify-center text-brand-dark shrink-0">
+                  <MessageCircle className="w-5 h-5 text-brand-gold" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-heading text-base sm:text-lg font-semibold text-brand-dark">
+                    WhatsApp Support
+                  </h4>
+                  <p className="text-brand-dark/65 text-xs font-sans leading-relaxed">
+                    Direct assistance and sizing guidance on +91 8508643832.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Container>
+        </section>
+
+        {/* =========================================================================
+            SECTION 5: NEWSLETTER SIGNUP
+            Enhanced newsletter signup styled for a prominent homepage section.
+            ========================================================================= */}
+        <section className="py-16 sm:py-24 bg-brand-cream/60">
+          <Container size="md">
+            <div className="rounded-3xl bg-brand-dark border border-brand-accent/25 text-brand-cream p-8 sm:p-14 text-center shadow-2xl relative overflow-hidden">
+              {/* Subtle ambient luxury light in background */}
+              <div className="absolute top-0 right-1/4 -translate-y-1/2 w-64 h-64 bg-brand-gold/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-1/4 translate-y-1/2 w-64 h-64 bg-brand-accent/15 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="relative z-10 max-w-lg mx-auto space-y-3">
+                <div className="inline-flex items-center gap-1.5 text-brand-gold text-xs font-semibold tracking-widest uppercase">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Stay In Touch</span>
+                </div>
+
+                <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight">
+                  Join the Velaash Circle
+                </h2>
+
+                <p className="text-brand-cream/75 text-xs sm:text-sm font-sans leading-relaxed">
+                  Subscribe to receive updates on new arrivals, seasonal collections, and wardrobe
+                  inspiration directly to your inbox.
+                </p>
+
+                {/* Client-side Newsletter Form */}
+                <HomepageNewsletter />
+              </div>
+            </div>
+          </Container>
+        </section>
+      </div>
+    </>
   );
 }

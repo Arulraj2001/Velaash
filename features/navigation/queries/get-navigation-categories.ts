@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { NavigationCategory, NavigationSubCategory } from "../types";
 
 /**
- * Curated general clothing boutique category tree fallback
+ * Curated general clothing category tree fallback
  * Used when the database has not yet been seeded or during local/offline preview.
  */
 export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
@@ -10,7 +10,7 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
     id: "cat-kurtas",
     name: "Kurtas & Sets",
     slug: "kurtas-sets",
-    description: "Everyday and festive kurtas crafted from handpicked cottons and silks",
+    description: "Everyday and festive kurtas crafted in contemporary silhouettes",
     image_url:
       "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80",
     display_order: 1,
@@ -103,7 +103,7 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
       },
       {
         id: "sub-printed-coords",
-        name: "Artisanal Printed Sets",
+        name: "Printed Co-ord Sets",
         slug: "printed-coord-sets",
         description: "Hand-block and contemporary geometric prints",
         image_url: null,
@@ -113,7 +113,7 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
         id: "sub-festive-coords",
         name: "Occasion & Festive Co-ords",
         slug: "festive-coord-sets",
-        description: "Subtle zari and hand-embroidered evening coordinates",
+        description: "Subtle tone-on-tone embroidery and evening coordinates",
         image_url: null,
         display_order: 3,
       },
@@ -140,7 +140,7 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
         id: "sub-blouses",
         name: "Embroidered Tops",
         slug: "embroidered-tops",
-        description: "Delicate necklines and handcrafted sleeve motifs",
+        description: "Delicate necklines and refined sleeve motifs",
         image_url: null,
         display_order: 2,
       },

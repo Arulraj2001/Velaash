@@ -24,7 +24,7 @@ export function NewsletterForm() {
     setTimeout(() => {
       setIsSubmitting(false);
       setStatus("success");
-      setMessage("Thank you! Your 10% welcome code has been sent.");
+      setMessage("Thank you for subscribing! You will receive our latest updates and new arrivals.");
       setEmail("");
     }, 600);
   };
@@ -32,8 +32,7 @@ export function NewsletterForm() {
   return (
     <div className="space-y-3 font-sans">
       <p className="text-brand-cream/70 text-xs leading-relaxed">
-        Be the first to explore limited capsule drops, seasonal previews, and private boutique
-        sales.
+        Subscribe to receive updates on new arrivals, collection previews, and seasonal styles.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-2">
@@ -44,7 +43,7 @@ export function NewsletterForm() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
             required
-            aria-label="Email address for boutique newsletter"
+            aria-label="Email address for newsletter"
             className="bg-brand-dark-muted/80 border-brand-accent/30 text-brand-cream placeholder:text-brand-cream/40 focus-visible:border-brand-gold focus-visible:ring-brand-gold h-10 w-full rounded-md border px-3.5 pr-10 text-xs focus-visible:ring-1 focus-visible:outline-none"
           />
           <button

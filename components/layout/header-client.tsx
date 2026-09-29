@@ -6,6 +6,7 @@ import { Search, ShoppingBag, Heart, Menu } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { BRAND } from "@/lib/constants";
 import type { NavigationCategory } from "@/features/navigation";
+import type { AnnouncementSetting } from "@/features/settings";
 import { AnnouncementBar } from "./announcement-bar";
 import { HeaderNav } from "./header-nav";
 import { SearchOverlay } from "./search-overlay";
@@ -17,9 +18,15 @@ interface HeaderClientProps {
   categories: NavigationCategory[];
   whatsappNumber?: string;
   whatsappUrl?: string;
+  announcement?: AnnouncementSetting;
 }
 
-export function HeaderClient({ categories, whatsappNumber, whatsappUrl }: HeaderClientProps) {
+export function HeaderClient({
+  categories,
+  whatsappNumber,
+  whatsappUrl,
+  announcement,
+}: HeaderClientProps) {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -47,7 +54,11 @@ export function HeaderClient({ categories, whatsappNumber, whatsappUrl }: Header
         }`}
       >
         {/* Top Dismissible Announcement Bar */}
-        <AnnouncementBar />
+        <AnnouncementBar
+          text={announcement?.text}
+          link={announcement?.link}
+          isEnabled={announcement?.is_enabled}
+        />
 
         <Container size="xl">
           <div

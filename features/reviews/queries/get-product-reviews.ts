@@ -11,9 +11,9 @@ export const MOCK_REVIEWS_DEFAULT: ProductReviewItem[] = [
     id: "rev-1",
     customer_name: "Priya S.",
     rating: 5,
-    title: "Exceptional craftsmanship and fit",
+    title: "Exceptional quality and fit",
     comment:
-      "The fabric feels truly luxurious and the zari embroidery is subtle yet stunning. Received countless compliments at a family evening reception. True to size.",
+      "The fabric feels comfortable and the neck embroidery is subtle yet stunning. Received countless compliments at a family evening reception. True to size.",
     is_verified_purchase: true,
     is_approved: true,
     created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),

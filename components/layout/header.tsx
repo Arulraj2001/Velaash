@@ -4,7 +4,7 @@ import { getSiteSettings } from "@/features/settings";
 import { HeaderClient } from "./header-client";
 
 export async function Header() {
-  const [categories, { storeProfile }] = await Promise.all([
+  const [categories, { storeProfile, announcement }] = await Promise.all([
     getNavigationCategories(),
     getSiteSettings(),
   ]);
@@ -14,6 +14,7 @@ export async function Header() {
       categories={categories}
       whatsappNumber={storeProfile.whatsapp_number}
       whatsappUrl={storeProfile.whatsapp_url}
+      announcement={announcement}
     />
   );
 }

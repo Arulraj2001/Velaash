@@ -401,7 +401,7 @@ export function ProductReviewsSection({
                     className="border-brand-border text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-accent focus:ring-brand-accent w-full resize-none rounded-lg border bg-white p-3.5 text-xs focus:ring-1 focus:outline-none"
                   />
                   <p className="text-brand-dark/50 mt-1 text-[11px]">
-                    Reviews undergo moderation before appearing publicly on the boutique catalog.
+                    Reviews undergo moderation before appearing publicly on the store catalog.
                   </p>
                 </div>
 

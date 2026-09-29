@@ -1,4 +1,4 @@
--- 006: Product Images & Boutique Size Charts
+-- 006: Product Images & Garment Size Charts
 -- Velaash E-Commerce Platform (VELAASH TRADER'S)
 
 -- 1. Product Images Table

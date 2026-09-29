@@ -30,7 +30,7 @@ export function PincodeChecker({ freeShippingThreshold = 999 }: PincodeCheckerPr
     // Realistic delivery estimation delay
     setTimeout(() => {
       setStatus("success");
-      setMessage(`Delivery to ${cleanPin} in 3-5 business days. Free standard shipping available.`);
+      setMessage(`Serviceable location (${cleanPin}). Standard delivery available.`);
     }, 600);
   };
 
@@ -86,7 +86,7 @@ export function PincodeChecker({ freeShippingThreshold = 999 }: PincodeCheckerPr
 
       {status === "idle" && (
         <p className="text-brand-dark/50 mt-2 text-[11px]">
-          Pre-paid orders above {formatCurrency(freeShippingThreshold)} qualify for free express delivery.
+          Pre-paid orders above {formatCurrency(freeShippingThreshold)} qualify for free delivery.
         </p>
       )}
     </div>

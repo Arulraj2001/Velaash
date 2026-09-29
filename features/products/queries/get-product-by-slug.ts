@@ -17,31 +17,31 @@ const PDP_EXTENDED_METADATA: Record<
   { fabric: string; care_instructions: string; craftsmanship: string; tips: string[] }
 > = {
   "chanderi-embroidered-kurta-set": {
-    fabric: "Pure Chanderi Silk-Cotton blend with 100% fine cotton inner lining",
+    fabric: "Chanderi cotton blend with 100% fine cotton inner lining",
     care_instructions:
       "Dry clean recommended for first two washes. Subsequently, gentle hand wash in cold water using mild liquid detergent. Dry in shade. Warm iron inside out.",
     craftsmanship:
       "Delicate embroidery along the jewel neckline with coordinating hem border.",
-    tips: ["True to size.", "Model is 5'8\" wearing size S."],
+    tips: ["True to size.", "For a relaxed silhouette, consider one size up."],
   },
-  "raw-silk-festive-anarkali": {
-    fabric: "Raw Silk blend with tissue border and inner lining",
+  "festive-anarkali-set": {
+    fabric: "Structured woven fabric with tonal border and inner lining",
     care_instructions: "Professional dry clean only. Store wrapped in protective cloth.",
     craftsmanship:
       "Flared 24-kali silhouette with detailed embroidery along the yoke and cuffs.",
     tips: [
       "Fitted silhouette at bust and waist with flared drape below.",
-      "Model is 5'9\" wearing size M.",
+      "Consult size chart for bust measurements.",
     ],
   },
-  "banarasi-georgette-lehenga": {
-    fabric: "Georgette with metallic zari floral motifs",
-    care_instructions: "Dry clean only. Do not iron directly on zari detailing.",
+  "woven-georgette-festive-set": {
+    fabric: "Georgette with tonal floral embroidery",
+    care_instructions: "Dry clean only. Do not iron directly on embroidered detailing.",
     craftsmanship:
       "Woven georgette with floral motifs and coordinating drawstring ties.",
     tips: [
-      "Lehenga skirt has an adjustable drawstring waist.",
-      "Model is 5'7\" wearing size S.",
+      "Skirt has an adjustable drawstring waist.",
+      "Standard comfortable fit.",
     ],
   },
 };
@@ -51,7 +51,7 @@ const DEFAULT_METADATA = {
   care_instructions:
     "Gentle dry clean or cold hand wash. Do not bleach. Dry flat in shade. Medium warm steam iron.",
   craftsmanship: "Finished with reinforced seams and quality detailing.",
-  tips: ["Standard fit.", "Model is 5'8\" wearing size S."],
+  tips: ["Standard fit.", "Refer to size guide for exact dimensions."],
 };
 
 export async function getProductBySlug(slug: string): Promise<ProductDetailItem | null> {

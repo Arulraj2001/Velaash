@@ -63,7 +63,7 @@ export function AdminLoginForm() {
           Administrative Console Gate
         </CardTitle>
         <CardDescription className="text-brand-cream/60 mx-auto max-w-xs text-xs">
-          Restricted to authorized boutique staff & store proprietors only.
+          Restricted to authorized staff & store administrators only.
         </CardDescription>
       </CardHeader>
 

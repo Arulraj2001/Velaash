@@ -41,7 +41,7 @@ export function SizeGuideModal({ isOpen, onClose, sizeChart, productName }: Size
     "Waist: Measure around your natural waistline, keeping the tape comfortably loose.",
     "Hips: Stand with feet together and measure around fullest part of your hips.",
     "Length: Measured from high shoulder point straight down to hemline.",
-    "All garments include a 1.5-inch inner seam allowance for custom boutique alteration.",
+    "Measurements are garment dimensions. For a relaxed fit, select one size up.",
   ];
 
   // Helper to convert inch string to cm if unit is cm
@@ -87,7 +87,7 @@ export function SizeGuideModal({ isOpen, onClose, sizeChart, productName }: Size
             <div className="flex items-center gap-2">
               <Ruler className="text-brand-gold h-5 w-5" />
               <span className="text-brand-accent text-[11px] font-semibold tracking-widest uppercase">
-                Boutique Sizing Guide
+                Size Guide
               </span>
             </div>
             <h2
@@ -192,7 +192,7 @@ export function SizeGuideModal({ isOpen, onClose, sizeChart, productName }: Size
 
         {/* Footer info */}
         <div className="text-brand-dark/60 border-brand-border/60 mt-6 flex flex-col items-center justify-between gap-3 border-t pt-4 text-xs sm:flex-row">
-          <p>Need custom tailoring or between sizes?</p>
+          <p>Have sizing questions or between sizes?</p>
           <button
             type="button"
             onClick={onClose}

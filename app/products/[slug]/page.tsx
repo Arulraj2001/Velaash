@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
         : [
             product.name,
             product.category_name || "Clothing",
-            "Indian Boutique",
+            "Contemporary Fashion",
             "Contemporary Clothing",
             "Velaash",
             "VELAASH TRADER'S",

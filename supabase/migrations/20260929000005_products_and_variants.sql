@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   hsn_code text DEFAULT '6204',
   gst_rate numeric(4,2) NOT NULL DEFAULT 5.00 CHECK (gst_rate >= 0 AND gst_rate <= 28),
   
-  -- Boutique Specific Attributes
+  -- Garment Specific Attributes
   blouse_included boolean DEFAULT false,
   saree_length_meters numeric(4,2),
   

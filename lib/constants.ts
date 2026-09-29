@@ -6,9 +6,9 @@
 export const BRAND = {
   name: "Velaash",
   legalName: "VELAASH TRADER'S",
-  tagline: "Contemporary Elegance, Timeless Style",
+  tagline: "", // Left blank per client direction — do not invent a tagline
   description:
-    "An exclusive boutique celebrating thoughtful design, refined fabrics, and effortless contemporary silhouettes for your everyday and occasion wardrobe.",
+    "Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe.",
   // Flag: Temporary contact email until a professional domain email (e.g. care@velaash.com) is provisioned by the client
   contactEmail: "bestrchandra@gmail.com",
   supportPhone: "+91 8508643832",
@@ -26,9 +26,13 @@ export const BRAND = {
   },
 } as const;
 
+/**
+ * Neutral announcement bar placeholder.
+ * TODO: [PRE-LAUNCH REQUIREMENT] Real promotional offers and coupon codes must be set by client in admin panel before launch.
+ */
 export const DEFAULT_ANNOUNCEMENT = {
-  text: "Complimentary express delivery on orders above ₹999 | Use code VELAASH10 for 10% off",
-  link: "/collections/new-arrivals",
+  text: "Welcome to Velaash — New Arrivals Every Week",
+  link: "/shop",
 };
 
 export const CUSTOMER_SERVICE_LINKS = [

@@ -384,7 +384,7 @@ export function CustomerLoginForm() {
               isLoading={isLoading}
               disabled={fullName.trim().length < 2}
             >
-              Save & Enter Boutique
+              Save & Continue
             </Button>
           </form>
         )}
@@ -393,7 +393,7 @@ export function CustomerLoginForm() {
       <CardFooter className="bg-brand-cream/40 border-brand-border/60 border-t p-4 text-center">
         <p className="text-brand-dark/60 w-full font-sans text-[11px] leading-relaxed">
           Guest checkout is always welcome. Account sign-in is required only to view saved
-          addresses, track couture orders, or maintain your wishlist.
+          addresses, track your orders, or maintain your wishlist.
         </p>
       </CardFooter>
     </Card>

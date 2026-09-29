@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   description: BRAND.description,
   keywords: [
     "Velaash",
-    "Clothing Boutique",
+    "Contemporary Clothing",
     "Kurtas and Sets",
     "Designer Dresses",
     "Co-ord Sets",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: BRAND.legalName }],
   openGraph: {
-    title: `${BRAND.name} | Contemporary Clothing Boutique`,
+    title: `${BRAND.name} | Modern Everyday Luxury & Contemporary Clothing`,
     description: BRAND.description,
     siteName: BRAND.name,
     locale: "en_IN",

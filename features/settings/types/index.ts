@@ -37,9 +37,31 @@ export interface ReturnsPolicySetting {
   policy_description: string;
 }
 
+/**
+ * Top notification announcement bar
+ * TODO: Real promotions, coupons, or banners must be configured by client in admin before launch.
+ */
+export interface AnnouncementSetting {
+  is_enabled: boolean;
+  text: string;
+  link: string;
+}
+
+/**
+ * Payment and Cash-on-Delivery configuration
+ */
+export interface PaymentPolicySetting {
+  razorpay_enabled: boolean;
+  cod_enabled: boolean;
+  cod_max_order_value: number;
+  cod_handling_fee: number;
+}
+
 export interface SiteSettingsData {
   storeProfile: StoreProfileSetting;
   socialLinks: SocialLinksSetting;
   shippingPolicy: ShippingPolicySetting;
   returnsPolicy: ReturnsPolicySetting;
+  announcement: AnnouncementSetting;
+  paymentSettings: PaymentPolicySetting;
 }

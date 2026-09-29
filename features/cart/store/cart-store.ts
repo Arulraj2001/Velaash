@@ -1,8 +1,6 @@
-"use client";
-
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { CartItem } from "../types";
+import type { CartItem, AppliedCoupon } from "../types";
 
 export interface AddItemInput {
   productId: string;
@@ -18,14 +16,30 @@ export interface AddItemInput {
   maxStock?: number;
 }
 
+export interface SyncItemUpdate {
+  id: string;
+  currentPrice: number;
+  priceChanged: boolean;
+  availableStock: number;
+  isAvailable: boolean;
+  adjustedQuantity: number;
+  message?: string;
+}
+
 interface CartStoreState {
   items: CartItem[];
+  appliedCoupon: AppliedCoupon | null;
   lastAddedItem: CartItem | null;
   lastAddedTimestamp: number | null;
   isToastVisible: boolean;
   addItem: (item: AddItemInput, quantity?: number) => { success: boolean; addedItem: CartItem };
-  removeItem: (id: string) => void;
+  removeItem: (id: string) => CartItem | null;
+  restoreItem: (item: CartItem, index?: number) => void;
   updateQuantity: (id: string, quantity: number) => void;
+  updateItemDetails: (id: string, updates: Partial<CartItem>) => void;
+  syncValidatedItems: (validatedItems: SyncItemUpdate[]) => void;
+  setAppliedCoupon: (coupon: AppliedCoupon | null) => void;
+  removeAppliedCoupon: () => void;
   clearCart: () => void;
   dismissToast: () => void;
   getTotalItems: () => number;
@@ -36,6 +50,7 @@ export const useCartStore = create<CartStoreState>()(
   persist(
     (set, get) => ({
       items: [],
+      appliedCoupon: null,
       lastAddedItem: null,
       lastAddedTimestamp: null,
       isToastVisible: false,
@@ -55,6 +70,8 @@ export const useCartStore = create<CartStoreState>()(
             ...existing,
             quantity: newQuantity,
             price: itemInput.price, // ensure latest price
+            maxStock,
+            isAvailable: true,
           };
           updatedItems[existingIndex] = finalItem;
 
@@ -79,6 +96,7 @@ export const useCartStore = create<CartStoreState>()(
             image: itemInput.image,
             quantity: Math.min(quantity, maxStock),
             maxStock,
+            isAvailable: true,
           };
 
           set({
@@ -93,9 +111,27 @@ export const useCartStore = create<CartStoreState>()(
       },
 
       removeItem: (id) => {
-        set((state) => ({
-          items: state.items.filter((item) => item.id !== id),
-        }));
+        const currentItems = get().items;
+        const removedItem = currentItems.find((item) => item.id === id) || null;
+        set({
+          items: currentItems.filter((item) => item.id !== id),
+        });
+        return removedItem;
+      },
+
+      restoreItem: (item, index) => {
+        set((state) => {
+          if (state.items.some((i) => i.id === item.id)) {
+            return state;
+          }
+          const newItems = [...state.items];
+          if (typeof index === "number" && index >= 0 && index <= newItems.length) {
+            newItems.splice(index, 0, item);
+          } else {
+            newItems.push(item);
+          }
+          return { items: newItems };
+        });
       },
 
       updateQuantity: (id, quantity) => {
@@ -115,8 +151,43 @@ export const useCartStore = create<CartStoreState>()(
         }));
       },
 
+      updateItemDetails: (id, updates) => {
+        set((state) => ({
+          items: state.items.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+        }));
+      },
+
+      syncValidatedItems: (validatedItems) => {
+        set((state) => {
+          const updated = state.items.map((item) => {
+            const match = validatedItems.find((v) => v.id === item.id);
+            if (!match) return item;
+            return {
+              ...item,
+              price: match.currentPrice,
+              priceUpdated: match.priceChanged,
+              maxStock: match.availableStock,
+              isAvailable: match.isAvailable,
+              quantity: match.isAvailable
+                ? Math.max(1, Math.min(item.quantity, match.adjustedQuantity))
+                : item.quantity,
+              availabilityWarning: match.message,
+            };
+          });
+          return { items: updated };
+        });
+      },
+
+      setAppliedCoupon: (coupon) => {
+        set({ appliedCoupon: coupon });
+      },
+
+      removeAppliedCoupon: () => {
+        set({ appliedCoupon: null });
+      },
+
       clearCart: () => {
-        set({ items: [], lastAddedItem: null, isToastVisible: false });
+        set({ items: [], appliedCoupon: null, lastAddedItem: null, isToastVisible: false });
       },
 
       dismissToast: () => {
@@ -134,7 +205,10 @@ export const useCartStore = create<CartStoreState>()(
     {
       name: "velaash_guest_cart",
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ items: state.items }),
+      partialize: (state) => ({
+        items: state.items,
+        appliedCoupon: state.appliedCoupon,
+      }),
     }
   )
 );

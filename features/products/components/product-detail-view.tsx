@@ -144,7 +144,7 @@ export function ProductDetailView({
     typeof window !== "undefined"
       ? window.location.href
       : `https://velaash.com/products/${product.slug}`;
-  const whatsappQuery = `Hi Velaash! I am interested in ordering "${product.name}" (${currentUrl}) in ${selectedColor}, size ${selectedSize}. Could you share tailoring and delivery details?`;
+  const whatsappQuery = `Hi Velaash! I am interested in ordering "${product.name}" (${currentUrl}) in ${selectedColor}, size ${selectedSize}. Could you share availability and delivery details?`;
   const whatsappHref = `https://wa.me/918508643832?text=${encodeURIComponent(whatsappQuery)}`;
 
   return (

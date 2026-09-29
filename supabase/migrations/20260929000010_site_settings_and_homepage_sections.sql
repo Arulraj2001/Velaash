@@ -160,10 +160,10 @@ VALUES
     'announcement_bar',
     '{
       "is_enabled": true,
-      "text": "Complimentary Bespoke Fitting & Express Shipping across India",
-      "link": "#"
+      "text": "Welcome to Velaash — New Arrivals Every Week",
+      "link": "/shop"
     }'::jsonb,
-    'Top boutique notification banner text',
+    'Top notification banner text (client configurable in admin)',
     true
   ),
   (
@@ -180,8 +180,8 @@ VALUES
   (
     'seo_defaults',
     '{
-      "meta_title": "Velaash | Luxury Indian Designer Clothing & Couture",
-      "meta_description": "Exclusive Indian luxury clothing boutique celebrating timeless craftsmanship, royal silhouettes, and modern artistry."
+      "meta_title": "Velaash | Modern Everyday Luxury & Contemporary Clothing",
+      "meta_description": "Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe."
     }'::jsonb,
     'Default search engine meta tags',
     true
@@ -193,30 +193,30 @@ INSERT INTO public.homepage_sections (section_type, title, display_order, is_act
 VALUES
   (
     'hero_banner',
-    'Royal Autumn-Winter Couture Collection',
+    'Modern Everyday Luxury',
     1,
     true,
     '{
-      "headline": "Banarasi Silks & Royal Zardozi",
-      "subheading": "Handcrafted couture pieces woven with real golden threads.",
+      "headline": "Modern Everyday Luxury",
+      "subheading": "Effortless silhouettes and contemporary styles designed for everyday refinement.",
       "cta_label": "Explore Collection",
-      "cta_link": "/collections/bridal-festive",
-      "bg_image": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1600&q=80"
+      "cta_link": "/shop",
+      "bg_image": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1600&q=80"
     }'::jsonb
   ),
   (
     'category_grid',
-    'Signature Collections',
+    'Explore Categories',
     2,
     true,
     '{
       "layout": "grid-4",
-      "categories": ["sarees", "lehengas", "anarkalis", "pre-order-couture"]
+      "categories": ["kurtas-sets", "dresses", "co-ord-sets", "tops-tunics"]
     }'::jsonb
   ),
   (
     'featured_products',
-    'Curated Heirlooms',
+    'Featured Arrivals',
     3,
     true,
     '{
@@ -225,33 +225,16 @@ VALUES
     }'::jsonb
   ),
   (
-    'couture_spotlight',
-    'The Artisan Story',
+    'value_strip',
+    'Our Commitments',
     4,
     true,
     '{
-      "craft_title": "Centuries of Heritage in Every Thread",
-      "description": "Our master weavers in Varanasi and Kanchipuram spend up to 180 hours on each bespoke piece.",
-      "read_more_link": "/about"
-    }'::jsonb
-  ),
-  (
-    'testimonials',
-    'Voices of Royalty',
-    5,
-    true,
-    '{
       "items": [
-        {
-          "client_name": "Meera Singhania",
-          "city": "Mumbai",
-          "quote": "The bespoke bridal lehenga from Velaash was breathtaking. Every stitch exuded pure luxury."
-        },
-        {
-          "client_name": "Ananya Roy",
-          "city": "Kolkata",
-          "quote": "Pure gold zari work that felt like wearing an heirloom. Unmatched craftsmanship."
-        }
+        { "title": "Pan-India Delivery", "description": "Reliable shipping across India" },
+        { "title": "Easy Returns", "description": "Hassle-free return & exchange policy" },
+        { "title": "Secure Payments", "description": "100% encrypted & protected checkout" },
+        { "title": "WhatsApp Support", "description": "Personal assistance on +91 8508643832" }
       ]
     }'::jsonb
   )

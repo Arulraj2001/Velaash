@@ -162,7 +162,7 @@ export interface ProductQueryResult {
 }
 
 /**
- * Boutique Size Chart specifications
+ * Size Chart specifications
  */
 export interface SizeChartData {
   id?: string;

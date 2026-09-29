@@ -11,7 +11,7 @@ export const MOCK_CLOTHING_PRODUCTS: ProductListItem[] = [
     name: "Chanderi Embroidered Kurta Set",
     slug: "chanderi-embroidered-kurta-set",
     description:
-      "Handcrafted in breathable Chanderi cotton-silk with delicate golden zari neck detailing and coordinating palazzo.",
+      "Breathable Chanderi cotton blend with delicate embroidered neck detailing and coordinating palazzo.",
     category_id: "a1111111-1111-4111-a111-111111111111",
     category_name: "Kurtas & Sets",
     category_slug: "kurtas-sets",
@@ -426,10 +426,10 @@ export const MOCK_CLOTHING_PRODUCTS: ProductListItem[] = [
   },
   {
     id: "p2222222-2222-4222-b222-333333333333",
-    name: "Mulberry Silk Flared Maxi Dress",
-    slug: "mulberry-silk-flared-maxi-dress",
+    name: "Flared Woven Maxi Dress",
+    slug: "flared-woven-maxi-dress",
     description:
-      "Sumptuous silk twill falling effortlessly into a sweeping ankle-grazing silhouette for twilight soirees.",
+      "Flowing woven fabric falling effortlessly into a sweeping ankle-grazing silhouette for occasion wear.",
     category_id: "a2222222-2222-4222-a222-222222222222",
     category_name: "Dresses",
     category_slug: "dresses",
@@ -446,7 +446,7 @@ export const MOCK_CLOTHING_PRODUCTS: ProductListItem[] = [
         id: "img-dress-3a",
         image_url:
           "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=800&q=80",
-        alt_text: "Mulberry Silk Flared Maxi Dress",
+        alt_text: "Flared Woven Maxi Dress",
         is_primary: true,
         display_order: 1,
         color: "Dusty Rose",
@@ -455,7 +455,7 @@ export const MOCK_CLOTHING_PRODUCTS: ProductListItem[] = [
         id: "img-dress-3b",
         image_url:
           "https://images.unsplash.com/photo-1502716119720-b23a93e5fe1b?auto=format&fit=crop&w=800&q=80",
-        alt_text: "Mulberry Silk Flared Maxi Dress Back",
+        alt_text: "Flared Woven Maxi Dress Back",
         is_primary: false,
         display_order: 2,
         color: "Dusty Rose",
@@ -496,8 +496,8 @@ export const MOCK_CLOTHING_PRODUCTS: ProductListItem[] = [
   // 3. Co-ord Sets
   {
     id: "p3333333-3333-4333-b333-111111111111",
-    name: "Artisanal Linen Tunic & Palazzo Set",
-    slug: "artisanal-linen-tunic-palazzo-set",
+    name: "Pure Linen Tunic & Palazzo Set",
+    slug: "pure-linen-tunic-palazzo-set",
     description:
       "Structured split-neck tunic matched with high-waisted wide leg palazzos in breathable pure slub linen.",
     category_id: "a3333333-3333-4333-a333-333333333333",
@@ -516,7 +516,7 @@ export const MOCK_CLOTHING_PRODUCTS: ProductListItem[] = [
         id: "img-coord-1a",
         image_url:
           "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
-        alt_text: "Artisanal Linen Tunic & Palazzo Set",
+        alt_text: "Pure Linen Tunic & Palazzo Set",
         is_primary: true,
         display_order: 1,
         color: "Oatmeal",
@@ -525,7 +525,7 @@ export const MOCK_CLOTHING_PRODUCTS: ProductListItem[] = [
         id: "img-coord-1b",
         image_url:
           "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80",
-        alt_text: "Artisanal Linen Set Detail",
+        alt_text: "Pure Linen Set Detail",
         is_primary: false,
         display_order: 2,
         color: "Oatmeal",
@@ -1053,7 +1053,7 @@ export const MOCK_CLOTHING_PRODUCTS: ProductListItem[] = [
     name: "Organic Cotton Notch-Collar Lounge Set",
     slug: "organic-cotton-notch-collar-lounge-set",
     description:
-      "Silky soft 100% organic cotton set with piped notch lapels and drawstring matching pajama pants.",
+      "Soft and breathable 100% organic cotton set with piped notch lapels and drawstring matching pajama pants.",
     category_id: "a6666666-6666-4666-a666-666666666666",
     category_name: "Loungewear",
     category_slug: "loungewear",

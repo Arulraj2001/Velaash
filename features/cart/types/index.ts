@@ -14,18 +14,75 @@ export const CartItemSchema = z.object({
   image: z.string(),
   quantity: z.number().int().positive().max(10),
   maxStock: z.number().int().nonnegative().default(10),
-});
-
-export const CartSchema = z.object({
-  id: z.string().optional(),
-  userId: z.string().optional(),
-  items: z.array(CartItemSchema).default([]),
-  subtotal: z.number().nonnegative(),
-  tax: z.number().nonnegative().default(0),
-  shippingFee: z.number().nonnegative().default(0),
-  discount: z.number().nonnegative().default(0),
-  total: z.number().nonnegative(),
+  isAvailable: z.boolean().default(true),
+  availabilityWarning: z.string().optional(),
+  priceUpdated: z.boolean().optional(),
 });
 
 export type CartItem = z.infer<typeof CartItemSchema>;
-export type Cart = z.infer<typeof CartSchema>;
+
+export interface AppliedCoupon {
+  code: string;
+  discountType: "percentage" | "flat";
+  discountValue: number;
+  minOrderValue: number;
+  maxDiscountAmount?: number | null;
+  discountAmount: number;
+}
+
+export interface ShippingPolicyData {
+  free_shipping_threshold: number;
+  standard_shipping_fee: number;
+}
+
+/**
+ * Shared calculation output for client UI and future server-side checkout validation
+ */
+export interface CartCalculationResult {
+  subtotal: number;
+  discount: number;
+  shippingFee: number;
+  isFreeShipping: boolean;
+  amountNeededForFreeShipping: number;
+  freeShippingProgress: number; // 0 to 100
+  total: number;
+  appliedCoupon: AppliedCoupon | null;
+  couponError?: string | null;
+}
+
+export type CouponValidationResponse =
+  | {
+      success: true;
+      coupon: {
+        id: string;
+        code: string;
+        discountType: "percentage" | "flat";
+        discountValue: number;
+        minOrderValue: number;
+        maxDiscountAmount: number | null;
+      };
+      discountAmount: number;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+export interface RevalidatedCartItem {
+  id: string;
+  productId: string;
+  variantId: string;
+  currentPrice: number;
+  priceChanged: boolean;
+  availableStock: number;
+  isAvailable: boolean;
+  quantityAdjusted: boolean;
+  adjustedQuantity: number;
+  message?: string;
+}
+
+export interface RevalidateCartResponse {
+  items: RevalidatedCartItem[];
+  validatedCoupon: AppliedCoupon | null;
+  couponError?: string | null;
+}

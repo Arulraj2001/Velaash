@@ -30,7 +30,7 @@ export const DEFAULT_CLOTHING_SIZE_CHART: SizeChartData = {
     "Waist: Measure around your natural waistline, keeping the tape comfortably loose.",
     "Hips: Stand with feet together and measure around the fullest part of your hips.",
     "Length: Measured from high shoulder point straight down to hemline.",
-    "All garments include a 1.5-inch inner seam allowance for custom boutique alteration.",
+    "Measurements are garment dimensions. For a relaxed fit, select one size up.",
   ],
 };
 

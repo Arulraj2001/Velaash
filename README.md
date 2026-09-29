@@ -1,6 +1,6 @@
 # Velaash (VELAASH TRADER'S) — E-Commerce Platform
 
-A production-grade Next.js e-commerce architecture for **Velaash** (Legal entity: **VELAASH TRADER'S**), an exclusive Indian luxury clothing boutique celebrating timeless craftsmanship, royal silhouettes, and modern artistry.
+A production-grade Next.js e-commerce architecture for **Velaash** (Legal entity: **VELAASH TRADER'S**), offering modern everyday luxury and contemporary clothing.
 
 ---
 
@@ -25,7 +25,7 @@ All visual tokens are defined in [`tailwind.config.ts`](./tailwind.config.ts) an
 ### Color Tokens
 
 - **Primary Gold**: `#F2A900` (`brand.gold`) — Primary CTA buttons, active accents, focus rings.
-- **Deep Accent Gold/Brown**: `#CC6F00` (`brand.accent`) — Secondary highlights, boutique tags, hover states.
+- **Deep Accent Gold/Brown**: `#CC6F00` (`brand.accent`) — Secondary highlights, collection tags, hover states.
 - **Dark Brand Brown**: `#4D2A00` (`brand.dark`) — Headings, body typography, dark surfaces, luxury footer.
 - **Light Gold Background**: `#F9E6A8` (`brand.light`) — Soft card backgrounds, highlight chips, subtle borders.
 - **Near-White Cream Base**: `#FFFBF0` (`brand.cream`) — Default page background providing a serene luxury ambiance.
@@ -33,7 +33,7 @@ All visual tokens are defined in [`tailwind.config.ts`](./tailwind.config.ts) an
 
 ### Typography
 
-- **Heading / Display**: `Cormorant Garamond` (Google Font via `next/font/google`), capturing Indian boutique heritage.
+- **Heading / Display**: `Cormorant Garamond` (Google Font via `next/font/google`), capturing timeless elegance.
 - **Body / Interface**: `Plus Jakarta Sans` (Google Font via `next/font/google`), clean, crisp, and accessible.
 
 ### Reusable UI Primitives (`@/components/ui`)
@@ -43,7 +43,7 @@ All visual tokens are defined in [`tailwind.config.ts`](./tailwind.config.ts) an
 - `Card` (`CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`, hover elevation)
 - `Badge` (`default`, `accent`, `subtle`, `outline`, `dark` variants, size variants, icon slots)
 - `Container` (responsive centered container: `sm`, `md`, `lg`, `xl`, `full`)
-- `Section` (semantic section with vertical rhythm: `sm`, `md`, `lg`, `xl`, and boutique backgrounds)
+- `Section` (semantic section with vertical rhythm: `sm`, `md`, `lg`, `xl`, and warm background surfaces)
 
 ---
 
@@ -130,7 +130,7 @@ Velaash implements a strict separation between **Customer Authentication** and *
 ### 1. Customer Authentication (`/account/login`)
 
 - **Passwordless OTP + Google OAuth**: Built for an Instagram/WhatsApp-driven luxury customer base. Shoppers receive a 6-digit OTP code directly in their inbox or authenticate with Google in one tap. No forgotten passwords or friction.
-- **Guest Checkout Unlocked**: Shoppers can browse the entire collection, add boutique items to their bag, and complete checkout without ever being forced to register. Login is required exclusively to access the **Customer Account** (`/account/*`) to view order timelines, manage saved shipping addresses, or maintain personal wishlists.
+- **Guest Checkout Unlocked**: Shoppers can browse the entire collection, add items to their bag, and complete checkout without ever being forced to register. Login is required exclusively to access the **Customer Account** (`/account/*`) to view order timelines, manage saved shipping addresses, or maintain personal wishlists.
 - **Automatic Customer Provisioning**: Successful sign-up seamlessly provisions or updates a corresponding record in the Postgres `customers` table with their full name and contact information.
 - **Protected Customer Routes**: `/account/*` routes are protected by Next.js middleware, automatically redirecting unauthenticated visitors to `/account/login?returnUrl=...`.
 

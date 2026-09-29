@@ -10,7 +10,17 @@ const subscribe = (callback: () => void) => {
   return () => window.removeEventListener("storage", callback);
 };
 
-export function AnnouncementBar() {
+interface AnnouncementBarProps {
+  text?: string;
+  link?: string;
+  isEnabled?: boolean;
+}
+
+export function AnnouncementBar({
+  text = DEFAULT_ANNOUNCEMENT.text,
+  link = DEFAULT_ANNOUNCEMENT.link,
+  isEnabled = true,
+}: AnnouncementBarProps) {
   const isServerOrDismissed = React.useSyncExternalStore(
     subscribe,
     () => sessionStorage.getItem("velaash_announcement_dismissed") === "true",
@@ -29,7 +39,7 @@ export function AnnouncementBar() {
     }
   };
 
-  if (isDismissed) {
+  if (!isEnabled || isDismissed) {
     return null;
   }
 
@@ -41,10 +51,10 @@ export function AnnouncementBar() {
       <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 pr-6 pl-2 sm:px-8">
         <Sparkles className="text-brand-gold hidden h-3.5 w-3.5 shrink-0 sm:inline" />
         <Link
-          href={DEFAULT_ANNOUNCEMENT.link}
+          href={link}
           className="truncate text-[11px] tracking-wider uppercase transition-all hover:underline sm:text-xs"
         >
-          {DEFAULT_ANNOUNCEMENT.text}
+          {text}
         </Link>
       </div>
 
