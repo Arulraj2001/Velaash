@@ -12,7 +12,15 @@ import { DEFAULT_CLOTHING_CATEGORIES } from "@/features/navigation/queries/get-n
 const PAGE_SIZE_DEFAULT = 12;
 
 /**
- * Helper to extract available filter facets from a list of products
+ * Checks if the current environment is running with placeholder/offline Supabase credentials
+ */
+function isPlaceholderEnvironment(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  return url.includes("placeholder-project") || url.includes("example.com");
+}
+
+/**
+ * Helper to compute available filter facets across all matching category inventory
  */
 function computeAvailableFilters(allProducts: ProductListItem[]): AvailableFiltersFacet {
   const categoryMap = new Map<string, { name: string; slug: string; count: number }>();
@@ -22,7 +30,6 @@ function computeAvailableFilters(allProducts: ProductListItem[]): AvailableFilte
   let maxPrice = -Infinity;
 
   for (const product of allProducts) {
-    // Categories
     if (product.category_slug && product.category_name) {
       const existing = categoryMap.get(product.category_slug);
       if (existing) {
@@ -36,12 +43,10 @@ function computeAvailableFilters(allProducts: ProductListItem[]): AvailableFilte
       }
     }
 
-    // Sizes
     for (const size of product.sizes) {
       sizeMap.set(size, (sizeMap.get(size) || 0) + 1);
     }
 
-    // Colors
     for (const c of product.colors) {
       const existing = colorMap.get(c.color);
       if (existing) {
@@ -51,12 +56,10 @@ function computeAvailableFilters(allProducts: ProductListItem[]): AvailableFilte
       }
     }
 
-    // Prices
     if (product.base_price < minPrice) minPrice = product.base_price;
     if (product.base_price > maxPrice) maxPrice = product.base_price;
   }
 
-  // Standard size ordering
   const standardSizeOrder = ["XS", "S", "M", "L", "XL", "XXL", "Free Size"];
   const sortedSizes = Array.from(sizeMap.entries())
     .sort((a, b) => {
@@ -85,18 +88,18 @@ function computeAvailableFilters(allProducts: ProductListItem[]): AvailableFilte
 }
 
 /**
- * Filter, sort, and paginate products in-memory (resilient fallback or post-fetch)
+ * In-memory fallback filter/sort ONLY used during offline development or placeholder testing
  */
-function applyFiltersAndSort(
+function applyMockFallbackFilters(
   products: ProductListItem[],
   params: ProductFilterParams
 ): { filtered: ProductListItem[]; availableFilters: AvailableFiltersFacet } {
-  // First compute available filters across the entire active inventory for this category scope
   const now = Date.now();
   let scope = products.map((p) => ({
     ...p,
     is_new: p.is_new ?? now - new Date(p.created_at).getTime() <= 30 * 24 * 60 * 60 * 1000,
   }));
+
   if (params.category) {
     const catLower = params.category.toLowerCase();
     scope = scope.filter(
@@ -107,10 +110,8 @@ function applyFiltersAndSort(
   }
   const availableFilters = computeAvailableFilters(scope);
 
-  // Now apply user filters
   let result = [...scope];
 
-  // Size filter
   if (params.size && params.size.length > 0) {
     const targetSizes = params.size.map((s) => s.toLowerCase());
     result = result.filter((p) =>
@@ -118,7 +119,6 @@ function applyFiltersAndSort(
     );
   }
 
-  // Color filter
   if (params.color && params.color.length > 0) {
     const targetColors = params.color.map((c) => c.toLowerCase());
     result = result.filter((p) =>
@@ -126,7 +126,6 @@ function applyFiltersAndSort(
     );
   }
 
-  // Price range
   if (params.minPrice !== undefined && !isNaN(params.minPrice)) {
     result = result.filter((p) => p.base_price >= (params.minPrice as number));
   }
@@ -134,12 +133,10 @@ function applyFiltersAndSort(
     result = result.filter((p) => p.base_price <= (params.maxPrice as number));
   }
 
-  // In Stock only
   if (params.inStock) {
     result = result.filter((p) => p.total_stock > 0);
   }
 
-  // Sorting
   const sort = params.sort || "featured";
   result.sort((a, b) => {
     switch (sort) {
@@ -164,7 +161,7 @@ function applyFiltersAndSort(
 }
 
 /**
- * Fetch category metadata by slug
+ * Fetch category metadata by slug directly from Postgres
  */
 export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMetadata | null> {
   try {
@@ -176,7 +173,14 @@ export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMe
       .eq("is_active", true)
       .maybeSingle();
 
-    if (data && !error) {
+    if (error) {
+      if (!isPlaceholderEnvironment() && !error.message?.includes("fetch failed")) {
+        console.error("Database error in getCategoryBySlug:", error);
+        throw new Error(`Database error fetching category: ${error.message}`);
+      }
+    }
+
+    if (data) {
       let parentName: string | null = null;
       let parentSlug: string | null = null;
 
@@ -215,7 +219,7 @@ export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMe
     }
   }
 
-  // Fallback to default clothing categories tree
+  // Fallback to static category hierarchy during build/mock preview
   for (const cat of DEFAULT_CLOTHING_CATEGORIES) {
     if (cat.slug === slug) {
       return {
@@ -250,12 +254,17 @@ export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMe
 
 /**
  * Primary server-side query function for the product listing and catalog pages
+ *
+ * Pushes down all filtering (category, size, color, price range, stock status),
+ * sorting (.order()), and pagination (.range()) directly to the Postgres database.
  */
 export async function getProducts(params: ProductFilterParams = {}): Promise<ProductQueryResult> {
   const page = Math.max(1, Number(params.page) || 1);
   const limit = Math.max(1, Number(params.limit) || PAGE_SIZE_DEFAULT);
-  let categoryMeta: ProductCategoryMetadata | null = null;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
+  let categoryMeta: ProductCategoryMetadata | null = null;
   if (params.category) {
     categoryMeta = await getCategoryBySlug(params.category);
   }
@@ -263,8 +272,102 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
   try {
     const supabase = await createClient();
 
-    // Query active products from Supabase
-    const query = supabase
+    // 1. DATABASE-LEVEL CATEGORY RESOLUTION
+    let targetCategoryIds: string[] | null = null;
+    if (params.category) {
+      const { data: allCategories, error: catErr } = await supabase
+        .from("categories")
+        .select("id, slug, parent_id")
+        .eq("is_active", true);
+
+      if (catErr && !isPlaceholderEnvironment() && !catErr.message?.includes("fetch failed")) {
+        console.error("Database error querying categories:", catErr);
+        throw new Error(`Database error fetching categories: ${catErr.message}`);
+      }
+
+      if (allCategories && allCategories.length > 0) {
+        const currentCat = allCategories.find(
+          (c) => c.slug.toLowerCase() === params.category?.toLowerCase()
+        );
+
+        if (currentCat) {
+          const childIds = allCategories
+            .filter((c) => c.parent_id === currentCat.id)
+            .map((c) => c.id);
+          targetCategoryIds = [currentCat.id, ...childIds];
+        } else {
+          // Category slug does not exist in database
+          return {
+            products: [],
+            totalCount: 0,
+            page,
+            pageSize: limit,
+            totalPages: 0,
+            category: categoryMeta,
+            availableFilters: {
+              categories: [],
+              sizes: [],
+              colors: [],
+              priceRange: { min: 0, max: 10000 },
+            },
+          };
+        }
+      }
+    }
+
+    // 2. DATABASE-LEVEL VARIANT FILTERING (SIZE & COLOR)
+    // Queries product_variants directly in Postgres to find matching product IDs
+    let matchingProductIds: string[] | null = null;
+    const hasSizeFilter = params.size && params.size.length > 0;
+    const hasColorFilter = params.color && params.color.length > 0;
+
+    if (hasSizeFilter || hasColorFilter) {
+      let variantQuery = supabase
+        .from("product_variants")
+        .select("product_id")
+        .eq("is_active", true);
+
+      if (hasSizeFilter) {
+        variantQuery = variantQuery.in("size", params.size!);
+      }
+      if (hasColorFilter) {
+        variantQuery = variantQuery.in("color", params.color!);
+      }
+
+      const { data: matchedVariants, error: variantErr } = await variantQuery;
+
+      if (
+        variantErr &&
+        !isPlaceholderEnvironment() &&
+        !variantErr.message?.includes("fetch failed")
+      ) {
+        console.error("Database error querying product_variants:", variantErr);
+        throw new Error(`Database error filtering variants: ${variantErr.message}`);
+      }
+
+      matchingProductIds = Array.from(new Set((matchedVariants || []).map((v) => v.product_id)));
+
+      // If variant filter matched 0 products in Postgres, return 0 results immediately
+      if (matchingProductIds.length === 0) {
+        return {
+          products: [],
+          totalCount: 0,
+          page,
+          pageSize: limit,
+          totalPages: 0,
+          category: categoryMeta,
+          availableFilters: {
+            categories: [],
+            sizes: [],
+            colors: [],
+            priceRange: { min: 0, max: 10000 },
+          },
+        };
+      }
+    }
+
+    // 3. DATABASE-LEVEL PRODUCT QUERY WITH SQL WHERE, ORDER BY, AND RANGE()
+    let query = supabase
       .from("products")
       .select(
         `
@@ -307,14 +410,80 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
           rating,
           is_approved
         )
-      `
+      `,
+        { count: "exact" }
       )
       .eq("is_active", true);
 
-    const { data: dbProducts, error } = await query;
+    // Apply SQL WHERE: category_id IN (...)
+    if (targetCategoryIds && targetCategoryIds.length > 0) {
+      query = query.in("category_id", targetCategoryIds);
+    }
 
+    // Apply SQL WHERE: id IN (matchingProductIds)
+    if (matchingProductIds && matchingProductIds.length > 0) {
+      query = query.in("id", matchingProductIds);
+    }
+
+    // Apply SQL WHERE: base_price >= minPrice
+    if (params.minPrice !== undefined && !isNaN(params.minPrice)) {
+      query = query.gte("base_price", params.minPrice);
+    }
+
+    // Apply SQL WHERE: base_price <= maxPrice
+    if (params.maxPrice !== undefined && !isNaN(params.maxPrice)) {
+      query = query.lte("base_price", params.maxPrice);
+    }
+
+    // Apply SQL WHERE: stock_status != 'out_of_stock'
+    if (params.inStock) {
+      query = query.neq("stock_status", "out_of_stock");
+    }
+
+    // Apply SQL ORDER BY at the database level
+    switch (params.sort) {
+      case "price-asc":
+        query = query.order("base_price", { ascending: true });
+        break;
+      case "price-desc":
+        query = query.order("base_price", { ascending: false });
+        break;
+      case "newest":
+        query = query.order("created_at", { ascending: false });
+        break;
+      case "featured":
+      default:
+        query = query
+          .order("is_featured", { ascending: false })
+          .order("created_at", { ascending: false });
+        break;
+    }
+
+    // Apply SQL PAGINATION at the database level via .range(from, to)
+    query = query.range(from, to);
+
+    // Execute the database query
+    const { data: dbProducts, count, error } = await query;
+
+    // Check for real database errors (never mask real schema or permission failures)
+    if (error) {
+      const isPlaceholderOrNetwork =
+        isPlaceholderEnvironment() ||
+        error.message?.includes("fetch failed") ||
+        error.message?.includes("ENOTFOUND");
+
+      if (!isPlaceholderOrNetwork) {
+        console.error("Database query failed in getProducts:", error);
+        throw new Error(`Database query failed: ${error.message} (${error.code || "UNKNOWN"})`);
+      }
+    }
+
+    // When real database products are returned from Postgres
     if (!error && dbProducts && dbProducts.length > 0) {
-      // Map Supabase rows to ProductListItem
+      const totalCount = count !== null ? count : dbProducts.length;
+      const totalPages = Math.ceil(totalCount / limit) || 1;
+      const now = Date.now();
+
       const mappedProducts: ProductListItem[] = dbProducts.map((p) => {
         const variants = (p.product_variants || []).filter((v) => v.is_active);
         const images = (p.product_images || []).sort(
@@ -328,7 +497,6 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
             ? Number((totalRating / approvedReviews.length).toFixed(1))
             : null;
 
-        // Unique colors
         const colorMap = new Map<string, string>();
         for (const v of variants) {
           if (v.color && !colorMap.has(v.color)) {
@@ -351,7 +519,6 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
 
         const sizes = Array.from(new Set(variants.map((v) => v.size)));
         const totalStock = variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0);
-
         const categoryData = Array.isArray(p.categories) ? p.categories[0] : p.categories;
 
         return {
@@ -367,7 +534,7 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
           created_at: p.created_at,
           is_active: p.is_active,
           is_featured: p.is_featured,
-          is_new: Date.now() - new Date(p.created_at).getTime() <= 30 * 24 * 60 * 60 * 1000,
+          is_new: now - new Date(p.created_at).getTime() <= 30 * 24 * 60 * 60 * 1000,
           stock_status: p.stock_status,
           images,
           variants,
@@ -378,19 +545,32 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
         };
       });
 
-      const { filtered, availableFilters } = applyFiltersAndSort(mappedProducts, params);
-      const totalCount = filtered.length;
-      const totalPages = Math.ceil(totalCount / limit) || 1;
-      const paginated = filtered.slice((page - 1) * limit, page * limit);
-
       return {
-        products: paginated,
+        products: mappedProducts,
         totalCount,
         page,
         pageSize: limit,
         totalPages,
         category: categoryMeta,
-        availableFilters,
+        availableFilters: computeAvailableFilters(mappedProducts),
+      };
+    }
+
+    // If query executed against real connected database and returned 0 rows
+    if (!error && dbProducts && dbProducts.length === 0) {
+      return {
+        products: [],
+        totalCount: 0,
+        page,
+        pageSize: limit,
+        totalPages: 0,
+        category: categoryMeta,
+        availableFilters: {
+          categories: [],
+          sizes: [],
+          colors: [],
+          priceRange: { min: 0, max: 10000 },
+        },
       };
     }
   } catch (err: unknown) {
@@ -402,10 +582,18 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
     ) {
       throw err;
     }
+
+    // If it's a real thrown error from the database check above, rethrow it
+    if (
+      err instanceof Error &&
+      (err.message.startsWith("Database query failed") || err.message.startsWith("Database error"))
+    ) {
+      throw err;
+    }
   }
 
-  // Graceful fallback to mock dataset
-  const { filtered, availableFilters } = applyFiltersAndSort(MOCK_CLOTHING_PRODUCTS, params);
+  // Graceful degradation ONLY when Supabase project URL is a placeholder or connection is offline
+  const { filtered, availableFilters } = applyMockFallbackFilters(MOCK_CLOTHING_PRODUCTS, params);
   const totalCount = filtered.length;
   const totalPages = Math.ceil(totalCount / limit) || 1;
   const paginated = filtered.slice((page - 1) * limit, page * limit);
