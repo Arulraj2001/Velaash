@@ -1,4 +1,5 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { env } from "@/lib/env";
 import type { Database } from "@/types/database.types";
@@ -7,10 +8,10 @@ import type { Database } from "@/types/database.types";
  * Creates a server-side Supabase client with Next.js App Router cookie handling.
  * Used inside Server Components, Route Handlers, and Server Actions.
  */
-export async function createClient() {
+export async function createClient(): Promise<SupabaseClient<Database>> {
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(
+  const client = createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
@@ -31,4 +32,6 @@ export async function createClient() {
       },
     }
   );
+
+  return client as unknown as SupabaseClient<Database>;
 }

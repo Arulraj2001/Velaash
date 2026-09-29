@@ -2,7 +2,8 @@ import * as React from "react";
 import Link from "next/link";
 import { BRAND, NAV_LINKS } from "@/lib/constants";
 import { Container } from "@/components/ui/container";
-import { Search, ShoppingBag, User, Heart, Menu } from "lucide-react";
+import { Search, ShoppingBag, Heart, Menu } from "lucide-react";
+import { AccountHeaderButton } from "./account-header-button";
 
 export function Header() {
   return (
@@ -67,13 +68,10 @@ export function Header() {
             >
               <Heart className="h-5 w-5" />
             </button>
-            <button
-              type="button"
-              className="text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-              aria-label="Account profile"
-            >
-              <User className="h-5 w-5" />
-            </button>
+
+            {/* Dynamic Real-time Patron Account Button */}
+            <AccountHeaderButton />
+
             <button
               type="button"
               className="text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold relative rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"

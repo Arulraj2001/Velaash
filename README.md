@@ -123,6 +123,28 @@ Open [http://localhost:3000](http://localhost:3000) to view the design system sh
 
 ---
 
+## 🔐 Authentication Architecture
+
+Velaash implements a strict separation between **Customer Authentication** and **Admin Authentication**:
+
+### 1. Customer Authentication (`/account/login`)
+
+- **Passwordless OTP + Google OAuth**: Built for an Instagram/WhatsApp-driven luxury customer base. Shoppers receive a 6-digit OTP code directly in their inbox or authenticate with Google in one tap. No forgotten passwords or friction.
+- **Guest Checkout Unlocked**: Shoppers can browse the entire collection, add couture items to the bag, and complete checkout without ever being forced to register. Login is required exclusively to access the **Patron Sanctuary** (`/account/*`) to view order stitching timelines, manage saved shipping addresses, or maintain personal wishlists.
+- **Automatic Customer Provisioning**: Successful sign-up seamlessly provisions or updates a corresponding record in the Postgres `customers` table with their full name and contact information.
+- **Protected Customer Routes**: `/account/*` routes are protected by Next.js middleware, automatically redirecting unauthenticated visitors to `/account/login?returnUrl=...`.
+
+### 2. Admin Authentication (`/admin/login`)
+
+- **Separate, Undiscoverable Gate**: Located strictly at `/admin/login` with `noindex, nofollow` robot directives and completely absent from all public headers, footers, and sitemaps.
+- **Email + Master Password**: Admin operations require instant, highly dependable access without waiting for email delivery cycles.
+- **Strict RBAC Verification (`is_admin()`)**: Authenticating against Supabase Auth is only step one. The server action and middleware verify that the user's UUID exists in the `public.admin_users` table. If a customer attempts to sign in via the admin gate, they are immediately signed out and returned a generic _"Access denied. Invalid credentials"_ error, preventing email enumeration.
+- **Middleware Fortress**: Any unauthenticated or non-admin user attempting to access any `/admin/*` route is intercepted by middleware and redirected to `/admin/login`.
+- **Role Hierarchy (`owner` vs `staff`)**: Differentiates operational staff (orders, catalog view) from store proprietors (`owner`), who retain exclusive rights over destructive catalog actions, admin provisioning, and financial settings.
+- **Brute-Force Throttling**: In-process attempt rate limiter locks access for 15 minutes after 5 consecutive failed attempts per IP/email (architected for Upstash Redis expansion).
+
+---
+
 ## 🛠 Available Scripts
 
 - `pnpm dev` — Start the Next.js development server with Turbopack

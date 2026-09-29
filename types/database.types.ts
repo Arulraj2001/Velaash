@@ -31,7 +31,7 @@ export type HomepageSectionType =
   | "couture_spotlight"
   | "custom_html";
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       admin_users: {
@@ -852,7 +852,7 @@ export interface Database {
     };
     CompositeTypes: Record<string, never>;
   };
-}
+};
 
 export type Tables<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Row"];

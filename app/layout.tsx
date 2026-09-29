@@ -4,6 +4,8 @@ import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { BRAND } from "@/lib/constants";
+import { AuthProvider } from "@/features/auth/components/auth-provider";
+import { createClient } from "@/lib/supabase/server";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -44,13 +46,34 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  let initialUser = null;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    initialUser = user;
+  } catch (error: unknown) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "digest" in error &&
+      (error as { digest: string }).digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
+    initialUser = null;
+  }
+
   return (
     <html lang="en" className={`${cormorant.variable} ${plusJakarta.variable} scroll-smooth`}>
       <body className="bg-brand-cream text-brand-dark selection:bg-brand-gold selection:text-brand-dark flex min-h-screen flex-col font-sans antialiased">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <AuthProvider initialUser={initialUser}>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );
