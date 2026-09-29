@@ -1,20 +1,24 @@
 import { z } from "zod";
 
 export const CartItemSchema = z.object({
-  id: z.string().uuid(),
-  productId: z.string().uuid(),
-  variantId: z.string().uuid(),
+  id: z.string(),
+  productId: z.string(),
+  variantId: z.string(),
   title: z.string(),
+  slug: z.string(),
   size: z.string(),
   color: z.string(),
-  price: z.number().positive(),
-  image: z.string().url(),
+  colorHex: z.string().optional(),
+  price: z.number().nonnegative(),
+  compareAtPrice: z.number().nonnegative().optional().nullable(),
+  image: z.string(),
   quantity: z.number().int().positive().max(10),
+  maxStock: z.number().int().nonnegative().default(10),
 });
 
 export const CartSchema = z.object({
-  id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
+  id: z.string().optional(),
+  userId: z.string().optional(),
   items: z.array(CartItemSchema).default([]),
   subtotal: z.number().nonnegative(),
   tax: z.number().nonnegative().default(0),

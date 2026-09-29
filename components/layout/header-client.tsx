@@ -11,6 +11,7 @@ import { HeaderNav } from "./header-nav";
 import { SearchOverlay } from "./search-overlay";
 import { MobileNavDrawer } from "./mobile-nav-drawer";
 import { AccountHeaderButton } from "./account-header-button";
+import { useCartCount } from "@/features/cart";
 
 interface HeaderClientProps {
   categories: NavigationCategory[];
@@ -22,6 +23,7 @@ export function HeaderClient({ categories, whatsappNumber, whatsappUrl }: Header
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const { count: cartCount } = useCartCount();
 
   // Shrink header slightly on scroll with smooth transitions
   React.useEffect(() => {
@@ -121,12 +123,12 @@ export function HeaderClient({ categories, whatsappNumber, whatsappUrl }: Header
               <Link
                 href="/cart"
                 className="text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold relative rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                aria-label="Shopping bag containing 0 items"
+                aria-label={`Shopping bag containing ${cartCount} items`}
                 title="Bag"
               >
                 <ShoppingBag className="h-5 w-5" />
                 <span className="bg-brand-gold text-brand-dark absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold shadow-sm">
-                  0
+                  {cartCount}
                 </span>
               </Link>
             </div>

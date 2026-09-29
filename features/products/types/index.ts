@@ -160,3 +160,63 @@ export interface ProductQueryResult {
   category?: ProductCategoryMetadata | null;
   availableFilters: AvailableFiltersFacet;
 }
+
+/**
+ * Boutique Size Chart specifications
+ */
+export interface SizeChartData {
+  id?: string;
+  name: string;
+  measurement_unit: "inches" | "cm";
+  headers: string[];
+  rows: Record<string, string>[];
+  tips?: string[];
+}
+
+/**
+ * Individual customer review for PDP
+ */
+export interface ProductReviewItem {
+  id: string;
+  customer_name: string;
+  rating: number;
+  title?: string | null;
+  comment: string;
+  is_verified_purchase: boolean;
+  is_approved: boolean;
+  created_at: string;
+}
+
+/**
+ * Review metrics & star breakdown
+ */
+export interface ProductReviewBreakdown {
+  average: number;
+  totalCount: number;
+  counts: { 1: number; 2: number; 3: number; 4: number; 5: number };
+  percentages: { 1: number; 2: number; 3: number; 4: number; 5: number };
+}
+
+/**
+ * Comprehensive Product Detail item for /products/[slug]
+ */
+export interface ProductDetailItem extends ProductListItem {
+  fabric?: string | null;
+  care_instructions?: string | null;
+  craftsmanship?: string | null;
+  is_made_to_order?: boolean;
+  weight_grams?: number | null;
+  length_cm?: number | null;
+  width_cm?: number | null;
+  height_cm?: number | null;
+  hsn_code?: string | null;
+  gst_rate?: number;
+  blouse_included?: boolean;
+  saree_length_meters?: number | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  seo_keywords?: string[];
+  size_chart?: SizeChartData | null;
+  reviews_breakdown: ProductReviewBreakdown;
+  reviews: ProductReviewItem[];
+}

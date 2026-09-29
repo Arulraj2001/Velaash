@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { BRAND } from "@/lib/constants";
 import { AuthProvider } from "@/features/auth/components/auth-provider";
 import { createClient } from "@/lib/supabase/server";
+import { CartToast } from "@/features/cart";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -73,6 +74,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <CartToast />
         </AuthProvider>
       </body>
     </html>
