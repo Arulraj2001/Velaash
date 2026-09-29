@@ -87,7 +87,7 @@ export function ContactInfoStep({
           {errors.contact?.phone && (
             <p className="mt-1 text-[11px] text-red-600">{errors.contact.phone.message}</p>
           )}
-          <p className="mt-1 text-[11px] text-brand-dark/50">Used for courier delivery updates via SMS.</p>
+          <p className="mt-1 text-[11px] text-brand-dark/50">Used for courier delivery updates.</p>
         </div>
       </div>
 

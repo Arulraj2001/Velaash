@@ -45,7 +45,7 @@ export const PaymentFailedEmail = ({
             <Text style={textStyle}>Dear {customerName},</Text>
             <Text style={textStyle}>
               We noticed that your recent online payment attempt for order{" "}
-              <strong style={{ color: "#1A1A1A" }}>{orderNumber}</strong> of ₹
+              <strong style={{ color: "#4D2A00" }}>{orderNumber}</strong> of ₹
               {totalAmount.toLocaleString("en-IN")} was not completed successfully.
             </Text>
 
@@ -56,8 +56,8 @@ export const PaymentFailedEmail = ({
             </Section>
 
             <Text style={textStyle}>
-              Don&apos;t worry — your selected items have not been lost. You can securely retry your
-              payment now or select another payment option such as UPI, Netbanking, or another card.
+              Your selected items have been kept in your order. You can securely retry your payment
+              now or select another payment option such as UPI, Netbanking, or another card.
             </Text>
 
             {/* CTA Button */}
@@ -70,32 +70,31 @@ export const PaymentFailedEmail = ({
             <Hr style={dividerStyle} />
 
             {/* Reassurance Notice */}
-            <Text style={noteTextStyle}>
-              <strong>Was your account debited?</strong> In the rare event that money was deducted
-              from your account despite this failure notice, banks typically reverse the funds
-              automatically within 3 to 5 business days.
-            </Text>
-            <Text style={noteTextStyle}>
-              If the amount is not reversed or you need immediate assistance, please reply directly
-              to this email or reach us at{" "}
-              <Link href="mailto:support@velaash.com" style={{ color: "#8E3A59" }}>
-                support@velaash.com
-              </Link>{" "}
-              with your order reference <strong>{orderNumber}</strong>.
-            </Text>
+            <Section style={supportContainerStyle}>
+              <Text style={noteTextStyle}>
+                <strong>Was your account debited?</strong> In the event that money was deducted from
+                your account despite this failure notice, banks typically reverse the funds
+                automatically within 3 to 5 business days.
+              </Text>
+              <Text style={{ ...noteTextStyle, marginBottom: 0 }}>
+                If the amount is not reversed or you need assistance, please contact us at{" "}
+                <Link href="mailto:support@velaash.com" style={{ color: "#CC6F00" }}>
+                  support@velaash.com
+                </Link>{" "}
+                with your order reference <strong>{orderNumber}</strong>.
+              </Text>
+            </Section>
           </Section>
 
           {/* Footer */}
           <Section style={footerSectionStyle}>
             <Text style={footerTextStyle}>
               Need assistance? Email us at{" "}
-              <Link href="mailto:support@velaash.com" style={{ color: "#8E3A59" }}>
+              <Link href="mailto:support@velaash.com" style={{ color: "#CC6F00" }}>
                 support@velaash.com
               </Link>
             </Text>
-            <Text style={legalTextStyle}>
-              VELAASH TRADER&apos;S • Authentic Ready-to-Wear Elegance
-            </Text>
+            <Text style={legalTextStyle}>VELAASH TRADER&apos;S</Text>
           </Section>
         </Container>
       </Body>
@@ -106,7 +105,7 @@ export const PaymentFailedEmail = ({
 export default PaymentFailedEmail;
 
 const mainStyle: React.CSSProperties = {
-  backgroundColor: "#F7F5F0",
+  backgroundColor: "#FFFBF0",
   fontFamily:
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
   padding: "24px 0",
@@ -118,25 +117,26 @@ const containerStyle: React.CSSProperties = {
   maxWidth: "600px",
   borderRadius: "8px",
   overflow: "hidden",
-  border: "1px solid #EAE5DE",
+  border: "1px solid #E8DCC2",
 };
 
 const headerSectionStyle: React.CSSProperties = {
-  backgroundColor: "#1A1A1A",
+  backgroundColor: "#4D2A00",
   padding: "28px 24px",
   textAlign: "center",
 };
 
 const brandLogoStyle: React.CSSProperties = {
-  color: "#FDFBF7",
-  fontSize: "24px",
+  color: "#FFFBF0",
+  fontFamily: "'Cormorant Garamond', Georgia, serif",
+  fontSize: "26px",
   fontWeight: "700",
   letterSpacing: "4px",
   margin: 0,
 };
 
 const brandSubtitleStyle: React.CSSProperties = {
-  color: "#C9A86A",
+  color: "#F2A900",
   fontSize: "11px",
   fontWeight: "600",
   letterSpacing: "2px",
@@ -149,7 +149,8 @@ const contentSectionStyle: React.CSSProperties = {
 
 const headingStyle: React.CSSProperties = {
   color: "#991B1B", // Warning dark red
-  fontSize: "20px",
+  fontFamily: "'Cormorant Garamond', Georgia, serif",
+  fontSize: "22px",
   fontWeight: "600",
   margin: "0 0 12px 0",
 };
@@ -190,7 +191,7 @@ const ctaSectionStyle: React.CSSProperties = {
 };
 
 const buttonStyle: React.CSSProperties = {
-  backgroundColor: "#8E3A59",
+  backgroundColor: "#CC6F00",
   color: "#FFFFFF",
   padding: "12px 28px",
   fontSize: "13px",
@@ -202,8 +203,16 @@ const buttonStyle: React.CSSProperties = {
 };
 
 const dividerStyle: React.CSSProperties = {
-  borderColor: "#EAE5DE",
+  borderColor: "#E8DCC2",
   margin: "24px 0",
+};
+
+const supportContainerStyle: React.CSSProperties = {
+  backgroundColor: "#FFFBF0",
+  border: "1px solid #F9E6A8",
+  borderRadius: "6px",
+  padding: "12px 16px",
+  margin: "16px 0",
 };
 
 const noteTextStyle: React.CSSProperties = {
@@ -214,10 +223,10 @@ const noteTextStyle: React.CSSProperties = {
 };
 
 const footerSectionStyle: React.CSSProperties = {
-  backgroundColor: "#FDFBF7",
+  backgroundColor: "#FFFBF0",
   padding: "20px 24px",
   textAlign: "center",
-  borderTop: "1px solid #EAE5DE",
+  borderTop: "1px solid #E8DCC2",
 };
 
 const footerTextStyle: React.CSSProperties = {

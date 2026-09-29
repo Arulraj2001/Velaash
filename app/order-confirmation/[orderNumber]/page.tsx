@@ -247,7 +247,7 @@ export default async function OrderConfirmationPage({
                     <span className="text-xs font-semibold text-brand-dark">Quality Check</span>
                   </div>
                   <p className="text-[11px] text-brand-dark/60 leading-tight">
-                    Hand-inspected & gift packaged.
+                    Your order is checked and prepared for dispatch.
                   </p>
                 </div>
 
@@ -260,7 +260,7 @@ export default async function OrderConfirmationPage({
                     <span className="text-xs font-semibold text-brand-dark/70">Dispatched</span>
                   </div>
                   <p className="text-[11px] text-brand-dark/60 leading-tight">
-                    Handed to courier with tracking SMS.
+                    Handed to courier with tracking details.
                   </p>
                 </div>
 
@@ -287,9 +287,10 @@ export default async function OrderConfirmationPage({
                   <span>Items Ordered ({order.items.length})</span>
                 </span>
                 <span className="text-xs font-normal text-brand-dark/60 lowercase">
-                  all items quality checked
+                  review your selections
                 </span>
               </h2>
+
 
               <div className="divide-y divide-brand-border/60">
                 {order.items.map((item, idx) => (

@@ -197,8 +197,9 @@ export function CheckoutView({
           contact: contactData.phone,
         },
         theme: {
-          color: "#8E3A59", // Velaash primary maroon
+          color: "#CC6F00", // Velaash brand deep accent
         },
+
         handler: async function (response: {
           razorpay_order_id: string;
           razorpay_payment_id: string;

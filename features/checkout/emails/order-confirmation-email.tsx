@@ -83,22 +83,21 @@ export const OrderConfirmationEmail = ({
           <Section style={contentSectionStyle}>
             <Heading style={headingStyle}>Thank you for your order, {customerName}!</Heading>
             <Text style={textStyle}>
-              Your order <strong style={{ color: "#1A1A1A" }}>{orderNumber}</strong> placed on{" "}
-              {orderDate} has been confirmed. Our team is carefully preparing your garments for
-              dispatch.
+              Your order <strong style={{ color: "#4D2A00" }}>{orderNumber}</strong> placed on{" "}
+              {orderDate} has been confirmed and is being prepared for dispatch.
             </Text>
 
             {/* Status Pills */}
             <Section style={statusContainerStyle}>
               <Text style={statusLabelStyle}>
                 Payment:{" "}
-                <span style={{ fontWeight: 600, color: isPaid ? "#166534" : "#854D0E" }}>
+                <span style={{ fontWeight: 600, color: isPaid ? "#166534" : "#CC6F00" }}>
                   {paymentMethodLabel} ({isPaid ? "Paid" : "Payable on Delivery"})
                 </span>
               </Text>
               <Text style={statusLabelStyle}>
                 Est. Delivery:{" "}
-                <span style={{ fontWeight: 600, color: "#1A1A1A" }}>5–7 Business Days</span>
+                <span style={{ fontWeight: 600, color: "#4D2A00" }}>5–7 Business Days</span>
               </Text>
             </Section>
 
@@ -184,8 +183,8 @@ export const OrderConfirmationEmail = ({
 
             {/* Explainer */}
             <Text style={noteTextStyle}>
-              What happens next? We will notify you via SMS and email once your parcel is handed over
-              to our courier partner, along with your live airway tracking number.
+              What happens next? We will notify you once your parcel is handed over to our
+              courier partner, along with your tracking details.
             </Text>
           </Section>
 
@@ -193,13 +192,11 @@ export const OrderConfirmationEmail = ({
           <Section style={footerSectionStyle}>
             <Text style={footerTextStyle}>
               Need assistance? Email us at{" "}
-              <Link href="mailto:support@velaash.com" style={{ color: "#8E3A59" }}>
+              <Link href="mailto:support@velaash.com" style={{ color: "#CC6F00" }}>
                 support@velaash.com
               </Link>
             </Text>
-            <Text style={legalTextStyle}>
-              VELAASH TRADER&apos;S • Authentic Ready-to-Wear Elegance
-            </Text>
+            <Text style={legalTextStyle}>VELAASH TRADER&apos;S</Text>
           </Section>
         </Container>
       </Body>
@@ -211,7 +208,7 @@ export default OrderConfirmationEmail;
 
 // Inline Email Styles (Calibrated to Velaash Brand Palette)
 const mainStyle: React.CSSProperties = {
-  backgroundColor: "#F7F5F0",
+  backgroundColor: "#FFFBF0",
   fontFamily:
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
   padding: "24px 0",
@@ -223,25 +220,26 @@ const containerStyle: React.CSSProperties = {
   maxWidth: "600px",
   borderRadius: "8px",
   overflow: "hidden",
-  border: "1px solid #EAE5DE",
+  border: "1px solid #E8DCC2",
 };
 
 const headerSectionStyle: React.CSSProperties = {
-  backgroundColor: "#1A1A1A",
+  backgroundColor: "#4D2A00",
   padding: "28px 24px",
   textAlign: "center",
 };
 
 const brandLogoStyle: React.CSSProperties = {
-  color: "#FDFBF7",
-  fontSize: "24px",
+  color: "#FFFBF0",
+  fontFamily: "'Cormorant Garamond', Georgia, serif",
+  fontSize: "26px",
   fontWeight: "700",
   letterSpacing: "4px",
   margin: 0,
 };
 
 const brandSubtitleStyle: React.CSSProperties = {
-  color: "#C9A86A",
+  color: "#F2A900",
   fontSize: "11px",
   fontWeight: "600",
   letterSpacing: "2px",
@@ -253,8 +251,9 @@ const contentSectionStyle: React.CSSProperties = {
 };
 
 const headingStyle: React.CSSProperties = {
-  color: "#1A1A1A",
-  fontSize: "20px",
+  color: "#4D2A00",
+  fontFamily: "'Cormorant Garamond', Georgia, serif",
+  fontSize: "22px",
   fontWeight: "600",
   margin: "0 0 12px 0",
 };
@@ -267,10 +266,10 @@ const textStyle: React.CSSProperties = {
 };
 
 const statusContainerStyle: React.CSSProperties = {
-  backgroundColor: "#FDFBF7",
+  backgroundColor: "#FFFBF0",
   borderRadius: "6px",
   padding: "12px 16px",
-  border: "1px solid #EAE5DE",
+  border: "1px solid #F9E6A8",
   margin: "16px 0",
 };
 
@@ -281,13 +280,14 @@ const statusLabelStyle: React.CSSProperties = {
 };
 
 const dividerStyle: React.CSSProperties = {
-  borderColor: "#EAE5DE",
+  borderColor: "#E8DCC2",
   margin: "20px 0",
 };
 
 const subheadingStyle: React.CSSProperties = {
-  color: "#1A1A1A",
-  fontSize: "15px",
+  color: "#4D2A00",
+  fontFamily: "'Cormorant Garamond', Georgia, serif",
+  fontSize: "16px",
   fontWeight: "600",
   margin: "0 0 12px 0",
 };
@@ -299,7 +299,7 @@ const itemRowStyle: React.CSSProperties = {
 const itemTitleStyle: React.CSSProperties = {
   fontSize: "14px",
   fontWeight: "600",
-  color: "#1A1A1A",
+  color: "#4D2A00",
   margin: 0,
 };
 
@@ -312,7 +312,7 @@ const itemMetaStyle: React.CSSProperties = {
 const itemPriceStyle: React.CSSProperties = {
   fontSize: "13px",
   fontWeight: "600",
-  color: "#8E3A59",
+  color: "#CC6F00",
   margin: "2px 0",
 };
 
@@ -335,7 +335,7 @@ const pricingLabelStyle: React.CSSProperties = {
 const pricingValueStyle: React.CSSProperties = {
   fontSize: "13px",
   fontWeight: "500",
-  color: "#1A1A1A",
+  color: "#4D2A00",
   margin: 0,
   textAlign: "right",
 };
@@ -343,14 +343,14 @@ const pricingValueStyle: React.CSSProperties = {
 const totalLabelStyle: React.CSSProperties = {
   fontSize: "16px",
   fontWeight: "700",
-  color: "#1A1A1A",
+  color: "#4D2A00",
   margin: 0,
 };
 
 const totalValueStyle: React.CSSProperties = {
   fontSize: "18px",
   fontWeight: "700",
-  color: "#8E3A59",
+  color: "#CC6F00",
   margin: 0,
   textAlign: "right",
 };
@@ -368,7 +368,7 @@ const ctaSectionStyle: React.CSSProperties = {
 };
 
 const buttonStyle: React.CSSProperties = {
-  backgroundColor: "#8E3A59",
+  backgroundColor: "#CC6F00",
   color: "#FFFFFF",
   padding: "12px 28px",
   fontSize: "13px",
@@ -388,10 +388,10 @@ const noteTextStyle: React.CSSProperties = {
 };
 
 const footerSectionStyle: React.CSSProperties = {
-  backgroundColor: "#FDFBF7",
+  backgroundColor: "#FFFBF0",
   padding: "20px 24px",
   textAlign: "center",
-  borderTop: "1px solid #EAE5DE",
+  borderTop: "1px solid #E8DCC2",
 };
 
 const footerTextStyle: React.CSSProperties = {
