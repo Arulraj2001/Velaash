@@ -101,6 +101,7 @@ DO $$ BEGIN
     'category_grid',
     'testimonials',
     'couture_spotlight',
+    'value_strip',
     'custom_html'
   );
 EXCEPTION

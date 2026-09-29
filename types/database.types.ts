@@ -29,6 +29,7 @@ export type HomepageSectionType =
   | "category_grid"
   | "testimonials"
   | "couture_spotlight"
+  | "value_strip"
   | "custom_html";
 
 export type Database = {

@@ -17,6 +17,9 @@ CREATE TRIGGER set_site_settings_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_updated_at();
 
+-- Ensure value_strip exists in homepage_section_type enum
+ALTER TYPE public.homepage_section_type ADD VALUE IF NOT EXISTS 'value_strip';
+
 -- 2. Homepage Builder Sections Table
 CREATE TABLE IF NOT EXISTS public.homepage_sections (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -47,6 +47,8 @@ SET
 WHERE section_type = 'category_grid';
 
 -- 6. Insert value_strip if not already present
+ALTER TYPE public.homepage_section_type ADD VALUE IF NOT EXISTS 'value_strip';
+
 INSERT INTO public.homepage_sections (section_type, title, display_order, is_active, content)
 VALUES
   (
