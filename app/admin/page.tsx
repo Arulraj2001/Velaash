@@ -142,7 +142,7 @@ export default async function AdminDashboardPage() {
                 Products & Variants
               </h3>
               <p className="text-brand-cream/70 text-xs">
-                Manage saree and lehenga inventory, update SKU stocks, and upload luxury media.
+                Manage apparel catalog and inventory, update SKU stocks, and upload product media.
               </p>
             </Card>
 

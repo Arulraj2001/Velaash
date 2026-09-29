@@ -1,95 +1,153 @@
 import * as React from "react";
 import Link from "next/link";
-import { BRAND, FOOTER_LINKS } from "@/lib/constants";
+import { BRAND, CUSTOMER_SERVICE_LINKS, LEGAL_LINKS } from "@/lib/constants";
 import { Container } from "@/components/ui/container";
+import { getNavigationCategories } from "@/features/navigation";
+import { FooterAccordionItem } from "./footer-accordion-item";
+import { NewsletterForm } from "./newsletter-form";
+import {
+  Instagram,
+  MessageCircle,
+  Facebook,
+  ShieldCheck,
+  CreditCard,
+  Banknote,
+  Smartphone,
+} from "lucide-react";
 
-export function Footer() {
+export async function Footer() {
   const currentYear = new Date().getFullYear();
+  const categories = await getNavigationCategories();
 
   return (
-    <footer className="border-brand-accent/20 bg-brand-dark text-brand-cream border-t">
-      {/* Top Footer Section */}
-      <div className="border-brand-cream/10 border-b py-14 sm:py-16">
+    <footer className="border-brand-accent/20 bg-brand-dark text-brand-cream border-t font-sans">
+      {/* Main 4-Column Footer Section */}
+      <div className="border-brand-cream/10 border-b py-12 sm:py-16">
         <Container size="xl">
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
-            {/* Brand column */}
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-12 lg:gap-10">
+            {/* Column 1: Brand Blurb & Social Media */}
             <div className="space-y-4 md:col-span-4">
               <div className="space-y-1">
-                <span className="font-heading text-brand-gold text-3xl font-normal tracking-wide">
+                <span className="font-heading text-brand-gold text-3xl font-semibold tracking-wide">
                   {BRAND.name}
                 </span>
                 <p className="text-brand-cream/60 text-[11px] tracking-widest uppercase">
                   {BRAND.tagline}
                 </p>
               </div>
-              <p className="text-brand-cream/70 max-w-sm font-sans text-xs leading-relaxed">
+
+              <p className="text-brand-cream/70 max-w-sm text-xs leading-relaxed">
                 {BRAND.description}
               </p>
-              <div className="text-brand-cream/60 space-y-1 pt-2 font-sans text-xs">
-                <p>
-                  Legal Entity:{" "}
-                  <span className="text-brand-gold font-medium">{BRAND.legalName}</span>
+
+              {/* Social Media Links */}
+              <div className="pt-2">
+                <p className="text-brand-gold mb-2.5 text-[11px] font-semibold tracking-wider uppercase">
+                  Follow Our Journey
                 </p>
-                <p>Contact: {BRAND.contactEmail}</p>
-                <p>Customer Care: {BRAND.supportPhone}</p>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={BRAND.socialLinks.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+                    aria-label="Follow Velaash on Instagram"
+                  >
+                    <Instagram className="h-4 w-4" />
+                  </a>
+                  <a
+                    href={BRAND.socialLinks.whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+                    aria-label="Chat with Velaash on WhatsApp"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                  </a>
+                  <a
+                    href={BRAND.socialLinks.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+                    aria-label="Connect with Velaash on Facebook"
+                  >
+                    <Facebook className="h-4 w-4" />
+                  </a>
+                </div>
               </div>
             </div>
 
-            {/* Quick Links Column 1 */}
-            <div className="space-y-3 md:col-span-2">
-              <h4 className="text-brand-gold text-xs font-semibold tracking-widest uppercase">
-                The Boutique
-              </h4>
-              <ul className="text-brand-cream/70 space-y-2 font-sans text-xs">
-                {FOOTER_LINKS.boutique.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="hover:text-brand-gold transition-colors duration-150"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            {/* Column 2: Shop / Collections Links (Accordion on mobile) */}
+            <div className="md:col-span-2">
+              <FooterAccordionItem title="Shop Collections">
+                <ul className="text-brand-cream/70 space-y-2 text-xs">
+                  {categories.map((cat) => (
+                    <li key={cat.id}>
+                      <Link
+                        href={`/collections/${cat.slug}`}
+                        className="hover:text-brand-gold block py-0.5 transition-colors duration-150"
+                      >
+                        {cat.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </FooterAccordionItem>
             </div>
 
-            {/* Quick Links Column 2 */}
-            <div className="space-y-3 md:col-span-3">
-              <h4 className="text-brand-gold text-xs font-semibold tracking-widest uppercase">
-                Client Concierge
-              </h4>
-              <ul className="text-brand-cream/70 space-y-2 font-sans text-xs">
-                {FOOTER_LINKS.customerCare.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="hover:text-brand-gold transition-colors duration-150"
-                    >
-                      {link.label}
-                    </Link>
+            {/* Column 3: Customer Care (Accordion on mobile) */}
+            <div className="md:col-span-3">
+              <FooterAccordionItem title="Customer Care">
+                <ul className="text-brand-cream/70 space-y-2 text-xs">
+                  {CUSTOMER_SERVICE_LINKS.map((link) => (
+                    <li key={link.label}>
+                      <Link
+                        href={link.href}
+                        className="hover:text-brand-gold block py-0.5 transition-colors duration-150"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                  <li className="text-brand-cream/50 space-y-0.5 pt-2 text-[11px]">
+                    <p>Support: {BRAND.supportPhone}</p>
+                    <p>Email: {BRAND.contactEmail}</p>
                   </li>
-                ))}
-              </ul>
+                </ul>
+              </FooterAccordionItem>
             </div>
 
-            {/* Quick Links Column 3 - Legal */}
+            {/* Column 4: Newsletter Signup */}
             <div className="space-y-3 md:col-span-3">
               <h4 className="text-brand-gold text-xs font-semibold tracking-widest uppercase">
-                Policies & Trust
+                The Velaash Edit
               </h4>
-              <ul className="text-brand-cream/70 space-y-2 font-sans text-xs">
-                {FOOTER_LINKS.legal.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="hover:text-brand-gold transition-colors duration-150"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <NewsletterForm />
+            </div>
+          </div>
+        </Container>
+      </div>
+
+      {/* Payment Trust & Security Row */}
+      <div className="border-brand-cream/10 bg-brand-dark-muted/30 border-b py-5">
+        <Container size="xl">
+          <div className="text-brand-cream/70 flex flex-col items-center justify-between gap-3 text-xs sm:flex-row">
+            <span className="text-brand-gold flex items-center gap-1.5 text-[11px] font-medium tracking-wider uppercase">
+              <ShieldCheck className="text-brand-gold h-4 w-4" />
+              100% Secure & Insured Checkout
+            </span>
+
+            <div className="text-brand-cream/60 flex flex-wrap items-center justify-center gap-4 text-[11px]">
+              <span className="flex items-center gap-1">
+                <Smartphone className="text-brand-gold h-3.5 w-3.5" /> UPI (GPay, PhonePe, Paytm)
+              </span>
+              <span className="flex items-center gap-1">
+                <CreditCard className="text-brand-gold h-3.5 w-3.5" /> Cards (Visa, Mastercard,
+                RuPay)
+              </span>
+              <span className="flex items-center gap-1">
+                <Banknote className="text-brand-gold h-3.5 w-3.5" /> Cash on Delivery (COD)
+              </span>
             </div>
           </div>
         </Container>
@@ -98,13 +156,24 @@ export function Footer() {
       {/* Bottom Legal & Copyright Bar */}
       <div className="bg-brand-dark/95 py-6">
         <Container size="xl">
-          <div className="text-brand-cream/50 flex flex-col items-center justify-between gap-4 font-sans text-xs sm:flex-row">
+          <div className="text-brand-cream/50 flex flex-col items-center justify-between gap-4 text-xs sm:flex-row">
             <p>
-              &copy; {currentYear} {BRAND.legalName}. All rights reserved.
+              &copy; {currentYear}{" "}
+              <span className="text-brand-gold font-medium">{BRAND.legalName}</span>. All rights
+              reserved.
             </p>
-            <p className="flex items-center gap-2 text-[11px] tracking-wider uppercase">
-              Handcrafted in India • Pure Heritage Silk & Couture
-            </p>
+
+            <div className="text-brand-cream/60 flex items-center gap-5 text-xs">
+              {LEGAL_LINKS.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="hover:text-brand-gold transition-colors duration-150"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
         </Container>
       </div>

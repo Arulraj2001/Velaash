@@ -237,7 +237,7 @@ export default function HomePage() {
                 <div>
                   <span className="text-brand-dark/50 text-xs">H1 Display (48px - 60px)</span>
                   <h1 className="font-heading text-brand-dark text-4xl font-semibold sm:text-5xl">
-                    Banarasi Zari Lehengas
+                    Embroidered Co-ord Sets
                   </h1>
                 </div>
                 <div>
@@ -245,13 +245,13 @@ export default function HomePage() {
                     H2 Section Heading (32px - 36px)
                   </span>
                   <h2 className="font-heading text-brand-dark text-2xl font-medium sm:text-3xl">
-                    Handwoven Pure Kanjivaram Silks
+                    Handcrafted Cotton & Linen Dresses
                   </h2>
                 </div>
                 <div>
                   <span className="text-brand-dark/50 text-xs">H3 Sub-heading (24px)</span>
                   <h3 className="font-heading text-brand-dark text-xl font-normal sm:text-2xl">
-                    Intricate Dabka & Zardozi Embroidery
+                    Artisanal Kurtas & Relaxed Silhouettes
                   </h3>
                 </div>
               </div>
@@ -387,7 +387,7 @@ export default function HomePage() {
 
                   <Input
                     label="Search Vault"
-                    placeholder="Search lehengas, dupattas, sarees..."
+                    placeholder="Search kurtas, dresses, co-ords, tops..."
                     leftIcon={<Search className="h-4 w-4" />}
                   />
 
@@ -405,7 +405,7 @@ export default function HomePage() {
               <Card className="space-y-6 p-6 sm:p-8">
                 <CardTitle className="text-xl">Boutique Badges & Tags</CardTitle>
                 <CardDescription>
-                  Pill badges for product categorization, stock status, and couture highlights.
+                  Pill badges for product categorization, stock status, and boutique highlights.
                 </CardDescription>
 
                 <div className="space-y-4">
@@ -419,13 +419,13 @@ export default function HomePage() {
 
                   <div className="flex flex-wrap gap-2 pt-2">
                     <Badge variant="default" size="sm" icon={<Sparkles className="h-3 w-3" />}>
-                      Pure Zari
+                      Pure Linen
                     </Badge>
                     <Badge variant="accent" size="sm">
-                      Made-to-Measure
+                      Relaxed Fit
                     </Badge>
                     <Badge variant="subtle" size="sm">
-                      Handloom Certified
+                      Mulberry Silk
                     </Badge>
                     <Badge variant="dark" size="sm">
                       Only 2 Left
@@ -441,21 +441,23 @@ export default function HomePage() {
                     <div className="from-brand-accent/20 via-brand-light/40 to-brand-cream flex h-40 items-center justify-center bg-gradient-to-tr p-4">
                       <div className="space-y-1 text-center">
                         <span className="font-heading text-brand-dark text-2xl font-semibold">
-                          Royal Gulab Silk Saree
+                          Chanderi Embroidered Kurta Set
                         </span>
-                        <p className="text-brand-dark/70 text-xs">Handcrafted in Varanasi</p>
+                        <p className="text-brand-dark/70 text-xs">
+                          Crafted with breathable cotton silk
+                        </p>
                       </div>
                     </div>
                     <CardHeader className="p-4 pb-2">
                       <div className="flex items-center justify-between">
                         <Badge variant="accent" size="sm">
-                          Haute Couture
+                          New Arrival
                         </Badge>
-                        <span className="text-brand-dark text-base font-semibold">₹48,500</span>
+                        <span className="text-brand-dark text-base font-semibold">₹3,850</span>
                       </div>
                     </CardHeader>
                     <CardContent className="text-brand-dark/70 p-4 pt-1 text-xs">
-                      Woven with real golden thread borders and intricate floral jaal.
+                      Featuring refined neck embroidery, coordinating palazzo, and soft dupatta.
                     </CardContent>
                     <CardFooter className="p-4 pt-0">
                       <Button

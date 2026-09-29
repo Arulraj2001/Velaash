@@ -82,7 +82,7 @@ export function AccountHeaderButton() {
             className="text-brand-dark hover:bg-brand-light/40 flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs transition-colors"
           >
             <UserCheck className="text-brand-accent h-4 w-4" />
-            <span>Patron Sanctuary</span>
+            <span>My Account</span>
           </Link>
 
           <Link
@@ -91,7 +91,7 @@ export function AccountHeaderButton() {
             className="text-brand-dark hover:bg-brand-light/40 flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs transition-colors"
           >
             <Package className="text-brand-accent h-4 w-4" />
-            <span>My Orders & Fits</span>
+            <span>My Orders</span>
           </Link>
 
           <div className="border-brand-border/60 my-1 border-t" />

@@ -23,22 +23,22 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: `${BRAND.name} | Luxury Indian Designer Clothing & Couture`,
+    default: `${BRAND.name} | Modern Everyday Luxury & Contemporary Clothing`,
     template: `%s | ${BRAND.name}`,
   },
   description: BRAND.description,
   keywords: [
     "Velaash",
-    "Indian Boutique",
-    "Haute Couture",
-    "Designer Lehengas",
-    "Silk Sarees",
-    "Luxury Ethnic Wear",
+    "Clothing Boutique",
+    "Kurtas and Sets",
+    "Designer Dresses",
+    "Co-ord Sets",
+    "Contemporary Womenswear",
     "VELAASH TRADER'S",
   ],
   authors: [{ name: BRAND.legalName }],
   openGraph: {
-    title: `${BRAND.name} | Luxury Indian Designer Clothing`,
+    title: `${BRAND.name} | Contemporary Clothing Boutique`,
     description: BRAND.description,
     siteName: BRAND.name,
     locale: "en_IN",

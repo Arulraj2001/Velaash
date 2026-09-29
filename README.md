@@ -130,7 +130,7 @@ Velaash implements a strict separation between **Customer Authentication** and *
 ### 1. Customer Authentication (`/account/login`)
 
 - **Passwordless OTP + Google OAuth**: Built for an Instagram/WhatsApp-driven luxury customer base. Shoppers receive a 6-digit OTP code directly in their inbox or authenticate with Google in one tap. No forgotten passwords or friction.
-- **Guest Checkout Unlocked**: Shoppers can browse the entire collection, add couture items to the bag, and complete checkout without ever being forced to register. Login is required exclusively to access the **Patron Sanctuary** (`/account/*`) to view order stitching timelines, manage saved shipping addresses, or maintain personal wishlists.
+- **Guest Checkout Unlocked**: Shoppers can browse the entire collection, add boutique items to their bag, and complete checkout without ever being forced to register. Login is required exclusively to access the **Customer Account** (`/account/*`) to view order timelines, manage saved shipping addresses, or maintain personal wishlists.
 - **Automatic Customer Provisioning**: Successful sign-up seamlessly provisions or updates a corresponding record in the Postgres `customers` table with their full name and contact information.
 - **Protected Customer Routes**: `/account/*` routes are protected by Next.js middleware, automatically redirecting unauthenticated visitors to `/account/login?returnUrl=...`.
 
