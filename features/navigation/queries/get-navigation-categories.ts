@@ -232,8 +232,13 @@ export async function getNavigationCategories(): Promise<NavigationCategory[]> {
       .eq("is_active", true)
       .order("display_order", { ascending: true });
 
-    if (error || !categories || categories.length === 0) {
-      return DEFAULT_CLOTHING_CATEGORIES;
+    if (error) {
+      console.error("Database query failed in getNavigationCategories:", error);
+      throw new Error(`Database error fetching categories: ${error.message} (${error.code || "UNKNOWN"})`);
+    }
+
+    if (!categories || categories.length === 0) {
+      return [];
     }
 
     // Partition into parents and children
@@ -241,7 +246,7 @@ export async function getNavigationCategories(): Promise<NavigationCategory[]> {
     const subCategories = categories.filter((c) => Boolean(c.parent_id));
 
     if (topLevel.length === 0) {
-      return DEFAULT_CLOTHING_CATEGORIES;
+      return [];
     }
 
     // Map sub-categories to their parent category
@@ -278,7 +283,7 @@ export async function getNavigationCategories(): Promise<NavigationCategory[]> {
     ) {
       throw error;
     }
-    // Fall back smoothly to default clothing categories
-    return DEFAULT_CLOTHING_CATEGORIES;
+    console.error("[getNavigationCategories] Database error:", error);
+    throw error;
   }
 }

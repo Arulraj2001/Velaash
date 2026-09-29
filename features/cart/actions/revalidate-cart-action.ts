@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { RevalidateCartResponse, RevalidatedCartItem } from "../types";
 import { validateCouponAction } from "./validate-coupon-action";
-import { MOCK_CLOTHING_PRODUCTS } from "@/features/products/queries/mock-products";
 
 interface InputCartItem {
   id: string;
@@ -108,57 +107,19 @@ export async function revalidateCartAction({
           message,
         });
       } else {
-        // Fallback validation against mock products if offline or seeded items
-        const mockProduct = MOCK_CLOTHING_PRODUCTS.find((p) => p.id === item.productId);
-        const mockVariant = mockProduct?.variants.find((v) => v.id === item.variantId);
-
-        if (mockVariant && mockProduct) {
-          const currentPrice =
-            mockVariant.price_override !== null && mockVariant.price_override !== undefined
-              ? mockVariant.price_override
-              : mockProduct.base_price;
-          const priceChanged = Math.abs(currentPrice - item.price) > 0.01;
-          const availableStock = mockVariant.stock_quantity;
-          const isAvailable = mockVariant.is_active && mockProduct.is_active && availableStock > 0;
-          const quantityExceeds = item.quantity > availableStock;
-          const adjustedQuantity = isAvailable ? Math.max(1, Math.min(item.quantity, availableStock)) : 0;
-
-          let message: string | undefined;
-          if (!isAvailable) {
-            message = "This item is currently out of stock or no longer available.";
-          } else if (quantityExceeds) {
-            message = `Quantity was adjusted to match available inventory (${availableStock} remaining).`;
-          } else if (priceChanged) {
-            message = "Price updated to current catalog price.";
-          }
-
-          revalidatedItems.push({
-            id: item.id,
-            productId: item.productId,
-            variantId: item.variantId,
-            currentPrice,
-            priceChanged,
-            availableStock,
-            isAvailable,
-            quantityAdjusted: quantityExceeds,
-            adjustedQuantity,
-            message,
-          });
-        } else {
-          // Variant completely missing/deleted
-          revalidatedItems.push({
-            id: item.id,
-            productId: item.productId,
-            variantId: item.variantId,
-            currentPrice: item.price,
-            priceChanged: false,
-            availableStock: 0,
-            isAvailable: false,
-            quantityAdjusted: true,
-            adjustedQuantity: 0,
-            message: "This product variant is no longer available in the store catalog.",
-          });
-        }
+        // Product variant was not found in the live database catalog
+        revalidatedItems.push({
+          id: item.id,
+          productId: item.productId,
+          variantId: item.variantId,
+          currentPrice: item.price,
+          priceChanged: false,
+          availableStock: 0,
+          isAvailable: false,
+          quantityAdjusted: true,
+          adjustedQuantity: 0,
+          message: "This product is no longer available in the store catalog.",
+        });
       }
     }
 

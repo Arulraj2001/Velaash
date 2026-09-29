@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
 import { validateCouponAction } from "@/features/cart/actions/validate-coupon-action";
-import { MOCK_CLOTHING_PRODUCTS } from "@/features/products/queries/mock-products";
 import { createRazorpayOrder } from "@/lib/razorpay";
 import { env } from "@/lib/env";
 import { checkCodRateLimit } from "@/lib/rate-limit";
@@ -41,8 +40,6 @@ const IDEMPOTENCY_STORE = new Map<
   }
 >();
 
-// In-memory sequence counter for fallback offline order number generation
-let fallbackOrderSequence = 1001;
 
 export async function createOrderAction(
   rawInput: CreateOrderInput
@@ -280,42 +277,11 @@ export async function createOrderAction(
           availableStock: liveMatch.stock_quantity,
         });
       } else {
-        // Mock fallback verification
-        const mockProduct = MOCK_CLOTHING_PRODUCTS.find((p) => p.id === requestedItem.productId);
-        const mockVariant = mockProduct?.variants.find((v) => v.id === requestedItem.variantId);
-
-        if (!mockProduct || !mockVariant || !mockProduct.is_active || !mockVariant.is_active) {
-          return {
-            success: false,
-            error: "An item in your cart is no longer available.",
-            code: "OUT_OF_STOCK",
-          };
-        }
-
-        if (mockVariant.stock_quantity < requestedItem.quantity) {
-          return {
-            success: false,
-            error: `"${mockProduct.name}" has only ${mockVariant.stock_quantity} available in stock (you requested ${requestedItem.quantity}).`,
-            code: "OUT_OF_STOCK",
-          };
-        }
-
-        const unitPrice =
-          mockVariant.price_override !== null && mockVariant.price_override !== undefined
-            ? mockVariant.price_override
-            : mockProduct.base_price;
-
-        verifiedItems.push({
-          productId: mockProduct.id,
-          variantId: mockVariant.id,
-          title: mockProduct.name,
-          size: mockVariant.size,
-          color: mockVariant.color,
-          unitPrice,
-          quantity: requestedItem.quantity,
-          lineSubtotal: unitPrice * requestedItem.quantity,
-          availableStock: mockVariant.stock_quantity,
-        });
+        return {
+          success: false,
+          error: "An item in your cart is no longer available in the store catalog.",
+          code: "OUT_OF_STOCK",
+        };
       }
     }
 
@@ -369,7 +335,6 @@ export async function createOrderAction(
     const totalAmount = Math.max(0, subtotal - discountAmount) + shippingCharge + codHandlingFee;
 
     // 11. Generate Order Number & Record Order
-    const year = new Date().getFullYear();
     let orderNumber: string;
     let orderId: string;
 
@@ -465,20 +430,12 @@ export async function createOrderAction(
       }
     }
 
-    // Fallback order generation for offline/mock test environments
     if (!dbWriteSuccess) {
-      fallbackOrderSequence++;
-      orderNumber = `VEL-${year}-${String(fallbackOrderSequence).padStart(5, "0")}`;
-      orderId = `ord-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-
-      // Deduct stock in mock catalog
-      for (const item of verifiedItems) {
-        const mockProduct = MOCK_CLOTHING_PRODUCTS.find((p) => p.id === item.productId);
-        const mockVariant = mockProduct?.variants.find((v) => v.id === item.variantId);
-        if (mockVariant) {
-          mockVariant.stock_quantity = Math.max(0, mockVariant.stock_quantity - item.quantity);
-        }
-      }
+      return {
+        success: false,
+        error: "Failed to persist order in the database. Please try again.",
+        code: "VALIDATION_FAILED",
+      };
     }
 
     // 12. Online Payment Gateway Integration (Razorpay Orders API)
