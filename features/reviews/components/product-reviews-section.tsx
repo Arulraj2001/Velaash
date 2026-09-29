@@ -93,7 +93,7 @@ export function ProductReviewsSection({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className="text-brand-accent text-[11px] font-semibold tracking-widest uppercase">
-              Verified Patron Experience
+              Customer Reviews
             </span>
             <h2 className="font-heading text-brand-dark text-2xl font-semibold sm:text-3xl">
               Ratings & Reviews
@@ -302,10 +302,10 @@ export function ProductReviewsSection({
                   <PenLine className="h-6 w-6" />
                 </div>
                 <h4 className="font-heading text-brand-dark text-lg font-semibold">
-                  Patron Sign-In Required
+                  Sign-In Required
                 </h4>
                 <p className="text-brand-dark/70 mx-auto max-w-xs text-xs">
-                  To maintain review authenticity, only verified patrons may submit reviews. Please
+                  To maintain review authenticity, only verified customers may submit reviews. Please
                   sign in to share your experience.
                 </p>
                 <div className="flex flex-col items-center justify-center gap-2 pt-2 sm:flex-row">

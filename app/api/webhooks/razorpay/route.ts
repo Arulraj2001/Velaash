@@ -240,7 +240,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const customerName =
         paymentEntity?.notes?.name ||
         paymentEntity?.notes?.full_name ||
-        "Valued Patron";
+        "Valued Customer";
       const totalAmountRupees = paymentEntity?.amount
         ? paymentEntity.amount / 100
         : 0;

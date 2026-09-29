@@ -55,7 +55,7 @@ export default async function SettingsPage() {
             className="mt-1 w-full rounded-xl border border-brand-border/80 bg-brand-cream/40 px-3.5 py-2.5 text-xs text-brand-dark font-mono cursor-not-allowed"
           />
           <p className="text-[11px] text-brand-dark/50 mt-1">
-            Primary email associated with your Supabase patron login.
+            Primary email associated with your account login.
           </p>
         </div>
 
@@ -86,7 +86,7 @@ export default async function SettingsPage() {
         </div>
 
         <div className="rounded-xl border border-brand-gold/40 bg-brand-light/20 p-4 text-xs text-brand-dark/70">
-          Editable patron profile fields and SMS preferences will be activated in Phase 4C.
+          Editable profile fields and SMS preferences will be activated in Phase 4C.
         </div>
       </div>
 

@@ -18,7 +18,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Account Overview | Velaash",
-  description: "Overview of your Velaash patron orders and account status.",
+  description: "Overview of your Velaash orders and account status.",
   robots: {
     index: false,
     follow: false,
@@ -132,7 +132,7 @@ export default async function AccountPage() {
           </div>
           <div className="mt-3 flex items-baseline justify-between">
             <span className="font-heading text-2xl font-semibold text-brand-dark">
-              Patron
+              Member
             </span>
             <Badge variant="subtle" size="sm">
               Verified

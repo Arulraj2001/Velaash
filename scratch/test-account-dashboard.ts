@@ -82,9 +82,9 @@ async function runAccountDashboardTests() {
     return { id: userId, email, name: fullName };
   }
 
-  const customerA = await getOrCreateTestCustomer("customer-a-patron@example.com", "Patron Alpha");
-  const customerB = await getOrCreateTestCustomer("customer-b-patron@example.com", "Patron Beta");
-  const filterTester = await getOrCreateTestCustomer("filter-test-user@example.com", "Filter Patron");
+  const customerA = await getOrCreateTestCustomer("customer-a-test@example.com", "Customer Alpha");
+  const customerB = await getOrCreateTestCustomer("customer-b-test@example.com", "Customer Beta");
+  const filterTester = await getOrCreateTestCustomer("filter-test-user@example.com", "Filter Test User");
 
   // Clean up any leftovers from previous test runs
   await supabase.from("orders").delete().ilike("order_number", "TEST-ACC-%");
@@ -220,7 +220,7 @@ async function runAccountDashboardTests() {
       discount_amount: 0,
       total_amount: item.total_amount,
       shipping_address: {
-        fullName: "Filter Patron",
+        fullName: "Filter Test User",
         email: filterTester.email,
         phone: "9123456789",
         addressLine1: "10 Textile Road",

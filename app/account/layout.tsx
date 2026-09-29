@@ -32,7 +32,7 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
     customer?.full_name ||
     user.user_metadata?.full_name ||
     user.email?.split("@")[0] ||
-    "Valued Patron";
+    "Valued Customer";
 
   return (
     <div className="min-h-[calc(100vh-220px)] bg-brand-cream/40 py-8 sm:py-12">
@@ -60,7 +60,7 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
             <div className="sm:text-right">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Active Patron Session
+                Active Session
               </span>
             </div>
           </div>

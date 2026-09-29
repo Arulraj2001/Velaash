@@ -50,7 +50,7 @@ export async function submitProductReview(input: SubmitReviewInput): Promise<Sub
     }
 
     const name =
-      customerName || user.user_metadata?.full_name || user.email?.split("@")[0] || "Valued Patron";
+      customerName || user.user_metadata?.full_name || user.email?.split("@")[0] || "Valued Customer";
 
     // Insert review with is_approved = false (pending moderation)
     const { error } = await supabase.from("reviews").insert({

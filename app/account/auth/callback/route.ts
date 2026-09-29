@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         data.user.user_metadata?.full_name ||
         data.user.user_metadata?.name ||
         data.user.user_metadata?.given_name ||
-        "Valued Patron";
+        "Valued Customer";
 
       const { data: existingCustomer } = await supabase
         .from("customers")
@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
           phone: null,
         });
       } else if (
-        existingCustomer.full_name === "Valued Patron" &&
-        googleFullName !== "Valued Patron"
+        existingCustomer.full_name === "Valued Customer" &&
+        googleFullName !== "Valued Customer"
       ) {
         await supabase
           .from("customers")

@@ -34,7 +34,7 @@ export function AccountHeaderButton() {
       <Link
         href="/account/login"
         className="text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold flex items-center gap-1.5 rounded-full p-2 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
-        aria-label="Sign In to Patron Account"
+        aria-label="Sign In to Your Account"
         title="Sign In"
       >
         <User className="h-5 w-5" />
@@ -46,7 +46,7 @@ export function AccountHeaderButton() {
   }
 
   // User is logged in
-  const userIdentifier = user.user_metadata?.full_name || user.email?.split("@")[0] || "Patron";
+  const userIdentifier = user.user_metadata?.full_name || user.email?.split("@")[0] || "Account";
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -54,7 +54,7 @@ export function AccountHeaderButton() {
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className="text-brand-dark hover:text-brand-accent hover:bg-brand-light/40 focus-visible:ring-brand-gold border-brand-gold/40 bg-brand-light/20 flex items-center gap-1.5 rounded-full border p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:px-2.5 sm:py-1.5"
-        aria-label="Patron Account Menu"
+        aria-label="Account Menu"
         aria-expanded={isOpen}
       >
         <div className="bg-brand-gold text-brand-dark flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold">

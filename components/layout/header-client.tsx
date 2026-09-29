@@ -124,7 +124,7 @@ export function HeaderClient({
                 </span>
               </Link>
 
-              {/* Patron Account Menu Button */}
+              {/* Account Menu Button */}
               <AccountHeaderButton />
 
               {/* Cart Drawer Trigger with Count Badge */}

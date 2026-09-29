@@ -27,7 +27,7 @@ BEGIN
   INSERT INTO public.customers (id, full_name, phone)
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', 'Valued Patron'),
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', 'Valued Customer'),
     NEW.raw_user_meta_data->>'phone'
   )
   ON CONFLICT (id) DO NOTHING;

@@ -172,7 +172,7 @@ export async function getOrderByNumber(
           couponCode: dbOrder.coupon_code,
           createdAt: dbOrder.created_at,
           shippingAddress: {
-            fullName: ship.fullName || "Valued Patron",
+            fullName: ship.fullName || "Valued Customer",
             phone: ship.phone || "",
             email: ship.email || "",
             addressLine1: ship.addressLine1 || "",

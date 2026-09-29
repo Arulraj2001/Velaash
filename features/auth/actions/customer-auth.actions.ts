@@ -121,10 +121,10 @@ export async function verifyOtpAction(input: VerifyOtpInput): Promise<AuthAction
     if (!customer) {
       await supabase.from("customers").insert({
         id: user.id,
-        full_name: parsed.data.fullName || "Valued Patron",
+        full_name: parsed.data.fullName || "Valued Customer",
         phone: null,
       });
-    } else if (parsed.data.fullName && customer.full_name === "Valued Patron") {
+    } else if (parsed.data.fullName && customer.full_name === "Valued Customer") {
       await supabase
         .from("customers")
         .update({ full_name: parsed.data.fullName })
@@ -134,7 +134,7 @@ export async function verifyOtpAction(input: VerifyOtpInput): Promise<AuthAction
     revalidatePath("/", "layout");
 
     const requiresName =
-      !customer || customer.full_name === "Valued Patron" || !customer.full_name?.trim();
+      !customer || customer.full_name === "Valued Customer" || !customer.full_name?.trim();
 
     return {
       success: true,

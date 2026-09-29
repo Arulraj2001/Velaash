@@ -5,9 +5,9 @@ import { CustomerLoginForm } from "@/features/auth";
 import { Container } from "@/components/ui";
 
 export const metadata: Metadata = {
-  title: "Patron Sign In | Velaash",
+  title: "Sign In | Velaash",
   description:
-    "Sign in to your Velaash patron account to view custom order history, manage addresses, or access your wishlist.",
+    "Sign in to your Velaash account to view order history, manage addresses, or access your wishlist.",
 };
 
 export default async function CustomerLoginPage(props: {
