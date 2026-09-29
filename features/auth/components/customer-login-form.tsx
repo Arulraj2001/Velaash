@@ -136,7 +136,7 @@ export function CustomerLoginForm() {
         return;
       }
 
-      setSuccessMessage("Profile saved! Entering your bespoke sanctuary...");
+      setSuccessMessage("Profile saved! Redirecting to your account...");
       setTimeout(() => {
         router.push(returnUrl);
         router.refresh();
@@ -328,7 +328,7 @@ export function CustomerLoginForm() {
               isLoading={isLoading}
               disabled={otpToken.length !== 6}
             >
-              Verify & Enter Sanctuary
+              Verify & Continue
             </Button>
 
             <div className="pt-2 text-center">
@@ -363,7 +363,7 @@ export function CustomerLoginForm() {
               onChange={(e) => setFullName(e.target.value)}
               required
               autoFocus
-              helperText="For order invoicing and bespoke fitting records"
+              helperText="For order invoicing and accurate size records"
             />
 
             <Input

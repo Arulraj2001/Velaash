@@ -61,7 +61,7 @@ export async function executeOrderCancellation(
   if (["shipped", "out_for_delivery", "delivered"].includes(order.status)) {
     return {
       success: false,
-      error: "This order has already been dispatched or delivered and cannot be cancelled online. Please contact our concierge support.",
+      error: "This order has already been dispatched or delivered and cannot be cancelled online. Please contact our support team.",
     };
   }
 

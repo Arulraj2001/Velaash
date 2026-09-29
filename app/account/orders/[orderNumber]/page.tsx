@@ -206,7 +206,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
                   Need Help with this Order?
                 </h4>
                 <p className="text-xs text-brand-dark/70 leading-relaxed">
-                  Have questions about size alteration, fabric care, or delivery timing? Our personal concierge is directly reachable via WhatsApp.
+                  Have questions about size alteration, fabric care, or delivery timing? Our customer support team is directly reachable via WhatsApp.
                 </p>
               </div>
             </div>
@@ -240,7 +240,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
                   className="w-full"
                   leftIcon={<Mail className="h-4 w-4" />}
                 >
-                  Email Concierge
+                  Email Support
                 </Button>
               </a>
             </div>
