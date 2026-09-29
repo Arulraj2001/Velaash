@@ -1,0 +1,2 @@
+/* Re-export global styles for feature imports and external tooling */
+@import "../app/globals.css";

@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+@theme {
+  --color-brand-gold: #f2a900;
+  --color-brand-gold-hover: #d99600;
+  --color-brand-accent: #cc6f00;
+  --color-brand-accent-hover: #b36000;
+  --color-brand-dark: #4d2a00;
+  --color-brand-dark-muted: #6b3c02;
+  --color-brand-light: #f9e6a8;
+  --color-brand-cream: #fffbf0;
+  --color-brand-cream-dark: #f3ebd8;
+  --color-brand-card: #ffffff;
+  --color-brand-card-muted: #fffefa;
+  --color-brand-border: #e8dcc2;
+  --color-brand-border-gold: #f2a900;
+
+  --font-heading: var(--font-heading), "Cormorant Garamond", Georgia, serif;
+  --font-sans: var(--font-sans), "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  --shadow-gold-sm: 0 2px 8px -2px rgba(242, 169, 0, 0.15);
+  --shadow-gold-md: 0 4px 16px -4px rgba(242, 169, 0, 0.22);
+  --shadow-gold-lg: 0 10px 25px -5px rgba(242, 169, 0, 0.28);
+  --shadow-luxury: 0 10px 30px -10px rgba(77, 42, 0, 0.08);
+  --shadow-luxury-hover: 0 14px 40px -10px rgba(77, 42, 0, 0.15);
+}
+
+:root {
+  --background: #fffbf0;
+  --foreground: #4d2a00;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family:
+    var(--font-sans),
+    system-ui,
+    -apple-system,
+    sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom focus ring styling for accessibility */
+*:focus-visible {
+  outline: 2px solid #f2a900;
+  outline-offset: 2px;
+}
+
+/* Luxury subtle scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #fffbf0;
+}
+::-webkit-scrollbar-thumb {
+  background: #e8dcc2;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #cc6f00;
+}
