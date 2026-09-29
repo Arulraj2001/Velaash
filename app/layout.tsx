@@ -7,6 +7,7 @@ import { BRAND } from "@/lib/constants";
 import { AuthProvider } from "@/features/auth/components/auth-provider";
 import { createClient } from "@/lib/supabase/server";
 import { CartToast } from "@/features/cart";
+import { WishlistSync, getWishlistProductIds } from "@/features/wishlist";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -49,12 +50,16 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let initialUser = null;
+  let initialWishlistIds: string[] = [];
   try {
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
     initialUser = user;
+    if (user) {
+      initialWishlistIds = await getWishlistProductIds(user.id);
+    }
   } catch (error: unknown) {
     if (
       typeof error === "object" &&
@@ -71,6 +76,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" className={`${cormorant.variable} ${plusJakarta.variable} scroll-smooth`}>
       <body className="bg-brand-cream text-brand-dark selection:bg-brand-gold selection:text-brand-dark flex min-h-screen flex-col font-sans antialiased">
         <AuthProvider initialUser={initialUser}>
+          <WishlistSync initialWishlistIds={initialWishlistIds} />
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />

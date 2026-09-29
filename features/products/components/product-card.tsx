@@ -4,26 +4,39 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Heart, Star } from "lucide-react";
+import { Heart, Star, ShoppingBag, ArrowRight } from "lucide-react";
 import type { ProductListItem } from "../types";
 import { useAuth } from "@/features/auth/components/auth-provider";
+import { useWishlistStore } from "@/features/wishlist/store/wishlist-store";
+import { useCartStore } from "@/features/cart/store/cart-store";
 import { formatCurrency } from "@/lib/utils";
 
 interface ProductCardProps {
   product: ProductListItem;
   priority?: boolean;
+  showQuickAdd?: boolean;
+  onWishlistChange?: (productId: string, isWishlisted: boolean) => void;
 }
 
-export function ProductCard({ product, priority = false }: ProductCardProps) {
+export function ProductCard({
+  product,
+  priority = false,
+  showQuickAdd = false,
+  onWishlistChange,
+}: ProductCardProps) {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
   // Color Swatch Selection State
   const [selectedColor, setSelectedColor] = React.useState<string | null>(null);
 
-  // Wishlist Optimistic Toggle State
-  const [isWishlisted, setIsWishlisted] = React.useState(false);
-  const [wishlistTooltip, setWishlistTooltip] = React.useState(false);
+  // Global Wishlist Store State
+  const isWishlisted = useWishlistStore((state) => state.wishlistIds.includes(product.id));
+  const [isTogglingWishlist, setIsTogglingWishlist] = React.useState(false);
+  const [wishlistTooltip, setWishlistTooltip] = React.useState<string | null>(null);
+
+  // Quick Add State feedback
+  const [isAddedFeedback, setIsAddedFeedback] = React.useState(false);
 
   // Determine images
   const primaryImage = product.images.find((img) => img.is_primary) || product.images[0];
@@ -35,7 +48,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
     : null;
   const activeImageUrl = activeColorObj?.image_url || primaryImage?.image_url;
 
-  // Badges calculations
+  // Badges & stock calculations
   const isNew = Boolean(product.is_new);
   const isSale = product.compare_at_price != null && product.compare_at_price > product.base_price;
   const discountPercent = isSale
@@ -44,22 +57,72 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       )
     : null;
   const isLowStock = product.total_stock > 0 && product.total_stock <= 5;
+  const isOutOfStock = product.total_stock <= 0 || product.stock_status === "out_of_stock";
+  const isInactive = product.is_active === false;
 
-  // Handle Wishlist Click
-  const handleWishlistToggle = (e: React.MouseEvent) => {
+  // Variants info for Quick Add
+  const activeVariants = product.variants.filter((v) => v.is_active);
+  const hasSingleVariant = activeVariants.length === 1;
+
+  // Handle Wishlist Click (Optimistic update with automatic server rollback on failure)
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      setWishlistTooltip(true);
-      setTimeout(() => setWishlistTooltip(false), 2500);
+      setWishlistTooltip("Please sign in to save items");
+      setTimeout(() => setWishlistTooltip(null), 2500);
       router.push(`/account/login?returnUrl=/products/${product.slug}`);
       return;
     }
 
-    setIsWishlisted((prev) => !prev);
-    // TODO: Wire real database write to public.wishlists when customer wishlist feature is initialized
-    console.log("Toggled wishlist for product:", product.id, !isWishlisted);
+    if (isTogglingWishlist) return;
+    setIsTogglingWishlist(true);
+
+    try {
+      const result = await useWishlistStore.getState().toggleWishlist(product.id);
+
+      if (!result.success && result.error) {
+        setWishlistTooltip(result.error);
+        setTimeout(() => setWishlistTooltip(null), 3000);
+      } else if (onWishlistChange) {
+        onWishlistChange(product.id, Boolean(result.isWishlisted));
+      }
+    } finally {
+      setIsTogglingWishlist(false);
+    }
+  };
+
+  // Handle Quick Add to Cart (Single Variant Products)
+  const handleQuickAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isInactive || isOutOfStock || !hasSingleVariant) return;
+
+    const singleVariant = activeVariants[0];
+    const imgUrl = activeImageUrl || primaryImage?.image_url || "/placeholder.jpg";
+    const variantPrice = singleVariant.price_override ?? product.base_price;
+
+    useCartStore.getState().addItem(
+      {
+        productId: product.id,
+        variantId: singleVariant.id,
+        title: product.name,
+        slug: product.slug,
+        size: singleVariant.size,
+        color: singleVariant.color,
+        colorHex: singleVariant.color_hex || undefined,
+        price: variantPrice,
+        compareAtPrice: product.compare_at_price,
+        image: imgUrl,
+        maxStock: singleVariant.stock_quantity,
+      },
+      1
+    );
+
+    setIsAddedFeedback(true);
+    setTimeout(() => setIsAddedFeedback(false), 2000);
   };
 
   // Handle Swatch Click
@@ -70,7 +133,11 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   };
 
   return (
-    <div className="group bg-brand-cream/40 hover:shadow-luxury relative flex flex-col justify-between rounded-xl font-sans transition-all duration-300">
+    <div
+      className={`group bg-brand-cream/40 hover:shadow-luxury relative flex flex-col justify-between rounded-xl font-sans transition-all duration-300 ${
+        isInactive ? "opacity-85" : ""
+      }`}
+    >
       {/* Clickable Card Link Wrapper */}
       <Link
         href={`/products/${product.slug}`}
@@ -87,6 +154,8 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
               priority={priority}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className={`object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105 ${
+                isInactive ? "grayscale-30" : ""
+              } ${
                 secondaryImage && !selectedColor
                   ? "transition-opacity duration-500 group-hover:opacity-0"
                   : ""
@@ -99,7 +168,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           )}
 
           {/* Secondary Hover Image (Crossfade on desktop when no color swatch override) */}
-          {secondaryImage && !selectedColor && (
+          {secondaryImage && !selectedColor && !isInactive && (
             <Image
               src={secondaryImage.image_url}
               alt={secondaryImage.alt_text || `${product.name} back view`}
@@ -111,20 +180,34 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
           {/* Stackable Badges (Top-Left) */}
           <div className="pointer-events-none absolute top-2.5 left-2.5 z-10 flex flex-col items-start gap-1.5">
-            {isNew && (
-              <span className="bg-brand-dark/90 text-brand-gold rounded-full px-2 py-0.5 text-[10px] font-medium tracking-widest uppercase shadow-sm backdrop-blur-xs">
-                New
+            {isInactive ? (
+              <span className="bg-zinc-800/90 text-white rounded-full px-2 py-0.5 text-[10px] font-medium tracking-wider uppercase shadow-sm backdrop-blur-xs">
+                No Longer Available
               </span>
-            )}
-            {isSale && discountPercent && (
-              <span className="rounded-full bg-rose-700 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-white uppercase shadow-sm">
-                {discountPercent}% OFF
-              </span>
-            )}
-            {isLowStock && (
-              <span className="rounded-full bg-amber-600/95 px-2 py-0.5 text-[10px] font-medium tracking-wider text-white shadow-sm backdrop-blur-xs">
-                Only {product.total_stock} Left
-              </span>
+            ) : (
+              <>
+                {isNew && (
+                  <span className="bg-brand-dark/90 text-brand-gold rounded-full px-2 py-0.5 text-[10px] font-medium tracking-widest uppercase shadow-sm backdrop-blur-xs">
+                    New
+                  </span>
+                )}
+                {isSale && discountPercent && (
+                  <span className="rounded-full bg-rose-700 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-white uppercase shadow-sm">
+                    {discountPercent}% OFF
+                  </span>
+                )}
+                {isOutOfStock ? (
+                  <span className="rounded-full bg-zinc-700/90 px-2 py-0.5 text-[10px] font-medium tracking-wider text-white shadow-sm backdrop-blur-xs">
+                    Out of Stock
+                  </span>
+                ) : (
+                  isLowStock && (
+                    <span className="rounded-full bg-amber-600/95 px-2 py-0.5 text-[10px] font-medium tracking-wider text-white shadow-sm backdrop-blur-xs">
+                      Only {product.total_stock} Left
+                    </span>
+                  )
+                )}
+              </>
             )}
           </div>
 
@@ -133,7 +216,8 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             type="button"
             onClick={handleWishlistToggle}
             aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-            className="text-brand-dark focus-visible:ring-brand-gold absolute top-2.5 right-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 shadow-sm backdrop-blur-xs transition-transform duration-200 hover:scale-110 hover:bg-white focus-visible:ring-2 focus-visible:outline-none active:scale-95"
+            disabled={isTogglingWishlist}
+            className="text-brand-dark focus-visible:ring-brand-gold absolute top-2.5 right-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 shadow-sm backdrop-blur-xs transition-transform duration-200 hover:scale-110 hover:bg-white focus-visible:ring-2 focus-visible:outline-none active:scale-95 disabled:opacity-70"
           >
             <Heart
               className={`h-4 w-4 transition-colors ${
@@ -144,10 +228,10 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             />
           </button>
 
-          {/* Unauthenticated Login Prompt Toast */}
+          {/* Tooltip Toast */}
           {wishlistTooltip && (
-            <div className="animate-in fade-in-0 zoom-in-95 bg-brand-dark text-brand-cream shadow-luxury absolute top-12 right-2.5 z-30 rounded-md px-2.5 py-1 text-[11px]">
-              Please sign in to save items
+            <div className="animate-in fade-in-0 zoom-in-95 bg-brand-dark text-brand-cream shadow-luxury absolute top-12 right-2.5 z-30 rounded-md px-2.5 py-1 text-[11px] whitespace-nowrap">
+              {wishlistTooltip}
             </div>
           )}
         </div>
@@ -195,7 +279,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
       {/* Color Swatches (Rendered outside the Link to allow interactive swatch clicking) */}
       {product.colors.length > 0 && (
-        <div className="px-3 pt-0 pb-3 sm:px-4 sm:pb-4">
+        <div className="px-3 pt-0 pb-3 sm:px-4 sm:pb-3">
           <div className="flex items-center gap-1.5">
             {product.colors.slice(0, 4).map((swatch) => {
               const isSelected = selectedColor === swatch.color;
@@ -222,6 +306,50 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
               </span>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Quick Add Action (Visible on Wishlist Grid) */}
+      {showQuickAdd && (
+        <div className="px-3 pb-3 sm:px-4 sm:pb-4 pt-1">
+          {isInactive ? (
+            <button
+              type="button"
+              disabled
+              className="w-full py-2.5 rounded-lg bg-zinc-200 text-zinc-500 text-xs font-medium cursor-not-allowed"
+            >
+              Unavailable
+            </button>
+          ) : isOutOfStock ? (
+            <button
+              type="button"
+              disabled
+              className="w-full py-2.5 rounded-lg bg-zinc-200 text-zinc-500 text-xs font-medium cursor-not-allowed"
+            >
+              Out of Stock
+            </button>
+          ) : hasSingleVariant ? (
+            <button
+              type="button"
+              onClick={handleQuickAddToCart}
+              className={`w-full py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs transition-all duration-150 ${
+                isAddedFeedback
+                  ? "bg-emerald-700 text-white"
+                  : "bg-brand-dark text-brand-cream hover:bg-brand-accent active:scale-98"
+              }`}
+            >
+              <ShoppingBag className="h-3.5 w-3.5" />
+              <span>{isAddedFeedback ? "Added to Bag!" : "Add to Bag"}</span>
+            </button>
+          ) : (
+            <Link
+              href={`/products/${product.slug}`}
+              className="w-full py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border border-brand-dark text-brand-dark hover:bg-brand-dark hover:text-brand-cream transition-colors duration-150 shadow-xs"
+            >
+              <span>Select Options</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          )}
         </div>
       )}
     </div>

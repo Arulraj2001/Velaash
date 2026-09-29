@@ -13,6 +13,7 @@ import { SearchOverlay } from "./search-overlay";
 import { MobileNavDrawer } from "./mobile-nav-drawer";
 import { AccountHeaderButton } from "./account-header-button";
 import { useCartCount } from "@/features/cart";
+import { useWishlistStore } from "@/features/wishlist/store/wishlist-store";
 
 interface HeaderClientProps {
   categories: NavigationCategory[];
@@ -31,6 +32,7 @@ export function HeaderClient({
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const { count: cartCount } = useCartCount();
+  const wishlistCount = useWishlistStore((state) => state.wishlistIds.length);
 
   // Shrink header slightly on scroll with smooth transitions
   React.useEffect(() => {
@@ -113,14 +115,14 @@ export function HeaderClient({
 
               {/* Wishlist Link with Count Badge */}
               <Link
-                href="/account"
+                href="/account/wishlist"
                 className="text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold relative hidden rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:inline-flex"
-                aria-label="Saved items in wishlist"
+                aria-label={`Saved items in wishlist (${wishlistCount})`}
                 title="Wishlist"
               >
                 <Heart className="h-5 w-5" />
                 <span className="bg-brand-light text-brand-dark border-brand-gold/40 absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full border text-[10px] font-bold shadow-xs">
-                  0
+                  {wishlistCount}
                 </span>
               </Link>
 

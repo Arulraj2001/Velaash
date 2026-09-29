@@ -38,13 +38,11 @@ const NAV_ITEMS: NavItem[] = [
     name: "Addresses",
     href: "/account/addresses",
     icon: MapPin,
-    badge: "Phase 4B",
   },
   {
     name: "Wishlist",
     href: "/account/wishlist",
     icon: Heart,
-    badge: "Phase 4B",
   },
   {
     name: "Profile Settings",
