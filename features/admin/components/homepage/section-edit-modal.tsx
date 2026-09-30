@@ -511,6 +511,12 @@ function SectionEditModalInner({
         if (!finalContent.items || (Array.isArray(finalContent.items) && finalContent.items.length === 0)) {
           finalContent.items = getTrustItems();
         }
+      } else if (section.section_type === "newsletter") {
+        if (!finalContent.headline) finalContent.headline = "Join the Velaash Circle";
+        if (!finalContent.subtext) {
+          finalContent.subtext =
+            "Subscribe to receive updates on new arrivals, seasonal collections, and wardrobe inspiration directly to your inbox.";
+        }
       }
 
       const res = await updateHomepageSectionAction(section.id, {
@@ -1763,7 +1769,7 @@ function SectionEditModalInner({
                 <input
                   type="text"
                   required
-                  value={getString("headline")}
+                  value={getString("headline", "Join the Velaash Circle")}
                   onChange={(e) => handleFieldChange("headline", e.target.value)}
                   placeholder="e.g. Join the Velaash Circle"
                   className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -1777,7 +1783,10 @@ function SectionEditModalInner({
                 <textarea
                   rows={3}
                   required
-                  value={getString("subtext")}
+                  value={getString(
+                    "subtext",
+                    "Subscribe to receive updates on new arrivals, seasonal collections, and wardrobe inspiration directly to your inbox."
+                  )}
                   onChange={(e) => handleFieldChange("subtext", e.target.value)}
                   placeholder="e.g. Subscribe to receive updates on new arrivals, seasonal collections..."
                   className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"

@@ -10,6 +10,7 @@ import {
   TestimonialsContentSchema,
   TrustItemSchema,
   ValueStripContentSchema,
+  NewsletterContentSchema,
 } from "../features/admin/types/homepage";
 
 function runHomepageAuditTests() {
@@ -258,6 +259,34 @@ function runHomepageAuditTests() {
   assert(
     "ValueStripContentSchema enforces minimum 1 item",
     !ValueStripContentSchema.safeParse(emptyValueStrip).success
+  );
+
+  // --- SECTION 8: NEWSLETTER TESTS ---
+  const validNewsletter = {
+    headline: "Join the Velaash Circle",
+    subtext: "Subscribe to receive updates on new arrivals, seasonal collections, and wardrobe inspiration directly to your inbox.",
+  };
+  assert(
+    "NewsletterContentSchema accepts valid headline and subtext",
+    NewsletterContentSchema.safeParse(validNewsletter).success
+  );
+
+  const invalidNewsletterNoHeadline = {
+    headline: "",
+    subtext: "Some subtext",
+  };
+  assert(
+    "NewsletterContentSchema rejects empty headline",
+    !NewsletterContentSchema.safeParse(invalidNewsletterNoHeadline).success
+  );
+
+  const invalidNewsletterNoSubtext = {
+    headline: "Join the Velaash Circle",
+    subtext: "   ",
+  };
+  assert(
+    "NewsletterContentSchema rejects empty subtext",
+    !NewsletterContentSchema.safeParse(invalidNewsletterNoSubtext).success
   );
 
   // URL normalization logic
