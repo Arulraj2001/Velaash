@@ -51,7 +51,7 @@ interface SectionEditModalProps {
   section: AdminHomepageSection | null;
   isOpen: boolean;
   onClose: () => void;
-  onSaved: (msg: string) => void;
+  onSaved: (msg: string, updatedSection?: AdminHomepageSection) => void;
   allProducts: ProductListItem[];
 }
 
@@ -83,7 +83,7 @@ function SectionEditModalInner({
 }: {
   section: AdminHomepageSection;
   onClose: () => void;
-  onSaved: (msg: string) => void;
+  onSaved: (msg: string, updatedSection?: AdminHomepageSection) => void;
   allProducts: ProductListItem[];
 }) {
   const [title, setTitle] = useState(section.title || "");
@@ -441,6 +441,23 @@ function SectionEditModalInner({
     handleFieldChange("items", current);
   };
 
+  const normalizeLink = (url: string | undefined): string => {
+    if (!url) return "";
+    const trimmed = url.trim();
+    if (!trimmed) return "";
+    if (
+      trimmed.startsWith("/") ||
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("#") ||
+      trimmed.startsWith("mailto:") ||
+      trimmed.startsWith("tel:")
+    ) {
+      return trimmed;
+    }
+    return `/${trimmed}`;
+  };
+
   // Submit Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -451,7 +468,11 @@ function SectionEditModalInner({
       const finalContent = { ...content };
 
       if (section.section_type === "hero_banner") {
-        const slides = getSlides();
+        const slides = getSlides().map((s) => ({
+          ...s,
+          cta_link: normalizeLink(s.cta_link),
+          secondary_cta_link: normalizeLink(s.secondary_cta_link),
+        }));
         finalContent.slides = slides;
         if (slides[0]) {
           finalContent.headline = slides[0].headline;
@@ -463,7 +484,10 @@ function SectionEditModalInner({
           finalContent.bg_image = slides[0].bg_image;
         }
       } else if (section.section_type === "occasion_strip") {
-        finalContent.items = getOccasionItems();
+        finalContent.items = getOccasionItems().map((item) => ({
+          ...item,
+          href: normalizeLink(item.href),
+        }));
         if (!finalContent.title) finalContent.title = "Shop by Occasion";
         if (!finalContent.subtitle) {
           finalContent.subtitle =
@@ -478,7 +502,14 @@ function SectionEditModalInner({
       });
 
       if (res.success) {
-        onSaved("Section saved successfully.");
+        const updatedSection: AdminHomepageSection = {
+          ...section,
+          title,
+          is_active: isActive,
+          content: finalContent,
+          updated_at: new Date().toISOString(),
+        };
+        onSaved(res.message || "Section saved successfully.", updatedSection);
         onClose();
       } else {
         setErrorMessage(res.error || "Failed to save section.");
@@ -606,7 +637,11 @@ function SectionEditModalInner({
                         {getSlides().length > 1 && (
                           <button
                             type="button"
-                            onClick={() => handleRemoveSlide(idx)}
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to remove Slide ${idx + 1}?`)) {
+                                handleRemoveSlide(idx);
+                              }
+                            }}
                             className="text-rose-500 hover:text-rose-700 p-1 rounded-md hover:bg-rose-50 transition-colors"
                             title="Delete slide"
                           >
@@ -731,8 +766,17 @@ function SectionEditModalInner({
 
                           <div className="flex items-center gap-2">
                             <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-                              <Upload className="w-3.5 h-3.5 text-slate-600" />
-                              <span>Upload Image</span>
+                              {isUploading ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" />
+                                  <span>Uploading...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-3.5 h-3.5 text-slate-600" />
+                                  <span>Upload Image</span>
+                                </>
+                              )}
                               <input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp"
@@ -743,6 +787,10 @@ function SectionEditModalInner({
                             </label>
                             <span className="text-[11px] text-slate-400">or enter image URL below</span>
                           </div>
+
+                          <p className="text-[10px] text-slate-400">
+                            Recommended: 2000 × 850px (Landscape), JPG or WebP under 5MB.
+                          </p>
 
                           <input
                             type="text"
@@ -1679,13 +1727,18 @@ function SectionEditModalInner({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploading}
               className="inline-flex items-center gap-2 px-5 py-2 bg-slate-900 hover:bg-black text-white text-sm font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Saving...</span>
+                </>
+              ) : isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Uploading Image...</span>
                 </>
               ) : (
                 <>

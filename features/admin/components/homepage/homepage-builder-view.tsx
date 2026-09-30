@@ -261,14 +261,15 @@ export function HomepageBuilderView({
         section={editingSection}
         isOpen={Boolean(editingSection)}
         onClose={() => setEditingSection(null)}
-        onSaved={(msg) => {
+        onSaved={(msg, updatedSection) => {
           showToast(msg);
-          // Reload local state
-          if (editingSection) {
+          // Reload local state with the newly updated section
+          if (updatedSection) {
             setSections((prev) =>
-              prev.map((s) => (s.id === editingSection.id ? { ...s, ...editingSection } : s))
+              prev.map((s) => (s.id === updatedSection.id ? updatedSection : s))
             );
           }
+          setEditingSection(null);
         }}
         allProducts={allProducts}
       />
