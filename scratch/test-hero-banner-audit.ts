@@ -8,6 +8,8 @@ import {
   CoutureSpotlightContentSchema,
   TestimonialItemSchema,
   TestimonialsContentSchema,
+  TrustItemSchema,
+  ValueStripContentSchema,
 } from "../features/admin/types/homepage";
 
 function runHomepageAuditTests() {
@@ -205,6 +207,57 @@ function runHomepageAuditTests() {
   assert(
     "TestimonialsContentSchema applies defaults when empty",
     parsedTestiDefault.success && parsedTestiDefault.data.headline === "Cherished by Our Patrons"
+  );
+
+  // --- SECTION 7: TRUST & VALUE STRIP TESTS ---
+  const validTrustItem = {
+    icon: "Truck",
+    title: "Pan-India Delivery",
+    description: "Reliable domestic shipping across all serviceable PIN codes.",
+  };
+  assert(
+    "TrustItemSchema accepts valid trust badge",
+    TrustItemSchema.safeParse(validTrustItem).success
+  );
+
+  const invalidTrustTitle = { ...validTrustItem, title: "" };
+  assert(
+    "TrustItemSchema rejects empty title",
+    !TrustItemSchema.safeParse(invalidTrustTitle).success
+  );
+
+  const invalidTrustIcon = { ...validTrustItem, icon: "NonExistentIcon" };
+  assert(
+    "TrustItemSchema rejects invalid icon enum",
+    !TrustItemSchema.safeParse(invalidTrustIcon).success
+  );
+
+  const validValueStrip = {
+    title: "Our Commitments",
+    items: [validTrustItem],
+  };
+  assert(
+    "ValueStripContentSchema accepts valid value strip with 1 item",
+    ValueStripContentSchema.safeParse(validValueStrip).success
+  );
+
+  const fiveTrustItems = [validTrustItem, validTrustItem, validTrustItem, validTrustItem, validTrustItem];
+  const invalidValueStripOver4 = {
+    title: "Our Commitments",
+    items: fiveTrustItems,
+  };
+  assert(
+    "ValueStripContentSchema enforces maximum 4 items",
+    !ValueStripContentSchema.safeParse(invalidValueStripOver4).success
+  );
+
+  const emptyValueStrip = {
+    title: "Our Commitments",
+    items: [],
+  };
+  assert(
+    "ValueStripContentSchema enforces minimum 1 item",
+    !ValueStripContentSchema.safeParse(emptyValueStrip).success
   );
 
   // URL normalization logic

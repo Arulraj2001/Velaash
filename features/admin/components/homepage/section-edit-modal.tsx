@@ -506,6 +506,11 @@ function SectionEditModalInner({
             "Real experiences from women who celebrate everyday grace in our tailored silhouettes.";
         }
         if (!finalContent.items) finalContent.items = getTestimonialItems();
+      } else if (section.section_type === "value_strip") {
+        if (!finalContent.title) finalContent.title = "Our Commitments";
+        if (!finalContent.items || (Array.isArray(finalContent.items) && finalContent.items.length === 0)) {
+          finalContent.items = getTrustItems();
+        }
       }
 
       const res = await updateHomepageSectionAction(section.id, {
@@ -1614,6 +1619,9 @@ function SectionEditModalInner({
                   placeholder="e.g. Our Commitments"
                   className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  💡 The Trust & Value Strip renders as a sleek, border-separated reassurance ribbon between storefront sections.
+                </p>
               </div>
 
               {/* Items List (max 4) */}
@@ -1659,9 +1667,11 @@ function SectionEditModalInner({
                             <button
                               type="button"
                               onClick={() => {
-                                const currentList = getTrustItems();
-                                const newItems = currentList.filter((_, i) => i !== idx);
-                                handleFieldChange("items", newItems);
+                                if (window.confirm(`Are you sure you want to remove '${item.title || `Item #${idx + 1}`}'?`)) {
+                                  const currentList = getTrustItems();
+                                  const newItems = currentList.filter((_, i) => i !== idx);
+                                  handleFieldChange("items", newItems);
+                                }
                               }}
                               className="text-slate-400 hover:text-rose-600 p-1 rounded"
                               title="Remove item"
