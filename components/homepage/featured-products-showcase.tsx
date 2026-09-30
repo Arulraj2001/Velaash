@@ -4,7 +4,8 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { ProductCard, type ProductListItem } from "@/features/products";
+import { ProductCard } from "@/features/products/components/product-card";
+import type { ProductListItem } from "@/features/products/types";
 
 interface FeaturedProductsShowcaseProps {
   title?: string;
