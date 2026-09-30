@@ -3,7 +3,7 @@
 # ==============================================================================
 
 [build]
-  command = "npm install --no-save @tailwindcss/oxide-linux-x64-gnu lightningcss-linux-x64-gnu && npm run build"
+  command = "npm install --include=dev --legacy-peer-deps @tailwindcss/oxide-linux-x64-gnu lightningcss-linux-x64-gnu && npm run build"
   publish = ".next"
 
 # Official Next.js Runtime plugin for Netlify (handles App Router, SSR, Server Actions, & Route Handlers)
