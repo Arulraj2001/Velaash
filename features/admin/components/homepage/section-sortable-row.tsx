@@ -14,6 +14,7 @@ import {
   Sparkles,
   ShieldCheck,
   Mail,
+  Heart,
   LucideIcon,
 } from "lucide-react";
 import type { AdminHomepageSection, HomepageSectionKind } from "../../types/homepage";
@@ -40,6 +41,18 @@ const SECTION_TYPE_CONFIG: Record<
     icon: Sparkles,
     badgeColor: "bg-purple-100 text-purple-800 border-purple-200",
   },
+  couture_spotlight: {
+    label: "Brand Story & Craft",
+    description: "The Craft of Velaash editorial spotlight with storytelling, imagery, and pillars",
+    icon: Sparkles,
+    badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
+  },
+  testimonials: {
+    label: "Patron Testimonials",
+    description: "Verified customer reviews, ratings, and testimonials showcasing buyer trust",
+    icon: Heart,
+    badgeColor: "bg-rose-100 text-rose-800 border-rose-200",
+  },
   value_strip: {
     label: "Trust & Value Strip",
     description: "4-column guarantee and reassurance badges (shipping, returns, payments)",
@@ -50,7 +63,7 @@ const SECTION_TYPE_CONFIG: Record<
     label: "Newsletter Signup",
     description: "Customer email acquisition banner for updates and promotions",
     icon: Mail,
-    badgeColor: "bg-rose-100 text-rose-800 border-rose-200",
+    badgeColor: "bg-teal-100 text-teal-800 border-teal-200",
   },
 };
 

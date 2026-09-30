@@ -12,6 +12,8 @@ export const HOMEPAGE_SECTION_TYPES = [
   "hero_banner",
   "category_grid",
   "featured_products",
+  "couture_spotlight",
+  "testimonials",
   "value_strip",
   "newsletter",
 ] as const;
@@ -63,6 +65,9 @@ export type HeroBannerContent = z.infer<typeof HeroBannerContentSchema>;
 export const CategoryGridContentSchema = z.object({
   title: z.string().trim().default("Explore Categories"),
   subtitle: z.string().trim().default("Thoughtfully tailored pieces across modern everyday silhouettes."),
+  show_occasions: z.boolean().default(true),
+  occasions_title: z.string().trim().default("Shop by Occasion"),
+  occasions_subtitle: z.string().trim().default("Thoughtfully curated palettes and cuts styled for life's celebrations and daily poise."),
 });
 
 export type CategoryGridContent = z.infer<typeof CategoryGridContentSchema>;
@@ -78,7 +83,43 @@ export const FeaturedProductsContentSchema = z.object({
 
 export type FeaturedProductsContent = z.infer<typeof FeaturedProductsContentSchema>;
 
-// 4. Trust Strip / Value Strip Content Schema
+// 4. Couture Spotlight (The Craft of Velaash / Brand Story) Content Schema
+export const CoutureSpotlightContentSchema = z.object({
+  tagline: z.string().trim().default("Artisanal Craft & Slow Fashion"),
+  headline: z.string().trim().min(1, "Headline is required").default("Consciously Crafted. Designed for Everyday Grace."),
+  description: z.string().trim().default(
+    "At Velaash, we reject disposable seasonal trends. Every piece is envisioned as an heirloom essential — pairing the airy breathability of authentic Indian textiles with sleek, contemporary cuts that seamlessly carry you from boardroom poise to festive soirees."
+  ),
+  image_url: z.string().trim().default("https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=80"),
+  detail_badge_title: z.string().trim().default("The Velaash Touch"),
+  detail_badge_text: z.string().trim().default("Hand-finished hems, concealed seams, and breathable natural textiles curated for lasting poise."),
+  cta_text: z.string().trim().default("Explore The Full Catalog"),
+  cta_link: z.string().trim().default("/shop"),
+});
+
+export type CoutureSpotlightContent = z.infer<typeof CoutureSpotlightContentSchema>;
+
+// 5. Client Testimonials Content Schema
+export const TestimonialItemSchema = z.object({
+  id: z.string().default(() => Math.random().toString(36).slice(2, 9)),
+  name: z.string().trim().min(1, "Customer name is required"),
+  location: z.string().trim().default("India"),
+  rating: z.coerce.number().min(1).max(5).default(5),
+  review: z.string().trim().min(1, "Review text is required"),
+  product_name: z.string().trim().optional().default(""),
+});
+
+export type TestimonialItem = z.infer<typeof TestimonialItemSchema>;
+
+export const TestimonialsContentSchema = z.object({
+  headline: z.string().trim().default("Cherished by Our Patrons"),
+  subtitle: z.string().trim().default("Real experiences from women who celebrate everyday grace in our tailored silhouettes."),
+  items: z.array(TestimonialItemSchema).default([]),
+});
+
+export type TestimonialsContent = z.infer<typeof TestimonialsContentSchema>;
+
+// 6. Trust Strip / Value Strip Content Schema
 export const TrustItemSchema = z.object({
   icon: z.enum(TRUST_ICON_KEYS).default("Truck"),
   title: z.string().trim().min(1, "Title is required"),
@@ -94,7 +135,7 @@ export const ValueStripContentSchema = z.object({
 
 export type ValueStripContent = z.infer<typeof ValueStripContentSchema>;
 
-// 5. Newsletter Content Schema
+// 7. Newsletter Content Schema
 export const NewsletterContentSchema = z.object({
   headline: z.string().trim().min(1, "Headline is required"),
   subtext: z.string().trim().min(1, "Subtext description is required"),

@@ -3,6 +3,8 @@ import type {
   HeroBannerContent,
   CategoryGridContent,
   FeaturedProductsContent,
+  CoutureSpotlightContent,
+  TestimonialsContent,
   ValueStripContent,
   NewsletterContent,
 } from "@/features/admin/types/homepage";
@@ -17,6 +19,8 @@ export interface LiveHomepageSection {
     | HeroBannerContent
     | CategoryGridContent
     | FeaturedProductsContent
+    | CoutureSpotlightContent
+    | TestimonialsContent
     | ValueStripContent
     | NewsletterContent
     | Record<string, unknown>;

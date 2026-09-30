@@ -2,16 +2,17 @@ import React from "react";
 import { Star, ShieldCheck, Heart } from "lucide-react";
 import { Container } from "@/components/ui/container";
 
-interface TestimonialItem {
-  id: string;
+export interface TestimonialItem {
+  id?: string;
   name: string;
-  location: string;
-  rating: number;
+  location?: string;
+  rating?: number;
   review: string;
-  productName: string;
+  productName?: string;
+  product_name?: string;
 }
 
-const TESTIMONIALS: TestimonialItem[] = [
+const DEFAULT_TESTIMONIALS: TestimonialItem[] = [
   {
     id: "1",
     name: "Ananya Sharma",
@@ -41,7 +42,19 @@ const TESTIMONIALS: TestimonialItem[] = [
   },
 ];
 
-export function ClientTestimonials() {
+export interface ClientTestimonialsProps {
+  headline?: string;
+  subtitle?: string;
+  items?: TestimonialItem[];
+}
+
+export function ClientTestimonials({
+  headline = "Cherished by Our Patrons",
+  subtitle = "Real experiences from women who celebrate everyday grace in our tailored silhouettes.",
+  items,
+}: ClientTestimonialsProps) {
+  const displayItems = items && items.length > 0 ? items : DEFAULT_TESTIMONIALS;
+
   return (
     <section className="py-16 sm:py-24 bg-white border-b border-brand-border/60">
       <Container size="xl">
@@ -52,50 +65,58 @@ export function ClientTestimonials() {
             <span>Velaash Women</span>
           </div>
           <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-brand-dark tracking-tight">
-            Cherished by Our Patrons
+            {headline}
           </h2>
           <p className="text-brand-muted text-xs sm:text-sm font-sans">
-            Real experiences from women who celebrate everyday grace in our tailored silhouettes.
+            {subtitle}
           </p>
         </div>
 
         {/* Testimonials Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          {TESTIMONIALS.map((item) => (
-            <div
-              key={item.id}
-              className="p-6 sm:p-8 rounded-2xl bg-brand-cream/20 border border-brand-border/70 hover:border-brand-gold/40 hover:shadow-luxury transition-all duration-300 flex flex-col justify-between"
-            >
-              <div className="space-y-4">
-                {/* 5 Stars */}
-                <div className="flex items-center gap-1 text-amber-500">
-                  {Array.from({ length: item.rating }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  ))}
+          {displayItems.map((item, idx) => {
+            const rating = item.rating || 5;
+            return (
+              <div
+                key={item.id || idx}
+                className="p-6 sm:p-8 rounded-2xl bg-brand-cream/20 border border-brand-border/70 hover:border-brand-gold/40 hover:shadow-luxury transition-all duration-300 flex flex-col justify-between"
+              >
+                <div className="space-y-4">
+                  {/* Rating Stars */}
+                  <div className="flex items-center gap-1 text-amber-500">
+                    {Array.from({ length: rating }).map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+
+                  {/* Review Text */}
+                  <p className="text-xs sm:text-sm font-sans text-brand-dark/90 leading-relaxed italic">
+                    &ldquo;{item.review}&rdquo;
+                  </p>
                 </div>
 
-                {/* Review Text */}
-                <p className="text-xs sm:text-sm font-sans text-brand-dark/90 leading-relaxed italic">
-                  &ldquo;{item.review}&rdquo;
-                </p>
+                {/* Author & Verification */}
+                <div className="pt-6 mt-6 border-t border-brand-border/50 flex items-center justify-between">
+                  <div>
+                    <h4 className="font-heading text-sm font-semibold text-brand-dark">
+                      {item.name}
+                    </h4>
+                    <p className="text-[11px] text-brand-muted">
+                      {item.location || "India"}
+                      {item.productName || item.product_name
+                        ? ` • ${item.productName || item.product_name}`
+                        : ""}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                    <span>Verified Buyer</span>
+                  </div>
+                </div>
               </div>
-
-              {/* Author & Verification */}
-              <div className="pt-6 mt-6 border-t border-brand-border/50 flex items-center justify-between">
-                <div>
-                  <h4 className="font-heading text-sm font-semibold text-brand-dark">
-                    {item.name}
-                  </h4>
-                  <p className="text-[11px] text-brand-muted">{item.location}</p>
-                </div>
-
-                <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                  <span>Verified Buyer</span>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Container>
     </section>

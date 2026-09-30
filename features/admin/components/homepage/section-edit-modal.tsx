@@ -18,6 +18,7 @@ import {
   Package,
   Headphones,
   Heart,
+  Star,
   LucideIcon,
   Search,
 } from "lucide-react";
@@ -173,8 +174,11 @@ function SectionEditModalInner({
     handleFieldChange("slides", current);
   };
 
-  // Image Upload handler for hero banner
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Image Upload handler for hero banner & couture spotlight
+  const handleImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    targetField = "bg_image"
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -187,7 +191,7 @@ function SectionEditModalInner({
 
       const res = await uploadHomepageImageAction(formData);
       if (res.success && res.url) {
-        handleFieldChange("bg_image", res.url);
+        handleFieldChange(targetField, res.url);
       } else {
         setErrorMessage(res.error || "Failed to upload image.");
       }
@@ -196,6 +200,53 @@ function SectionEditModalInner({
     } finally {
       setIsUploading(false);
     }
+  };
+
+  interface TestimonialItemState {
+    id: string;
+    name: string;
+    location: string;
+    rating: number;
+    review: string;
+    product_name?: string;
+  }
+
+  const getTestimonialItems = (): TestimonialItemState[] => {
+    if (Array.isArray(content.items)) {
+      return content.items as TestimonialItemState[];
+    }
+    return [];
+  };
+
+  const handleAddTestimonial = () => {
+    const current = getTestimonialItems();
+    const newItem: TestimonialItemState = {
+      id: `testi-${Date.now()}`,
+      name: "New Patron",
+      location: "Mumbai",
+      rating: 5,
+      review:
+        "The fabric quality of the Chanderi Kurta set is simply unmatched. It breathes so well and feels wonderfully luxurious.",
+      product_name: "Chanderi Anarkali Set",
+    };
+    handleFieldChange("items", [...current, newItem]);
+  };
+
+  const handleUpdateTestimonial = (
+    index: number,
+    field: keyof TestimonialItemState,
+    val: unknown
+  ) => {
+    const current = [...getTestimonialItems()];
+    if (current[index]) {
+      current[index] = { ...current[index], [field]: val };
+      handleFieldChange("items", current);
+    }
+  };
+
+  const handleRemoveTestimonial = (index: number) => {
+    const current = getTestimonialItems().filter((_, i) => i !== index);
+    handleFieldChange("items", current);
   };
 
   // Submit Handler
@@ -599,6 +650,64 @@ function SectionEditModalInner({
                   className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
+
+              {/* Shop by Occasion Navigation Strip Options */}
+              <div className="pt-4 border-t border-slate-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Shop by Occasion Strip
+                    </h3>
+                    <p className="text-[11px] text-slate-500">
+                      Display curated Festive, Workday, Evening, and Brunch occasion pills above category tiles.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="showOccasionsToggle"
+                      checked={content.show_occasions !== false}
+                      onChange={(e) => handleFieldChange("show_occasions", e.target.checked)}
+                      className="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer"
+                    />
+                    <label htmlFor="showOccasionsToggle" className="text-xs font-medium text-slate-700 cursor-pointer">
+                      {content.show_occasions !== false ? "Visible" : "Hidden"}
+                    </label>
+                  </div>
+                </div>
+
+                {content.show_occasions !== false && (
+                  <div className="space-y-3 pt-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Occasions Strip Title
+                      </label>
+                      <input
+                        type="text"
+                        value={getString("occasions_title", "Shop by Occasion")}
+                        onChange={(e) => handleFieldChange("occasions_title", e.target.value)}
+                        placeholder="e.g. Shop by Occasion"
+                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Occasions Strip Subtitle
+                      </label>
+                      <input
+                        type="text"
+                        value={getString(
+                          "occasions_subtitle",
+                          "Thoughtfully curated palettes and cuts styled for life's celebrations and daily poise."
+                        )}
+                        onChange={(e) => handleFieldChange("occasions_subtitle", e.target.value)}
+                        placeholder="e.g. Thoughtfully curated palettes..."
+                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -780,7 +889,342 @@ function SectionEditModalInner({
                 </div>
               )}
             </div>
-          )}          {/* 4. TRUST / VALUE STRIP */}
+          )}
+
+          {/* 4. COUTURE SPOTLIGHT (BRAND STORY & CRAFT) */}
+          {section.section_type === "couture_spotlight" && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs leading-relaxed">
+                <strong>Brand Craft Spotlight:</strong> This section conveys the slow fashion philosophy,
+                artisanal textile heritage, and tailored poise of your brand.
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Tagline / Pill Label
+                  </label>
+                  <input
+                    type="text"
+                    value={getString("tagline", "Artisanal Craft & Slow Fashion")}
+                    onChange={(e) => handleFieldChange("tagline", e.target.value)}
+                    placeholder="e.g. Artisanal Craft & Slow Fashion"
+                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Headline <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={getString("headline", "Consciously Crafted. Designed for Everyday Grace.")}
+                    onChange={(e) => handleFieldChange("headline", e.target.value)}
+                    placeholder="e.g. Consciously Crafted. Designed for Everyday Grace."
+                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Brand Narrative / Story Description <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={getString(
+                    "description",
+                    "At Velaash, we reject disposable seasonal trends. Every piece is envisioned as an heirloom essential — pairing the airy breathability of authentic Indian textiles with sleek, contemporary cuts that seamlessly carry you from boardroom poise to festive soirees."
+                  )}
+                  onChange={(e) => handleFieldChange("description", e.target.value)}
+                  placeholder="Enter brand craftsmanship and textile story..."
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              {/* Editorial Image Upload & Preview */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Editorial Craftsmanship Image <span className="text-rose-500">*</span>
+                </label>
+                <div className="space-y-3">
+                  {getString("image_url") ? (
+                    <div className="relative aspect-[4/3] w-full max-w-sm rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                      <Image
+                        src={getString("image_url")}
+                        alt="Editorial preview"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : null}
+
+                  <div className="flex items-center gap-3">
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                          <span>Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 text-slate-600" />
+                          <span>Upload Image</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(e) => handleImageUpload(e, "image_url")}
+                        disabled={isUploading}
+                        className="hidden"
+                      />
+                    </label>
+                    <span className="text-xs text-slate-400">or enter image URL below</span>
+                  </div>
+
+                  <input
+                    type="text"
+                    required
+                    value={getString("image_url")}
+                    onChange={(e) => handleFieldChange("image_url", e.target.value)}
+                    placeholder="https://images.unsplash.com/..."
+                    className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Floating Detail Badge */}
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                  Floating Luxury Detail Badge
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Badge Title
+                    </label>
+                    <input
+                      type="text"
+                      value={getString("detail_badge_title", "The Velaash Touch")}
+                      onChange={(e) => handleFieldChange("detail_badge_title", e.target.value)}
+                      placeholder="e.g. The Velaash Touch"
+                      className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      Badge Text
+                    </label>
+                    <input
+                      type="text"
+                      value={getString(
+                        "detail_badge_text",
+                        "Hand-finished hems, concealed seams, and breathable natural textiles curated for lasting poise."
+                      )}
+                      onChange={(e) => handleFieldChange("detail_badge_text", e.target.value)}
+                      placeholder="e.g. Hand-finished hems..."
+                      className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Call to Action Label
+                  </label>
+                  <input
+                    type="text"
+                    value={getString("cta_text", "Explore The Full Catalog")}
+                    onChange={(e) => handleFieldChange("cta_text", e.target.value)}
+                    placeholder="e.g. Explore The Full Catalog"
+                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Call to Action Link
+                  </label>
+                  <input
+                    type="text"
+                    value={getString("cta_link", "/shop")}
+                    onChange={(e) => handleFieldChange("cta_link", e.target.value)}
+                    placeholder="e.g. /shop"
+                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 5. PATRON TESTIMONIALS */}
+          {section.section_type === "testimonials" && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Section Headline
+                  </label>
+                  <input
+                    type="text"
+                    value={getString("headline", "Cherished by Our Patrons")}
+                    onChange={(e) => handleFieldChange("headline", e.target.value)}
+                    placeholder="e.g. Cherished by Our Patrons"
+                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Section Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={getString(
+                      "subtitle",
+                      "Real experiences from women who celebrate everyday grace in our tailored silhouettes."
+                    )}
+                    onChange={(e) => handleFieldChange("subtitle", e.target.value)}
+                    placeholder="e.g. Real experiences..."
+                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* Testimonials List */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Patron Reviews ({getTestimonialItems().length})
+                    </label>
+                    <p className="text-[11px] text-slate-500">
+                      Display authentic reviews with verified buyer badges on your homepage.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddTestimonial}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-colors shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Review</span>
+                  </button>
+                </div>
+
+                {getTestimonialItems().length === 0 ? (
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                    <p className="text-xs text-slate-500">
+                      No customer reviews yet. Click &quot;Add Review&quot; to showcase feedback from your patrons.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {getTestimonialItems().map((t, idx) => (
+                      <div
+                        key={t.id || idx}
+                        className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Review #{idx + 1}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTestimonial(idx)}
+                            className="text-rose-500 hover:text-rose-700 p-1 rounded-md hover:bg-rose-50 transition-colors"
+                            title="Remove review"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                              Customer Name
+                            </label>
+                            <input
+                              type="text"
+                              value={t.name || ""}
+                              onChange={(e) => handleUpdateTestimonial(idx, "name", e.target.value)}
+                              placeholder="e.g. Ananya Sharma"
+                              className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                              City / Location
+                            </label>
+                            <input
+                              type="text"
+                              value={t.location || ""}
+                              onChange={(e) => handleUpdateTestimonial(idx, "location", e.target.value)}
+                              placeholder="e.g. Mumbai"
+                              className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                              Star Rating (1 - 5)
+                            </label>
+                            <select
+                              value={t.rating || 5}
+                              onChange={(e) =>
+                                handleUpdateTestimonial(idx, "rating", Number(e.target.value))
+                              }
+                              className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                            >
+                              <option value={5}>★★★★★ (5 Stars)</option>
+                              <option value={4}>★★★★☆ (4 Stars)</option>
+                              <option value={3}>★★★☆☆ (3 Stars)</option>
+                              <option value={2}>★★☆☆☆ (2 Stars)</option>
+                              <option value={1}>★☆☆☆☆ (1 Star)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                            Silhouette / Product Mentioned (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={t.product_name || ""}
+                            onChange={(e) =>
+                              handleUpdateTestimonial(idx, "product_name", e.target.value)
+                            }
+                            placeholder="e.g. Chanderi Anarkali Set"
+                            className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                            Review Content
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={t.review || ""}
+                            onChange={(e) => handleUpdateTestimonial(idx, "review", e.target.value)}
+                            placeholder="Customer review quote..."
+                            className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 6. TRUST / VALUE STRIP */}
           {section.section_type === "value_strip" && (
             <div className="space-y-4">
               <div>

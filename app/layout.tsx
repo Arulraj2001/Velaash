@@ -4,6 +4,7 @@ import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { CustomerShell } from "@/components/layout/customer-shell";
 import { BRAND } from "@/lib/constants";
 import { AuthProvider } from "@/features/auth/components/auth-provider";
 import { createClient } from "@/lib/supabase/server";
@@ -114,12 +115,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         ) : (
           <AuthProvider initialUser={initialUser}>
             <WishlistSync initialWishlistIds={initialWishlistIds} />
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <CartToast />
+            <CustomerShell
+              header={<Header />}
+              footer={<Footer />}
+              overlays={
+                <>
+                  <CartToast />
+                  <CookieConsentBanner />
+                </>
+              }
+            >
+              {children}
+            </CustomerShell>
             <AnalyticsScripts />
-            <CookieConsentBanner />
           </AuthProvider>
         )}
         <Script

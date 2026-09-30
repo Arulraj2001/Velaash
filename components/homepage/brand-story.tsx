@@ -5,7 +5,27 @@ import { ArrowRight, Feather, Scissors, Sparkles } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 
-export function BrandStory() {
+export interface BrandStoryProps {
+  tagline?: string;
+  headline?: string;
+  description?: string;
+  imageUrl?: string;
+  detailBadgeTitle?: string;
+  detailBadgeText?: string;
+  ctaText?: string;
+  ctaLink?: string;
+}
+
+export function BrandStory({
+  tagline = "Artisanal Craft & Slow Fashion",
+  headline = "Consciously Crafted. Designed for Everyday Grace.",
+  description = "At Velaash, we reject disposable seasonal trends. Every piece is envisioned as an heirloom essential — pairing the airy breathability of authentic Indian textiles with sleek, contemporary cuts that seamlessly carry you from boardroom poise to festive soirees.",
+  imageUrl = "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=80",
+  detailBadgeTitle = "The Velaash Touch",
+  detailBadgeText = "Hand-finished hems, concealed seams, and breathable natural textiles curated for lasting poise.",
+  ctaText = "Explore The Full Catalog",
+  ctaLink = "/shop",
+}: BrandStoryProps) {
   return (
     <section className="py-16 sm:py-24 bg-brand-cream/30 border-b border-brand-border/60 overflow-hidden">
       <Container size="xl">
@@ -14,8 +34,8 @@ export function BrandStory() {
           <div className="lg:col-span-6 relative">
             <div className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-luxury border border-brand-border/80">
               <Image
-                src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=80"
-                alt="Velaash Craftsmanship and Natural Fabrics"
+                src={imageUrl}
+                alt={headline}
                 fill
                 className="object-cover object-center"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -24,30 +44,36 @@ export function BrandStory() {
             </div>
 
             {/* Floating Luxury Detail Badge */}
-            <div className="absolute -bottom-6 -right-4 sm:right-6 bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-xl border border-brand-border/70 max-w-[260px] hidden sm:block">
-              <div className="flex items-center gap-2 text-brand-gold text-xs font-semibold uppercase tracking-wider mb-1">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>The Velaash Touch</span>
+            {detailBadgeTitle ? (
+              <div className="absolute -bottom-6 -right-4 sm:right-6 bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-xl border border-brand-border/70 max-w-[260px] hidden sm:block">
+                <div className="flex items-center gap-2 text-brand-gold text-xs font-semibold uppercase tracking-wider mb-1">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{detailBadgeTitle}</span>
+                </div>
+                {detailBadgeText && (
+                  <p className="text-xs text-brand-dark/90 font-sans leading-relaxed">
+                    {detailBadgeText}
+                  </p>
+                )}
               </div>
-              <p className="text-xs text-brand-dark/90 font-sans leading-relaxed">
-                Hand-finished hems, concealed seams, and breathable natural textiles curated for lasting poise.
-              </p>
-            </div>
+            ) : null}
           </div>
 
           {/* Right: Narrative Story & Pillars */}
           <div className="lg:col-span-6 space-y-6">
             <div className="space-y-2">
-              <span className="text-brand-accent-dark text-xs font-semibold tracking-widest uppercase">
-                Artisanal Craft & Slow Fashion
-              </span>
+              {tagline && (
+                <span className="text-brand-accent-dark text-xs font-semibold tracking-widest uppercase">
+                  {tagline}
+                </span>
+              )}
               <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-brand-dark tracking-tight leading-[1.15]">
-                Consciously Crafted. Designed for Everyday Grace.
+                {headline}
               </h2>
             </div>
 
             <p className="text-brand-muted text-sm sm:text-base font-sans leading-relaxed">
-              At Velaash, we reject disposable seasonal trends. Every piece is envisioned as an heirloom essential — pairing the airy breathability of authentic Indian textiles with sleek, contemporary cuts that seamlessly carry you from boardroom poise to festive soirees.
+              {description}
             </p>
 
             {/* 3 Pillars */}
@@ -95,14 +121,16 @@ export function BrandStory() {
               </div>
             </div>
 
-            <div className="pt-2">
-              <Link href="/shop">
-                <Button variant="primary" size="md" className="shadow-luxury">
-                  <span>Explore The Full Catalog</span>
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
+            {ctaText && ctaLink ? (
+              <div className="pt-2">
+                <Link href={ctaLink}>
+                  <Button variant="primary" size="md" className="shadow-luxury">
+                    <span>{ctaText}</span>
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            ) : null}
           </div>
         </div>
       </Container>

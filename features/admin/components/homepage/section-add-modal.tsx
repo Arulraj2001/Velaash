@@ -8,6 +8,7 @@ import {
   Sparkles,
   ShieldCheck,
   Mail,
+  Heart,
   Loader2,
   AlertCircle,
   Plus,
@@ -49,6 +50,20 @@ const AVAILABLE_SECTIONS: {
     badge: "Merchandising",
     description: "Product showcase grid supporting automatic selection or custom hand-curated ordering.",
     icon: Sparkles,
+  },
+  {
+    type: "couture_spotlight",
+    title: "The Craft of Velaash",
+    badge: "Brand Story",
+    description: "Artisanal heritage spotlight showcasing slow fashion, natural textiles, and hand-touched details.",
+    icon: Sparkles,
+  },
+  {
+    type: "testimonials",
+    title: "Patron Testimonials",
+    badge: "Social Proof",
+    description: "Verified customer reviews and ratings celebrating everyday grace in your tailored silhouettes.",
+    icon: Heart,
   },
   {
     type: "value_strip",

@@ -18,6 +18,8 @@ import {
   HeroBannerContentSchema,
   CategoryGridContentSchema,
   FeaturedProductsContentSchema,
+  CoutureSpotlightContentSchema,
+  TestimonialsContentSchema,
   ValueStripContentSchema,
   NewsletterContentSchema,
 } from "../types/homepage";
@@ -54,6 +56,41 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
       secondary_cta_text: "Kurtas & Sets",
       secondary_cta_link: "/collections/kurtas-sets",
       bg_image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+      slides: [
+        {
+          id: "slide-1",
+          tag: "New Season Arrivals",
+          headline: "Modern Everyday Luxury",
+          subtitle: "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+          cta_text: "Explore Collection",
+          cta_link: "/shop",
+          secondary_cta_text: "Kurtas & Sets",
+          secondary_cta_link: "/collections/kurtas-sets",
+          bg_image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+        },
+        {
+          id: "slide-2",
+          tag: "Festive Capsule",
+          headline: "Timeless Grace, Artisanal Craft",
+          subtitle: "Handcrafted threadwork, rich jewel tones, and opulent fabrics tailored for your special celebrations.",
+          cta_text: "Shop Festive",
+          cta_link: "/collections/kurtas-sets",
+          secondary_cta_text: "Dresses",
+          secondary_cta_link: "/collections/dresses",
+          bg_image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=2000&q=85",
+        },
+        {
+          id: "slide-3",
+          tag: "Contemporary Co-Ords",
+          headline: "The Art of Breathable Dressing",
+          subtitle: "Pure cottons and relaxed co-ords designed to keep you poised from morning meetings to evening dinners.",
+          cta_text: "Discover Co-ords",
+          cta_link: "/collections/co-ord-sets",
+          secondary_cta_text: "View All",
+          secondary_cta_link: "/shop",
+          bg_image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=85",
+        },
+      ],
     },
   },
   {
@@ -64,6 +101,9 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
     content: {
       title: "Explore by Category",
       subtitle: "Thoughtfully tailored pieces across modern everyday silhouettes.",
+      show_occasions: true,
+      occasions_title: "Shop by Occasion",
+      occasions_subtitle: "Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise.",
     },
   },
   {
@@ -80,9 +120,61 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
     },
   },
   {
+    section_type: "couture_spotlight",
+    title: "The Craft of Velaash",
+    display_order: 4,
+    is_active: true,
+    content: {
+      tagline: "Artisanal Craft & Slow Fashion",
+      headline: "Consciously Crafted. Designed for Everyday Grace.",
+      description: "At Velaash, we reject disposable seasonal trends. Every piece is envisioned as an heirloom essential — pairing the airy breathability of authentic Indian textiles with sleek, contemporary cuts that seamlessly carry you from boardroom poise to festive soirees.",
+      image_url: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=80",
+      detail_badge_title: "The Velaash Touch",
+      detail_badge_text: "Hand-finished hems, concealed seams, and breathable natural textiles curated for lasting poise.",
+      cta_text: "Explore The Full Catalog",
+      cta_link: "/shop",
+    },
+  },
+  {
+    section_type: "testimonials",
+    title: "Patron Testimonials",
+    display_order: 5,
+    is_active: true,
+    content: {
+      headline: "Cherished by Our Patrons",
+      subtitle: "Real experiences from women who celebrate everyday grace in our tailored silhouettes.",
+      items: [
+        {
+          id: "1",
+          name: "Ananya Sharma",
+          location: "Mumbai",
+          rating: 5,
+          review: "The fabric quality of the Chanderi Kurta set is simply unmatched. It breathes so well even during humid days, and the subtle gold zari trim feels wonderfully luxurious without being over the top.",
+          product_name: "Chanderi Anarkali Set",
+        },
+        {
+          id: "2",
+          name: "Ritu Mathur",
+          location: "Bangalore",
+          rating: 5,
+          review: "Wore my Velaash co-ord set to an evening gallery preview and received countless compliments! The drape is exceptionally flattering, and the stitching is high-end boutique caliber.",
+          product_name: "Silk Blend Co-Ord Ensemble",
+        },
+        {
+          id: "3",
+          name: "Dr. Divya Patel",
+          location: "Ahmedabad",
+          rating: 5,
+          review: "Fast dispatch, gorgeous unboxing packaging, and the cotton weave is heavenly. It holds its silhouette beautifully after multiple gentle washes. Velaash is my new staple.",
+          product_name: "Everyday Classic Straight Kurta",
+        },
+      ],
+    },
+  },
+  {
     section_type: "value_strip",
     title: "Our Commitments",
-    display_order: 4,
+    display_order: 6,
     is_active: true,
     content: {
       title: "Our Commitments",
@@ -113,7 +205,7 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
   {
     section_type: "newsletter",
     title: "Stay In Touch",
-    display_order: 5,
+    display_order: 7,
     is_active: true,
     content: {
       headline: "Join the Velaash Circle",
@@ -178,6 +270,38 @@ export async function getAdminHomepageSectionsAction(): Promise<AdminHomepageSec
       if (!seenTypes.has(section.section_type)) {
         seenTypes.add(section.section_type);
         normalized.push(section);
+      }
+    }
+
+    // Auto-seed any missing standard sections (couture_spotlight, testimonials) into the database
+    const missingDefaults = DEFAULT_INITIAL_SECTIONS.filter(
+      (sec) => !seenTypes.has(sec.section_type)
+    );
+
+    if (missingDefaults.length > 0) {
+      let maxOrder = normalized.reduce((max, s) => Math.max(max, s.display_order), 0);
+      for (const missing of missingDefaults) {
+        maxOrder += 1;
+        try {
+          const { data: inserted, error: insertErr } = await adminClient
+            .from("homepage_sections")
+            .insert({
+              section_type: missing.section_type as HomepageSectionType,
+              title: missing.title,
+              display_order: maxOrder,
+              is_active: missing.is_active,
+              content: missing.content as unknown as Json,
+            })
+            .select("*")
+            .single();
+
+          if (!insertErr && inserted) {
+            normalized.push(normalizeSectionRow(inserted));
+            seenTypes.add(missing.section_type);
+          }
+        } catch (seedErr) {
+          console.warn(`Could not auto-seed missing section ${missing.section_type}:`, seedErr);
+        }
       }
     }
 
@@ -250,6 +374,18 @@ export async function updateHomepageSectionAction(
       validatedContent = parsed.data;
     } else if (sectionType === "value_strip") {
       const parsed = ValueStripContentSchema.safeParse(input.content);
+      if (!parsed.success) {
+        return { success: false, error: parsed.error.issues[0]?.message };
+      }
+      validatedContent = parsed.data;
+    } else if (sectionType === "couture_spotlight") {
+      const parsed = CoutureSpotlightContentSchema.safeParse(input.content);
+      if (!parsed.success) {
+        return { success: false, error: parsed.error.issues[0]?.message };
+      }
+      validatedContent = parsed.data;
+    } else if (sectionType === "testimonials") {
+      const parsed = TestimonialsContentSchema.safeParse(input.content);
       if (!parsed.success) {
         return { success: false, error: parsed.error.issues[0]?.message };
       }
@@ -425,6 +561,59 @@ export async function createHomepageSectionAction(
         mode: "auto",
         product_ids: [],
         limit: 8,
+        ...defaultContent,
+      };
+    } else if (section_type === "couture_spotlight") {
+      defaultTitle = defaultTitle || "The Craft of Velaash";
+      defaultContent = {
+        tagline: "Artisanal Craft & Slow Fashion",
+        headline: "Consciously Crafted. Designed for Everyday Grace.",
+        description:
+          "At Velaash, we reject disposable seasonal trends. Every piece is envisioned as an heirloom essential — pairing the airy breathability of authentic Indian textiles with sleek, contemporary cuts that seamlessly carry you from boardroom poise to festive soirees.",
+        image_url:
+          "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=80",
+        detail_badge_title: "The Velaash Touch",
+        detail_badge_text:
+          "Hand-finished hems, concealed seams, and breathable natural textiles curated for lasting poise.",
+        cta_text: "Explore The Full Catalog",
+        cta_link: "/shop",
+        ...defaultContent,
+      };
+    } else if (section_type === "testimonials") {
+      defaultTitle = defaultTitle || "Patron Testimonials";
+      defaultContent = {
+        headline: "Cherished by Our Patrons",
+        subtitle:
+          "Real experiences from women who celebrate everyday grace in our tailored silhouettes.",
+        items: [
+          {
+            id: "1",
+            name: "Ananya Sharma",
+            location: "Mumbai",
+            rating: 5,
+            review:
+              "The fabric quality of the Chanderi Kurta set is simply unmatched. It breathes so well even during humid days, and the subtle gold zari trim feels wonderfully luxurious without being over the top.",
+            product_name: "Chanderi Anarkali Set",
+          },
+          {
+            id: "2",
+            name: "Ritu Mathur",
+            location: "Bangalore",
+            rating: 5,
+            review:
+              "Wore my Velaash co-ord set to an evening gallery preview and received countless compliments! The drape is exceptionally flattering, and the stitching is high-end boutique caliber.",
+            product_name: "Silk Blend Co-Ord Ensemble",
+          },
+          {
+            id: "3",
+            name: "Dr. Divya Patel",
+            location: "Ahmedabad",
+            rating: 5,
+            review:
+              "Fast dispatch, gorgeous unboxing packaging, and the cotton weave is heavenly. It holds its silhouette beautifully after multiple gentle washes. Velaash is my new staple.",
+            product_name: "Everyday Classic Straight Kurta",
+          },
+        ],
         ...defaultContent,
       };
     } else if (section_type === "value_strip") {

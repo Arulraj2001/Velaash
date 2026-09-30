@@ -219,11 +219,18 @@ export default async function HomePage() {
               const title = (content.title as string) || "Explore by Category";
               const subtitle =
                 (content.subtitle as string) || "Thoughtfully tailored pieces across modern everyday silhouettes.";
+              const showOccasions = content.show_occasions !== false;
+              const occasionsTitle = (content.occasions_title as string) || "Shop by Occasion";
+              const occasionsSubtitle =
+                (content.occasions_subtitle as string) ||
+                "Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise.";
 
               return (
                 <React.Fragment key={section.id}>
-                  {/* Curated Occasion & Mood Navigation */}
-                  <OccasionStrip />
+                  {/* Curated Occasion & Mood Navigation (Togglable in Admin) */}
+                  {showOccasions && (
+                    <OccasionStrip title={occasionsTitle} subtitle={occasionsSubtitle} />
+                  )}
 
                   {/* Main Category Grid */}
                   <section className="py-16 sm:py-24 border-b border-brand-border/60 bg-white">
@@ -286,19 +293,53 @@ export default async function HomePage() {
               const subtitle = (content.subtitle as string) || "Handpicked styles from our collection.";
 
               return (
-                <React.Fragment key={section.id}>
-                  <FeaturedProductsShowcase
-                    title={title}
-                    subtitle={subtitle}
-                    products={featuredProducts}
-                  />
+                <FeaturedProductsShowcase
+                  key={section.id}
+                  title={title}
+                  subtitle={subtitle}
+                  products={featuredProducts}
+                />
+              );
+            }
 
-                  {/* Brand Craftsmanship & Fabric Story */}
-                  <BrandStory />
+            case "couture_spotlight": {
+              const content = (section.content as Record<string, unknown>) || {};
+              return (
+                <BrandStory
+                  key={section.id}
+                  tagline={content.tagline as string | undefined}
+                  headline={content.headline as string | undefined}
+                  description={content.description as string | undefined}
+                  imageUrl={content.image_url as string | undefined}
+                  detailBadgeTitle={content.detail_badge_title as string | undefined}
+                  detailBadgeText={content.detail_badge_text as string | undefined}
+                  ctaText={content.cta_text as string | undefined}
+                  ctaLink={content.cta_link as string | undefined}
+                />
+              );
+            }
 
-                  {/* Client Reviews & Social Proof */}
-                  <ClientTestimonials />
-                </React.Fragment>
+            case "testimonials": {
+              const content = (section.content as Record<string, unknown>) || {};
+              const rawItems = Array.isArray(content.items)
+                ? (content.items as Array<{
+                    id?: string;
+                    name: string;
+                    location?: string;
+                    rating?: number;
+                    review: string;
+                    product_name?: string;
+                    productName?: string;
+                  }>)
+                : undefined;
+
+              return (
+                <ClientTestimonials
+                  key={section.id}
+                  headline={content.headline as string | undefined}
+                  subtitle={content.subtitle as string | undefined}
+                  items={rawItems}
+                />
               );
             }
 

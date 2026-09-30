@@ -48,7 +48,15 @@ const OCCASIONS: OccasionItem[] = [
   },
 ];
 
-export function OccasionStrip() {
+export interface OccasionStripProps {
+  title?: string;
+  subtitle?: string;
+}
+
+export function OccasionStrip({
+  title = "Shop by Occasion",
+  subtitle = "Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise.",
+}: OccasionStripProps) {
   return (
     <section className="py-12 sm:py-16 bg-brand-cream/40 border-b border-brand-border/60">
       <Container size="xl">
@@ -60,11 +68,11 @@ export function OccasionStrip() {
               <span>Curated Styling</span>
             </div>
             <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-semibold text-brand-dark tracking-tight">
-              Shop by Occasion
+              {title}
             </h2>
           </div>
           <p className="text-brand-muted text-xs sm:text-sm font-sans max-w-md">
-            Thoughtfully curated palettes and cuts styled for life&apos;s special celebrations and effortless daily poise.
+            {subtitle}
           </p>
         </div>
 
