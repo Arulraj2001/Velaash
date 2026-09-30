@@ -3,6 +3,7 @@ import {
   HeroBannerContentSchema,
   OccasionCardSchema,
   OccasionStripContentSchema,
+  CategoryGridContentSchema,
 } from "../features/admin/types/homepage";
 
 function runHomepageAuditTests() {
@@ -86,6 +87,17 @@ function runHomepageAuditTests() {
     "OccasionStripContentSchema validates correctly",
     OccasionStripContentSchema.safeParse(occasionStripContent).success
   );
+
+  // --- SECTION 3: CATEGORY GRID TESTS ---
+  const validCategoryGrid = {
+    title: "Explore Categories",
+    subtitle: "Thoughtfully tailored pieces across modern everyday silhouettes.",
+  };
+  assert("CategoryGridContentSchema accepts valid title and subtitle", CategoryGridContentSchema.safeParse(validCategoryGrid).success);
+
+  const defaultCategoryGrid = {};
+  const parsedDefault = CategoryGridContentSchema.safeParse(defaultCategoryGrid);
+  assert("CategoryGridContentSchema applies defaults when empty", parsedDefault.success && parsedDefault.data.title === "Explore Categories");
 
   // URL normalization logic
   const normalizeLink = (url: string | undefined): string => {

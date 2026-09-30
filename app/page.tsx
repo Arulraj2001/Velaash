@@ -233,6 +233,7 @@ export default async function HomePage() {
             }
 
             case "category_grid": {
+              if (categories.length === 0) return null;
               const content = (section.content as Record<string, unknown>) || {};
               const title = (content.title as string) || "Explore by Category";
               const subtitle =
