@@ -499,6 +499,13 @@ function SectionEditModalInner({
         if (typeof finalContent.cta_link === "string") {
           finalContent.cta_link = normalizeLink(finalContent.cta_link);
         }
+      } else if (section.section_type === "testimonials") {
+        if (!finalContent.headline) finalContent.headline = "Cherished by Our Patrons";
+        if (!finalContent.subtitle) {
+          finalContent.subtitle =
+            "Real experiences from women who celebrate everyday grace in our tailored silhouettes.";
+        }
+        if (!finalContent.items) finalContent.items = getTestimonialItems();
       }
 
       const res = await updateHomepageSectionAction(section.id, {
@@ -1501,7 +1508,11 @@ function SectionEditModalInner({
                           </span>
                           <button
                             type="button"
-                            onClick={() => handleRemoveTestimonial(idx)}
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to remove ${t.name ? `the review by "${t.name}"` : `Review #${idx + 1}`}?`)) {
+                                handleRemoveTestimonial(idx);
+                              }
+                            }}
                             className="text-rose-500 hover:text-rose-700 p-1 rounded-md hover:bg-rose-50 transition-colors"
                             title="Remove review"
                           >

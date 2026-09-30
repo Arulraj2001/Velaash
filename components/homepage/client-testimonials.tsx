@@ -75,7 +75,7 @@ export function ClientTestimonials({
         {/* Testimonials Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {displayItems.map((item, idx) => {
-            const rating = item.rating || 5;
+            const rating = Math.min(5, Math.max(1, Math.round(item.rating || 5)));
             return (
               <div
                 key={item.id || idx}

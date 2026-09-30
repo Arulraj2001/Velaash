@@ -6,6 +6,8 @@ import {
   CategoryGridContentSchema,
   FeaturedProductsContentSchema,
   CoutureSpotlightContentSchema,
+  TestimonialItemSchema,
+  TestimonialsContentSchema,
 } from "../features/admin/types/homepage";
 
 function runHomepageAuditTests() {
@@ -160,6 +162,49 @@ function runHomepageAuditTests() {
   assert(
     "CoutureSpotlightContentSchema rejects empty headline",
     !CoutureSpotlightContentSchema.safeParse(invalidCoutureHeadline).success
+  );
+
+  // --- SECTION 6: CLIENT TESTIMONIALS TESTS ---
+  const validTestimonial = {
+    id: "testi-1",
+    name: "Ananya Sharma",
+    location: "Mumbai",
+    rating: 5,
+    review: "The fabric quality of the Chanderi Kurta set is simply unmatched.",
+    product_name: "Chanderi Anarkali Set",
+  };
+  assert(
+    "TestimonialItemSchema accepts valid testimonial item",
+    TestimonialItemSchema.safeParse(validTestimonial).success
+  );
+
+  const invalidTestimonialName = { ...validTestimonial, name: " " };
+  assert(
+    "TestimonialItemSchema rejects empty customer name",
+    !TestimonialItemSchema.safeParse(invalidTestimonialName).success
+  );
+
+  const invalidTestimonialReview = { ...validTestimonial, review: "" };
+  assert(
+    "TestimonialItemSchema rejects empty review quote",
+    !TestimonialItemSchema.safeParse(invalidTestimonialReview).success
+  );
+
+  const validTestimonialsSection = {
+    headline: "Cherished by Our Patrons",
+    subtitle: "Real experiences from women who celebrate everyday grace.",
+    items: [validTestimonial],
+  };
+  assert(
+    "TestimonialsContentSchema validates correctly",
+    TestimonialsContentSchema.safeParse(validTestimonialsSection).success
+  );
+
+  const defaultTestimonials = {};
+  const parsedTestiDefault = TestimonialsContentSchema.safeParse(defaultTestimonials);
+  assert(
+    "TestimonialsContentSchema applies defaults when empty",
+    parsedTestiDefault.success && parsedTestiDefault.data.headline === "Cherished by Our Patrons"
   );
 
   // URL normalization logic
