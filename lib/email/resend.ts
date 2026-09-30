@@ -50,7 +50,7 @@ export interface SendEmailResult {
 export async function sendTransactionalEmail(
   options: SendEmailOptions
 ): Promise<SendEmailResult> {
-  const from = env.EMAIL_FROM || "Velaash <orders@velaash.in>";
+  const from = env.EMAIL_FROM || "orders@velaash.in";
 
   // Record into audit log
   DISPATCHED_EMAILS_LOG.push({

@@ -8,7 +8,7 @@ export const env = createEnv({
     RAZORPAY_KEY_SECRET: z.string().min(1).optional(),
     RAZORPAY_WEBHOOK_SECRET: z.string().min(1).optional(),
     RESEND_API_KEY: z.string().min(1).optional(),
-    EMAIL_FROM: z.string().min(1).optional().default("Velaash <orders@velaash.in>"),
+    EMAIL_FROM: z.string().min(1).optional(),
     UPSTASH_REDIS_REST_URL: z.string().url().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
     // Shiprocket logistics integration (optional — mock mode active when absent)
@@ -22,7 +22,7 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
-    NEXT_PUBLIC_APP_URL: z.string().url().optional().default(process.env.NODE_ENV === "production" ? "https://velaash.in" : "http://localhost:3000"),
+    NEXT_PUBLIC_APP_URL: z.string().url().optional().default("http://localhost:3000"),
     NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().optional(),
     NEXT_PUBLIC_GA4_MEASUREMENT_ID: z.string().optional(),
     NEXT_PUBLIC_META_PIXEL_ID: z.string().optional(),
