@@ -4,6 +4,7 @@ import {
   OccasionCardSchema,
   OccasionStripContentSchema,
   CategoryGridContentSchema,
+  FeaturedProductsContentSchema,
 } from "../features/admin/types/homepage";
 
 function runHomepageAuditTests() {
@@ -98,6 +99,38 @@ function runHomepageAuditTests() {
   const defaultCategoryGrid = {};
   const parsedDefault = CategoryGridContentSchema.safeParse(defaultCategoryGrid);
   assert("CategoryGridContentSchema applies defaults when empty", parsedDefault.success && parsedDefault.data.title === "Explore Categories");
+
+  // --- SECTION 4: FEATURED PRODUCTS TESTS ---
+  const validAutoFeatured = {
+    title: "Featured Arrivals",
+    subtitle: "Handpicked styles from our collection.",
+    mode: "auto",
+    product_ids: [],
+    limit: 12,
+  };
+  assert(
+    "FeaturedProductsContentSchema accepts valid auto config with limit 12",
+    FeaturedProductsContentSchema.safeParse(validAutoFeatured).success
+  );
+
+  const validManualFeatured = {
+    title: "Curated Silk Sets",
+    subtitle: "Handpicked styles.",
+    mode: "manual",
+    product_ids: ["prod-1", "prod-2", "prod-3"],
+    limit: 8,
+  };
+  const parsedManual = FeaturedProductsContentSchema.safeParse(validManualFeatured);
+  assert(
+    "FeaturedProductsContentSchema accepts manual mode with product_ids",
+    parsedManual.success && parsedManual.data.product_ids.length === 3
+  );
+
+  const invalidMode = { ...validAutoFeatured, mode: "invalid_mode" };
+  assert(
+    "FeaturedProductsContentSchema rejects invalid mode",
+    !FeaturedProductsContentSchema.safeParse(invalidMode).success
+  );
 
   // URL normalization logic
   const normalizeLink = (url: string | undefined): string => {

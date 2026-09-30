@@ -45,17 +45,17 @@ export function FeaturedProductsShowcase({
 
   // Filter products based on active tab
   const displayedProducts = useMemo(() => {
-    if (activeTab === "all") return products.slice(0, 8);
+    if (activeTab === "all") return products;
     if (activeTab === "new") {
       const newItems = products.filter((p) => p.is_new);
-      return newItems.length > 0 ? newItems.slice(0, 8) : [...products].reverse().slice(0, 8);
+      return newItems.length > 0 ? newItems : [...products].reverse();
     }
     if (activeTab === "bestsellers") {
       const featured = products.filter((p) => p.is_featured);
-      return featured.length > 0 ? featured.slice(0, 8) : products.slice(0, 8);
+      return featured.length > 0 ? featured : products;
     }
     // Specific category slug
-    return products.filter((p) => p.category_slug === activeTab).slice(0, 8);
+    return products.filter((p) => p.category_slug === activeTab);
   }, [products, activeTab]);
 
   return (
