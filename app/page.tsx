@@ -21,7 +21,7 @@ import { getProducts, ProductCard, type ProductListItem } from "@/features/produ
 import { getSiteSettings } from "@/features/settings";
 import { env } from "@/lib/env";
 
-const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.com").replace(/\/$/, "");
+const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 import { getHomepageSections } from "@/features/homepage";
 import { HomepageNewsletter } from "@/components/homepage/homepage-newsletter";
 

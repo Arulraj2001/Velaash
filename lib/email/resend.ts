@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import * as Sentry from "@sentry/nextjs";
 import { env } from "@/lib/env";
 import React from "react";
 
@@ -49,7 +50,7 @@ export interface SendEmailResult {
 export async function sendTransactionalEmail(
   options: SendEmailOptions
 ): Promise<SendEmailResult> {
-  const from = env.EMAIL_FROM || "Velaash <orders@velaash.com>";
+  const from = env.EMAIL_FROM || "Velaash <orders@velaash.in>";
 
   // Record into audit log
   DISPATCHED_EMAILS_LOG.push({
@@ -63,9 +64,15 @@ export async function sendTransactionalEmail(
 
   const resend = getResendClient();
 
-  if (!resend) {
+  // In development/test environments, mock dispatch to RFC 2606 reserved test domains
+  // because Resend sandbox API strictly rejects domains like example.com
+  const isTestDomain =
+    /@(example\.(com|org|net)|.*\.test|.*\.example)$/i.test(options.to) ||
+    options.to.endsWith("@example-velaash.in");
+
+  if (!resend || isTestDomain) {
     console.info(
-      `[Email:Mock] RESEND_API_KEY not configured. Simulated dispatch to "${options.to}" with subject: "${options.subject}"`
+      `[Email:Mock] ${isTestDomain ? "Test domain detected" : "RESEND_API_KEY not configured"}. Simulated dispatch to "${options.to}" with subject: "${options.subject}"`
     );
     return {
       success: true,
@@ -88,6 +95,13 @@ export async function sendTransactionalEmail(
         `[Email:Error] Resend API rejected message to "${options.to}" for order "${options.orderNumber}":`,
         error
       );
+      Sentry.captureMessage(
+        `[Email:Warning] Resend failed to dispatch email for order ${options.orderNumber || "N/A"}: ${error.message}`,
+        {
+          level: "warning",
+          tags: { service: "email", orderNumber: options.orderNumber },
+        }
+      );
       return {
         success: false,
         error: error.message,
@@ -109,6 +123,10 @@ export async function sendTransactionalEmail(
       `[Email:Exception] Network or unexpected exception while sending email to "${options.to}":`,
       msg
     );
+    Sentry.captureException(err, {
+      level: "warning",
+      tags: { service: "email", orderNumber: options.orderNumber },
+    });
     return {
       success: false,
       error: msg,

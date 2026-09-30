@@ -20,6 +20,7 @@ import {
   markOrderAsRefundedAction,
   cancelAdminOrderAction,
   resendOrderConfirmationEmailAction,
+  pushToShiprocketAction,
 } from "../actions/order-actions";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -79,6 +80,9 @@ export function AdminOrderDetailView({
   // Admin Notes State
   const [adminNotes, setAdminNotes] = useState(order.adminNotes || "");
   const [notesSaved, setNotesSaved] = useState(false);
+
+  // Shiprocket push state
+  const [shiprocketPushing, setShiprocketPushing] = useState(false);
 
   // Transitions available for current status
   const allowedNextTransitions = VALID_ORDER_STATUS_TRANSITIONS[order.status] || [];
@@ -252,6 +256,36 @@ export function AdminOrderDetailView({
     });
   };
 
+  // Push to Shiprocket
+  const handlePushToShiprocket = async () => {
+    if (shiprocketPushing) return;
+    setShiprocketPushing(true);
+    setNotification(null);
+    try {
+      const res = await pushToShiprocketAction(order.orderNumber);
+      if (res.success) {
+        const awbMsg = res.awbCode ? ` AWB: ${res.awbCode}.` : "";
+        setNotification({
+          type: "success",
+          message: `Order pushed to Shiprocket successfully.${awbMsg} Status updated to Shipped.`,
+        });
+        setOrder((prev) => ({
+          ...prev,
+          status: "shipped",
+          trackingNumber: res.awbCode ?? prev.trackingNumber,
+          canCancel: false,
+        }));
+      } else {
+        setNotification({
+          type: "error",
+          message: res.error || "Failed to push order to Shiprocket.",
+        });
+      }
+    } finally {
+      setShiprocketPushing(false);
+    }
+  };
+
   const statusStyle = ORDER_STATUS_STYLES[order.status] || ORDER_STATUS_STYLES.pending;
   const payStyle = PAYMENT_STATUS_STYLES[order.paymentStatus] || PAYMENT_STATUS_STYLES.pending;
 
@@ -289,6 +323,26 @@ export function AdminOrderDetailView({
             <Mail className="h-3.5 w-3.5 text-slate-500" />
             Resend Email
           </button>
+
+          {/* Push to Shiprocket — only for packed orders */}
+          {order.status === "packed" && (
+            <button
+              type="button"
+              disabled={isPending || shiprocketPushing}
+              onClick={handlePushToShiprocket}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-300 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-800 hover:bg-indigo-100 disabled:opacity-50 transition-colors shadow-2xs"
+            >
+              {shiprocketPushing ? (
+                <svg className="h-3.5 w-3.5 animate-spin text-indigo-600" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+              ) : (
+                <Truck className="h-3.5 w-3.5 text-indigo-600" />
+              )}
+              {shiprocketPushing ? "Pushing..." : "Push to Shiprocket"}
+            </button>
+          )}
 
           {/* Owner-Only: Mark as Refunded */}
           {isOwner && order.canRefund && (

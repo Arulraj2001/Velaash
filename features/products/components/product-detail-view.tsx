@@ -25,6 +25,7 @@ import { ProductAccordion } from "./product-accordion";
 import { MobileStickyBar } from "./mobile-sticky-bar";
 import { ProductReviewsSection } from "@/features/reviews/components/product-reviews-section";
 import { trackViewItem, trackAddToCart } from "@/features/analytics";
+import { env } from "@/lib/env";
 
 interface ProductDetailViewProps {
   product: ProductDetailItem;
@@ -165,10 +166,11 @@ export function ProductDetailView({
   };
 
   // 10. WhatsApp enquiry link
+  const siteUrl = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
   const currentUrl =
     typeof window !== "undefined"
       ? window.location.href
-      : `https://velaash.com/products/${product.slug}`;
+      : `${siteUrl}/products/${product.slug}`;
   const whatsappQuery = `Hi Velaash! I am interested in ordering "${product.name}" (${currentUrl}) in ${selectedColor}, size ${selectedSize}. Could you share availability and delivery details?`;
   const whatsappHref = `https://wa.me/918508643832?text=${encodeURIComponent(whatsappQuery)}`;
 

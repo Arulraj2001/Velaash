@@ -116,7 +116,7 @@ export async function Footer() {
                   ))}
                   <li className="text-brand-cream/50 space-y-0.5 pt-2 text-[11px]">
                     <p>Support: {storeProfile.whatsapp_number || storeProfile.phone}</p>
-                    {/* Flag: Temporary contact email bestrchandra@gmail.com; to be replaced with a professional domain email (e.g. care@velaash.com) once provisioned by client */}
+                    {/* Flag: Temporary contact email bestrchandra@gmail.com; to be replaced with a professional domain email (e.g. care@velaash.in) once provisioned by client */}
                     <p>Email: {storeProfile.email}</p>
                   </li>
                 </ul>

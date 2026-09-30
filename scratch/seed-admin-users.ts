@@ -9,6 +9,9 @@ try {
   // Ignore if already loaded in environment
 }
 
+import { assertSafeScriptExecution } from "../lib/script-guard";
+assertSafeScriptExecution("scratch/seed-admin-users.ts");
+
 // Node < 22 WebSocket shim for @supabase/realtime-js
 if (typeof globalThis.WebSocket === "undefined") {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

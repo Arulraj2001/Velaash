@@ -17,7 +17,7 @@ import {
 import { BRAND } from "@/lib/constants";
 import { env } from "@/lib/env";
 
-const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.com").replace(/\/$/, "");
+const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;

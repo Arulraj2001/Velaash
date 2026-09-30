@@ -66,7 +66,9 @@ export async function getCustomerWishlist(
   try {
     let supabase;
     try {
-      supabase = await createClient();
+      const client = await createClient();
+      const { data: { user } } = await client.auth.getUser();
+      supabase = user ? client : createAdminClient();
     } catch {
       supabase = createAdminClient();
     }

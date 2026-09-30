@@ -4,6 +4,9 @@ try {
   process.loadEnvFile(".env.local");
 } catch {}
 
+import { assertSafeScriptExecution } from "../lib/script-guard";
+assertSafeScriptExecution("scratch/seed-category-size-charts.ts");
+
 if (typeof globalThis.WebSocket === "undefined") {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any).WebSocket = class DummyWebSocket {

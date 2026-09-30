@@ -221,7 +221,7 @@ async function main() {
       shipping_address: {
         fullName: "Test Customer",
         phone: "+91 9999988888",
-        email: "test.customer@velaash.com",
+        email: "test.customer@velaash.in",
         addressLine1: "123 Silk Lane",
         city: "Chennai",
         state: "Tamil Nadu",

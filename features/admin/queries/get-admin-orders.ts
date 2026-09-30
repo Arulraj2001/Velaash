@@ -349,6 +349,8 @@ export async function getAdminOrderDetail(
     cancelReason: order.cancel_reason,
     trackingNumber: tracking.trackingNumber,
     courierName: tracking.courierName,
+    shiprocketOrderId: order.shiprocket_order_id ?? null,
+    shiprocketShipmentId: order.shiprocket_shipment_id ?? null,
     razorpayPaymentId: order.razorpay_payment_id,
     razorpayOrderId: order.razorpay_order_id,
     createdAt: order.created_at,

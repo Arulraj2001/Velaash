@@ -455,10 +455,10 @@ export default async function OrderConfirmationPage({
                 Contact our customer support team with your order reference{" "}
                 <strong className="text-brand-dark">{order.orderNumber}</strong> at{" "}
                 <a
-                  href="mailto:support@velaash.com"
+                  href="mailto:support@velaash.in"
                   className="font-medium text-brand-accent underline underline-offset-2"
                 >
-                  support@velaash.com
+                  support@velaash.in
                 </a>
                 .
               </p>

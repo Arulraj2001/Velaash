@@ -9,7 +9,7 @@ import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
 import { BRAND } from "@/lib/constants";
 import { env } from "@/lib/env";
 
-const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.com").replace(/\/$/, "");
+const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     product.description ||
     `${product.name} - Contemporary everyday luxury clothing by Velaash.`;
 
-  const primaryImage = product.images[0]?.image_url || "https://velaash.com/og-image.jpg";
+  const primaryImage = product.images[0]?.image_url || `${BASE_URL}/og-image.jpg`;
 
   return {
     title,

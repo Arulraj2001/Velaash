@@ -18,7 +18,7 @@
 import type { MetadataRoute } from "next";
 import { env } from "@/lib/env";
 
-const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.com").replace(/\/$/, "");
+const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 
 export default function robots(): MetadataRoute.Robots {
   return {

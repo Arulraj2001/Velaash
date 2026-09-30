@@ -102,7 +102,7 @@ export function AdminLoginForm() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="staff@velaash.com"
+                placeholder="staff@velaash.in"
                 className="border-brand-accent/40 bg-brand-dark-muted/80 text-brand-cream placeholder:text-brand-cream/30 focus-visible:border-brand-gold focus-visible:ring-brand-gold/30 flex h-11 w-full rounded-md border py-2 pr-3.5 pl-10 text-sm focus-visible:ring-2 focus-visible:outline-none"
               />
             </div>

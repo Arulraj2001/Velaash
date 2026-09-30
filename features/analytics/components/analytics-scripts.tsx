@@ -13,7 +13,6 @@ function AnalyticsContent() {
 
   const ga4Id = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID?.trim();
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
-  const clarityId = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID?.trim();
 
   // Automatic page_view event on route transitions when consent is active
   useEffect(() => {
@@ -33,7 +32,7 @@ function AnalyticsContent() {
   }
 
   // If no analytics IDs are configured in environment variables, skip cleanly
-  if (!ga4Id && !pixelId && !clarityId) {
+  if (!ga4Id && !pixelId) {
     return null;
   }
 
@@ -74,19 +73,6 @@ function AnalyticsContent() {
             'https://connect.facebook.net/en_US/fbevents.js');
             fbq('init', '${pixelId}');
             fbq('track', 'PageView');
-          `}
-        </Script>
-      )}
-
-      {/* 3. Microsoft Clarity */}
-      {clarityId && (
-        <Script id="clarity-init" strategy="afterInteractive">
-          {`
-            (function(c,l,a,r,i,t,y){
-                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-            })(window, document, "clarity", "script", "${clarityId}");
           `}
         </Script>
       )}

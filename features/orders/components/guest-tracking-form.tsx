@@ -246,6 +246,7 @@ export function GuestTrackingForm() {
                 <CourierTrackingBanner
                   courierName={result.order.courierName}
                   trackingNumber={result.order.trackingNumber}
+                  enableLiveTracking={true}
                 />
               )}
             </div>

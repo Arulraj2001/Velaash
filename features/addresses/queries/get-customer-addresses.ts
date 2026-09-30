@@ -15,7 +15,9 @@ export async function getCustomerAddresses(
   try {
     let supabase;
     try {
-      supabase = await createClient();
+      const client = await createClient();
+      const { data: { user } } = await client.auth.getUser();
+      supabase = user ? client : createAdminClient();
     } catch {
       // Fallback to admin client when called outside request scope (e.g. tests)
       supabase = createAdminClient();

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { verifyRazorpayWebhookSignature } from "@/lib/razorpay";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MOCK_CLOTHING_PRODUCTS } from "@/features/products/queries/mock-products";
@@ -43,6 +44,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!isValid) {
       console.error("[WEBHOOK SECURITY ALERT] Invalid Razorpay webhook signature received.");
+      Sentry.captureMessage("[WEBHOOK SECURITY ALERT] Invalid Razorpay webhook signature received", {
+        level: "warning",
+        tags: { service: "razorpay_webhook" },
+      });
       return NextResponse.json(
         { error: "Invalid webhook signature" },
         { status: 400 }
@@ -244,7 +249,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const totalAmountRupees = paymentEntity?.amount
         ? paymentEntity.amount / 100
         : 0;
-      const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const appUrl = (env.NEXT_PUBLIC_APP_URL || "https://velaash.in").replace(/\/$/, "");
       const retryUrl = `${appUrl}/checkout?retry=${receiptOrderNumber || razorpayOrderId}`;
 
       try {
@@ -289,6 +294,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   } catch (err) {
     console.error("Fatal error handling Razorpay webhook:", err);
+    Sentry.captureException(err, { tags: { service: "razorpay_webhook" } });
     return NextResponse.json(
       { error: "Internal webhook processing error" },
       { status: 500 }

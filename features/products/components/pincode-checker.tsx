@@ -4,34 +4,87 @@ import * as React from "react";
 import { Truck, Check, AlertCircle, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
-interface PincodeCheckerProps {
-  freeShippingThreshold?: number;
+interface ServiceabilityResponse {
+  serviceable: boolean;
+  estimatedDays: number | null;
+  courierName: string | null;
+  codAvailable: boolean;
+  isLive: boolean;
+  degraded?: boolean;
+  error?: string;
 }
 
-export function PincodeChecker({ freeShippingThreshold = 999 }: PincodeCheckerProps) {
-  const [pincode, setPincode] = React.useState("");
-  const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
-  const [message, setMessage] = React.useState<string | null>(null);
+interface PincodeCheckerProps {
+  freeShippingThreshold?: number;
+  /** Product weight in grams — passed from PDP to improve rate accuracy */
+  productWeightGrams?: number;
+  /** Approximate product price — passed for declared value */
+  productPrice?: number;
+}
 
-  const handleCheck = (e: React.FormEvent) => {
+export function PincodeChecker({
+  freeShippingThreshold = 999,
+  productWeightGrams = 500,
+  productPrice = 999,
+}: PincodeCheckerProps) {
+  const [pincode, setPincode] = React.useState("");
+  const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error" | "unserviceable">("idle");
+  const [result, setResult] = React.useState<ServiceabilityResponse | null>(null);
+
+  const handleCheck = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanPin = pincode.trim();
 
-    // Indian PIN codes are 6 numeric digits
     if (!/^\d{6}$/.test(cleanPin)) {
       setStatus("error");
-      setMessage("Please enter a valid 6-digit Indian PIN code.");
+      setResult(null);
       return;
     }
 
     setStatus("loading");
-    setMessage(null);
+    setResult(null);
 
-    // Realistic delivery estimation delay
-    setTimeout(() => {
+    try {
+      const params = new URLSearchParams({
+        pincode: cleanPin,
+        weight: String(productWeightGrams),
+        declared_value: String(productPrice),
+      });
+
+      const res = await fetch(`/api/shiprocket/serviceability?${params.toString()}`);
+      const data: ServiceabilityResponse = await res.json();
+
+      if (!res.ok || !data.serviceable) {
+        setStatus("unserviceable");
+        setResult(data);
+        return;
+      }
+
       setStatus("success");
-      setMessage(`Serviceable location (${cleanPin}). Standard delivery available.`);
-    }, 600);
+      setResult(data);
+    } catch {
+      // Network failure — show fallback success (non-blocking)
+      setStatus("success");
+      setResult({
+        serviceable: true,
+        estimatedDays: 7,
+        courierName: null,
+        codAvailable: true,
+        isLive: false,
+        degraded: true,
+      });
+    }
+  };
+
+  const formatDeliveryMessage = (data: ServiceabilityResponse, pin: string): string => {
+    if (!data.serviceable) {
+      return `Sorry, we currently don't deliver to PIN ${pin}. Please contact us on WhatsApp for alternatives.`;
+    }
+    const dayStr = data.estimatedDays
+      ? `in ${data.estimatedDays}–${data.estimatedDays + 2} business days`
+      : "within 5–7 business days";
+    const courierStr = data.courierName ? ` via ${data.courierName}` : "";
+    return `Delivery to ${pin} expected ${dayStr}${courierStr}.`;
   };
 
   return (
@@ -53,7 +106,7 @@ export function PincodeChecker({ freeShippingThreshold = 999 }: PincodeCheckerPr
               setPincode(e.target.value.replace(/\D/g, ""));
               if (status !== "idle") {
                 setStatus("idle");
-                setMessage(null);
+                setResult(null);
               }
             }}
             placeholder="Enter 6-digit Pincode (e.g. 560001)"
@@ -69,18 +122,39 @@ export function PincodeChecker({ freeShippingThreshold = 999 }: PincodeCheckerPr
         </button>
       </form>
 
-      {/* Result feedback */}
-      {status === "success" && (
-        <div className="animate-in fade-in mt-2.5 flex items-start gap-2 text-xs text-emerald-800 duration-200">
-          <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-          <span>{message}</span>
+      {/* ✅ Serviceable */}
+      {status === "success" && result && (
+        <div className="animate-in fade-in mt-2.5 space-y-1 duration-200">
+          <div className="flex items-start gap-2 text-xs text-emerald-800">
+            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+            <span>{formatDeliveryMessage(result, pincode)}</span>
+          </div>
+          {result.codAvailable && (
+            <p className="text-brand-muted pl-6 text-[11px]">
+              Cash on Delivery available for this location.
+            </p>
+          )}
+          {result.degraded && (
+            <p className="text-brand-muted pl-6 text-[11px] italic">
+              (Live check unavailable — estimated delivery shown)
+            </p>
+          )}
         </div>
       )}
 
+      {/* ❌ Unserviceable */}
+      {status === "unserviceable" && result && (
+        <div className="animate-in fade-in mt-2.5 flex items-start gap-2 text-xs text-rose-700 duration-200">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+          <span>{formatDeliveryMessage(result, pincode)}</span>
+        </div>
+      )}
+
+      {/* ⚠ Validation error */}
       {status === "error" && (
         <div className="animate-in fade-in mt-2.5 flex items-start gap-2 text-xs text-rose-700 duration-200">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
-          <span>{message}</span>
+          <span>Please enter a valid 6-digit Indian PIN code.</span>
         </div>
       )}
 
@@ -92,3 +166,4 @@ export function PincodeChecker({ freeShippingThreshold = 999 }: PincodeCheckerPr
     </div>
   );
 }
+

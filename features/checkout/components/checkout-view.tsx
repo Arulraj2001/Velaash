@@ -255,7 +255,7 @@ export function CheckoutView({
           } catch (err) {
             console.error("Payment verification client error:", err);
             setSubmissionError(
-              `Payment verification timed out. If your account was debited, please contact support@velaash.com with order reference "${orderInfo.orderNumber}".`
+              `Payment verification timed out. If your account was debited, please contact support@velaash.in with order reference "${orderInfo.orderNumber}".`
             );
             setIsSubmitting(false);
           }

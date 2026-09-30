@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { env } from "@/lib/env";
 import {
   SendOtpSchema,
   VerifyOtpSchema,
@@ -157,9 +158,12 @@ export async function signInWithGoogleAction(
 ): Promise<AuthActionResult<{ url: string }>> {
   try {
     const headerList = await headers();
-    const host = headerList.get("host") || "localhost:3000";
+    const host = headerList.get("host") || "velaash.in";
     const protocol = host.includes("localhost") ? "http" : "https";
-    const redirectTo = `${protocol}://${host}/account/auth/callback?returnUrl=${encodeURIComponent(
+    const origin = env.NEXT_PUBLIC_APP_URL
+      ? env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
+      : `${protocol}://${host}`;
+    const redirectTo = `${origin}/account/auth/callback?returnUrl=${encodeURIComponent(
       returnUrl
     )}`;
 

@@ -42,7 +42,7 @@ async function runOrderLifecycleTests() {
   } = await import("../lib/rate-limit");
   const { DISPATCHED_EMAILS_LOG, sendTransactionalEmail } = await import("../lib/email/resend");
   const { PaymentFailedEmail } = await import("../features/checkout/emails/payment-failed-email");
-  const { MOCK_CLOTHING_PRODUCTS } = await import("../features/products/queries/mock-products");
+  const React = await import("react");
 
 
   console.log("================================================================");
@@ -58,8 +58,22 @@ async function runOrderLifecycleTests() {
   // -------------------------------------------------------------------------
   console.log("SUITE 1: Guest Order Confirmation & PII Privacy Access Control");
 
-  const testProduct = MOCK_CLOTHING_PRODUCTS[0];
-  const testVariant = testProduct.variants[0];
+  const { createAdminClient } = await import("../lib/supabase/admin");
+  const adminClient = createAdminClient();
+  const { data: dbVariant } = await adminClient
+    .from("product_variants")
+    .select("id, product_id, stock_quantity, products!inner(id, name, base_price, is_active)")
+    .eq("products.is_active", true)
+    .eq("is_active", true)
+    .gte("stock_quantity", 5)
+    .limit(1)
+    .single();
+
+  if (!dbVariant) throw new Error("No active product variant found in database");
+
+  const testProductId = dbVariant.product_id;
+  const testVariantId = dbVariant.id;
+  const testProductName = (dbVariant as unknown as { products: { name: string } }).products?.name || "Hand-Block Printed Anarkali Ensemble";
 
   const guestEmail = "ananya.roy@example.com";
   const guestPhone = "9876543210";
@@ -84,8 +98,8 @@ async function runOrderLifecycleTests() {
     paymentMethod: "cod",
     items: [
       {
-        productId: testProduct.id,
-        variantId: testVariant.id,
+        productId: testProductId,
+        variantId: testVariantId,
         quantity: 1,
       },
     ],
@@ -95,7 +109,7 @@ async function runOrderLifecycleTests() {
   assert(
     orderResult.success === true,
     "createOrderAction creates guest COD order successfully",
-    `Order Number: ${orderResult.success ? orderResult.orderNumber : "FAILED"}`
+    `Order Number: ${orderResult.success ? orderResult.orderNumber : "FAILED: " + (orderResult.error || "")}`
   );
 
   if (!orderResult.success) {
@@ -140,10 +154,7 @@ async function runOrderLifecycleTests() {
       `Email: "${firstVisitOrder.shippingAddress.email}"`
     );
 
-    const expectedProductName =
-      "title" in testProduct
-        ? String((testProduct as Record<string, unknown>).title)
-        : testProduct.name;
+    const expectedProductName = testProductName;
     assert(
       firstVisitOrder.items.length === 1 && firstVisitOrder.items[0].title === expectedProductName,
       "Itemized order list is correctly attached with title, variant, and quantity",
@@ -254,7 +265,7 @@ async function runOrderLifecycleTests() {
     to: "customer.fail@example.com",
     subject: `Payment Notice: Order ${failedTestOrderNum} - Velaash`,
     orderNumber: failedTestOrderNum,
-    react: PaymentFailedEmail({
+    react: React.createElement(PaymentFailedEmail, {
       orderNumber: failedTestOrderNum,
       customerName: "Kavita Sharma",
       totalAmount: 4250,
@@ -335,8 +346,8 @@ async function runOrderLifecycleTests() {
     paymentMethod: "cod",
     items: [
       {
-        productId: testProduct.id,
-        variantId: testVariant.id,
+        productId: testProductId,
+        variantId: testVariantId,
         quantity: 1,
       },
     ],

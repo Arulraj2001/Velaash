@@ -205,6 +205,12 @@ async function runAdminProductsTests() {
       checkedProd?.is_active === false,
       "Product status was successfully updated to is_active = false"
     );
+
+    // Restore product back to active state so catalog is not broken for other tests
+    await adminClient
+      .from("products")
+      .update({ is_active: true })
+      .eq("id", orderedProductId);
   } else {
     console.log("  [SKIP] No order items in current DB to test deactivation conversion.");
   }

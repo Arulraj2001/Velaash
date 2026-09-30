@@ -11,7 +11,7 @@
  *   1. Go to Merchant Center → Products → Feeds
  *   2. Click "+" to add a new feed
  *   3. Choose "Scheduled fetch" as the input method
- *   4. Enter the feed URL: https://velaash.com/api/feed/google-merchant
+ *   4. Enter the feed URL: https://velaash.in/api/feed/google-merchant
  *   5. Set fetch frequency to "Daily" (the feed is revalidated every 6 hours via ISR)
  *   6. Complete the currency and country targeting setup (India / INR)
  *
@@ -33,7 +33,7 @@ import { env } from "@/lib/env";
 // Revalidate every 6 hours — keeps price/stock data fresh without hammering DB
 export const revalidate = 21600;
 
-const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.com").replace(/\/$/, "");
+const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 const BRAND_NAME = "Velaash";
 
 /** Map category slugs to Google Product Category IDs */

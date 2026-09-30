@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
@@ -34,6 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const descriptionDefault = seoDefaults.meta_description || BRAND.description;
 
   return {
+    metadataBase: new URL(env.NEXT_PUBLIC_APP_URL || "https://velaash.in"),
     title: {
       default: titleDefault,
       template: `%s | ${brandName}`,
@@ -61,15 +63,9 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
     },
     // Google Search Console HTML-tag verification.
-    // Set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION in your environment to activate.
-    // Obtain this value from Search Console → Settings → Ownership verification → HTML tag.
-    ...(env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
-      ? {
-          verification: {
-            google: env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
-          },
-        }
-      : {}),
+    verification: {
+      google: env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "PiKfxQxUuM8Kq1JpvpByh0u8dBuRdHMWvlKPqpBUylk",
+    },
   };
 }
 
@@ -128,6 +124,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <CookieConsentBanner />
           </AuthProvider>
         )}
+        <Script
+          id="microsoft-clarity"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "${env.NEXT_PUBLIC_CLARITY_PROJECT_ID || "yqemtpkwtz"}");`,
+          }}
+        />
       </body>
     </html>
   );

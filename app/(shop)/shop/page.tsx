@@ -12,18 +12,21 @@ import {
   type ProductSortOption,
 } from "@/features/products";
 import { BRAND } from "@/lib/constants";
+import { env } from "@/lib/env";
+
+const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 
 export const metadata: Metadata = {
   title: "Shop All Collections | Velaash",
   description:
     "Explore the complete Velaash catalog. Discover refined everyday kurtas, dresses, versatile co-ord sets, and relaxed loungewear.",
   alternates: {
-    canonical: "https://velaash.com/shop",
+    canonical: `${BASE_URL}/shop`,
   },
   openGraph: {
     title: "Shop All Collections | Velaash",
     description: "Refined everyday luxury and contemporary clothing by Velaash.",
-    url: "https://velaash.com/shop",
+    url: `${BASE_URL}/shop`,
     siteName: BRAND.name,
     locale: "en_IN",
     type: "website",

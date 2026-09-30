@@ -85,9 +85,6 @@ async function main() {
   const { createOrderAction } = await import(
     "../features/checkout/actions/create-order-action"
   );
-  const { MOCK_CLOTHING_PRODUCTS } = await import(
-    "../features/products/queries/mock-products"
-  );
 
   let passedSuites = 0;
 

@@ -16,7 +16,7 @@ import { env } from "@/lib/env";
 // without hammering the database on every crawler hit.
 export const revalidate = 21600;
 
-const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.com").replace(/\/$/, "");
+const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 
 /** Static pages always included in the sitemap */
 const STATIC_PAGES: MetadataRoute.Sitemap = [

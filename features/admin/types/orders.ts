@@ -202,6 +202,8 @@ export interface AdminOrderDetail {
   cancelReason?: string | null;
   trackingNumber?: string | null;
   courierName?: string | null;
+  shiprocketOrderId?: string | null;
+  shiprocketShipmentId?: string | null;
   razorpayPaymentId?: string | null;
   razorpayOrderId?: string | null;
   createdAt: string;

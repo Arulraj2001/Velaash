@@ -2,6 +2,9 @@
 import { createClient } from "@supabase/supabase-js";
 import * as fs from "fs";
 import * as path from "path";
+import { assertSafeScriptExecution } from "../lib/script-guard";
+
+assertSafeScriptExecution("scratch/execute-seed.ts");
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;

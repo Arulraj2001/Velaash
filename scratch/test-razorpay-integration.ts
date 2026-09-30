@@ -192,7 +192,28 @@ async function runRazorpayIntegrationTests() {
   console.log("\nSUITE 2: Server-Side Razorpay Order Creation & Soft-Reservation");
 
   const testVariant = MOCK_CLOTHING_PRODUCTS[0]?.variants[0];
-  const initialStock = testVariant?.stock_quantity ?? 4;
+
+  const { createAdminClient } = await import("../lib/supabase/admin");
+  const adminClient = createAdminClient();
+  const { data: dbVariant } = await adminClient
+    .from("product_variants")
+    .select("id, product_id, stock_quantity, products!inner(id, name, base_price, is_active)")
+    .eq("products.is_active", true)
+    .eq("is_active", true)
+    .gte("stock_quantity", 5)
+    .limit(1)
+    .single();
+
+  if (!dbVariant) throw new Error("No active product variant found in database");
+
+  const testProductId = dbVariant.product_id;
+  const testVariantId = dbVariant.id;
+  const initialStock = dbVariant.stock_quantity ?? 5;
+  const unitPrice = Number((dbVariant as unknown as { products: { base_price: number } }).products?.base_price ?? 4250);
+  const discount = Math.round(unitPrice * 0.1);
+  const expectedTotal = unitPrice - discount;
+  const expectedPaise = expectedTotal * 100;
+
   const idempotencyKey = `idemp-rzp-${Date.now()}`;
 
   const rzpOrderResult = await createOrderAction({
@@ -214,12 +235,12 @@ async function runRazorpayIntegrationTests() {
     paymentMethod: "razorpay", // Online payment
     items: [
       {
-        productId: "p1111111-1111-4111-b111-111111111111",
-        variantId: "v1-1",
-        quantity: 1, // unit price ₹4250
+        productId: testProductId,
+        variantId: testVariantId,
+        quantity: 1,
       },
     ],
-    couponCode: "SAVE10", // 10% off = ₹425. Total = 4250 - 425 = ₹3825
+    couponCode: "SAVE10",
     idempotencyKey,
   });
 
@@ -241,21 +262,30 @@ async function runRazorpayIntegrationTests() {
       `Generated Razorpay Order: ${rzpOrderResult.razorpayOrderId}`
     );
 
-    // ₹3,825 in rupees = 382500 in paise
-    const expectedPaise = 3825 * 100;
     assert(
       rzpOrderResult.amountPaise === expectedPaise,
-      `Authoritative total amount is strictly converted to paise: ${expectedPaise} paise (₹3,825.00)`,
+      `Authoritative total amount is strictly converted to paise: ${expectedPaise} paise (₹${expectedTotal}.00)`,
       `Returned amountPaise: ${rzpOrderResult.amountPaise}`
     );
 
-    // Stock soft-reservation check
-    const stockAfterRzpOrder = testVariant?.stock_quantity ?? 0;
+    // Stock soft-reservation check in PostgreSQL
+    const { data: updatedVariant } = await adminClient
+      .from("product_variants")
+      .select("stock_quantity")
+      .eq("id", testVariantId)
+      .single();
+    const stockAfterRzpOrder = updatedVariant?.stock_quantity ?? 0;
     assert(
       stockAfterRzpOrder === initialStock - 1,
       "Stock was soft-reserved by purchased quantity (held for 30 minutes)",
       `Stock decremented from ${initialStock} to ${stockAfterRzpOrder}`
     );
+
+    // Restore variant stock
+    await adminClient
+      .from("product_variants")
+      .update({ stock_quantity: initialStock })
+      .eq("id", testVariantId);
   }
 
   // -------------------------------------------------------------------------

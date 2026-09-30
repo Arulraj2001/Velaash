@@ -9,7 +9,7 @@ export const BRAND = {
   tagline: "", // Left blank per client direction — do not invent a tagline
   description:
     "Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe.",
-  // Flag: Temporary contact email until a professional domain email (e.g. care@velaash.com) is provisioned by the client
+  // Flag: Temporary contact email until a professional domain email (e.g. care@velaash.in) is provisioned by the client
   contactEmail: "bestrchandra@gmail.com",
   supportPhone: "+91 8508643832",
   whatsappNumber: "+91 8508643832",

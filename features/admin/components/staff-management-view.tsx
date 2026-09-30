@@ -242,7 +242,7 @@ export function StaffManagementView({
                   name="email"
                   type="email"
                   required
-                  placeholder="e.g. staff@velaash.com"
+                  placeholder="e.g. staff@velaash.in"
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
                 />
               </div>

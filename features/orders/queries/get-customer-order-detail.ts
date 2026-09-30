@@ -54,6 +54,10 @@ export async function getCustomerOrderDetail(
       coupon_code,
       notes,
       cancel_reason,
+      tracking_number,
+      courier_name,
+      shiprocket_order_id,
+      shiprocket_shipment_id,
       created_at,
       updated_at
     `)
@@ -191,6 +195,8 @@ export async function getCustomerOrderDetail(
     cancelReason: order.cancel_reason,
     trackingNumber: extractTrackingInfo(order).trackingNumber,
     courierName: extractTrackingInfo(order).courierName,
+    shiprocketOrderId: order.shiprocket_order_id ?? null,
+    shiprocketShipmentId: order.shiprocket_shipment_id ?? null,
     createdAt: order.created_at,
     updatedAt: order.updated_at,
     shippingAddress: {

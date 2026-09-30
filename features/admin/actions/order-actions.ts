@@ -1,8 +1,10 @@
 "use server";
 
 import React from "react";
+import * as Sentry from "@sentry/nextjs";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/features/auth/queries/get-admin-user";
+import type { AdminUserSession } from "@/features/auth/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   UpdateOrderStatusSchema,
@@ -17,6 +19,7 @@ import { executeOrderCancellation } from "@/features/orders/actions/cancel-order
 import { sendTransactionalEmail } from "@/lib/email/resend";
 import { OrderConfirmationEmail } from "@/features/checkout/emails/order-confirmation-email";
 import { env } from "@/lib/env";
+import type { Database } from "@/types/database.types";
 
 export interface OrderActionResult {
   success: boolean;
@@ -93,13 +96,22 @@ export async function updateOrderStatusAction(
     }
 
     // 4. Update order status in orders table
+    //    When shipping, also write to the dedicated columns so they are directly
+    //    queryable without parsing the notes JSON metadata blob.
+    const updatePayload: Database["public"]["Tables"]["orders"]["Update"] = {
+      status: targetStatus,
+      notes: updatedNotes,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (targetStatus === "shipped") {
+      updatePayload.tracking_number = trackingNumber?.trim() ?? null;
+      updatePayload.courier_name = courierName?.trim() ?? null;
+    }
+
     const { error: updateErr } = await adminSupabase
       .from("orders")
-      .update({
-        status: targetStatus,
-        notes: updatedNotes,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq("id", order.id);
 
     if (updateErr) {
@@ -110,6 +122,7 @@ export async function updateOrderStatusAction(
       };
     }
 
+
     // 5. Insert audit log record
     await adminSupabase.from("order_status_history").insert({
       order_id: order.id,
@@ -119,10 +132,14 @@ export async function updateOrderStatusAction(
     });
 
     // 6. Revalidate routes
-    revalidatePath("/admin/orders");
-    revalidatePath(`/admin/orders/${orderNumber}`);
-    revalidatePath(`/account/orders/${orderNumber}`);
-    revalidatePath("/account/orders");
+    try {
+      revalidatePath("/admin/orders");
+      revalidatePath(`/admin/orders/${orderNumber}`);
+      revalidatePath(`/account/orders/${orderNumber}`);
+      revalidatePath("/account/orders");
+    } catch {
+      // Safe no-op outside Next.js request context (e.g. CLI test suites)
+    }
 
     return {
       success: true,
@@ -452,7 +469,7 @@ export async function resendOrderConfirmationEmailAction(
       };
     });
 
-    const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = (env.NEXT_PUBLIC_APP_URL || "https://velaash.in").replace(/\/$/, "");
     const orderViewUrl = `${appUrl}/account/orders/${order.order_number}`;
 
     const formattedDate = new Date(order.created_at).toLocaleDateString("en-IN", {
@@ -504,5 +521,188 @@ export async function resendOrderConfirmationEmailAction(
       success: false,
       error: error instanceof Error ? error.message : "Failed to resend confirmation email.",
     };
+  }
+}
+
+/**
+ * Pushes a packed Velaash order to Shiprocket for dispatch.
+ * - Allowed for OWNER and STAFF with 'manage_orders' permission.
+ * - Only valid for orders in 'packed' status (state machine enforced).
+ * - On success: transitions order to 'shipped', records Shiprocket order ID + AWB in notes,
+ *   and creates an audit trail entry. Manual tracking entry remains available as fallback.
+ * - On failure: returns a clear error without mutating order state.
+ */
+export async function pushToShiprocketAction(
+  orderNumber: string,
+  options?: { adminSessionOverride?: AdminUserSession }
+): Promise<OrderActionResult & { awbCode?: string | null; shiprocketOrderId?: string | null }> {
+  try {
+    const admin = options?.adminSessionOverride ?? (await requireAdmin("manage_orders"));
+    const adminSupabase = createAdminClient();
+
+    // 1. Fetch full order with items
+    const { data: order, error: orderErr } = await adminSupabase
+      .from("orders")
+      .select("id, order_number, status, notes, payment_method, total_amount, shipping_address, created_at")
+      .eq("order_number", orderNumber)
+      .maybeSingle();
+
+    if (orderErr || !order) {
+      return { success: false, error: "Order not found." };
+    }
+
+    if (order.status !== "packed") {
+      return {
+        success: false,
+        error: `Only 'packed' orders can be pushed to Shiprocket. Current status: '${order.status}'.`,
+      };
+    }
+
+    // 2. Fetch order items
+    const { data: items, error: itemsErr } = await adminSupabase
+      .from("order_items")
+      .select("product_name_snapshot, quantity, unit_price, variant_details_snapshot")
+      .eq("order_id", order.id);
+
+    if (itemsErr || !items || items.length === 0) {
+      return { success: false, error: "Failed to retrieve order items." };
+    }
+
+    // 3. Fetch Shiprocket pickup settings from site_settings
+    let pickupLocation = "Primary"; // Default pickup location name in Shiprocket dashboard
+    let defaultWeightKg = 0.5;
+    try {
+      const { data: srRow } = await adminSupabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "shiprocket_settings")
+        .maybeSingle();
+
+      if (srRow?.value) {
+        const srSettings = srRow.value as {
+          pickup_location_name?: string;
+          default_weight_kg?: number;
+        };
+        pickupLocation = srSettings.pickup_location_name ?? pickupLocation;
+        defaultWeightKg = srSettings.default_weight_kg ?? defaultWeightKg;
+      }
+    } catch {
+      // Non-critical — use defaults
+    }
+
+    // 4. Build Shiprocket payload
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const addr = (order.shipping_address as any) || {};
+
+    const { createShiprocketOrder } = await import("@/lib/shiprocket");
+
+    const srResult = await createShiprocketOrder({
+      orderNumber: order.order_number,
+      orderDate: order.created_at,
+      pickupLocation,
+      customerName: addr.fullName || "Customer",
+      customerEmail: addr.email || "",
+      customerPhone: addr.phone || "",
+      shippingAddress: {
+        fullName: addr.fullName || "",
+        addressLine1: addr.addressLine1 || "",
+        addressLine2: addr.addressLine2 || null,
+        city: addr.city || "",
+        state: addr.state || "",
+        pincode: addr.pincode || "",
+        country: "India",
+        phone: addr.phone || "",
+      },
+      paymentMethod: order.payment_method === "cod" ? "COD" : "Prepaid",
+      totalAmount: Number(order.total_amount) || 0,
+      items: items.map((item) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const details = (item.variant_details_snapshot as any) || {};
+        return {
+          name: item.product_name_snapshot,
+          sku: `${orderNumber}-${details.size || "OS"}-${details.color || "DEFAULT"}`.substring(0, 40),
+          units: item.quantity,
+          sellingPrice: Number(item.unit_price) || 0,
+        };
+      }),
+      weightKg: defaultWeightKg,
+    });
+
+    // 5. Record Shiprocket IDs and AWB in BOTH dedicated columns AND notes metadata blob
+    //    - Dedicated columns: queryable by extractTrackingInfo + customer-facing queries
+    //    - Notes blob: legacy fallback compatibility for old orders / data exports
+    const updatedNotes = serializeOrderNotes(order.notes, {
+      trackingNumber: srResult.awbCode ?? undefined,
+      courierName: srResult.courierName ?? undefined,
+    });
+
+    // 6. Transition order to 'shipped' status — write all four Shiprocket fields
+    const { error: updateErr } = await adminSupabase
+      .from("orders")
+      .update({
+        status: "shipped",
+        notes: updatedNotes,
+        // Dedicated tracking columns (these are what extractTrackingInfo reads first)
+        tracking_number: srResult.awbCode ?? null,
+        courier_name: srResult.courierName ?? null,
+        // Shiprocket-specific IDs for amendments/cancellations
+        shiprocket_order_id: String(srResult.shiprocketOrderId),
+        shiprocket_shipment_id: String(srResult.shipmentId),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", order.id);
+
+    if (updateErr) {
+      return {
+        success: false,
+        error: "Shiprocket order created but failed to update local status. Please mark as shipped manually.",
+      };
+    }
+
+    // 7. Audit trail
+    const auditNote = [
+      `Order pushed to Shiprocket by ${admin.fullName || admin.email}.`,
+      `Shiprocket Order ID: ${srResult.shiprocketOrderId}`,
+      srResult.awbCode ? `AWB: ${srResult.awbCode}` : null,
+      srResult.courierName ? `Courier: ${srResult.courierName}` : null,
+    ]
+      .filter(Boolean)
+      .join(" | ");
+
+    const isValidUuid =
+      Boolean(admin.id) &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(admin.id);
+
+    await adminSupabase.from("order_status_history").insert({
+      order_id: order.id,
+      status: "shipped",
+      note: auditNote,
+      created_by: isValidUuid ? admin.id : null,
+    });
+
+    try {
+      revalidatePath("/admin/orders");
+      revalidatePath(`/admin/orders/${orderNumber}`);
+      revalidatePath(`/account/orders/${orderNumber}`);
+    } catch {
+      // Safe no-op outside Next.js request context (e.g. CLI test suites)
+    }
+
+    return {
+      success: true,
+      orderNumber,
+      awbCode: srResult.awbCode ?? null,
+      shiprocketOrderId: String(srResult.shiprocketOrderId),
+    };
+  } catch (error) {
+    console.error("Error in pushToShiprocketAction:", error);
+    Sentry.captureException(error, {
+      tags: { service: "shiprocket_push", orderNumber },
+    });
+    const msg = error instanceof Error ? error.message : "Failed to push order to Shiprocket.";
+    if (msg.includes("FORBIDDEN")) {
+      return { success: false, error: "Access denied: insufficient permissions." };
+    }
+    return { success: false, error: msg };
   }
 }

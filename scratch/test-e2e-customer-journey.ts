@@ -60,6 +60,10 @@ async function runE2ECustomerJourneyTest() {
   let createdOrderId: string | null = null;
   let secondOrderNumber: string | null = null;
   let secondOrderId: string | null = null;
+  let variantA: any = null;
+  let variantB: any = null;
+  let originalStockA: number = 10;
+  let originalStockB: number = 10;
 
   try {
     // -------------------------------------------------------------------------
@@ -86,31 +90,33 @@ async function runE2ECustomerJourneyTest() {
       `Product A: "${productA.name}" | Product B: "${productB.name}"`
     );
 
-    // Get live variants for both products
+    // Get live variants for both products with at least 3 stock units
     const { data: variantsA } = await adminSupabase
       .from("product_variants")
       .select("id, size, color, stock_quantity, price_override")
       .eq("product_id", productA.id)
-      .gt("stock_quantity", 0)
+      .gte("stock_quantity", 3)
       .limit(1);
 
     const { data: variantsB } = await adminSupabase
       .from("product_variants")
       .select("id, size, color, stock_quantity, price_override")
       .eq("product_id", productB.id)
-      .gt("stock_quantity", 0)
+      .gte("stock_quantity", 3)
       .limit(1);
 
-    const variantA = variantsA?.[0] || productA.variants?.[0] || {
+    variantA = variantsA?.[0] || productA.variants?.[0] || {
       id: "v-mock-001",
       size: "M",
       color: "Burgundy",
     };
-    const variantB = variantsB?.[0] || productB.variants?.[0] || {
+    variantB = variantsB?.[0] || productB.variants?.[0] || {
       id: "v-mock-002",
       size: "Free Size",
       color: "Maroon",
     };
+    originalStockA = variantA?.stock_quantity ?? 10;
+    originalStockB = variantB?.stock_quantity ?? 10;
 
     const cartItems = [
       {
@@ -137,7 +143,7 @@ async function runE2ECustomerJourneyTest() {
     console.log("\n--- STEP 2: Guest Checkout (Create Account Checked, COD Payment) ---");
 
     const testTimestamp = Date.now();
-    const guestEmail = `meera.nair.${testTimestamp}@example-velaash.com`;
+    const guestEmail = `meera.nair.${testTimestamp}@example-velaash.in`;
     const guestPhone = "9876543210";
     const guestFullName = "Meera Nair";
     const idempotencyKey = `idemp-e2e-${testTimestamp}`;
@@ -488,6 +494,12 @@ async function runE2ECustomerJourneyTest() {
       await adminSupabase.from("customers").delete().eq("id", createdUserId);
       await adminSupabase.auth.admin.deleteUser(createdUserId);
       console.log(`  Cleaned up customer & auth user (${createdUserId})`);
+    }
+    if (variantA?.id) {
+      await adminSupabase.from("product_variants").update({ stock_quantity: originalStockA }).eq("id", variantA.id);
+    }
+    if (variantB?.id) {
+      await adminSupabase.from("product_variants").update({ stock_quantity: originalStockB }).eq("id", variantB.id);
     }
   }
 }

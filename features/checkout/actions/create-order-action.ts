@@ -224,7 +224,7 @@ export async function createOrderAction(
 
           // Send account confirmation email explaining the OTP login flow (no password link)
           try {
-            const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+            const appUrl = (env.NEXT_PUBLIC_APP_URL || "https://velaash.in").replace(/\/$/, "");
             await sendTransactionalEmail({
               to: input.contact.email,
               subject: "Welcome to Velaash — Your Account is Ready",
@@ -375,9 +375,75 @@ export async function createOrderAction(
     }
 
     // 8. Authoritative Shipping Fee Calculation
+    //
+    // Strategy (in priority order):
+    //   a. If subtotal >= free_shipping_threshold → free shipping (always, regardless of courier rate)
+    //   b. Try Shiprocket serviceability for the destination pincode:
+    //      - On success: use the quoted live courier rate
+    //      - On failure/unserviceable: fall back to site-default standard_shipping_fee silently
+    //
+    // IMPORTANT: We never hard-block a sale due to Shiprocket API failure.
+    // The fallback preserves the business rule while keeping UX intact.
     const freeShippingThreshold = siteSettings.shippingPolicy.free_shipping_threshold;
     const isFreeShipping = subtotal >= freeShippingThreshold;
-    const shippingCharge = isFreeShipping ? 0 : siteSettings.shippingPolicy.standard_shipping_fee;
+
+    let shippingCharge: number;
+    let shippingSource: "free" | "shiprocket" | "site_default" = "site_default";
+
+    if (isFreeShipping) {
+      shippingCharge = 0;
+      shippingSource = "free";
+    } else {
+      // Attempt live Shiprocket rate for the customer's pincode
+      try {
+        const { checkServiceability } = await import("@/lib/shiprocket");
+
+        // Fetch pickup postcode from site_settings (shiprocket_settings key)
+        let pickupPostcode = "600001"; // Chennai fallback
+        if (adminSupabase) {
+          try {
+            const { data: srRow } = await adminSupabase
+              .from("site_settings")
+              .select("value")
+              .eq("key", "shiprocket_settings")
+              .maybeSingle();
+            const srSettings = srRow?.value as { pickup_postcode?: string; default_weight_kg?: number } | null;
+            if (srSettings?.pickup_postcode) pickupPostcode = srSettings.pickup_postcode;
+          } catch {
+            // Non-critical — proceed with fallback postcode
+          }
+        }
+
+        // Estimate total cart weight: 500g per item as a reasonable default for apparel
+        const estimatedWeightGrams = verifiedItems.reduce(
+          (acc, item) => acc + item.quantity * 500,
+          0
+        );
+
+        const serviceability = await checkServiceability({
+          pickupPostcode,
+          deliveryPostcode: input.shippingAddress.pincode,
+          weightGrams: Math.max(estimatedWeightGrams, 100),
+          totalAmountINR: subtotal,
+          cod: input.paymentMethod === "cod",
+        });
+
+        if (serviceability?.serviceable && serviceability.rate !== null && serviceability.isLive) {
+          shippingCharge = serviceability.rate;
+          shippingSource = "shiprocket";
+        } else {
+          // API returned mock/fallback or pincode is unserviceable → use site default
+          shippingCharge = siteSettings.shippingPolicy.standard_shipping_fee;
+        }
+      } catch {
+        // Shiprocket API completely unavailable → silent fallback, never block checkout
+        shippingCharge = siteSettings.shippingPolicy.standard_shipping_fee;
+      }
+    }
+
+    console.info(
+      `[Checkout] Shipping charge ₹${shippingCharge} (source: ${shippingSource}, pincode: ${input.shippingAddress.pincode})`
+    );
 
     // 9. Payment Method Validation & COD Fee Calculation
     let codHandlingFee = 0;
@@ -648,7 +714,7 @@ export async function createOrderAction(
     // 12c. Transactional Email Dispatch for COD Orders
     if (input.paymentMethod === "cod") {
       try {
-        const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+        const appUrl = (env.NEXT_PUBLIC_APP_URL || "https://velaash.in").replace(/\/$/, "");
         const orderViewUrl = `${appUrl}/order-confirmation/${orderNumber!}?token=${accessToken}`;
         await sendTransactionalEmail({
           to: input.contact.email,

@@ -161,6 +161,10 @@ export async function trackGuestOrderAction(
       shipping_address,
       coupon_code,
       notes,
+      tracking_number,
+      courier_name,
+      shiprocket_order_id,
+      shiprocket_shipment_id,
       created_at
     `)
     .eq("order_number", cleanOrderNumber)

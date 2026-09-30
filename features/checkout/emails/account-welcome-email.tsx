@@ -89,8 +89,8 @@ export const AccountWelcomeEmail = ({
           <Section style={footerSectionStyle}>
             <Text style={footerTextStyle}>
               Need assistance? Email us at{" "}
-              <Link href="mailto:support@velaash.com" style={{ color: "#CC6F00" }}>
-                support@velaash.com
+              <Link href="mailto:support@velaash.in" style={{ color: "#CC6F00" }}>
+                support@velaash.in
               </Link>
             </Text>
             <Text style={legalTextStyle}>VELAASH TRADER&apos;S</Text>

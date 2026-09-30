@@ -1207,7 +1207,9 @@ function SeoDefaultsForm({
       <div className="space-y-1.5 pt-2">
         <span className="text-xs font-semibold text-slate-500">Search Result Preview</span>
         <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-1">
-          <span className="text-xs text-slate-500 block truncate">https://velaash.com</span>
+          <span className="text-xs text-slate-500 block truncate">
+            {process.env.NEXT_PUBLIC_APP_URL || "https://velaash.in"}
+          </span>
           <span className="text-sm font-semibold text-blue-700 hover:underline cursor-pointer block truncate">
             {form.meta_title || "Velaash"}
           </span>

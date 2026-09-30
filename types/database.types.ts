@@ -30,6 +30,7 @@ export type HomepageSectionType =
   | "testimonials"
   | "couture_spotlight"
   | "value_strip"
+  | "newsletter"
   | "custom_html";
 
 export type Database = {
@@ -464,6 +465,11 @@ export type Database = {
           coupon_code: string | null;
           notes: string | null;
           cancel_reason: string | null;
+          tracking_number: string | null;
+          courier_name: string | null;
+          admin_notes: string | null;
+          shiprocket_order_id: string | null;
+          shiprocket_shipment_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -486,6 +492,11 @@ export type Database = {
           coupon_code?: string | null;
           notes?: string | null;
           cancel_reason?: string | null;
+          tracking_number?: string | null;
+          courier_name?: string | null;
+          admin_notes?: string | null;
+          shiprocket_order_id?: string | null;
+          shiprocket_shipment_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -508,6 +519,11 @@ export type Database = {
           coupon_code?: string | null;
           notes?: string | null;
           cancel_reason?: string | null;
+          tracking_number?: string | null;
+          courier_name?: string | null;
+          admin_notes?: string | null;
+          shiprocket_order_id?: string | null;
+          shiprocket_shipment_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };

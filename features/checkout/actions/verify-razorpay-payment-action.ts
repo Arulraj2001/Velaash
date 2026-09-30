@@ -59,7 +59,7 @@ export async function verifyRazorpayPaymentAction(
       success: false,
       error:
         `Payment verification failed. If your bank account was debited, please contact customer support ` +
-        `at support@velaash.com with reference "${orderNumber}".`,
+        `at support@velaash.in with reference "${orderNumber}".`,
       code: "SIGNATURE_VERIFICATION_FAILED",
     };
   }
@@ -137,7 +137,7 @@ export async function verifyRazorpayPaymentAction(
           mockOrder.paymentStatus = "paid";
           mockOrder.status = "confirmed";
           try {
-            const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+            const appUrl = (env.NEXT_PUBLIC_APP_URL || "https://velaash.in").replace(/\/$/, "");
             const orderViewUrl = `${appUrl}/order-confirmation/${orderNumber}?token=${accessToken}`;
             await sendTransactionalEmail({
               to: mockOrder.shippingAddress.email,
@@ -218,7 +218,7 @@ export async function verifyRazorpayPaymentAction(
 
   if (mockOrder) {
     try {
-      const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const appUrl = (env.NEXT_PUBLIC_APP_URL || "https://velaash.in").replace(/\/$/, "");
       const orderViewUrl = `${appUrl}/order-confirmation/${orderNumber}?token=${accessToken}`;
       await sendTransactionalEmail({
         to: mockOrder.shippingAddress.email,

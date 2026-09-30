@@ -18,6 +18,8 @@ import {
   signInWithGoogleAction,
   updateCustomerProfileAction,
 } from "../actions/customer-auth.actions";
+import { useAuth } from "./auth-provider";
+import { createClient } from "@/lib/supabase/client";
 import {
   Mail,
   KeyRound,
@@ -46,6 +48,54 @@ export function CustomerLoginForm() {
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+
+  // Consume AuthProvider to detect cross-tab or out-of-band authentications
+  const { isAuthenticated } = useAuth();
+
+  // Helper to handle out-of-band / magic link authentication race condition
+  // If the customer clicks a magic link in another tab or authenticates while sitting on the OTP screen,
+  // automatically notify them with a brief "You're signed in!" message and redirect forward to /account.
+  const handleAuthenticatedRedirect = React.useCallback(() => {
+    setSuccessMessage("You're signed in! Redirecting to your account...");
+    setError(null);
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      router.push(returnUrl);
+      router.refresh();
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [router, returnUrl]);
+
+  // 1. Detect state change propagated via AuthProvider
+  React.useEffect(() => {
+    if (isAuthenticated && step === "OTP") {
+      const timer = setTimeout(() => {
+        handleAuthenticatedRedirect();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, step, handleAuthenticatedRedirect]);
+
+  // 2. Direct onAuthStateChange listener on browser Supabase client for instantaneous cross-tab event notification
+  React.useEffect(() => {
+    if (step !== "OTP") return;
+
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (
+        session?.user &&
+        (event === "SIGNED_IN" || event === "USER_UPDATED" || event === "TOKEN_REFRESHED")
+      ) {
+        handleAuthenticatedRedirect();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [step, handleAuthenticatedRedirect]);
 
   // Cooldown timer for resend OTP
   const [resendCooldown, setResendCooldown] = React.useState(0);

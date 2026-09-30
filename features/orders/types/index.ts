@@ -64,6 +64,8 @@ export interface CustomerOrderDetail {
   cancelReason?: string | null;
   trackingNumber?: string | null;
   courierName?: string | null;
+  shiprocketOrderId?: string | null;
+  shiprocketShipmentId?: string | null;
   createdAt: string;
   updatedAt: string;
   shippingAddress: {

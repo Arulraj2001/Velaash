@@ -112,9 +112,6 @@ async function runCheckoutTests() {
   const { createOrderAction } = await import(
     "../features/checkout/actions/create-order-action"
   );
-  const { MOCK_CLOTHING_PRODUCTS } = await import(
-    "../features/products/queries/mock-products"
-  );
 
   // -------------------------------------------------------------------------
   // SUITE 2: ACCESS RULES & EMPTY CART VALIDATION
@@ -148,7 +145,29 @@ async function runCheckoutTests() {
   // -------------------------------------------------------------------------
   // SUITE 3: SERVER-SIDE OUT-OF-STOCK ENFORCEMENT
   // -------------------------------------------------------------------------
+  // SUITE 3: SERVER-SIDE OUT-OF-STOCK ENFORCEMENT
+  // -------------------------------------------------------------------------
   console.log("\nSUITE 3: Server-Side Out-of-Stock & Inventory Cap Enforcement");
+
+  const { createAdminClient } = await import("../lib/supabase/admin");
+  const adminClient = createAdminClient();
+  const { data: dbVariant } = await adminClient
+    .from("product_variants")
+    .select("id, product_id, stock_quantity, products!inner(id, name, base_price, is_active)")
+    .eq("products.is_active", true)
+    .eq("is_active", true)
+    .gte("stock_quantity", 2)
+    .limit(1)
+    .single();
+
+  if (!dbVariant) {
+    throw new Error("No active product variant with stock found in database for checkout test");
+  }
+
+  const testProductId = dbVariant.product_id;
+  const testVariantId = dbVariant.id;
+  const initialStock = dbVariant.stock_quantity;
+  const unitPrice = Number((dbVariant as unknown as { products: { base_price: number } }).products.base_price);
 
   const outOfStockResult = await createOrderAction({
     contact: {
@@ -166,9 +185,9 @@ async function runCheckoutTests() {
     paymentMethod: "cod",
     items: [
       {
-        productId: "p1111111-1111-4111-b111-111111111111",
-        variantId: "v1-1",
-        quantity: 10, // Exceeds available stock (4 units) but within schema max cap (50 units)
+        productId: testProductId,
+        variantId: testVariantId,
+        quantity: Math.min(50, initialStock + 10), // Exceeds available stock but within schema max cap (50 units)
       },
     ],
     idempotencyKey: "test-out-of-stock-1",
@@ -218,7 +237,7 @@ async function runCheckoutTests() {
       pincode: "012345", // Invalid: Indian PIN cannot start with 0
     },
     paymentMethod: "cod",
-    items: [{ productId: "p1", variantId: "v1-1", quantity: 1 }],
+    items: [{ productId: testProductId, variantId: testVariantId, quantity: 1 }],
     idempotencyKey: "exploit-bad-pin-1",
   });
   assert(
@@ -228,7 +247,6 @@ async function runCheckoutTests() {
   );
 
   // 3. Client environment import protection (lib/supabase/admin.ts runtime check)
-  const { createAdminClient } = await import("../lib/supabase/admin");
   let browserViolationCaught = false;
   try {
     // Simulate browser global window
@@ -251,14 +269,6 @@ async function runCheckoutTests() {
   // SUITE 4: END-TO-END COD CHECKOUT & AUTHORITATIVE PRICING
   // -------------------------------------------------------------------------
   console.log("\nSUITE 4: End-to-End COD Order Creation & Authoritative Pricing");
-
-  const testVariantId = "v1-1";
-  const testProductId = "p1111111-1111-4111-b111-111111111111";
-
-  // Record initial stock for inventory audit
-  const mockProduct = MOCK_CLOTHING_PRODUCTS.find((p) => p.id === testProductId);
-  const mockVariant = mockProduct?.variants.find((v) => v.id === testVariantId);
-  const initialStock = mockVariant?.stock_quantity ?? 4;
   console.log(`         Initial variant stock before purchase: ${initialStock}`);
 
   const idempotencyKey = `idemp-test-order-${Date.now()}`;
@@ -285,10 +295,10 @@ async function runCheckoutTests() {
       {
         productId: testProductId,
         variantId: testVariantId,
-        quantity: 1, // 1 unit at ₹4250
+        quantity: 1,
       },
     ],
-    couponCode: "SAVE10", // 10% coupon off ₹4250 = ₹425
+    couponCode: "SAVE10", // 10% coupon off unitPrice
     idempotencyKey,
   });
 
@@ -306,21 +316,27 @@ async function runCheckoutTests() {
     );
 
     // Verified Math:
-    // Subtotal: ₹4,250
-    // Discount: 10% of 4250 = ₹425
-    // Shipping: ₹0 (since 4250 >= 999 threshold)
-    // COD Handling Fee: ₹99
-    // Expected Total: 4250 - 425 + 0 + 99 = ₹3,924
-    const expectedTotal = 4250 - 425 + 0 + 99; // 3924
+    // Subtotal: unitPrice
+    // Discount: 10% of unitPrice (capped at 1000)
+    // Shipping: 0 if unitPrice >= 999 else 99
+    // COD Handling Fee: 99
+    const expectedDiscount = Math.min(Math.round(unitPrice * 0.1), 1000);
+    const expectedShipping = unitPrice >= 999 ? 0 : 99;
+    const expectedTotal = unitPrice - expectedDiscount + expectedShipping + 99;
     assert(
       codOrderResult.totalAmount === expectedTotal,
-      `Authoritative total recalculation is exact: ₹${expectedTotal} (Subtotal ₹4250 - Discount ₹425 + Shipping ₹0 + COD Fee ₹99)`,
+      `Authoritative total recalculation is exact: ₹${expectedTotal} (Subtotal ₹${unitPrice} - Discount ₹${expectedDiscount} + Shipping ₹${expectedShipping} + COD Fee ₹99)`,
       `Order total: ₹${codOrderResult.totalAmount}`
     );
   }
 
-  // Stock check: stock should have decreased by 1
-  const stockAfterOrder = mockVariant?.stock_quantity ?? 0;
+  // Stock check in DB: stock should have decreased by 1
+  const { data: variantAfterOrder } = await adminClient
+    .from("product_variants")
+    .select("stock_quantity")
+    .eq("id", testVariantId)
+    .single();
+  const stockAfterOrder = variantAfterOrder?.stock_quantity ?? 0;
   console.log(`         Stock after first purchase: ${stockAfterOrder}`);
   assert(
     stockAfterOrder === initialStock - 1,
@@ -374,12 +390,23 @@ async function runCheckoutTests() {
   }
 
   // Critical stock check: stock must NOT have decreased a second time!
-  const stockAfterDuplicate = mockVariant?.stock_quantity ?? 0;
+  const { data: variantAfterDup } = await adminClient
+    .from("product_variants")
+    .select("stock_quantity")
+    .eq("id", testVariantId)
+    .single();
+  const stockAfterDuplicate = variantAfterDup?.stock_quantity ?? 0;
   console.log(`         Stock after duplicate submission: ${stockAfterDuplicate}`);
   assert(
     stockAfterDuplicate === stockAfterOrder,
     "Stock was NOT double-deducted on duplicate submission (Idempotency Verified ✓)"
   );
+
+  // Cleanup: Restore stock quantity for test variant
+  await adminClient
+    .from("product_variants")
+    .update({ stock_quantity: initialStock })
+    .eq("id", testVariantId);
 
   // -------------------------------------------------------------------------
   // FINAL RESULT SUMMARY

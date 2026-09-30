@@ -1,0 +1,66 @@
+# ==============================================================================
+# Netlify Configuration for Velaash E-Commerce (Next.js App Router)
+# ==============================================================================
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# Official Next.js Runtime plugin for Netlify (handles App Router, SSR, Server Actions, & Route Handlers)
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "20.20.2"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# ==============================================================================
+# Security & Caching Headers
+# ==============================================================================
+
+# Global security headers for all HTML/document responses
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(self)"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+# Immutable caching for hashed Next.js static bundles and styles
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Static public assets (fonts, icons, svgs)
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+
+# Service worker and manifest headers
+[[headers]]
+  for = "/favicon.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# ==============================================================================
+# Environment Contexts
+# ==============================================================================
+
+[context.production.environment]
+  NODE_ENV = "production"
+
+[context.deploy-preview.environment]
+  NODE_ENV = "production"
+
+[context.branch-deploy.environment]
+  NODE_ENV = "production"
