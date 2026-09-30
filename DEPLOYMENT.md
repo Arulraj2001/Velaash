@@ -79,12 +79,12 @@ Configure the following variables:
 |---|---|:---:|---|
 | `NEXT_PUBLIC_GA4_MEASUREMENT_ID` | Public / Browser | **OPTIONAL** | Google Analytics 4 (e.g. `G-XXXXXXXXXX`). |
 | `NEXT_PUBLIC_META_PIXEL_ID` | Public / Browser | **OPTIONAL** | Meta / Facebook Pixel ID (numeric string). |
-| `NEXT_PUBLIC_CLARITY_PROJECT_ID` | Public / Browser | **OPTIONAL** | Microsoft Clarity project ID (`yqemtpkwtz`). |
+| `NEXT_PUBLIC_CLARITY_PROJECT_ID` | Public / Browser | **OPTIONAL** | Microsoft Clarity project ID (set in Netlify env vars). |
 
 ### I. Search Engine Verification
 | Variable | Scope | Requirement | Description / Value |
 |---|---|:---:|---|
-| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Public / Browser | **OPTIONAL** | Google Search Console HTML tag content value (`PiKfxQxUuM8Kq1JpvpByh0u8dBuRdHMWvlKPqpBUylk`). |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Public / Browser | **OPTIONAL** | Google Search Console HTML tag content value (set in Netlify env vars). |
 
 ---
 
