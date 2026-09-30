@@ -24,6 +24,7 @@
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.49.1",
     "@t3-oss/env-nextjs": "^0.12.0",
+    "@tailwindcss/oxide-linux-x64-gnu": "^4.3.3",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/pm": "^3.31.3",
     "@tiptap/react": "^3.31.3",
@@ -59,7 +60,7 @@
   },
   "packageManager": "npm@10.8.2",
   "optionalDependencies": {
-    "lightningcss-linux-x64-gnu": "^1.32.0",
-    "lightningcss-win32-x64-msvc": "^1.32.0"
+    "@tailwindcss/oxide-linux-x64-gnu": "4.3.3",
+    "lightningcss-linux-x64-gnu": "1.32.0"
   }
 }
