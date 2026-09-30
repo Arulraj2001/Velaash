@@ -495,6 +495,10 @@ function SectionEditModalInner({
           finalContent.subtitle =
             "Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise.";
         }
+      } else if (section.section_type === "couture_spotlight") {
+        if (typeof finalContent.cta_link === "string") {
+          finalContent.cta_link = normalizeLink(finalContent.cta_link);
+        }
       }
 
       const res = await updateHomepageSectionAction(section.id, {
@@ -1309,7 +1313,7 @@ function SectionEditModalInner({
                 </label>
                 <div className="space-y-3">
                   {getString("image_url") ? (
-                    <div className="relative aspect-[4/3] w-full max-w-sm rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                    <div className="relative aspect-[4/5] max-w-[200px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-xs">
                       <Image
                         src={getString("image_url")}
                         alt="Editorial preview"
@@ -1342,6 +1346,10 @@ function SectionEditModalInner({
                     </label>
                     <span className="text-xs text-slate-400">or enter image URL below</span>
                   </div>
+
+                  <p className="text-[10px] text-slate-400">
+                    Recommended: 1200 × 1500px (Portrait 4:5), JPG or WebP under 5MB.
+                  </p>
 
                   <input
                     type="text"

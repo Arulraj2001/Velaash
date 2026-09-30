@@ -5,6 +5,7 @@ import {
   OccasionStripContentSchema,
   CategoryGridContentSchema,
   FeaturedProductsContentSchema,
+  CoutureSpotlightContentSchema,
 } from "../features/admin/types/homepage";
 
 function runHomepageAuditTests() {
@@ -130,6 +131,35 @@ function runHomepageAuditTests() {
   assert(
     "FeaturedProductsContentSchema rejects invalid mode",
     !FeaturedProductsContentSchema.safeParse(invalidMode).success
+  );
+
+  // --- SECTION 5: COUTURE SPOTLIGHT TESTS ---
+  const validCouture = {
+    tagline: "Artisanal Craft & Slow Fashion",
+    headline: "Consciously Crafted. Designed for Everyday Grace.",
+    description: "At Velaash, we reject disposable seasonal trends.",
+    image_url: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e",
+    detail_badge_title: "The Velaash Touch",
+    detail_badge_text: "Hand-finished hems.",
+    cta_text: "Explore The Full Catalog",
+    cta_link: "/shop",
+  };
+  assert(
+    "CoutureSpotlightContentSchema accepts valid couture spotlight config",
+    CoutureSpotlightContentSchema.safeParse(validCouture).success
+  );
+
+  const defaultCouture = {};
+  const parsedCoutureDefault = CoutureSpotlightContentSchema.safeParse(defaultCouture);
+  assert(
+    "CoutureSpotlightContentSchema applies defaults when empty",
+    parsedCoutureDefault.success && parsedCoutureDefault.data.headline === "Consciously Crafted. Designed for Everyday Grace."
+  );
+
+  const invalidCoutureHeadline = { ...validCouture, headline: "" };
+  assert(
+    "CoutureSpotlightContentSchema rejects empty headline",
+    !CoutureSpotlightContentSchema.safeParse(invalidCoutureHeadline).success
   );
 
   // URL normalization logic
