@@ -36,10 +36,8 @@ export async function GET(req: NextRequest) {
   let pickupPostcode = "600001"; // Chennai fallback
   try {
     const settings = await getSiteSettings();
-    // @ts-expect-error – shiprocket_settings may not be in the typed interface yet
-    const srSettings = settings.shiprocketSettings as { pickup_postcode?: string } | undefined;
-    if (srSettings?.pickup_postcode) {
-      pickupPostcode = srSettings.pickup_postcode;
+    if (settings.shiprocketSettings?.pickup_postcode) {
+      pickupPostcode = settings.shiprocketSettings.pickup_postcode;
     }
   } catch {
     // Non-critical — use fallback

@@ -120,3 +120,22 @@ export const SeoDefaultsSchema = z.object({
 });
 
 export type SeoDefaultsFormData = z.infer<typeof SeoDefaultsSchema>;
+
+// 9. Logistics & Shiprocket Settings
+export const ShiprocketSettingsSchema = z.object({
+  pickup_postcode: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Warehouse pickup pincode must be a 6-digit Indian postal code"),
+  pickup_location_name: z
+    .string()
+    .trim()
+    .min(1, "Pickup location name is required (must match Shiprocket dashboard)"),
+  default_weight_kg: z.coerce
+    .number()
+    .positive("Default package weight must be greater than 0 kg")
+    .max(50, "Default package weight cannot exceed 50 kg"),
+  auto_push_on_pack: z.boolean().default(false),
+});
+
+export type ShiprocketSettingsFormData = z.infer<typeof ShiprocketSettingsSchema>;

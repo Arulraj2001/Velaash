@@ -17,6 +17,7 @@ import {
   TaxSettingsSchema,
   AnnouncementSettingsSchema,
   SeoDefaultsSchema,
+  ShiprocketSettingsSchema,
   type StoreProfileFormData,
   type SocialLinksFormData,
   type ShippingSettingsFormData,
@@ -25,6 +26,7 @@ import {
   type TaxSettingsFormData,
   type AnnouncementSettingsFormData,
   type SeoDefaultsFormData,
+  type ShiprocketSettingsFormData,
 } from "../types/settings";
 
 export interface SettingsActionResult {
@@ -402,6 +404,44 @@ export async function updateSeoSettingsAction(
     return {
       success: false,
       error: err instanceof Error ? err.message : "Failed to update SEO defaults.",
+    };
+  }
+}
+
+/**
+ * Update 9. Logistics & Shiprocket Settings
+ * Permission: manage_settings (Owner only).
+ */
+export async function updateShiprocketSettingsAction(
+  input: ShiprocketSettingsFormData
+): Promise<SettingsActionResult> {
+  try {
+    await requireAdmin("manage_settings");
+
+    const parsed = ShiprocketSettingsSchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message || "Invalid Shiprocket logistics settings.",
+      };
+    }
+
+    const res = await upsertSiteSetting(
+      "shiprocket_settings",
+      parsed.data,
+      "Shiprocket logistics integration settings and warehouse dispatch details"
+    );
+
+    if (!res.success) {
+      return { success: false, error: res.error };
+    }
+
+    revalidateSettingsPaths();
+    return { success: true, message: "Logistics and Shiprocket settings updated successfully." };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to update Shiprocket settings.",
     };
   }
 }

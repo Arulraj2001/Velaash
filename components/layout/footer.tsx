@@ -17,6 +17,19 @@ import {
   Smartphone,
 } from "lucide-react";
 
+function PinterestIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146 1.124.347 2.317.535 3.554.535 6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z" />
+    </svg>
+  );
+}
+
 export async function Footer() {
   const currentYear = new Date().getFullYear();
   const [categories, { storeProfile, socialLinks }] = await Promise.all([
@@ -45,41 +58,58 @@ export async function Footer() {
                 {BRAND.description}
               </p>
 
-              {/* Social Media Links */}
-              <div className="pt-2">
-                <p className="text-brand-gold mb-2.5 text-[11px] font-semibold tracking-wider uppercase">
-                  Follow Our Journey
-                </p>
-                <div className="flex items-center gap-3">
-                  <a
-                    href={socialLinks.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-                    aria-label="Follow Velaash on Instagram"
-                  >
-                    <Instagram className="h-4 w-4" />
-                  </a>
-                  <a
-                    href={socialLinks.whatsapp}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-                    aria-label="Chat with Velaash on WhatsApp"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                  </a>
-                  <a
-                    href={socialLinks.facebook}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-                    aria-label="Connect with Velaash on Facebook"
-                  >
-                    <Facebook className="h-4 w-4" />
-                  </a>
+                {/* Social Media Links */}
+                <div className="pt-2">
+                  <p className="text-brand-gold mb-2.5 text-[11px] font-semibold tracking-wider uppercase">
+                    Follow Our Journey
+                  </p>
+                  <div className="flex items-center gap-3">
+                    {socialLinks.instagram && (
+                      <a
+                        href={socialLinks.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+                        aria-label="Follow Velaash on Instagram"
+                      >
+                        <Instagram className="h-4 w-4" />
+                      </a>
+                    )}
+                    {socialLinks.whatsapp && (
+                      <a
+                        href={socialLinks.whatsapp}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+                        aria-label="Chat with Velaash on WhatsApp"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </a>
+                    )}
+                    {socialLinks.facebook && (
+                      <a
+                        href={socialLinks.facebook}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+                        aria-label="Connect with Velaash on Facebook"
+                      >
+                        <Facebook className="h-4 w-4" />
+                      </a>
+                    )}
+                    {socialLinks.pinterest && (
+                      <a
+                        href={socialLinks.pinterest}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+                        aria-label="Follow Velaash on Pinterest"
+                      >
+                        <PinterestIcon className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
             </div>
 
             {/* Column 2: Shop / Collections Links (Accordion on mobile) */}

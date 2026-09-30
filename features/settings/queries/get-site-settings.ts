@@ -10,6 +10,7 @@ import type {
   PaymentPolicySetting,
   TaxPolicySetting,
   SeoDefaultsSetting,
+  ShiprocketSetting,
 } from "../types";
 
 export const DEFAULT_SHIPPING_POLICY: ShippingPolicySetting = {
@@ -48,6 +49,13 @@ export const DEFAULT_SEO_DEFAULTS: SeoDefaultsSetting = {
     "Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe.",
 };
 
+export const DEFAULT_SHIPROCKET_SETTING: ShiprocketSetting = {
+  pickup_postcode: "600001",
+  pickup_location_name: "Primary",
+  default_weight_kg: 0.5,
+  auto_push_on_pack: false,
+};
+
 export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   storeProfile: {
     name: BRAND.name,
@@ -70,6 +78,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   paymentSettings: DEFAULT_PAYMENT_POLICY,
   taxSettings: DEFAULT_TAX_POLICY,
   seoDefaults: DEFAULT_SEO_DEFAULTS,
+  shiprocketSettings: DEFAULT_SHIPROCKET_SETTING,
 };
 
 /**
@@ -95,6 +104,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
         "payment_settings",
         "tax_settings",
         "seo_defaults",
+        "shiprocket_settings",
       ]);
 
     if (error || !data || data.length === 0) {
@@ -110,6 +120,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     const paymentSettingsRow = data.find((row) => row.key === "payment_settings");
     const taxSettingsRow = data.find((row) => row.key === "tax_settings");
     const seoDefaultsRow = data.find((row) => row.key === "seo_defaults");
+    const shiprocketRow = data.find((row) => row.key === "shiprocket_settings");
 
     const rawStoreProfile = (storeProfileRow?.value as Partial<StoreProfileSetting>) || {};
     const rawSocialLinks = (socialLinksRow?.value as Partial<SocialLinksSetting>) || {};
@@ -218,6 +229,19 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       meta_description: rawSeo.meta_description || DEFAULT_SEO_DEFAULTS.meta_description,
     };
 
+    const rawShiprocket = (shiprocketRow?.value as Partial<ShiprocketSetting>) || {};
+    const shiprocketSettings: ShiprocketSetting = {
+      pickup_postcode: String(rawShiprocket.pickup_postcode || DEFAULT_SHIPROCKET_SETTING.pickup_postcode).trim(),
+      pickup_location_name: String(
+        rawShiprocket.pickup_location_name || DEFAULT_SHIPROCKET_SETTING.pickup_location_name
+      ).trim(),
+      default_weight_kg:
+        typeof rawShiprocket.default_weight_kg === "number" && rawShiprocket.default_weight_kg > 0
+          ? rawShiprocket.default_weight_kg
+          : DEFAULT_SHIPROCKET_SETTING.default_weight_kg,
+      auto_push_on_pack: Boolean(rawShiprocket.auto_push_on_pack),
+    };
+
     return {
       storeProfile,
       socialLinks,
@@ -227,6 +251,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       paymentSettings,
       taxSettings,
       seoDefaults,
+      shiprocketSettings,
     };
   } catch (error: unknown) {
     if (

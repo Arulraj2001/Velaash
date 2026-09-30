@@ -29,29 +29,47 @@ export async function GET(request: NextRequest, context: RouteParams) {
       return new NextResponse("Order not found.", { status: 404 });
     }
 
-    // Read GST configuration from site_settings
+    // Read GST & Store Profile configuration from site_settings
     let gstEnabled = false;
     let gstin: string | null = null;
+    let storeProfile: {
+      name?: string;
+      legal_name?: string;
+      email?: string;
+      phone?: string;
+    } | null = null;
 
     try {
       const adminSupabase = createAdminClient();
-      const { data: taxRow } = await adminSupabase
+      const { data: settingsRows } = await adminSupabase
         .from("site_settings")
-        .select("value")
-        .eq("key", "tax_settings")
-        .maybeSingle();
+        .select("key, value")
+        .in("key", ["tax_settings", "store_profile"]);
 
+      const taxRow = settingsRows?.find((r) => r.key === "tax_settings");
       if (taxRow?.value && typeof taxRow.value === "object") {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const val = taxRow.value as any;
         gstEnabled = Boolean(val.gst_enabled);
         gstin = val.gstin ? String(val.gstin) : null;
       }
+
+      const storeProfileRow = settingsRows?.find((r) => r.key === "store_profile");
+      if (storeProfileRow?.value && typeof storeProfileRow.value === "object") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const profile = storeProfileRow.value as any;
+        storeProfile = {
+          name: profile.name,
+          legal_name: profile.legal_name,
+          email: profile.email,
+          phone: profile.phone || profile.whatsapp_number,
+        };
+      }
     } catch (err) {
-      console.warn("Notice: could not load tax_settings from site_settings, defaulting to GST disabled:", err);
+      console.warn("Notice: could not load settings from site_settings, defaulting to fallback:", err);
     }
 
-    const pdfBuffer = await generateInvoicePdfBuffer(order, gstEnabled, gstin);
+    const pdfBuffer = await generateInvoicePdfBuffer(order, gstEnabled, gstin, storeProfile);
 
     // Return PDF stream
     return new NextResponse(pdfBuffer as unknown as BodyInit, {

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Store,
   Share2,
@@ -17,6 +18,7 @@ import {
   Upload,
   Loader2,
   ExternalLink,
+  PackageCheck,
 } from "lucide-react";
 import type { SiteSettingsData } from "@/features/settings";
 import {
@@ -28,6 +30,7 @@ import {
   updateTaxSettingsAction,
   updateAnnouncementSettingsAction,
   updateSeoSettingsAction,
+  updateShiprocketSettingsAction,
   uploadBrandAssetAction,
 } from "../../actions/settings-actions";
 
@@ -35,6 +38,7 @@ type SettingsTab =
   | "store_profile"
   | "social_links"
   | "shipping"
+  | "logistics"
   | "returns"
   | "payments"
   | "tax"
@@ -44,7 +48,8 @@ type SettingsTab =
 const TABS: { id: SettingsTab; label: string; icon: React.ElementType; description: string }[] = [
   { id: "store_profile", label: "Store Profile", icon: Store, description: "Brand name, legal entity, contact info & logos" },
   { id: "social_links", label: "Social Links", icon: Share2, description: "Instagram, Facebook, WhatsApp & Pinterest URLs" },
-  { id: "shipping", label: "Shipping & Delivery", icon: Truck, description: "Free shipping threshold & standard shipping fees" },
+  { id: "shipping", label: "Shipping & Rates", icon: Truck, description: "Free shipping threshold & standard shipping fees" },
+  { id: "logistics", label: "Logistics & Shiprocket", icon: PackageCheck, description: "Warehouse pickup pincode & dispatch location" },
   { id: "returns", label: "Returns Policy", icon: RotateCcw, description: "Return window in days & terms copy" },
   { id: "payments", label: "Payments & COD", icon: CreditCard, description: "COD fees, order limits & Razorpay gateway toggle" },
   { id: "tax", label: "Tax & GST", icon: Receipt, description: "Indian GST toggle & GSTIN for invoice generation" },
@@ -53,11 +58,13 @@ const TABS: { id: SettingsTab; label: string; icon: React.ElementType; descripti
 ];
 
 export function SiteSettingsView({ initialSettings }: { initialSettings: SiteSettingsData }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<SettingsTab>("store_profile");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
+    router.refresh();
     setTimeout(() => setToastMessage(null), 3500);
   };
 
@@ -147,6 +154,13 @@ export function SiteSettingsView({ initialSettings }: { initialSettings: SiteSet
             />
           )}
 
+          {activeTab === "logistics" && (
+            <LogisticsSettingsForm
+              initial={initialSettings.shiprocketSettings}
+              onSaved={() => showToast("Logistics and Shiprocket settings saved successfully.")}
+            />
+          )}
+
           {activeTab === "returns" && (
             <ReturnsSettingsForm
               initial={initialSettings.returnsPolicy}
@@ -205,7 +219,7 @@ function StoreProfileForm({
     phone: initial.phone || "+91 8508643832",
     whatsapp_number: initial.whatsapp_number || "+91 8508643832",
     whatsapp_url: initial.whatsapp_url || "https://wa.me/918508643832",
-    logo_url: initial.logo_url || "/brand/logo.svg",
+    logo_url: initial.logo_url && initial.logo_url !== "/brand/logo.svg" ? initial.logo_url : "/logo.png",
     favicon_url: initial.favicon_url || "/favicon.ico",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -313,7 +327,7 @@ function StoreProfileForm({
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1">Contact Email</label>
           <input
@@ -325,19 +339,34 @@ function StoreProfileForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">Contact Phone / WhatsApp</label>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">Customer Support Phone</label>
+          <input
+            type="text"
+            required
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            placeholder="+91 8508643832"
+            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">WhatsApp Support Number</label>
           <input
             type="text"
             required
             value={form.whatsapp_number}
-            onChange={(e) =>
+            onChange={(e) => {
+              const val = e.target.value;
+              const digits = val.replace(/\D/g, "");
+              const cleanDigits = digits.length === 10 ? `91${digits}` : digits;
+              const url = cleanDigits ? `https://wa.me/${cleanDigits}` : "";
               setForm({
                 ...form,
-                whatsapp_number: e.target.value,
-                phone: e.target.value,
-                whatsapp_url: `https://wa.me/${e.target.value.replace(/\D/g, "")}`,
-              })
-            }
+                whatsapp_number: val,
+                whatsapp_url: url,
+              });
+            }}
+            placeholder="+91 8508643832"
             className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
@@ -1239,6 +1268,133 @@ function SeoDefaultsForm({
         >
           {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           <span>Save SEO Defaults</span>
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ============================================================================
+// 9. LOGISTICS & SHIPROCKET SETTINGS FORM
+// ============================================================================
+function LogisticsSettingsForm({
+  initial,
+  onSaved,
+}: {
+  initial: SiteSettingsData["shiprocketSettings"];
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    pickup_postcode: initial.pickup_postcode || "600001",
+    pickup_location_name: initial.pickup_location_name || "Primary",
+    default_weight_kg: initial.default_weight_kg ?? 0.5,
+    auto_push_on_pack: initial.auto_push_on_pack ?? false,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await updateShiprocketSettingsAction(form);
+      if (res.success) {
+        onSaved();
+      } else {
+        setErrorMsg(res.error || "Failed to save logistics settings.");
+      }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Save failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <h2 className="text-lg font-heading font-semibold text-slate-900">Logistics &amp; Shiprocket</h2>
+        <p className="text-xs text-slate-500">
+          Configure warehouse dispatch details, pickup location name, and parcel weight used for live courier rates and automated fulfillment.
+        </p>
+      </div>
+
+      {errorMsg && (
+        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 text-amber-900 text-xs leading-relaxed">
+        <strong>Dispatch Hub:</strong> The pickup pincode is used as the origin when querying real-time delivery estimates and courier rates for customer destination pincodes. The pickup location name must exactly match a registered pickup address in your Shiprocket dashboard.
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
+            Warehouse Pickup Pincode (Origin) <span className="text-rose-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            maxLength={6}
+            value={form.pickup_postcode}
+            onChange={(e) => setForm({ ...form, pickup_postcode: e.target.value.replace(/\D/g, "").slice(0, 6) })}
+            placeholder="600001"
+            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">6-digit Indian PIN code of your dispatch warehouse or workshop.</p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
+            Shiprocket Pickup Location Name <span className="text-rose-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={form.pickup_location_name}
+            onChange={(e) => setForm({ ...form, pickup_location_name: e.target.value })}
+            placeholder="Primary"
+            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">Exact nickname configured under Settings &rarr; Pickup Addresses in Shiprocket.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
+            Default Package Weight (kg) <span className="text-rose-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              step="0.05"
+              min="0.05"
+              max="50"
+              required
+              value={form.default_weight_kg}
+              onChange={(e) => setForm({ ...form, default_weight_kg: Number(e.target.value) })}
+              className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900"
+            />
+            <span className="absolute right-3 top-2 text-xs font-semibold text-slate-400">kg</span>
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">Estimated parcel weight if individual product weight is not specified.</p>
+        </div>
+      </div>
+
+      <div className="pt-4 border-t border-slate-100 flex justify-end">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-colors disabled:opacity-50"
+        >
+          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          <span>Save Logistics Settings</span>
         </button>
       </div>
     </form>

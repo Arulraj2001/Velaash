@@ -203,14 +203,25 @@ export interface InvoicePdfProps {
   order: AdminOrderDetail;
   gstEnabled?: boolean;
   gstin?: string | null;
+  storeProfile?: {
+    name?: string;
+    legal_name?: string;
+    email?: string;
+    phone?: string;
+  } | null;
 }
 
 export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
   order,
   gstEnabled = false,
   gstin = null,
+  storeProfile = null,
 }) => {
   const isGstActive = Boolean(gstEnabled && gstin);
+  const brandDisplayName = storeProfile?.name || BRAND.name;
+  const legalEntityName = storeProfile?.legal_name || BRAND.legalName;
+  const supportEmail = storeProfile?.email || BRAND.contactEmail;
+  const supportPhone = storeProfile?.phone || BRAND.supportPhone;
 
   const formattedDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
     day: "numeric",
@@ -224,10 +235,10 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
         {/* Header Block */}
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.brandName}>VELAASH</Text>
-            <Text style={styles.legalEntity}>Legal Entity: {BRAND.legalName}</Text>
+            <Text style={styles.brandName}>{brandDisplayName.toUpperCase()}</Text>
+            <Text style={styles.legalEntity}>Legal Entity: {legalEntityName}</Text>
             <Text style={styles.brandMeta}>Tamil Nadu, India</Text>
-            <Text style={styles.brandMeta}>Support: {BRAND.contactEmail} | {BRAND.supportPhone}</Text>
+            <Text style={styles.brandMeta}>Support: {supportEmail} | {supportPhone}</Text>
           </View>
           <View style={styles.invoiceBadgeBlock}>
             <Text style={styles.docTitle}>
@@ -330,13 +341,13 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
               <Text style={styles.summaryVal}>₹{order.subtotal.toFixed(2)}</Text>
             </View>
 
-            {order.discountAmount > 0 && (
+            {Boolean(order.discountAmount && order.discountAmount > 0) && (
               <View style={styles.summaryLine}>
                 <Text style={styles.summaryLabel}>
                   Discount {order.couponCode ? `(${order.couponCode})` : ""}:
                 </Text>
                 <Text style={styles.summaryVal}>
-                  -₹{order.discountAmount.toFixed(2)}
+                  -₹{(order.discountAmount ?? 0).toFixed(2)}
                 </Text>
               </View>
             )}
@@ -344,13 +355,15 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
             <View style={styles.summaryLine}>
               <Text style={styles.summaryLabel}>Shipping Charges:</Text>
               <Text style={styles.summaryVal}>
-                {order.shippingCharge === 0 ? "FREE" : `₹${order.shippingCharge.toFixed(2)}`}
+                {(order.shippingCharge ?? (order as any).shippingFee ?? 0) === 0
+                  ? "FREE"
+                  : `₹${(order.shippingCharge ?? (order as any).shippingFee ?? 0).toFixed(2)}`}
               </Text>
             </View>
 
             <View style={styles.summaryLineBold}>
               <Text style={styles.totalLabel}>Total Payable:</Text>
-              <Text style={styles.totalVal}>₹{order.totalAmount.toFixed(2)}</Text>
+              <Text style={styles.totalVal}>₹{(order.totalAmount ?? 0).toFixed(2)}</Text>
             </View>
           </View>
         </View>
@@ -375,10 +388,16 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
 export async function generateInvoicePdfBuffer(
   order: AdminOrderDetail,
   gstEnabled = false,
-  gstin?: string | null
+  gstin?: string | null,
+  storeProfile?: {
+    name?: string;
+    legal_name?: string;
+    email?: string;
+    phone?: string;
+  } | null
 ): Promise<Buffer> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const doc = React.createElement(InvoiceDocument, { order, gstEnabled, gstin } as any);
+  const doc = React.createElement(InvoiceDocument, { order, gstEnabled, gstin, storeProfile } as any);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return await renderToBuffer(doc as any);
 }

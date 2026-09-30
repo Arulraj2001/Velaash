@@ -2,7 +2,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const PRODUCT_IMAGES_BUCKET = "product-images";
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
-export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+export const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/svg+xml",
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
+];
 
 /**
  * Ensures the product-images bucket is provisioned as a public storage bucket.

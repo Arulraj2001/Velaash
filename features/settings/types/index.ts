@@ -72,6 +72,16 @@ export interface SeoDefaultsSetting {
   meta_description: string;
 }
 
+/**
+ * Logistics and Shiprocket integration configuration
+ */
+export interface ShiprocketSetting {
+  pickup_postcode: string;
+  pickup_location_name: string;
+  default_weight_kg: number;
+  auto_push_on_pack: boolean;
+}
+
 export interface SiteSettingsData {
   storeProfile: StoreProfileSetting;
   socialLinks: SocialLinksSetting;
@@ -81,6 +91,7 @@ export interface SiteSettingsData {
   paymentSettings: PaymentPolicySetting;
   taxSettings: TaxPolicySetting;
   seoDefaults: SeoDefaultsSetting;
+  shiprocketSettings: ShiprocketSetting;
 }
 
 export type SiteSettings = SiteSettingsData;
