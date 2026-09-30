@@ -9,7 +9,7 @@ import { env } from "@/lib/env";
 
 
 // In-memory mock store for automated webhook test assertions
-export const MOCK_WEBHOOK_EVENT_LOG: Array<{
+const MOCK_WEBHOOK_EVENT_LOG: Array<{
   event: string;
   orderNumber?: string;
   razorpayOrderId?: string;
