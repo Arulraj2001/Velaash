@@ -121,6 +121,7 @@ export interface ProductFilterParams {
   sort?: ProductSortOption;
   page?: number;
   limit?: number;
+  productIds?: string[];
 }
 
 /**

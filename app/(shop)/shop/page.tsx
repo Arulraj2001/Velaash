@@ -75,7 +75,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         <h1 className="font-heading text-brand-dark text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
           Shop All Collections
         </h1>
-        <p className="text-brand-dark/70 max-w-2xl text-xs leading-relaxed sm:text-sm">
+        <p className="text-brand-muted max-w-2xl text-xs leading-relaxed sm:text-sm">
           Contemporary silhouettes, breathable handpicked fabrics, and effortless style crafted for
           your modern everyday and occasion wardrobe.
         </p>

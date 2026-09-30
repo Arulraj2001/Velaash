@@ -1,0 +1,1559 @@
+{
+  "app/(shop)/category/[slug]/page.tsx": [
+    {
+      "line": 119,
+      "old": "<p className=\"text-brand-dark/70 max-w-2xl text-xs leading-relaxed sm:text-sm\">",
+      "new": "<p className=\"text-brand-muted max-w-2xl text-xs leading-relaxed sm:text-sm\">"
+    }
+  ],
+  "app/(shop)/shop/page.tsx": [
+    {
+      "line": 78,
+      "old": "<p className=\"text-brand-dark/70 max-w-2xl text-xs leading-relaxed sm:text-sm\">",
+      "new": "<p className=\"text-brand-muted max-w-2xl text-xs leading-relaxed sm:text-sm\">"
+    }
+  ],
+  "app/account/components/account-nav.tsx": [
+    {
+      "line": 75,
+      "old": ": \"text-brand-dark/70 hover:bg-brand-cream/80 hover:text-brand-dark border-l-4 border-transparent\"",
+      "new": ": \"text-brand-muted hover:bg-brand-cream/80 hover:text-brand-dark border-l-4 border-transparent\""
+    },
+    {
+      "line": 82,
+      "old": "isActive ? \"text-brand-dark\" : \"text-brand-dark/50\"",
+      "new": "isActive ? \"text-brand-dark\" : \"text-brand-muted\""
+    },
+    {
+      "line": 89,
+      "old": "<span className=\"text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-brand-light/60 text-brand-dark/60 tracking-wider\">",
+      "new": "<span className=\"text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-brand-light/60 text-brand-muted tracking-wider\">"
+    },
+    {
+      "line": 132,
+      "old": ": \"text-brand-dark/70 hover:bg-brand-cream/80 hover:text-brand-dark\"",
+      "new": ": \"text-brand-muted hover:bg-brand-cream/80 hover:text-brand-dark\""
+    }
+  ],
+  "app/account/layout.tsx": [
+    {
+      "line": 54,
+      "old": "<p className=\"text-xs text-brand-dark/70 font-mono\">",
+      "new": "<p className=\"text-xs text-brand-muted font-mono\">"
+    },
+    {
+      "line": 78,
+      "old": "<p className=\"text-[11px] font-bold uppercase tracking-wider text-brand-dark/50\">",
+      "new": "<p className=\"text-[11px] font-bold uppercase tracking-wider text-brand-muted\">"
+    }
+  ],
+  "app/account/orders/components/order-status-filter.tsx": [
+    {
+      "line": 37,
+      "old": "<Filter className=\"h-4 w-4 text-brand-dark/50 shrink-0\" />",
+      "new": "<Filter className=\"h-4 w-4 text-brand-muted shrink-0\" />"
+    }
+  ],
+  "app/account/orders/page.tsx": [
+    {
+      "line": 66,
+      "old": "<p className=\"text-xs text-brand-dark/60 mt-1\">",
+      "new": "<p className=\"text-xs text-brand-muted mt-1\">"
+    },
+    {
+      "line": 78,
+      "old": "<div className=\"mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-light/30 text-brand-dark/50\">",
+      "new": "<div className=\"mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-light/30 text-brand-muted\">"
+    },
+    {
+      "line": 87,
+      "old": "<p className=\"text-xs text-brand-dark/60 max-w-sm mx-auto\">",
+      "new": "<p className=\"text-xs text-brand-muted max-w-sm mx-auto\">"
+    },
+    {
+      "line": 131,
+      "old": "<div className=\"h-full w-full flex items-center justify-center text-brand-dark/30\">",
+      "new": "<div className=\"h-full w-full flex items-center justify-center text-brand-subtle\">"
+    },
+    {
+      "line": 148,
+      "old": "<span className=\"text-brand-dark/50 font-normal ml-1\">",
+      "new": "<span className=\"text-brand-muted font-normal ml-1\">"
+    },
+    {
+      "line": 154,
+      "old": "<div className=\"flex items-center gap-3 text-[11px] text-brand-dark/60 font-sans flex-wrap\">",
+      "new": "<div className=\"flex items-center gap-3 text-[11px] text-brand-muted font-sans flex-wrap\">"
+    },
+    {
+      "line": 177,
+      "old": "<p className=\"text-[11px] uppercase tracking-wider text-brand-dark/50 font-medium\">",
+      "new": "<p className=\"text-[11px] uppercase tracking-wider text-brand-muted font-medium\">"
+    },
+    {
+      "line": 199,
+      "old": "<div className=\"flex items-center justify-between border-t border-brand-border/60 pt-5 mt-6 text-xs text-brand-dark/70\">",
+      "new": "<div className=\"flex items-center justify-between border-t border-brand-border/60 pt-5 mt-6 text-xs text-brand-muted\">"
+    }
+  ],
+  "app/account/orders/[orderNumber]/page.tsx": [
+    {
+      "line": 82,
+      "old": "className=\"inline-flex items-center gap-1.5 text-xs font-medium text-brand-dark/70 hover:text-brand-accent transition-colors\"",
+      "new": "className=\"inline-flex items-center gap-1.5 text-xs font-medium text-brand-muted hover:text-brand-accent transition-colors\""
+    },
+    {
+      "line": 103,
+      "old": "<p className=\"text-xs text-brand-dark/60 font-sans\">",
+      "new": "<p className=\"text-xs text-brand-muted font-sans\">"
+    },
+    {
+      "line": 109,
+      "old": "<p className=\"text-[11px] uppercase tracking-wider text-brand-dark/50 font-medium\">",
+      "new": "<p className=\"text-[11px] uppercase tracking-wider text-brand-muted font-medium\">"
+    },
+    {
+      "line": 120,
+      "old": "<h3 className=\"text-xs font-bold uppercase tracking-wider text-brand-dark/60\">",
+      "new": "<h3 className=\"text-xs font-bold uppercase tracking-wider text-brand-muted\">"
+    },
+    {
+      "line": 161,
+      "old": "<div className=\"h-full w-full flex items-center justify-center text-brand-dark/30\">",
+      "new": "<div className=\"h-full w-full flex items-center justify-center text-brand-subtle\">"
+    },
+    {
+      "line": 172,
+      "old": "<div className=\"flex items-center gap-2 flex-wrap text-xs text-brand-dark/70\">",
+      "new": "<div className=\"flex items-center gap-2 flex-wrap text-xs text-brand-muted\">"
+    },
+    {
+      "line": 179,
+      "old": "<p className=\"text-[11px] font-mono text-brand-dark/50\">",
+      "new": "<p className=\"text-[11px] font-mono text-brand-muted\">"
+    },
+    {
+      "line": 185,
+      "old": "<span className=\"text-xs text-brand-dark/70\">",
+      "new": "<span className=\"text-xs text-brand-muted\">"
+    },
+    {
+      "line": 208,
+      "old": "<p className=\"text-xs text-brand-dark/70 leading-relaxed\">",
+      "new": "<p className=\"text-xs text-brand-muted leading-relaxed\">"
+    },
+    {
+      "line": 261,
+      "old": "<div className=\"space-y-1 text-xs text-brand-dark/80 font-sans leading-relaxed\">",
+      "new": "<div className=\"space-y-1 text-xs text-brand-muted font-sans leading-relaxed\">"
+    },
+    {
+      "line": 274,
+      "old": "<div className=\"pt-2 border-t border-brand-border/40 mt-3 space-y-1 text-[11px] text-brand-dark/70\">",
+      "new": "<div className=\"pt-2 border-t border-brand-border/40 mt-3 space-y-1 text-[11px] text-brand-muted\">"
+    },
+    {
+      "line": 276,
+      "old": "<Phone className=\"h-3 w-3 text-brand-dark/50\" />",
+      "new": "<Phone className=\"h-3 w-3 text-brand-muted\" />"
+    },
+    {
+      "line": 280,
+      "old": "<Mail className=\"h-3 w-3 text-brand-dark/50\" />",
+      "new": "<Mail className=\"h-3 w-3 text-brand-muted\" />"
+    },
+    {
+      "line": 313,
+      "old": "<div className=\"flex justify-between text-brand-dark/70\">",
+      "new": "<div className=\"flex justify-between text-brand-muted\">"
+    },
+    {
+      "line": 328,
+      "old": "<div className=\"flex justify-between text-brand-dark/70\">",
+      "new": "<div className=\"flex justify-between text-brand-muted\">"
+    },
+    {
+      "line": 340,
+      "old": "<div className=\"flex justify-between text-brand-dark/70\">",
+      "new": "<div className=\"flex justify-between text-brand-muted\">"
+    },
+    {
+      "line": 354,
+      "old": "<div className=\"pt-2 text-[11px] text-brand-dark/60 font-sans border-t border-brand-border/40\">",
+      "new": "<div className=\"pt-2 text-[11px] text-brand-muted font-sans border-t border-brand-border/40\">"
+    }
+  ],
+  "app/account/page.tsx": [
+    {
+      "line": 83,
+      "old": "<span className=\"text-xs font-semibold uppercase tracking-wider text-brand-dark/60\">",
+      "new": "<span className=\"text-xs font-semibold uppercase tracking-wider text-brand-muted\">"
+    },
+    {
+      "line": 106,
+      "old": "<span className=\"text-xs font-semibold uppercase tracking-wider text-brand-dark/60\">",
+      "new": "<span className=\"text-xs font-semibold uppercase tracking-wider text-brand-muted\">"
+    },
+    {
+      "line": 126,
+      "old": "<span className=\"text-xs font-semibold uppercase tracking-wider text-brand-dark/60\">",
+      "new": "<span className=\"text-xs font-semibold uppercase tracking-wider text-brand-muted\">"
+    },
+    {
+      "line": 151,
+      "old": "<p className=\"text-xs text-brand-dark/60\">",
+      "new": "<p className=\"text-xs text-brand-muted\">"
+    },
+    {
+      "line": 168,
+      "old": "<div className=\"mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-light/30 text-brand-dark/60\">",
+      "new": "<div className=\"mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-light/30 text-brand-muted\">"
+    },
+    {
+      "line": 175,
+      "old": "<p className=\"text-xs text-brand-dark/60 max-w-sm mx-auto\">",
+      "new": "<p className=\"text-xs text-brand-muted max-w-sm mx-auto\">"
+    },
+    {
+      "line": 211,
+      "old": "<div className=\"h-full w-full flex items-center justify-center text-brand-dark/40\">",
+      "new": "<div className=\"h-full w-full flex items-center justify-center text-brand-subtle\">"
+    },
+    {
+      "line": 226,
+      "old": "<p className=\"text-xs text-brand-dark/80 line-clamp-1\">",
+      "new": "<p className=\"text-xs text-brand-muted line-clamp-1\">"
+    },
+    {
+      "line": 229,
+      "old": "<span className=\"text-brand-dark/50 ml-1\">",
+      "new": "<span className=\"text-brand-muted ml-1\">"
+    },
+    {
+      "line": 235,
+      "old": "<p className=\"text-[11px] text-brand-dark/50\">",
+      "new": "<p className=\"text-[11px] text-brand-muted\">"
+    }
+  ],
+  "app/account/settings/page.tsx": [
+    {
+      "line": 36,
+      "old": "<p className=\"text-xs text-brand-dark/60 mt-0.5\">",
+      "new": "<p className=\"text-xs text-brand-muted mt-0.5\">"
+    },
+    {
+      "line": 57,
+      "old": "<p className=\"text-[11px] text-brand-dark/50 mt-1\">",
+      "new": "<p className=\"text-[11px] text-brand-muted mt-1\">"
+    },
+    {
+      "line": 88,
+      "old": "<div className=\"rounded-xl border border-brand-gold/40 bg-brand-light/20 p-4 text-xs text-brand-dark/70\">",
+      "new": "<div className=\"rounded-xl border border-brand-gold/40 bg-brand-light/20 p-4 text-xs text-brand-muted\">"
+    }
+  ],
+  "app/order-confirmation/[orderNumber]/page.tsx": [
+    {
+      "line": 113,
+      "old": "<span className=\"text-xs font-semibold uppercase tracking-widest text-brand-accent\">",
+      "new": "<span className=\"text-xs font-semibold uppercase tracking-widest text-brand-accent-dark\">"
+    },
+    {
+      "line": 121,
+      "old": "<p className=\"mt-2 text-sm text-brand-dark/70 max-w-xl mx-auto leading-relaxed\">",
+      "new": "<p className=\"mt-2 text-sm text-brand-muted max-w-xl mx-auto leading-relaxed\">"
+    },
+    {
+      "line": 130,
+      "old": "<span className=\"text-brand-dark/50 block text-[11px] uppercase tracking-wider\">",
+      "new": "<span className=\"text-brand-muted block text-[11px] uppercase tracking-wider\">"
+    },
+    {
+      "line": 139,
+      "old": "<span className=\"text-brand-dark/50 block text-[11px] uppercase tracking-wider\">",
+      "new": "<span className=\"text-brand-muted block text-[11px] uppercase tracking-wider\">"
+    },
+    {
+      "line": 146,
+      "old": "<span className=\"text-brand-dark/50 block text-[11px] uppercase tracking-wider\">",
+      "new": "<span className=\"text-brand-muted block text-[11px] uppercase tracking-wider\">"
+    },
+    {
+      "line": 165,
+      "old": "<span className=\"text-brand-dark/50 block text-[11px] uppercase tracking-wider\">",
+      "new": "<span className=\"text-brand-muted block text-[11px] uppercase tracking-wider\">"
+    },
+    {
+      "line": 223,
+      "old": "<Clock className=\"h-4 w-4 text-brand-gold\" />",
+      "new": "<Clock className=\"h-4 w-4 text-brand-accent\" />"
+    },
+    {
+      "line": 236,
+      "old": "<p className=\"text-[11px] text-brand-dark/60 leading-tight\">",
+      "new": "<p className=\"text-[11px] text-brand-muted leading-tight\">"
+    },
+    {
+      "line": 249,
+      "old": "<p className=\"text-[11px] text-brand-dark/60 leading-tight\">",
+      "new": "<p className=\"text-[11px] text-brand-muted leading-tight\">"
+    },
+    {
+      "line": 257,
+      "old": "<span className=\"flex h-6 w-6 items-center justify-center rounded-full bg-brand-cream text-brand-dark/60 text-xs font-bold border border-brand-border\">",
+      "new": "<span className=\"flex h-6 w-6 items-center justify-center rounded-full bg-brand-cream text-brand-muted text-xs font-bold border border-brand-border\">"
+    },
+    {
+      "line": 260,
+      "old": "<span className=\"text-xs font-semibold text-brand-dark/70\">Dispatched</span>",
+      "new": "<span className=\"text-xs font-semibold text-brand-muted\">Dispatched</span>"
+    },
+    {
+      "line": 262,
+      "old": "<p className=\"text-[11px] text-brand-dark/60 leading-tight\">",
+      "new": "<p className=\"text-[11px] text-brand-muted leading-tight\">"
+    },
+    {
+      "line": 270,
+      "old": "<span className=\"flex h-6 w-6 items-center justify-center rounded-full bg-brand-cream text-brand-dark/60 text-xs font-bold border border-brand-border\">",
+      "new": "<span className=\"flex h-6 w-6 items-center justify-center rounded-full bg-brand-cream text-brand-muted text-xs font-bold border border-brand-border\">"
+    },
+    {
+      "line": 273,
+      "old": "<span className=\"text-xs font-semibold text-brand-dark/70\">Delivered</span>",
+      "new": "<span className=\"text-xs font-semibold text-brand-muted\">Delivered</span>"
+    },
+    {
+      "line": 275,
+      "old": "<p className=\"text-[11px] text-brand-dark/60 leading-tight\">",
+      "new": "<p className=\"text-[11px] text-brand-muted leading-tight\">"
+    },
+    {
+      "line": 286,
+      "old": "<Package className=\"h-4 w-4 text-brand-gold\" />",
+      "new": "<Package className=\"h-4 w-4 text-brand-accent\" />"
+    },
+    {
+      "line": 289,
+      "old": "<span className=\"text-xs font-normal text-brand-dark/60 lowercase\">",
+      "new": "<span className=\"text-xs font-normal text-brand-muted lowercase\">"
+    },
+    {
+      "line": 299,
+      "old": "<div className=\"h-16 w-16 shrink-0 rounded-lg bg-brand-cream/60 border border-brand-border/60 flex items-center justify-center text-brand-dark/40 overflow-hidden\">",
+      "new": "<div className=\"h-16 w-16 shrink-0 rounded-lg bg-brand-cream/60 border border-brand-border/60 flex items-center justify-center text-brand-subtle overflow-hidden\">"
+    },
+    {
+      "line": 306,
+      "old": "<div className=\"mt-1 flex flex-wrap gap-2 text-xs text-brand-dark/60\">",
+      "new": "<div className=\"mt-1 flex flex-wrap gap-2 text-xs text-brand-muted\">"
+    },
+    {
+      "line": 323,
+      "old": "<span className=\"block text-[11px] text-brand-dark/50\">",
+      "new": "<span className=\"block text-[11px] text-brand-muted\">"
+    },
+    {
+      "line": 343,
+      "old": "<div className=\"flex justify-between text-brand-dark/70\">",
+      "new": "<div className=\"flex justify-between text-brand-muted\">"
+    },
+    {
+      "line": 359,
+      "old": "<div className=\"flex justify-between text-brand-dark/70\">",
+      "new": "<div className=\"flex justify-between text-brand-muted\">"
+    },
+    {
+      "line": 369,
+      "old": "<div className=\"flex justify-between text-brand-dark/70\">",
+      "new": "<div className=\"flex justify-between text-brand-muted\">"
+    },
+    {
+      "line": 380,
+      "old": "<span className=\"block text-[11px] text-brand-dark/50 font-normal\">",
+      "new": "<span className=\"block text-[11px] text-brand-muted font-normal\">"
+    },
+    {
+      "line": 395,
+      "old": "<Truck className=\"h-4 w-4 text-brand-gold\" />",
+      "new": "<Truck className=\"h-4 w-4 text-brand-accent\" />"
+    },
+    {
+      "line": 412,
+      "old": "<div className=\"text-xs text-brand-dark/70 space-y-1 leading-relaxed\">",
+      "new": "<div className=\"text-xs text-brand-muted space-y-1 leading-relaxed\">"
+    },
+    {
+      "line": 424,
+      "old": "<p className=\"pt-1 text-brand-dark/60\">",
+      "new": "<p className=\"pt-1 text-brand-muted\">"
+    },
+    {
+      "line": 436,
+      "old": "<span className=\"text-[11px] text-brand-dark/60 block uppercase tracking-wider\">",
+      "new": "<span className=\"text-[11px] text-brand-muted block uppercase tracking-wider\">"
+    },
+    {
+      "line": 447,
+      "old": "<div className=\"rounded-2xl border border-brand-border/60 bg-brand-cream/30 p-5 text-xs text-brand-dark/70 space-y-2\">",
+      "new": "<div className=\"rounded-2xl border border-brand-border/60 bg-brand-cream/30 p-5 text-xs text-brand-muted space-y-2\">"
+    },
+    {
+      "line": 449,
+      "old": "<HelpCircle className=\"h-4 w-4 text-brand-gold\" />",
+      "new": "<HelpCircle className=\"h-4 w-4 text-brand-accent\" />"
+    },
+    {
+      "line": 480,
+      "old": "<ShoppingBag className=\"h-4 w-4 text-brand-dark/60\" />",
+      "new": "<ShoppingBag className=\"h-4 w-4 text-brand-muted\" />"
+    }
+  ],
+  "app/page.tsx": [
+    {
+      "line": 183,
+      "old": "<span className=\"text-brand-accent text-xs font-semibold tracking-widest uppercase\">",
+      "new": "<span className=\"text-brand-accent-dark text-xs font-semibold tracking-widest uppercase\">"
+    },
+    {
+      "line": 189,
+      "old": "<p className=\"text-brand-dark/70 text-xs sm:text-sm font-sans\">",
+      "new": "<p className=\"text-brand-muted text-xs sm:text-sm font-sans\">"
+    },
+    {
+      "line": 246,
+      "old": "<span className=\"text-brand-accent text-xs font-semibold tracking-widest uppercase\">",
+      "new": "<span className=\"text-brand-accent-dark text-xs font-semibold tracking-widest uppercase\">"
+    },
+    {
+      "line": 271,
+      "old": "<p className=\"text-brand-dark/70 text-sm\">",
+      "new": "<p className=\"text-brand-muted text-sm\">"
+    },
+    {
+      "line": 294,
+      "old": "<Truck className=\"w-5 h-5 text-brand-gold\" />",
+      "new": "<Truck className=\"w-5 h-5 text-brand-accent\" />"
+    },
+    {
+      "line": 300,
+      "old": "<p className=\"text-brand-dark/65 text-xs font-sans leading-relaxed\">",
+      "new": "<p className=\"text-brand-muted text-xs font-sans leading-relaxed\">"
+    },
+    {
+      "line": 309,
+      "old": "<RotateCcw className=\"w-5 h-5 text-brand-gold\" />",
+      "new": "<RotateCcw className=\"w-5 h-5 text-brand-accent\" />"
+    },
+    {
+      "line": 315,
+      "old": "<p className=\"text-brand-dark/65 text-xs font-sans leading-relaxed\">",
+      "new": "<p className=\"text-brand-muted text-xs font-sans leading-relaxed\">"
+    },
+    {
+      "line": 324,
+      "old": "<ShieldCheck className=\"w-5 h-5 text-brand-gold\" />",
+      "new": "<ShieldCheck className=\"w-5 h-5 text-brand-accent\" />"
+    },
+    {
+      "line": 330,
+      "old": "<p className=\"text-brand-dark/65 text-xs font-sans leading-relaxed\">",
+      "new": "<p className=\"text-brand-muted text-xs font-sans leading-relaxed\">"
+    },
+    {
+      "line": 339,
+      "old": "<MessageCircle className=\"w-5 h-5 text-brand-gold\" />",
+      "new": "<MessageCircle className=\"w-5 h-5 text-brand-accent\" />"
+    },
+    {
+      "line": 345,
+      "old": "<p className=\"text-brand-dark/65 text-xs font-sans leading-relaxed\">",
+      "new": "<p className=\"text-brand-muted text-xs font-sans leading-relaxed\">"
+    }
+  ],
+  "components/layout/account-header-button.tsx": [
+    {
+      "line": 27,
+      "old": "<User className=\"text-brand-dark/40 h-4 w-4\" />",
+      "new": "<User className=\"text-brand-muted h-4 w-4\" />"
+    },
+    {
+      "line": 36,
+      "old": "className=\"text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold flex items-center gap-1.5 rounded-full p-2 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none\"",
+      "new": "className=\"text-brand-muted hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold flex items-center gap-1.5 rounded-full p-2 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none\""
+    },
+    {
+      "line": 66,
+      "old": "<ChevronDown className=\"text-brand-dark/60 hidden h-3 w-3 lg:inline\" />",
+      "new": "<ChevronDown className=\"text-brand-muted hidden h-3 w-3 lg:inline\" />"
+    }
+  ],
+  "components/layout/header-client.tsx": [
+    {
+      "line": 109,
+      "old": "className=\"text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none\"",
+      "new": "className=\"text-brand-muted hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none\""
+    },
+    {
+      "line": 119,
+      "old": "className=\"text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold relative hidden rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:inline-flex\"",
+      "new": "className=\"text-brand-muted hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold relative hidden rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:inline-flex\""
+    },
+    {
+      "line": 135,
+      "old": "className=\"text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold relative rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none\"",
+      "new": "className=\"text-brand-muted hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold relative rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none\""
+    }
+  ],
+  "components/layout/header-nav.tsx": [
+    {
+      "line": 53,
+      "old": "className=\"text-brand-dark/85 hover:text-brand-accent after:bg-brand-gold relative py-1 text-xs font-medium tracking-widest uppercase transition-colors duration-150 after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:w-0 after:transition-all hover:after:w-full\"",
+      "new": "className=\"text-brand-muted hover:text-brand-accent after:bg-brand-gold relative py-1 text-xs font-medium tracking-widest uppercase transition-colors duration-150 after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:w-0 after:transition-all hover:after:w-full\""
+    },
+    {
+      "line": 63,
+      "old": "className=\"text-brand-dark/50 hover:text-brand-accent rounded p-1\"",
+      "new": "className=\"text-brand-muted hover:text-brand-accent rounded p-1\""
+    },
+    {
+      "line": 89,
+      "old": "className=\"text-brand-dark/70 hover:text-brand-accent flex items-center gap-0.5 text-[11px] font-medium hover:underline\"",
+      "new": "className=\"text-brand-muted hover:text-brand-accent flex items-center gap-0.5 text-[11px] font-medium hover:underline\""
+    },
+    {
+      "line": 108,
+      "old": "<span className=\"text-brand-dark/50 truncate text-[11px]\">",
+      "new": "<span className=\"text-brand-muted truncate text-[11px]\">"
+    }
+  ],
+  "components/layout/mobile-nav-drawer.tsx": [
+    {
+      "line": 90,
+      "old": "className=\"text-brand-dark/70 hover:text-brand-dark hover:bg-brand-light/30 rounded-full p-2 transition-colors\"",
+      "new": "className=\"text-brand-muted hover:text-brand-dark hover:bg-brand-light/30 rounded-full p-2 transition-colors\""
+    },
+    {
+      "line": 119,
+      "old": "className={`text-brand-dark/60 h-4 w-4 transition-transform duration-200 ${",
+      "new": "className={`text-brand-muted h-4 w-4 transition-transform duration-200 ${"
+    },
+    {
+      "line": 141,
+      "old": "className=\"text-brand-dark/80 hover:text-brand-accent block py-1 text-xs transition-colors\"",
+      "new": "className=\"text-brand-muted hover:text-brand-accent block py-1 text-xs transition-colors\""
+    },
+    {
+      "line": 174,
+      "old": "className=\"text-brand-dark/80 hover:text-brand-accent block px-2 py-1.5 text-xs transition-colors\"",
+      "new": "className=\"text-brand-muted hover:text-brand-accent block px-2 py-1.5 text-xs transition-colors\""
+    }
+  ],
+  "components/layout/search-overlay.tsx": [
+    {
+      "line": 86,
+      "old": "className=\"text-brand-dark/70 hover:text-brand-dark hover:bg-brand-light/40 focus-visible:ring-brand-gold rounded-full p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none\"",
+      "new": "className=\"text-brand-muted hover:text-brand-dark hover:bg-brand-light/40 focus-visible:ring-brand-gold rounded-full p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none\""
+    },
+    {
+      "line": 101,
+      "old": "className=\"border-brand-border bg-brand-card text-brand-dark placeholder:text-brand-dark/40 focus-visible:border-brand-gold focus-visible:ring-brand-gold/30 h-14 w-full rounded-xl border pr-12 pl-14 text-base shadow-inner focus-visible:ring-2 focus-visible:outline-none sm:text-lg\"",
+      "new": "className=\"border-brand-border bg-brand-card text-brand-dark placeholder:text-brand-subtle focus-visible:border-brand-gold focus-visible:ring-brand-gold/30 h-14 w-full rounded-xl border pr-12 pl-14 text-base shadow-inner focus-visible:ring-2 focus-visible:outline-none sm:text-lg\""
+    },
+    {
+      "line": 107,
+      "old": "className=\"text-brand-dark/50 hover:text-brand-dark absolute right-4 rounded-full p-1\"",
+      "new": "className=\"text-brand-muted hover:text-brand-dark absolute right-4 rounded-full p-1\""
+    },
+    {
+      "line": 117,
+      "old": "<p className=\"text-brand-dark/60 text-[11px] font-semibold tracking-wider uppercase\">",
+      "new": "<p className=\"text-brand-muted text-[11px] font-semibold tracking-wider uppercase\">"
+    }
+  ],
+  "components/ui/card.tsx": [
+    {
+      "line": 51,
+      "old": "className={cn(\"text-brand-dark/70 font-sans text-xs tracking-wide\", className)}",
+      "new": "className={cn(\"text-brand-muted font-sans text-xs tracking-wide\", className)}"
+    }
+  ],
+  "components/ui/input.tsx": [
+    {
+      "line": 38,
+      "old": "className=\"text-brand-dark/80 block text-xs font-medium tracking-wider uppercase\"",
+      "new": "className=\"text-brand-muted block text-xs font-medium tracking-wider uppercase\""
+    },
+    {
+      "line": 45,
+      "old": "<div className=\"text-brand-dark/50 pointer-events-none absolute left-3 flex items-center\">",
+      "new": "<div className=\"text-brand-muted pointer-events-none absolute left-3 flex items-center\">"
+    },
+    {
+      "line": 57,
+      "old": "\"border-brand-border bg-brand-card text-brand-dark placeholder:text-brand-dark/40 flex h-11 w-full rounded-md border px-3.5 py-2 text-sm transition-colors duration-150\",",
+      "new": "\"border-brand-border bg-brand-card text-brand-dark placeholder:text-brand-subtle flex h-11 w-full rounded-md border px-3.5 py-2 text-sm transition-colors duration-150\","
+    },
+    {
+      "line": 68,
+      "old": "<div className=\"text-brand-dark/50 absolute right-3 flex items-center\">{rightIcon}</div>",
+      "new": "<div className=\"text-brand-muted absolute right-3 flex items-center\">{rightIcon}</div>"
+    },
+    {
+      "line": 77,
+      "old": "<p id={helperId} className=\"text-brand-dark/60 text-xs\">",
+      "new": "<p id={helperId} className=\"text-brand-muted text-xs\">"
+    }
+  ],
+  "features/addresses/components/address-card.tsx": [
+    {
+      "line": 75,
+      "old": "<p className=\"flex items-center gap-1.5 text-xs text-brand-dark/70 font-sans\">",
+      "new": "<p className=\"flex items-center gap-1.5 text-xs text-brand-muted font-sans\">"
+    },
+    {
+      "line": 76,
+      "old": "<Phone className=\"h-3 w-3 text-brand-dark/50\" />",
+      "new": "<Phone className=\"h-3 w-3 text-brand-muted\" />"
+    },
+    {
+      "line": 82,
+      "old": "<div className=\"text-xs text-brand-dark/80 font-sans space-y-0.5 leading-relaxed pt-1\">",
+      "new": "<div className=\"text-xs text-brand-muted font-sans space-y-0.5 leading-relaxed pt-1\">"
+    }
+  ],
+  "features/addresses/components/address-modal.tsx": [
+    {
+      "line": 115,
+      "old": "<p className=\"text-xs text-brand-dark/60 font-sans\">",
+      "new": "<p className=\"text-xs text-brand-muted font-sans\">"
+    },
+    {
+      "line": 122,
+      "old": "className=\"p-1.5 rounded-full text-brand-dark/60 hover:text-brand-dark hover:bg-brand-cream/80 transition-colors\"",
+      "new": "className=\"p-1.5 rounded-full text-brand-muted hover:text-brand-dark hover:bg-brand-cream/80 transition-colors\""
+    },
+    {
+      "line": 155,
+      "old": ": \"border-brand-border/80 text-brand-dark/70 hover:bg-brand-cream/50\"",
+      "new": ": \"border-brand-border/80 text-brand-muted hover:bg-brand-cream/50\""
+    },
+    {
+      "line": 176,
+      "old": "className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:ring-1 transition-all ${",
+      "new": "className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-subtle focus:outline-none focus:ring-1 transition-all ${"
+    },
+    {
+      "line": 194,
+      "old": "<span className=\"inline-flex items-center px-2.5 rounded-l-xl border border-r-0 border-brand-border/80 bg-brand-cream/50 text-xs text-brand-dark/70 font-mono\">",
+      "new": "<span className=\"inline-flex items-center px-2.5 rounded-l-xl border border-r-0 border-brand-border/80 bg-brand-cream/50 text-xs text-brand-muted font-mono\">"
+    },
+    {
+      "line": 203,
+      "old": "className={`w-full px-3 py-2 rounded-r-xl border text-xs text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:ring-1 transition-all ${",
+      "new": "className={`w-full px-3 py-2 rounded-r-xl border text-xs text-brand-dark placeholder:text-brand-subtle focus:outline-none focus:ring-1 transition-all ${"
+    },
+    {
+      "line": 228,
+      "old": "className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:ring-1 transition-all ${",
+      "new": "className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-subtle focus:outline-none focus:ring-1 transition-all ${"
+    },
+    {
+      "line": 244,
+      "old": "Street, Area, Landmark <span className=\"text-brand-dark/50 text-[11px] font-normal\">(Optional)</span>",
+      "new": "Street, Area, Landmark <span className=\"text-brand-subtle text-[11px] font-normal\">(Optional)</span>"
+    },
+    {
+      "line": 251,
+      "old": "className=\"w-full px-3.5 py-2 rounded-xl border border-brand-border/80 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition-all\"",
+      "new": "className=\"w-full px-3.5 py-2 rounded-xl border border-brand-border/80 text-xs text-brand-dark placeholder:text-brand-subtle focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition-all\""
+    },
+    {
+      "line": 266,
+      "old": "className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:ring-1 transition-all ${",
+      "new": "className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-subtle focus:outline-none focus:ring-1 transition-all ${"
+    },
+    {
+      "line": 289,
+      "old": "className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:ring-1 transition-all ${",
+      "new": "className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-subtle focus:outline-none focus:ring-1 transition-all ${"
+    },
+    {
+      "line": 341,
+      "old": "<span className=\"text-[11px] text-brand-dark/50 block\">",
+      "new": "<span className=\"text-[11px] text-brand-muted block\">"
+    }
+  ],
+  "features/addresses/components/delete-address-modal.tsx": [
+    {
+      "line": 78,
+      "old": "<p className=\"text-xs text-brand-dark/60 font-sans\">",
+      "new": "<p className=\"text-xs text-brand-muted font-sans\">"
+    },
+    {
+      "line": 87,
+      "old": "className=\"p-1.5 rounded-lg text-brand-dark/50 hover:text-brand-dark hover:bg-brand-cream/60 transition-colors\"",
+      "new": "className=\"p-1.5 rounded-lg text-brand-muted hover:text-brand-dark hover:bg-brand-cream/60 transition-colors\""
+    },
+    {
+      "line": 103,
+      "old": "<p className=\"text-brand-dark/80 leading-relaxed font-medium\">",
+      "new": "<p className=\"text-brand-muted leading-relaxed font-medium\">"
+    },
+    {
+      "line": 131,
+      "old": "<span className=\"uppercase text-[10px] text-brand-dark/50 font-medium px-1.5 py-0.2 rounded bg-brand-light/50\">",
+      "new": "<span className=\"uppercase text-[10px] text-brand-muted font-medium px-1.5 py-0.2 rounded bg-brand-light/50\">"
+    },
+    {
+      "line": 135,
+      "old": "<p className=\"text-[11px] text-brand-dark/70 truncate\">",
+      "new": "<p className=\"text-[11px] text-brand-muted truncate\">"
+    },
+    {
+      "line": 144,
+      "old": "<p className=\"text-xs text-brand-dark/80 leading-relaxed font-sans\">",
+      "new": "<p className=\"text-xs text-brand-muted leading-relaxed font-sans\">"
+    }
+  ],
+  "features/addresses/components/saved-addresses-view.tsx": [
+    {
+      "line": 92,
+      "old": "<p className=\"text-xs text-brand-dark/70 font-sans\">",
+      "new": "<p className=\"text-xs text-brand-muted font-sans\">"
+    },
+    {
+      "line": 119,
+      "old": "<p className=\"text-xs text-brand-dark/60 leading-relaxed font-sans\">",
+      "new": "<p className=\"text-xs text-brand-muted leading-relaxed font-sans\">"
+    }
+  ],
+  "features/auth/components/customer-login-form.tsx": [
+    {
+      "line": 191,
+      "old": "<CardDescription className=\"text-brand-dark/70 mx-auto max-w-sm text-xs leading-relaxed\">",
+      "new": "<CardDescription className=\"text-brand-muted mx-auto max-w-sm text-xs leading-relaxed\">"
+    },
+    {
+      "line": 249,
+      "old": "<span className=\"bg-brand-card text-brand-dark/50 relative px-3 text-[11px] tracking-wider uppercase\">",
+      "new": "<span className=\"bg-brand-card text-brand-muted relative px-3 text-[11px] tracking-wider uppercase\">"
+    },
+    {
+      "line": 291,
+      "old": "<span className=\"text-brand-dark/70 max-w-[220px] truncate\">",
+      "new": "<span className=\"text-brand-muted max-w-[220px] truncate\">"
+    },
+    {
+      "line": 336,
+      "old": "<p className=\"text-brand-dark/50 text-xs\">",
+      "new": "<p className=\"text-brand-muted text-xs\">"
+    },
+    {
+      "line": 394,
+      "old": "<p className=\"text-brand-dark/60 w-full font-sans text-[11px] leading-relaxed\">",
+      "new": "<p className=\"text-brand-muted w-full font-sans text-[11px] leading-relaxed\">"
+    }
+  ],
+  "features/cart/components/cart-empty-state.tsx": [
+    {
+      "line": 11,
+      "old": "<ShoppingBag className=\"h-10 w-10 text-brand-dark/70 stroke-[1.5]\" />",
+      "new": "<ShoppingBag className=\"h-10 w-10 text-brand-muted stroke-[1.5]\" />"
+    },
+    {
+      "line": 18,
+      "old": "<p className=\"mt-3 max-w-md text-sm md:text-base text-brand-dark/70 leading-relaxed\">",
+      "new": "<p className=\"mt-3 max-w-md text-sm md:text-base text-brand-muted leading-relaxed\">"
+    }
+  ],
+  "features/cart/components/cart-item-row.tsx": [
+    {
+      "line": 67,
+      "old": "<div className=\"mt-1 flex flex-wrap items-center gap-2 text-xs text-brand-dark/70\">",
+      "new": "<div className=\"mt-1 flex flex-wrap items-center gap-2 text-xs text-brand-muted\">"
+    },
+    {
+      "line": 69,
+      "old": "<span className=\"font-medium text-brand-dark/90\">Color:</span> {item.color}",
+      "new": "<span className=\"font-medium text-brand-muted\">Color:</span> {item.color}"
+    },
+    {
+      "line": 80,
+      "old": "<span className=\"font-medium text-brand-dark/90\">Size:</span> {item.size}",
+      "new": "<span className=\"font-medium text-brand-muted\">Size:</span> {item.size}"
+    },
+    {
+      "line": 89,
+      "old": "className=\"text-brand-dark/40 hover:text-red-600 transition-colors p-1 -mt-1 -mr-1\"",
+      "new": "className=\"text-brand-muted hover:text-red-600 transition-colors p-1 -mt-1 -mr-1\""
+    },
+    {
+      "line": 103,
+      "old": "<span className=\"text-xs text-brand-dark/40 line-through\">",
+      "new": "<span className=\"text-xs text-brand-subtle line-through\">"
+    },
+    {
+      "line": 175,
+      "old": "<span className=\"text-[11px] text-brand-dark/50 hidden sm:inline\">",
+      "new": "<span className=\"text-[11px] text-brand-muted hidden sm:inline\">"
+    },
+    {
+      "line": 186,
+      "old": "<span className=\"text-xs text-brand-dark/50 mr-1.5 sm:hidden\">Total:</span>",
+      "new": "<span className=\"text-xs text-brand-muted mr-1.5 sm:hidden\">Total:</span>"
+    },
+    {
+      "line": 189,
+      "old": "!isAvailable ? \"text-brand-dark/40 line-through\" : \"text-brand-dark\"",
+      "new": "!isAvailable ? \"text-brand-subtle line-through\" : \"text-brand-dark\""
+    }
+  ],
+  "features/cart/components/cart-order-summary.tsx": [
+    {
+      "line": 127,
+      "old": "<div className=\"flex justify-between text-brand-dark/80\">",
+      "new": "<div className=\"flex justify-between text-brand-muted\">"
+    },
+    {
+      "line": 155,
+      "old": "<div className=\"flex justify-between text-brand-dark/80\">",
+      "new": "<div className=\"flex justify-between text-brand-muted\">"
+    },
+    {
+      "line": 173,
+      "old": "<p className=\"text-[10px] text-brand-dark/50 mt-0.5\">Inclusive of all taxes</p>",
+      "new": "<p className=\"text-[10px] text-brand-muted mt-0.5\">Inclusive of all taxes</p>"
+    },
+    {
+      "line": 194,
+      "old": "className=\"flex-1 rounded-none border border-brand-border/80 bg-white px-3 py-2 text-xs uppercase placeholder:normal-case placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none disabled:opacity-50\"",
+      "new": "className=\"flex-1 rounded-none border border-brand-border/80 bg-white px-3 py-2 text-xs uppercase placeholder:normal-case placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none disabled:opacity-50\""
+    },
+    {
+      "line": 258,
+      "old": "<div className=\"flex items-center gap-2 text-[11px] text-brand-dark/70\">",
+      "new": "<div className=\"flex items-center gap-2 text-[11px] text-brand-muted\">"
+    },
+    {
+      "line": 259,
+      "old": "<ShieldCheck className=\"h-4 w-4 text-brand-gold shrink-0\" />",
+      "new": "<ShieldCheck className=\"h-4 w-4 text-brand-accent shrink-0\" />"
+    },
+    {
+      "line": 262,
+      "old": "<div className=\"flex items-center gap-2 text-[11px] text-brand-dark/70\">",
+      "new": "<div className=\"flex items-center gap-2 text-[11px] text-brand-muted\">"
+    },
+    {
+      "line": 263,
+      "old": "<RotateCcw className=\"h-4 w-4 text-brand-gold shrink-0\" />",
+      "new": "<RotateCcw className=\"h-4 w-4 text-brand-accent shrink-0\" />"
+    }
+  ],
+  "features/cart/components/cart-toast.tsx": [
+    {
+      "line": 59,
+      "old": "className=\"text-brand-dark/50 hover:text-brand-dark transition-colors\"",
+      "new": "className=\"text-brand-muted hover:text-brand-dark transition-colors\""
+    },
+    {
+      "line": 70,
+      "old": "<p className=\"text-brand-dark/70 text-xs\">",
+      "new": "<p className=\"text-brand-muted text-xs\">"
+    }
+  ],
+  "features/cart/components/cart-view.tsx": [
+    {
+      "line": 232,
+      "old": "<p className=\"mt-1 text-xs sm:text-sm text-brand-dark/60\">",
+      "new": "<p className=\"mt-1 text-xs sm:text-sm text-brand-muted\">"
+    },
+    {
+      "line": 238,
+      "old": "<div className=\"flex items-center gap-1.5 text-xs text-brand-dark/50\">",
+      "new": "<div className=\"flex items-center gap-1.5 text-xs text-brand-muted\">"
+    }
+  ],
+  "features/checkout/components/checkout-view.tsx": [
+    {
+      "line": 381,
+      "old": "<ShoppingBag className=\"h-8 w-8 text-brand-dark/50\" />",
+      "new": "<ShoppingBag className=\"h-8 w-8 text-brand-muted\" />"
+    },
+    {
+      "line": 384,
+      "old": "<p className=\"mt-2 text-xs text-brand-dark/60\">Redirecting to cart...</p>",
+      "new": "<p className=\"mt-2 text-xs text-brand-muted\">Redirecting to cart...</p>"
+    },
+    {
+      "line": 404,
+      "old": "<p className=\"mt-1 text-xs sm:text-sm text-brand-dark/60\">",
+      "new": "<p className=\"mt-1 text-xs sm:text-sm text-brand-muted\">"
+    }
+  ],
+  "features/checkout/components/contact-info-step.tsx": [
+    {
+      "line": 53,
+      "old": "className={`w-full rounded-none border px-3 py-2.5 pl-9 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${",
+      "new": "className={`w-full rounded-none border px-3 py-2.5 pl-9 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${"
+    },
+    {
+      "line": 57,
+      "old": "<Mail className=\"absolute left-3 top-3 h-3.5 w-3.5 text-brand-dark/40\" />",
+      "new": "<Mail className=\"absolute left-3 top-3 h-3.5 w-3.5 text-brand-muted\" />"
+    },
+    {
+      "line": 62,
+      "old": "<p className=\"mt-1 text-[11px] text-brand-dark/50\">Order confirmation &amp; receipt will be sent here.</p>",
+      "new": "<p className=\"mt-1 text-[11px] text-brand-muted\">Order confirmation &amp; receipt will be sent here.</p>"
+    },
+    {
+      "line": 71,
+      "old": "<span className=\"absolute left-3 top-2.5 text-xs font-medium text-brand-dark/60 select-none\">",
+      "new": "<span className=\"absolute left-3 top-2.5 text-xs font-medium text-brand-muted select-none\">"
+    },
+    {
+      "line": 81,
+      "old": "className={`w-full rounded-none border px-3 py-2.5 pl-12 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${",
+      "new": "className={`w-full rounded-none border px-3 py-2.5 pl-12 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${"
+    },
+    {
+      "line": 85,
+      "old": "<Phone className=\"absolute right-3 top-3 h-3.5 w-3.5 text-brand-dark/40\" />",
+      "new": "<Phone className=\"absolute right-3 top-3 h-3.5 w-3.5 text-brand-muted\" />"
+    },
+    {
+      "line": 90,
+      "old": "<p className=\"mt-1 text-[11px] text-brand-dark/50\">Used for courier delivery updates.</p>",
+      "new": "<p className=\"mt-1 text-[11px] text-brand-muted\">Used for courier delivery updates.</p>"
+    },
+    {
+      "line": 103,
+      "old": "<span className=\"text-xs text-brand-dark/80\">",
+      "new": "<span className=\"text-xs text-brand-muted\">"
+    }
+  ],
+  "features/checkout/components/order-review-sidebar.tsx": [
+    {
+      "line": 44,
+      "old": "<span className=\"text-xs text-brand-dark/60 font-medium\">",
+      "new": "<span className=\"text-xs text-brand-muted font-medium\">"
+    },
+    {
+      "line": 67,
+      "old": "<p className=\"text-[11px] text-brand-dark/70 mt-0.5\">",
+      "new": "<p className=\"text-[11px] text-brand-muted mt-0.5\">"
+    },
+    {
+      "line": 80,
+      "old": "<div className=\"flex justify-between text-brand-dark/80\">",
+      "new": "<div className=\"flex justify-between text-brand-muted\">"
+    },
+    {
+      "line": 97,
+      "old": "<div className=\"flex justify-between text-brand-dark/80\">",
+      "new": "<div className=\"flex justify-between text-brand-muted\">"
+    },
+    {
+      "line": 108,
+      "old": "<div className=\"flex justify-between text-brand-dark/80\">",
+      "new": "<div className=\"flex justify-between text-brand-muted\">"
+    },
+    {
+      "line": 121,
+      "old": "<p className=\"text-[10px] text-brand-dark/50\">Inclusive of all taxes</p>",
+      "new": "<p className=\"text-[10px] text-brand-muted\">Inclusive of all taxes</p>"
+    },
+    {
+      "line": 140,
+      "old": "<Lock className=\"h-3.5 w-3.5 text-brand-gold\" />",
+      "new": "<Lock className=\"h-3.5 w-3.5 text-brand-accent\" />"
+    },
+    {
+      "line": 146,
+      "old": "<Lock className=\"h-3.5 w-3.5 text-brand-gold\" />",
+      "new": "<Lock className=\"h-3.5 w-3.5 text-brand-accent\" />"
+    },
+    {
+      "line": 153,
+      "old": "<p className=\"mt-2 text-center text-[10px] text-brand-dark/50\">",
+      "new": "<p className=\"mt-2 text-center text-[10px] text-brand-muted\">"
+    },
+    {
+      "line": 162,
+      "old": "className=\"text-xs font-semibold text-brand-dark/70 hover:text-brand-dark underline underline-offset-4 transition-colors\"",
+      "new": "className=\"text-xs font-semibold text-brand-muted hover:text-brand-dark underline underline-offset-4 transition-colors\""
+    },
+    {
+      "line": 170,
+      "old": "<div className=\"flex items-center gap-2 text-[11px] text-brand-dark/70\">",
+      "new": "<div className=\"flex items-center gap-2 text-[11px] text-brand-muted\">"
+    },
+    {
+      "line": 171,
+      "old": "<ShieldCheck className=\"h-4 w-4 text-brand-gold shrink-0\" />",
+      "new": "<ShieldCheck className=\"h-4 w-4 text-brand-accent shrink-0\" />"
+    },
+    {
+      "line": 174,
+      "old": "<div className=\"flex items-center gap-2 text-[11px] text-brand-dark/70\">",
+      "new": "<div className=\"flex items-center gap-2 text-[11px] text-brand-muted\">"
+    },
+    {
+      "line": 175,
+      "old": "<RotateCcw className=\"h-4 w-4 text-brand-gold shrink-0\" />",
+      "new": "<RotateCcw className=\"h-4 w-4 text-brand-accent shrink-0\" />"
+    }
+  ],
+  "features/checkout/components/payment-method-step.tsx": [
+    {
+      "line": 65,
+      "old": "<p className=\"mt-0.5 text-xs text-brand-dark/70\">",
+      "new": "<p className=\"mt-0.5 text-xs text-brand-muted\">"
+    },
+    {
+      "line": 107,
+      "old": "<span className=\"text-[11px] text-brand-dark/60 font-medium\">",
+      "new": "<span className=\"text-[11px] text-brand-muted font-medium\">"
+    },
+    {
+      "line": 112,
+      "old": "<p className=\"mt-0.5 text-xs text-brand-dark/70\">",
+      "new": "<p className=\"mt-0.5 text-xs text-brand-muted\">"
+    },
+    {
+      "line": 134,
+      "old": "<div className=\"mt-4 pt-3 border-t border-brand-border/40 flex items-center gap-2 text-[11px] text-brand-dark/60\">",
+      "new": "<div className=\"mt-4 pt-3 border-t border-brand-border/40 flex items-center gap-2 text-[11px] text-brand-muted\">"
+    },
+    {
+      "line": 135,
+      "old": "<ShieldCheck className=\"h-4 w-4 text-brand-gold shrink-0\" />",
+      "new": "<ShieldCheck className=\"h-4 w-4 text-brand-accent shrink-0\" />"
+    }
+  ],
+  "features/checkout/components/shipping-address-step.tsx": [
+    {
+      "line": 117,
+      "old": "className=\"text-xs font-semibold text-brand-dark/70 hover:text-brand-dark underline transition-colors\"",
+      "new": "className=\"text-xs font-semibold text-brand-muted hover:text-brand-dark underline transition-colors\""
+    },
+    {
+      "line": 158,
+      "old": "<p className=\"text-xs text-brand-dark/70 mt-1 leading-relaxed\">",
+      "new": "<p className=\"text-xs text-brand-muted mt-1 leading-relaxed\">"
+    },
+    {
+      "line": 162,
+      "old": "<p className=\"text-xs text-brand-dark/70\">",
+      "new": "<p className=\"text-xs text-brand-muted\">"
+    },
+    {
+      "line": 165,
+      "old": "<p className=\"text-xs text-brand-dark/60 mt-1.5\">Phone: +91 {addr.phone}</p>",
+      "new": "<p className=\"text-xs text-brand-muted mt-1.5\">Phone: +91 {addr.phone}</p>"
+    },
+    {
+      "line": 199,
+      "old": "className={`w-full rounded-none border px-3 py-2 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${",
+      "new": "className={`w-full rounded-none border px-3 py-2 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${"
+    },
+    {
+      "line": 216,
+      "old": "<span className=\"absolute left-3 top-2 text-xs font-medium text-brand-dark/60 select-none\">",
+      "new": "<span className=\"absolute left-3 top-2 text-xs font-medium text-brand-muted select-none\">"
+    },
+    {
+      "line": 226,
+      "old": "className={`w-full rounded-none border px-3 py-2 pl-12 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${",
+      "new": "className={`w-full rounded-none border px-3 py-2 pl-12 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${"
+    },
+    {
+      "line": 250,
+      "old": "className={`w-full rounded-none border px-3 py-2 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${",
+      "new": "className={`w-full rounded-none border px-3 py-2 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${"
+    },
+    {
+      "line": 264,
+      "old": "Area, Colony, Sector, Landmark <span className=\"text-brand-dark/40 font-normal\">(Optional)</span>",
+      "new": "Area, Colony, Sector, Landmark <span className=\"text-brand-subtle font-normal\">(Optional)</span>"
+    },
+    {
+      "line": 271,
+      "old": "className=\"w-full rounded-none border border-brand-border/80 bg-white px-3 py-2 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors\"",
+      "new": "className=\"w-full rounded-none border border-brand-border/80 bg-white px-3 py-2 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors\""
+    },
+    {
+      "line": 290,
+      "old": "className={`w-full rounded-none border px-3 py-2 pl-8 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${",
+      "new": "className={`w-full rounded-none border px-3 py-2 pl-8 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${"
+    },
+    {
+      "line": 296,
+      "old": "<MapPin className=\"absolute left-2.5 top-2.5 h-3.5 w-3.5 text-brand-dark/40\" />",
+      "new": "<MapPin className=\"absolute left-2.5 top-2.5 h-3.5 w-3.5 text-brand-muted\" />"
+    },
+    {
+      "line": 314,
+      "old": "className={`w-full rounded-none border px-3 py-2 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${",
+      "new": "className={`w-full rounded-none border px-3 py-2 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${"
+    },
+    {
+      "line": 389,
+      "old": "<span className=\"text-xs text-brand-dark/80\">Save this address to my profile</span>",
+      "new": "<span className=\"text-xs text-brand-muted\">Save this address to my profile</span>"
+    }
+  ],
+  "features/checkout/components/shipping-method-step.tsx": [
+    {
+      "line": 40,
+      "old": "<p className=\"mt-0.5 text-xs text-brand-dark/70\">",
+      "new": "<p className=\"mt-0.5 text-xs text-brand-muted\">"
+    }
+  ],
+  "features/orders/components/cancel-order-button.tsx": [
+    {
+      "line": 86,
+      "old": "<p className=\"text-xs text-brand-dark/70 leading-relaxed\">",
+      "new": "<p className=\"text-xs text-brand-muted leading-relaxed\">"
+    }
+  ],
+  "features/orders/components/order-timeline.tsx": [
+    {
+      "line": 152,
+      "old": "isFuture && \"border-brand-border/80 bg-white text-brand-dark/40\"",
+      "new": "isFuture && \"border-brand-border/80 bg-white text-brand-subtle\""
+    },
+    {
+      "line": 167,
+      "old": "isCurrent ? \"text-brand-dark font-bold\" : isCompleted ? \"text-brand-dark\" : \"text-brand-dark/50\"",
+      "new": "isCurrent ? \"text-brand-dark font-bold\" : isCompleted ? \"text-brand-dark\" : \"text-brand-muted\""
+    },
+    {
+      "line": 172,
+      "old": "<p className=\"text-[11px] text-brand-dark/60 leading-tight hidden sm:block max-w-[140px]\">",
+      "new": "<p className=\"text-[11px] text-brand-muted leading-tight hidden sm:block max-w-[140px]\">"
+    }
+  ],
+  "features/products/components/active-filter-chips.tsx": [
+    {
+      "line": 76,
+      "old": "<span className=\"text-brand-dark/60 text-xs font-medium\">",
+      "new": "<span className=\"text-brand-muted text-xs font-medium\">"
+    },
+    {
+      "line": 93,
+      "old": "className=\"text-brand-dark/60 hover:text-brand-dark\"",
+      "new": "className=\"text-brand-muted hover:text-brand-dark\""
+    },
+    {
+      "line": 110,
+      "old": "className=\"text-brand-dark/60 hover:text-brand-dark\"",
+      "new": "className=\"text-brand-muted hover:text-brand-dark\""
+    },
+    {
+      "line": 124,
+      "old": "className=\"text-brand-dark/60 hover:text-brand-dark\"",
+      "new": "className=\"text-brand-muted hover:text-brand-dark\""
+    }
+  ],
+  "features/products/components/catalog-breadcrumbs.tsx": [
+    {
+      "line": 36,
+      "old": "<nav aria-label=\"Breadcrumbs\" className=\"text-brand-dark/60 py-2 font-sans text-xs\">",
+      "new": "<nav aria-label=\"Breadcrumbs\" className=\"text-brand-muted py-2 font-sans text-xs\">"
+    },
+    {
+      "line": 42,
+      "old": "{index > 0 && <ChevronRight className=\"text-brand-dark/40 h-3 w-3\" />}",
+      "new": "{index > 0 && <ChevronRight className=\"text-brand-muted h-3 w-3\" />}"
+    }
+  ],
+  "features/products/components/mobile-sticky-bar.tsx": [
+    {
+      "line": 66,
+      "old": "<div className=\"text-brand-dark/70 flex items-center gap-1.5 text-[11px]\">",
+      "new": "<div className=\"text-brand-muted flex items-center gap-1.5 text-[11px]\">"
+    }
+  ],
+  "features/products/components/pincode-checker.tsx": [
+    {
+      "line": 40,
+      "old": "<Truck className=\"text-brand-gold h-4 w-4\" />",
+      "new": "<Truck className=\"text-brand-accent h-4 w-4\" />"
+    },
+    {
+      "line": 60,
+      "old": "className=\"border-brand-border text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-accent focus:ring-brand-accent w-full rounded-lg border bg-white px-3.5 py-2 text-xs focus:ring-1 focus:outline-none\"",
+      "new": "className=\"border-brand-border text-brand-dark placeholder:text-brand-subtle focus:border-brand-accent focus:ring-brand-accent w-full rounded-lg border bg-white px-3.5 py-2 text-xs focus:ring-1 focus:outline-none\""
+    },
+    {
+      "line": 88,
+      "old": "<p className=\"text-brand-dark/50 mt-2 text-[11px]\">",
+      "new": "<p className=\"text-brand-muted mt-2 text-[11px]\">"
+    }
+  ],
+  "features/products/components/product-accordion.tsx": [
+    {
+      "line": 44,
+      "old": "<Sparkles className=\"h-4 w-4 text-brand-gold\" />",
+      "new": "<Sparkles className=\"h-4 w-4 text-brand-accent\" />"
+    },
+    {
+      "line": 50,
+      "old": "className={`h-4 w-4 text-brand-dark/60 transition-transform duration-200 ${",
+      "new": "className={`h-4 w-4 text-brand-muted transition-transform duration-200 ${"
+    },
+    {
+      "line": 57,
+      "old": "<div className=\"space-y-4 pb-5 pt-1 text-xs sm:text-sm text-brand-dark/80 leading-relaxed animate-in fade-in duration-200\">",
+      "new": "<div className=\"space-y-4 pb-5 pt-1 text-xs sm:text-sm text-brand-muted leading-relaxed animate-in fade-in duration-200\">"
+    },
+    {
+      "line": 80,
+      "old": "<div className=\"text-[11px] text-brand-dark/60\">",
+      "new": "<div className=\"text-[11px] text-brand-muted\">"
+    },
+    {
+      "line": 97,
+      "old": "<Truck className=\"h-4 w-4 text-brand-gold\" />",
+      "new": "<Truck className=\"h-4 w-4 text-brand-accent\" />"
+    },
+    {
+      "line": 103,
+      "old": "className={`h-4 w-4 text-brand-dark/60 transition-transform duration-200 ${",
+      "new": "className={`h-4 w-4 text-brand-muted transition-transform duration-200 ${"
+    },
+    {
+      "line": 110,
+      "old": "<div className=\"space-y-3 pb-5 pt-1 text-xs sm:text-sm text-brand-dark/80 leading-relaxed animate-in fade-in duration-200\">",
+      "new": "<div className=\"space-y-3 pb-5 pt-1 text-xs sm:text-sm text-brand-muted leading-relaxed animate-in fade-in duration-200\">"
+    },
+    {
+      "line": 136,
+      "old": "<Ruler className=\"h-4 w-4 text-brand-gold\" />",
+      "new": "<Ruler className=\"h-4 w-4 text-brand-accent\" />"
+    },
+    {
+      "line": 142,
+      "old": "className={`h-4 w-4 text-brand-dark/60 transition-transform duration-200 ${",
+      "new": "className={`h-4 w-4 text-brand-muted transition-transform duration-200 ${"
+    },
+    {
+      "line": 149,
+      "old": "<div className=\"space-y-3 pb-5 pt-1 text-xs sm:text-sm text-brand-dark/80 leading-relaxed animate-in fade-in duration-200\">",
+      "new": "<div className=\"space-y-3 pb-5 pt-1 text-xs sm:text-sm text-brand-muted leading-relaxed animate-in fade-in duration-200\">"
+    }
+  ],
+  "features/products/components/product-card.tsx": [
+    {
+      "line": 165,
+      "old": "<div className=\"bg-brand-light/30 text-brand-dark/40 flex h-full w-full items-center justify-center text-xs\">",
+      "new": "<div className=\"bg-brand-light/30 text-brand-muted flex h-full w-full items-center justify-center text-xs\">"
+    },
+    {
+      "line": 226,
+      "old": ": \"text-brand-dark/70 hover:text-brand-dark\"",
+      "new": ": \"text-brand-muted hover:text-brand-dark\""
+    },
+    {
+      "line": 242,
+      "old": "<div className=\"text-brand-dark/60 flex items-center justify-between text-[11px]\">",
+      "new": "<div className=\"text-brand-muted flex items-center justify-between text-[11px]\">"
+    },
+    {
+      "line": 243,
+      "old": "<span className=\"text-brand-accent truncate text-[10px] font-medium tracking-wider uppercase\">",
+      "new": "<span className=\"text-brand-accent-dark truncate text-[11px] font-semibold tracking-wider uppercase\">"
+    },
+    {
+      "line": 252,
+      "old": "<span className=\"text-brand-dark/40 text-[10px]\">({product.rating.count})</span>",
+      "new": "<span className=\"text-brand-muted text-[10px]\">({product.rating.count})</span>"
+    },
+    {
+      "line": 272,
+      "old": "<span className=\"text-brand-dark/40 text-xs line-through\">",
+      "new": "<span className=\"text-brand-subtle text-xs line-through\">"
+    },
+    {
+      "line": 304,
+      "old": "<span className=\"text-brand-dark/60 pl-0.5 text-[10px] font-medium\">",
+      "new": "<span className=\"text-brand-muted pl-0.5 text-[10px] font-medium\">"
+    }
+  ],
+  "features/products/components/product-detail-view.tsx": [
+    {
+      "line": 155,
+      "old": "className=\"text-brand-dark/60 flex items-center gap-1.5 font-sans text-xs\"",
+      "new": "className=\"text-brand-muted flex items-center gap-1.5 font-sans text-xs\""
+    },
+    {
+      "line": 203,
+      "old": "<span className=\"text-brand-accent text-[11px] font-semibold tracking-widest uppercase\">",
+      "new": "<span className=\"text-brand-accent-dark text-[11px] font-semibold tracking-widest uppercase\">"
+    },
+    {
+      "line": 246,
+      "old": "<span className=\"text-brand-dark/50 text-base line-through\">",
+      "new": "<span className=\"text-brand-subtle text-base line-through\">"
+    },
+    {
+      "line": 254,
+      "old": "<div className=\"text-brand-dark/60 w-full text-[11px]\">",
+      "new": "<div className=\"text-brand-muted w-full text-[11px]\">"
+    },
+    {
+      "line": 261,
+      "old": "<div className=\"text-brand-dark/80 text-xs leading-relaxed sm:text-sm\">",
+      "new": "<div className=\"text-brand-muted text-xs leading-relaxed sm:text-sm\">"
+    },
+    {
+      "line": 287,
+      "old": "Color: <span className=\"text-brand-dark/80 font-normal\">{selectedColor}</span>",
+      "new": "Color: <span className=\"text-brand-muted font-normal\">{selectedColor}</span>"
+    },
+    {
+      "line": 322,
+      "old": "<span className=\"text-brand-dark/80 font-normal\">{selectedSize}</span>",
+      "new": "<span className=\"text-brand-muted font-normal\">{selectedSize}</span>"
+    },
+    {
+      "line": 329,
+      "old": "<Sparkles className=\"text-brand-gold h-3 w-3\" />",
+      "new": "<Sparkles className=\"text-brand-accent h-3 w-3\" />"
+    },
+    {
+      "line": 350,
+      "old": ": \"border-brand-border/60 bg-brand-light/30 text-brand-dark/40 cursor-pointer line-through\"",
+      "new": ": \"border-brand-border/60 bg-brand-light/30 text-brand-subtle cursor-pointer line-through\""
+    },
+    {
+      "line": 410,
+      "old": "<span className=\"text-brand-dark/50 text-[11px]\">",
+      "new": "<span className=\"text-brand-muted text-[11px]\">"
+    },
+    {
+      "line": 436,
+      "old": "<Zap className=\"text-brand-gold fill-brand-gold h-4 w-4\" />",
+      "new": "<Zap className=\"text-brand-accent fill-brand-accent h-4 w-4\" />"
+    },
+    {
+      "line": 459,
+      "old": "<div className=\"border-brand-border/60 text-brand-dark/80 flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]\">",
+      "new": "<div className=\"border-brand-border/60 text-brand-muted flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]\">"
+    },
+    {
+      "line": 460,
+      "old": "<ShieldCheck className=\"text-brand-gold h-4 w-4 shrink-0\" />",
+      "new": "<ShieldCheck className=\"text-brand-accent h-4 w-4 shrink-0\" />"
+    },
+    {
+      "line": 463,
+      "old": "<div className=\"border-brand-border/60 text-brand-dark/80 flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]\">",
+      "new": "<div className=\"border-brand-border/60 text-brand-muted flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]\">"
+    },
+    {
+      "line": 464,
+      "old": "<RotateCcw className=\"text-brand-gold h-4 w-4 shrink-0\" />",
+      "new": "<RotateCcw className=\"text-brand-accent h-4 w-4 shrink-0\" />"
+    }
+  ],
+  "features/products/components/product-filters-drawer.tsx": [
+    {
+      "line": 102,
+      "old": "className=\"text-brand-dark/70 hover:bg-brand-light/40 hover:text-brand-dark rounded-full p-1.5\"",
+      "new": "className=\"text-brand-muted hover:bg-brand-light/40 hover:text-brand-dark rounded-full p-1.5\""
+    }
+  ],
+  "features/products/components/product-filters.tsx": [
+    {
+      "line": 113,
+      "old": "className=\"text-brand-dark/70 hover:text-brand-accent flex items-center justify-between py-1 transition-colors\"",
+      "new": "className=\"text-brand-muted hover:text-brand-accent flex items-center justify-between py-1 transition-colors\""
+    },
+    {
+      "line": 116,
+      "old": "<span className=\"text-brand-dark/40 font-mono text-[11px]\">({cat.count})</span>",
+      "new": "<span className=\"text-brand-muted font-mono text-[11px]\">({cat.count})</span>"
+    },
+    {
+      "line": 170,
+      "old": ": \"border-brand-border/70 text-brand-dark/80 hover:border-brand-gold bg-white/60\"",
+      "new": ": \"border-brand-border/70 text-brand-muted hover:border-brand-gold bg-white/60\""
+    },
+    {
+      "line": 197,
+      "old": "className=\"text-brand-dark/80 hover:text-brand-dark flex cursor-pointer items-center gap-2.5 py-1 text-xs\"",
+      "new": "className=\"text-brand-muted hover:text-brand-dark flex cursor-pointer items-center gap-2.5 py-1 text-xs\""
+    }
+  ],
+  "features/products/components/product-grid-empty.tsx": [
+    {
+      "line": 27,
+      "old": "<p className=\"text-brand-dark/70 mb-6 max-w-md text-xs leading-relaxed sm:text-sm\">",
+      "new": "<p className=\"text-brand-muted mb-6 max-w-md text-xs leading-relaxed sm:text-sm\">"
+    }
+  ],
+  "features/products/components/product-pagination.tsx": [
+    {
+      "line": 75,
+      "old": "<span className=\"border-brand-border/40 text-brand-dark/30 flex h-9 cursor-not-allowed items-center gap-1 rounded-lg border bg-neutral-100 px-3\">",
+      "new": "<span className=\"border-brand-border/40 text-brand-subtle flex h-9 cursor-not-allowed items-center gap-1 rounded-lg border bg-neutral-100 px-3\">"
+    },
+    {
+      "line": 88,
+      "old": "className=\"text-brand-dark/40 flex h-9 w-8 items-center justify-center\"",
+      "new": "className=\"text-brand-subtle flex h-9 w-8 items-center justify-center\""
+    },
+    {
+      "line": 124,
+      "old": "<span className=\"border-brand-border/40 text-brand-dark/30 flex h-9 cursor-not-allowed items-center gap-1 rounded-lg border bg-neutral-100 px-3\">",
+      "new": "<span className=\"border-brand-border/40 text-brand-subtle flex h-9 cursor-not-allowed items-center gap-1 rounded-lg border bg-neutral-100 px-3\">"
+    }
+  ],
+  "features/products/components/product-sort.tsx": [
+    {
+      "line": 40,
+      "old": "<label htmlFor=\"catalog-sort\" className=\"text-brand-dark/60 hidden font-medium sm:inline\">",
+      "new": "<label htmlFor=\"catalog-sort\" className=\"text-brand-muted hidden font-medium sm:inline\">"
+    },
+    {
+      "line": 56,
+      "old": "<ArrowUpDown className=\"text-brand-dark/50 pointer-events-none absolute right-2.5 h-3.5 w-3.5\" />",
+      "new": "<ArrowUpDown className=\"text-brand-muted pointer-events-none absolute right-2.5 h-3.5 w-3.5\" />"
+    }
+  ],
+  "features/products/components/size-guide-modal.tsx": [
+    {
+      "line": 88,
+      "old": "<Ruler className=\"text-brand-gold h-5 w-5\" />",
+      "new": "<Ruler className=\"text-brand-accent h-5 w-5\" />"
+    },
+    {
+      "line": 99,
+      "old": "<p className=\"text-brand-dark/70 text-xs\">",
+      "new": "<p className=\"text-brand-muted text-xs\">"
+    },
+    {
+      "line": 108,
+      "old": "className=\"text-brand-dark/60 hover:bg-brand-light/60 hover:text-brand-dark rounded-full p-2 transition-colors\"",
+      "new": "className=\"text-brand-muted hover:bg-brand-light/60 hover:text-brand-dark rounded-full p-2 transition-colors\""
+    },
+    {
+      "line": 117,
+      "old": "<span className=\"text-brand-dark/70 text-xs font-medium\">Measurement Unit:</span>",
+      "new": "<span className=\"text-brand-muted text-xs font-medium\">Measurement Unit:</span>"
+    },
+    {
+      "line": 125,
+      "old": ": \"text-brand-dark/60 hover:text-brand-dark\"",
+      "new": ": \"text-brand-muted hover:text-brand-dark\""
+    },
+    {
+      "line": 136,
+      "old": ": \"text-brand-dark/60 hover:text-brand-dark\"",
+      "new": ": \"text-brand-muted hover:text-brand-dark\""
+    },
+    {
+      "line": 159,
+      "old": "<tbody className=\"divide-brand-border/50 text-brand-dark/80 divide-y\">",
+      "new": "<tbody className=\"divide-brand-border/50 text-brand-muted divide-y\">"
+    },
+    {
+      "line": 183,
+      "old": "<ul className=\"text-brand-dark/80 space-y-2 text-xs\">",
+      "new": "<ul className=\"text-brand-muted space-y-2 text-xs\">"
+    },
+    {
+      "line": 186,
+      "old": "<CheckCircle2 className=\"text-brand-gold mt-0.5 h-4 w-4 shrink-0\" />",
+      "new": "<CheckCircle2 className=\"text-brand-accent mt-0.5 h-4 w-4 shrink-0\" />"
+    },
+    {
+      "line": 194,
+      "old": "<div className=\"text-brand-dark/60 border-brand-border/60 mt-6 flex flex-col items-center justify-between gap-3 border-t pt-4 text-xs sm:flex-row\">",
+      "new": "<div className=\"text-brand-muted border-brand-border/60 mt-6 flex flex-col items-center justify-between gap-3 border-t pt-4 text-xs sm:flex-row\">"
+    }
+  ],
+  "features/reviews/components/product-reviews-section.tsx": [
+    {
+      "line": 95,
+      "old": "<span className=\"text-brand-accent text-[11px] font-semibold tracking-widest uppercase\">",
+      "new": "<span className=\"text-brand-accent-dark text-[11px] font-semibold tracking-widest uppercase\">"
+    },
+    {
+      "line": 133,
+      "old": "<p className=\"text-brand-dark/70 text-xs\">",
+      "new": "<p className=\"text-brand-muted text-xs\">"
+    },
+    {
+      "line": 162,
+      "old": "<span className=\"text-brand-dark/60 w-8 text-right font-medium\">{count}</span>",
+      "new": "<span className=\"text-brand-muted w-8 text-right font-medium\">{count}</span>"
+    },
+    {
+      "line": 206,
+      "old": "<span className=\"text-brand-dark/50 text-[11px]\">",
+      "new": "<span className=\"text-brand-muted text-[11px]\">"
+    },
+    {
+      "line": 222,
+      "old": "<p className=\"text-brand-dark/80 text-xs leading-relaxed sm:text-sm\">",
+      "new": "<p className=\"text-brand-muted text-xs leading-relaxed sm:text-sm\">"
+    },
+    {
+      "line": 262,
+      "old": "<p className=\"text-brand-dark/70 text-xs\">",
+      "new": "<p className=\"text-brand-muted text-xs\">"
+    },
+    {
+      "line": 270,
+      "old": "className=\"text-brand-dark/60 hover:text-brand-dark p-1\"",
+      "new": "className=\"text-brand-muted hover:text-brand-dark p-1\""
+    },
+    {
+      "line": 285,
+      "old": "<p className=\"text-brand-dark/70 mx-auto max-w-xs text-xs\">",
+      "new": "<p className=\"text-brand-muted mx-auto max-w-xs text-xs\">"
+    },
+    {
+      "line": 307,
+      "old": "<p className=\"text-brand-dark/70 mx-auto max-w-xs text-xs\">",
+      "new": "<p className=\"text-brand-muted mx-auto max-w-xs text-xs\">"
+    },
+    {
+      "line": 361,
+      "old": "<span className=\"text-brand-dark/70 ml-2 text-xs font-medium\">",
+      "new": "<span className=\"text-brand-muted ml-2 text-xs font-medium\">"
+    },
+    {
+      "line": 382,
+      "old": "className=\"border-brand-border text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-accent focus:ring-brand-accent w-full rounded-lg border bg-white px-3.5 py-2 text-xs focus:ring-1 focus:outline-none\"",
+      "new": "className=\"border-brand-border text-brand-dark placeholder:text-brand-subtle focus:border-brand-accent focus:ring-brand-accent w-full rounded-lg border bg-white px-3.5 py-2 text-xs focus:ring-1 focus:outline-none\""
+    },
+    {
+      "line": 401,
+      "old": "className=\"border-brand-border text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-accent focus:ring-brand-accent w-full resize-none rounded-lg border bg-white p-3.5 text-xs focus:ring-1 focus:outline-none\"",
+      "new": "className=\"border-brand-border text-brand-dark placeholder:text-brand-subtle focus:border-brand-accent focus:ring-brand-accent w-full resize-none rounded-lg border bg-white p-3.5 text-xs focus:ring-1 focus:outline-none\""
+    },
+    {
+      "line": 403,
+      "old": "<p className=\"text-brand-dark/50 mt-1 text-[11px]\">",
+      "new": "<p className=\"text-brand-muted mt-1 text-[11px]\">"
+    }
+  ],
+  "features/wishlist/components/wishlist-view.tsx": [
+    {
+      "line": 31,
+      "old": "<p className=\"text-xs text-brand-dark/70 font-sans\">",
+      "new": "<p className=\"text-xs text-brand-muted font-sans\">"
+    },
+    {
+      "line": 63,
+      "old": "<p className=\"text-xs text-brand-dark/65 leading-relaxed font-sans\">",
+      "new": "<p className=\"text-xs text-brand-muted leading-relaxed font-sans\">"
+    }
+  ]
+}

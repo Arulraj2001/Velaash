@@ -92,7 +92,7 @@ export function ProductReviewsSection({
         {/* Section Heading */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <span className="text-brand-accent text-[11px] font-semibold tracking-widest uppercase">
+            <span className="text-brand-accent-dark text-[11px] font-semibold tracking-widest uppercase">
               Customer Reviews
             </span>
             <h2 className="font-heading text-brand-dark text-2xl font-semibold sm:text-3xl">
@@ -130,7 +130,7 @@ export function ProductReviewsSection({
                   />
                 ))}
               </div>
-              <p className="text-brand-dark/70 text-xs">
+              <p className="text-brand-muted text-xs">
                 Based on{" "}
                 <span className="text-brand-dark font-semibold">{breakdown.totalCount}</span>{" "}
                 verified ratings
@@ -159,7 +159,7 @@ export function ProductReviewsSection({
                     </div>
 
                     {/* Count label */}
-                    <span className="text-brand-dark/60 w-8 text-right font-medium">{count}</span>
+                    <span className="text-brand-muted w-8 text-right font-medium">{count}</span>
                   </div>
                 );
               })}
@@ -203,7 +203,7 @@ export function ProductReviewsSection({
                       />
                     ))}
                   </div>
-                  <span className="text-brand-dark/50 text-[11px]">
+                  <span className="text-brand-muted text-[11px]">
                     {new Date(rev.created_at).toLocaleDateString("en-IN", {
                       day: "numeric",
                       month: "short",
@@ -219,7 +219,7 @@ export function ProductReviewsSection({
                     {rev.title}
                   </h5>
                 )}
-                <p className="text-brand-dark/80 text-xs leading-relaxed sm:text-sm">
+                <p className="text-brand-muted text-xs leading-relaxed sm:text-sm">
                   {rev.comment}
                 </p>
               </div>
@@ -259,7 +259,7 @@ export function ProductReviewsSection({
                 <h3 className="font-heading text-brand-dark text-xl font-semibold">
                   Write a Review
                 </h3>
-                <p className="text-brand-dark/70 text-xs">
+                <p className="text-brand-muted text-xs">
                   Sharing your experience with{" "}
                   <span className="text-brand-dark font-medium">{productName}</span>
                 </p>
@@ -267,7 +267,7 @@ export function ProductReviewsSection({
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-brand-dark/60 hover:text-brand-dark p-1"
+                className="text-brand-muted hover:text-brand-dark p-1"
                 aria-label="Close review dialog"
               >
                 <X className="h-5 w-5" />
@@ -282,7 +282,7 @@ export function ProductReviewsSection({
                 <h4 className="font-heading text-brand-dark text-lg font-semibold">
                   Thank You for Your Feedback!
                 </h4>
-                <p className="text-brand-dark/70 mx-auto max-w-xs text-xs">
+                <p className="text-brand-muted mx-auto max-w-xs text-xs">
                   {submissionStatus.message}
                 </p>
                 <button
@@ -304,7 +304,7 @@ export function ProductReviewsSection({
                 <h4 className="font-heading text-brand-dark text-lg font-semibold">
                   Sign-In Required
                 </h4>
-                <p className="text-brand-dark/70 mx-auto max-w-xs text-xs">
+                <p className="text-brand-muted mx-auto max-w-xs text-xs">
                   To maintain review authenticity, only verified customers may submit reviews. Please
                   sign in to share your experience.
                 </p>
@@ -358,7 +358,7 @@ export function ProductReviewsSection({
                         />
                       </button>
                     ))}
-                    <span className="text-brand-dark/70 ml-2 text-xs font-medium">
+                    <span className="text-brand-muted ml-2 text-xs font-medium">
                       {selectedRating} of 5 Stars
                     </span>
                   </div>
@@ -379,7 +379,7 @@ export function ProductReviewsSection({
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="e.g. Gorgeous drape and vibrant color"
                     maxLength={100}
-                    className="border-brand-border text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-accent focus:ring-brand-accent w-full rounded-lg border bg-white px-3.5 py-2 text-xs focus:ring-1 focus:outline-none"
+                    className="border-brand-border text-brand-dark placeholder:text-brand-subtle focus:border-brand-accent focus:ring-brand-accent w-full rounded-lg border bg-white px-3.5 py-2 text-xs focus:ring-1 focus:outline-none"
                   />
                 </div>
 
@@ -398,9 +398,9 @@ export function ProductReviewsSection({
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder="Describe the fabric feel, drape, sizing accuracy, and overall craftsmanship..."
-                    className="border-brand-border text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-accent focus:ring-brand-accent w-full resize-none rounded-lg border bg-white p-3.5 text-xs focus:ring-1 focus:outline-none"
+                    className="border-brand-border text-brand-dark placeholder:text-brand-subtle focus:border-brand-accent focus:ring-brand-accent w-full resize-none rounded-lg border bg-white p-3.5 text-xs focus:ring-1 focus:outline-none"
                   />
-                  <p className="text-brand-dark/50 mt-1 text-[11px]">
+                  <p className="text-brand-muted mt-1 text-[11px]">
                     Reviews undergo moderation before appearing publicly on the store catalog.
                   </p>
                 </div>

@@ -161,3 +161,66 @@ export async function checkCodRateLimit(params: {
 export function resetCodRateLimitsForTest() {
   IN_MEMORY_RATE_LIMIT_STORE.clear();
 }
+
+/**
+ * Track Order Lookup Rate Limiting
+ * Threshold: Max 5 failed lookups per IP per 15 minutes.
+ */
+export const MAX_FAILED_TRACK_LOOKUPS_PER_IP = 5;
+export const TRACK_RATE_LIMIT_WINDOW_SECONDS = 15 * 60; // 900 seconds (15 min)
+
+export async function checkTrackOrderRateLimit(ip: string): Promise<{
+  allowed: boolean;
+  errorMessage?: string;
+  attempts?: number;
+}> {
+  const cleanIp = ip.trim() || "unknown-ip";
+  const key = `ratelimit:track:ip:${cleanIp}`;
+
+  const redis = getRedisClient();
+  if (redis) {
+    try {
+      const val = await redis.get<number>(key);
+      const current = val ? Number(val) : 0;
+      if (current >= MAX_FAILED_TRACK_LOOKUPS_PER_IP) {
+        return {
+          allowed: false,
+          errorMessage:
+            "Too many failed tracking attempts. Please wait a few minutes before trying again or sign in to your account.",
+          attempts: current,
+        };
+      }
+      return { allowed: true, attempts: current };
+    } catch (err) {
+      console.warn("[RateLimit] Upstash Redis get failed for track order, falling back to memory:", err);
+    }
+  }
+
+  // In-memory check
+  const now = Date.now();
+  const existing = IN_MEMORY_RATE_LIMIT_STORE.get(key);
+  if (existing && existing.expiresAt > now) {
+    if (existing.count >= MAX_FAILED_TRACK_LOOKUPS_PER_IP) {
+      return {
+        allowed: false,
+        errorMessage:
+          "Too many failed tracking attempts. Please wait a few minutes before trying again or sign in to your account.",
+        attempts: existing.count,
+      };
+    }
+    return { allowed: true, attempts: existing.count };
+  }
+
+  return { allowed: true, attempts: 0 };
+}
+
+export async function recordFailedTrackOrderAttempt(ip: string): Promise<void> {
+  const cleanIp = ip.trim() || "unknown-ip";
+  const key = `ratelimit:track:ip:${cleanIp}`;
+  await incrementAndCheckLimit(key, MAX_FAILED_TRACK_LOOKUPS_PER_IP, TRACK_RATE_LIMIT_WINDOW_SECONDS);
+}
+
+export function resetTrackOrderRateLimitsForTest() {
+  IN_MEMORY_RATE_LIMIT_STORE.clear();
+}
+

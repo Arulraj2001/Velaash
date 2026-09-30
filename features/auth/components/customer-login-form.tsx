@@ -183,17 +183,17 @@ export function CustomerLoginForm() {
         </div>
         <CardTitle className="font-heading text-brand-dark text-2xl sm:text-3xl">
           {step === "PROFILE_NAME"
-            ? "Personalize Your Vault"
+            ? "Complete Your Profile"
             : step === "OTP"
               ? "Enter Verification Code"
-              : "Sign In to Velaash"}
+              : "Sign In or Create Account"}
         </CardTitle>
-        <CardDescription className="text-brand-dark/70 mx-auto max-w-xs text-xs">
+        <CardDescription className="text-brand-muted mx-auto max-w-sm text-xs leading-relaxed">
           {step === "PROFILE_NAME"
             ? "Tell us your name so we can personalize your account."
             : step === "OTP"
               ? `We sent a 6-digit access code to ${email}`
-              : "Instant access via mobile-friendly email OTP or Google. No password required."}
+              : "Enter your email — we'll sign you in, or create your account if you're new here."}
         </CardDescription>
       </CardHeader>
 
@@ -228,7 +228,7 @@ export function CustomerLoginForm() {
               autoFocus
               autoComplete="email"
               leftIcon={<Mail className="h-4 w-4" />}
-              helperText="We will send a fast 6-digit access code to your inbox"
+              helperText="We will send a fast 6-digit access code to your inbox — no password needed"
             />
 
             <Button
@@ -246,7 +246,7 @@ export function CustomerLoginForm() {
               <div className="absolute inset-0 flex items-center">
                 <div className="border-brand-border/60 w-full border-t" />
               </div>
-              <span className="bg-brand-card text-brand-dark/50 relative px-3 text-[11px] tracking-wider uppercase">
+              <span className="bg-brand-card text-brand-muted relative px-3 text-[11px] tracking-wider uppercase">
                 Or continue with
               </span>
             </div>
@@ -288,7 +288,7 @@ export function CustomerLoginForm() {
         {step === "OTP" && (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div className="flex items-center justify-between pb-1 text-xs">
-              <span className="text-brand-dark/70 max-w-[220px] truncate">
+              <span className="text-brand-muted max-w-[220px] truncate">
                 To: <span className="text-brand-dark font-semibold">{email}</span>
               </span>
               <button
@@ -333,7 +333,7 @@ export function CustomerLoginForm() {
 
             <div className="pt-2 text-center">
               {resendCooldown > 0 ? (
-                <p className="text-brand-dark/50 text-xs">
+                <p className="text-brand-muted text-xs">
                   Resend code in{" "}
                   <span className="text-brand-accent font-mono font-bold">{resendCooldown}s</span>
                 </p>
@@ -391,7 +391,7 @@ export function CustomerLoginForm() {
       </CardContent>
 
       <CardFooter className="bg-brand-cream/40 border-brand-border/60 border-t p-4 text-center">
-        <p className="text-brand-dark/60 w-full font-sans text-[11px] leading-relaxed">
+        <p className="text-brand-muted w-full font-sans text-[11px] leading-relaxed">
           Guest checkout is always welcome. Account sign-in is required only to view saved
           addresses, track your orders, or maintain your wishlist.
         </p>

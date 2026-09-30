@@ -56,7 +56,7 @@ export function CartToast() {
             <button
               type="button"
               onClick={dismissToast}
-              className="text-brand-dark/50 hover:text-brand-dark transition-colors"
+              className="text-brand-muted hover:text-brand-dark transition-colors"
               aria-label="Dismiss notification"
             >
               <X className="h-4 w-4" />
@@ -67,7 +67,7 @@ export function CartToast() {
             {lastAddedItem.title}
           </p>
 
-          <p className="text-brand-dark/70 text-xs">
+          <p className="text-brand-muted text-xs">
             {lastAddedItem.color} &bull; Size {lastAddedItem.size} &bull; Qty{" "}
             {lastAddedItem.quantity}
           </p>

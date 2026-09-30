@@ -8,9 +8,15 @@ import type { Database } from "@/types/database.types";
  * for Customer (/account/*) and Admin (/admin/*) gates.
  */
 export async function updateSession(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+
   let supabaseResponse = NextResponse.next({
-    request,
+    request: {
+      headers: requestHeaders,
+    },
   });
+  supabaseResponse.headers.set("x-pathname", request.nextUrl.pathname);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

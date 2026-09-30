@@ -33,13 +33,13 @@ export function CatalogBreadcrumbs({ items }: CatalogBreadcrumbsProps) {
       />
 
       {/* Visual Breadcrumb Navigation */}
-      <nav aria-label="Breadcrumbs" className="text-brand-dark/60 py-2 font-sans text-xs">
+      <nav aria-label="Breadcrumbs" className="text-brand-muted py-2 font-sans text-xs">
         <ol className="flex flex-wrap items-center gap-1.5">
           {items.map((item, index) => {
             const isLast = index === items.length - 1;
             return (
               <li key={`${item.label}-${index}`} className="flex items-center gap-1.5">
-                {index > 0 && <ChevronRight className="text-brand-dark/40 h-3 w-3" />}
+                {index > 0 && <ChevronRight className="text-brand-muted h-3 w-3" />}
                 {item.href && !isLast ? (
                   <Link href={item.href} className="hover:text-brand-accent transition-colors">
                     {item.label}

@@ -33,7 +33,7 @@ export default async function SettingsPage() {
           <h2 className="font-heading text-2xl font-semibold text-brand-dark">
             Profile Settings
           </h2>
-          <p className="text-xs text-brand-dark/60 mt-0.5">
+          <p className="text-xs text-brand-muted mt-0.5">
             Manage your personal profile information, communication preferences, and security.
           </p>
         </div>
@@ -54,7 +54,7 @@ export default async function SettingsPage() {
             disabled
             className="mt-1 w-full rounded-xl border border-brand-border/80 bg-brand-cream/40 px-3.5 py-2.5 text-xs text-brand-dark font-mono cursor-not-allowed"
           />
-          <p className="text-[11px] text-brand-dark/50 mt-1">
+          <p className="text-[11px] text-brand-muted mt-1">
             Primary email associated with your account login.
           </p>
         </div>
@@ -85,7 +85,7 @@ export default async function SettingsPage() {
           />
         </div>
 
-        <div className="rounded-xl border border-brand-gold/40 bg-brand-light/20 p-4 text-xs text-brand-dark/70">
+        <div className="rounded-xl border border-brand-gold/40 bg-brand-light/20 p-4 text-xs text-brand-muted">
           Editable profile fields and SMS preferences will be activated in Phase 4C.
         </div>
       </div>

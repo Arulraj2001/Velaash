@@ -7,6 +7,7 @@ import type {
   PaymentMethod,
   PaymentStatus,
 } from "../types";
+import { extractTrackingInfo, extractCustomerNotes } from "@/features/admin/utils/order-metadata";
 
 /**
  * Retrieves full details for a customer's specific order.
@@ -186,8 +187,10 @@ export async function getCustomerOrderDetail(
     codHandlingFee: codFee,
     totalAmount: Number(order.total_amount),
     couponCode: order.coupon_code,
-    notes: order.notes,
+    notes: extractCustomerNotes(order),
     cancelReason: order.cancel_reason,
+    trackingNumber: extractTrackingInfo(order).trackingNumber,
+    courierName: extractTrackingInfo(order).courierName,
     createdAt: order.created_at,
     updatedAt: order.updated_at,
     shippingAddress: {

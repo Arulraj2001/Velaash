@@ -50,16 +50,16 @@ export function ContactInfoStep({
               autoComplete="email"
               placeholder="you@example.com"
               {...register("contact.email")}
-              className={`w-full rounded-none border px-3 py-2.5 pl-9 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${
+              className={`w-full rounded-none border px-3 py-2.5 pl-9 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${
                 errors.contact?.email ? "border-red-500 bg-red-50/20" : "border-brand-border/80 bg-white"
               }`}
             />
-            <Mail className="absolute left-3 top-3 h-3.5 w-3.5 text-brand-dark/40" />
+            <Mail className="absolute left-3 top-3 h-3.5 w-3.5 text-brand-muted" />
           </div>
           {errors.contact?.email && (
             <p className="mt-1 text-[11px] text-red-600">{errors.contact.email.message}</p>
           )}
-          <p className="mt-1 text-[11px] text-brand-dark/50">Order confirmation &amp; receipt will be sent here.</p>
+          <p className="mt-1 text-[11px] text-brand-muted">Order confirmation &amp; receipt will be sent here.</p>
         </div>
 
         {/* Phone Field */}
@@ -68,7 +68,7 @@ export function ContactInfoStep({
             Mobile Number <span className="text-red-600">*</span>
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-2.5 text-xs font-medium text-brand-dark/60 select-none">
+            <span className="absolute left-3 top-2.5 text-xs font-medium text-brand-muted select-none">
               +91
             </span>
             <input
@@ -78,16 +78,16 @@ export function ContactInfoStep({
               autoComplete="tel"
               placeholder="9876543210"
               {...register("contact.phone")}
-              className={`w-full rounded-none border px-3 py-2.5 pl-12 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${
+              className={`w-full rounded-none border px-3 py-2.5 pl-12 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${
                 errors.contact?.phone ? "border-red-500 bg-red-50/20" : "border-brand-border/80 bg-white"
               }`}
             />
-            <Phone className="absolute right-3 top-3 h-3.5 w-3.5 text-brand-dark/40" />
+            <Phone className="absolute right-3 top-3 h-3.5 w-3.5 text-brand-muted" />
           </div>
           {errors.contact?.phone && (
             <p className="mt-1 text-[11px] text-red-600">{errors.contact.phone.message}</p>
           )}
-          <p className="mt-1 text-[11px] text-brand-dark/50">Used for courier delivery updates.</p>
+          <p className="mt-1 text-[11px] text-brand-muted">Used for courier delivery updates.</p>
         </div>
       </div>
 
@@ -100,7 +100,7 @@ export function ContactInfoStep({
               {...register("contact.createAccount")}
               className="h-4 w-4 rounded border-brand-border text-brand-dark focus:ring-brand-accent"
             />
-            <span className="text-xs text-brand-dark/80">
+            <span className="text-xs text-brand-muted">
               Create an account with this info to track your orders faster next time
             </span>
           </label>

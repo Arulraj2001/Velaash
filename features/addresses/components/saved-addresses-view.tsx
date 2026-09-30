@@ -89,7 +89,7 @@ export function SavedAddressesView({ initialAddresses }: SavedAddressesViewProps
           <h2 className="font-heading text-xl sm:text-2xl font-semibold text-brand-dark">
             Delivery Addresses
           </h2>
-          <p className="text-xs text-brand-dark/70 font-sans">
+          <p className="text-xs text-brand-muted font-sans">
             Manage your saved delivery destinations for seamless and fast doorstep checkout.
           </p>
         </div>
@@ -116,7 +116,7 @@ export function SavedAddressesView({ initialAddresses }: SavedAddressesViewProps
             <h3 className="font-heading text-lg font-semibold text-brand-dark">
               No Saved Addresses Yet
             </h3>
-            <p className="text-xs text-brand-dark/60 leading-relaxed font-sans">
+            <p className="text-xs text-brand-muted leading-relaxed font-sans">
               Save your home, office, or family delivery address now for fast, one-click ordering during checkout.
             </p>
           </div>

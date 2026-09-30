@@ -11,6 +11,7 @@ import { env } from "@/lib/env";
 import { checkCodRateLimit } from "@/lib/rate-limit";
 import { sendTransactionalEmail } from "@/lib/email/resend";
 import { OrderConfirmationEmail } from "../emails/order-confirmation-email";
+import { AccountWelcomeEmail } from "../emails/account-welcome-email";
 import { generateOrderAccessToken } from "../utils/order-access-token";
 import { MOCK_ORDERS_STORE } from "../queries/get-order-by-number";
 import { MOCK_ONLINE_PENDING_ORDERS } from "../services/order-cleanup";
@@ -42,7 +43,8 @@ const IDEMPOTENCY_STORE = new Map<
 
 
 export async function createOrderAction(
-  rawInput: CreateOrderInput
+  rawInput: CreateOrderInput,
+  options?: { authenticatedCustomerId?: string }
 ): Promise<CreateOrderResponse> {
   // 1. Check for empty cart
   if (!rawInput.items || rawInput.items.length === 0) {
@@ -118,18 +120,20 @@ export async function createOrderAction(
   try {
     // 3. Fetch current user session (optional - supports guest checkout)
     // Note: customerId is NEVER trusted from client input; extracted strictly from verified cookie session
-    let customerId: string | null = null;
+    let customerId: string | null = options?.authenticatedCustomerId ?? null;
     let guestAccountCreated = false;
-    try {
-      const userSupabase = await createClient();
-      const {
-        data: { user },
-      } = await userSupabase.auth.getUser();
-      if (user) {
-        customerId = user.id;
+    if (!customerId) {
+      try {
+        const userSupabase = await createClient();
+        const {
+          data: { user },
+        } = await userSupabase.auth.getUser();
+        if (user) {
+          customerId = user.id;
+        }
+      } catch {
+        // Guest user or outside request context
       }
-    } catch {
-      // Guest user or outside request context
     }
 
     // 4. Fetch live site settings for shipping & COD rules
@@ -154,26 +158,89 @@ export async function createOrderAction(
     }
 
     // Guest Account Creation: If guest checked "Create an account?" during checkout,
-    // provision user via Supabase auth admin, auto-populating public.customers via trigger,
-    // and sending password-setup invite link
+    // provision user via Supabase auth admin without a password (email confirmed, OTP-ready),
+    // auto-populating public.customers via database trigger and dispatching an account welcome email.
     if (!customerId && input.contact.createAccount && adminSupabase) {
       try {
-        const { data: inviteData, error: inviteErr } =
-          await adminSupabase.auth.admin.inviteUserByEmail(input.contact.email, {
-            data: {
+        const { data: createdUser, error: createErr } =
+          await adminSupabase.auth.admin.createUser({
+            email: input.contact.email,
+            email_confirm: true,
+            user_metadata: {
               full_name: input.shippingAddress.fullName,
               phone: input.contact.phone,
             },
           });
-        if (!inviteErr && inviteData?.user) {
-          customerId = inviteData.user.id;
+
+        if (!createErr && createdUser?.user) {
+          customerId = createdUser.user.id;
           guestAccountCreated = true;
           console.info(
-            `[GuestAccount] Successfully provisioned Supabase account for ${input.contact.email} (UID: ${customerId})`
+            `[GuestAccount] Successfully provisioned passwordless Supabase account for ${input.contact.email} (UID: ${customerId})`
           );
+        } else if (createErr) {
+          // If the user already exists in auth.users, associate the order with their existing customer account
+          const { data: listData } = await adminSupabase.auth.admin.listUsers();
+          const existingUser = listData?.users?.find(
+            (u) => u.email?.toLowerCase() === input.contact.email.toLowerCase()
+          );
+          if (existingUser) {
+            customerId = existingUser.id;
+            console.info(
+              `[GuestAccount] Associated with existing customer account for ${input.contact.email} (UID: ${customerId})`
+            );
+          } else {
+            console.warn("[GuestAccount] Supabase createUser error:", createErr.message);
+          }
+        }
+
+        // If a new customer account was created, ensure customer profile is up-to-date,
+        // auto-save the shipping address as their default address, and dispatch welcome email
+        if (guestAccountCreated && customerId) {
+          await adminSupabase.from("customers").upsert({
+            id: customerId,
+            full_name: input.shippingAddress.fullName,
+            phone: input.contact.phone,
+          });
+
+          // Auto-save entered shipping address as default address for the newly created customer account
+          const { error: addressErr } = await adminSupabase.from("addresses").insert({
+            customer_id: customerId,
+            full_name: input.shippingAddress.fullName,
+            phone: input.shippingAddress.phone,
+            address_line1: input.shippingAddress.addressLine1,
+            address_line2: input.shippingAddress.addressLine2 || null,
+            city: input.shippingAddress.city,
+            state: input.shippingAddress.state,
+            pincode: input.shippingAddress.pincode,
+            address_type: input.shippingAddress.addressType || "home",
+            is_default: true,
+          });
+          if (addressErr) {
+            console.warn("[GuestAccount] Failed to auto-save default shipping address:", addressErr.message);
+          } else {
+            console.info(`[GuestAccount] Auto-saved default shipping address for customer UID: ${customerId}`);
+          }
+
+          // Send account confirmation email explaining the OTP login flow (no password link)
+          try {
+            const appUrl = env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+            await sendTransactionalEmail({
+              to: input.contact.email,
+              subject: "Welcome to Velaash — Your Account is Ready",
+              react: React.createElement(AccountWelcomeEmail, {
+                customerName: input.shippingAddress.fullName,
+                email: input.contact.email,
+                loginUrl: `${appUrl}/account/login`,
+              }),
+              text: `Welcome to Velaash, ${input.shippingAddress.fullName}! Your customer account has been created for ${input.contact.email} and your delivery address has been saved to your account. You can log in anytime at ${appUrl}/account/login using your email — we'll send you a fast 6-digit access code, no password needed.`,
+            });
+          } catch (welcomeErr) {
+            console.warn("[GuestAccount] Failed to dispatch account welcome email:", welcomeErr);
+          }
         }
       } catch (authErr) {
-        console.warn("[GuestAccount] Supabase invite caught exception or user exists:", authErr);
+        console.warn("[GuestAccount] Supabase account creation caught exception:", authErr);
       }
     }
 
@@ -191,7 +258,7 @@ export async function createOrderAction(
       color: string;
       products: {
         id: string;
-        title: string;
+        name: string;
         base_price: number;
         is_active: boolean;
       } | null;
@@ -211,19 +278,21 @@ export async function createOrderAction(
             color,
             products (
               id,
-              title,
+              name,
               base_price,
               is_active
             )
           `)
           .in("id", variantIds);
 
-        if (!error && data && data.length > 0) {
+        if (error) {
+          console.error("Live variants query PostgREST error:", error);
+        } else if (data && data.length > 0) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           liveVariants = data as any;
         }
-      } catch {
-        // Fallback to mock catalog if database is not reachable
+      } catch (err) {
+        console.error("Live variants query exception:", err);
       }
     }
 
@@ -255,7 +324,7 @@ export async function createOrderAction(
         if (liveMatch.stock_quantity < requestedItem.quantity) {
           return {
             success: false,
-            error: `"${liveMatch.products.title}" has only ${liveMatch.stock_quantity} available in stock (you requested ${requestedItem.quantity}).`,
+            error: `"${liveMatch.products.name}" has only ${liveMatch.stock_quantity} available in stock (you requested ${requestedItem.quantity}).`,
             code: "OUT_OF_STOCK",
           };
         }
@@ -268,7 +337,7 @@ export async function createOrderAction(
         verifiedItems.push({
           productId: liveMatch.product_id,
           variantId: liveMatch.id,
-          title: liveMatch.products.title,
+          title: liveMatch.products.name,
           size: liveMatch.size,
           color: liveMatch.color,
           unitPrice,
@@ -329,6 +398,15 @@ export async function createOrderAction(
         };
       }
       codHandlingFee = cod_handling_fee;
+    } else if (input.paymentMethod === "razorpay") {
+      const { razorpay_enabled } = siteSettings.paymentSettings;
+      if (!razorpay_enabled) {
+        return {
+          success: false,
+          error: "Online payments via Razorpay are temporarily paused. Please choose Cash on Delivery or contact support.",
+          code: "GATEWAY_ERROR",
+        };
+      }
     }
 
     // 10. Authoritative Total Amount
@@ -355,30 +433,48 @@ export async function createOrderAction(
 
     if (liveVariants && adminSupabase) {
       try {
-        const { data: orderData, error: orderError } = await adminSupabase
-          .from("orders")
-          .insert({
-            customer_id: customerId,
-            status: "pending",
-            payment_method: input.paymentMethod,
-            payment_status: "pending",
-            subtotal,
-            shipping_charge: shippingCharge,
-            discount_amount: discountAmount,
-            total_amount: totalAmount,
-            shipping_address: shippingAddressSnapshot,
-            billing_address: shippingAddressSnapshot,
-            coupon_code: validatedCouponCode,
-            notes: `[idempotency_key: ${input.idempotencyKey}]${codHandlingFee > 0 ? ` [COD handling fee: ₹${codHandlingFee}]` : ""}${guestAccountCreated ? " [guest_account_created: true]" : ""}`,
-          })
+        let insertAttempts = 0;
+        let orderData: { id: string; order_number: string } | null = null;
 
-          .select("id, order_number")
-          .single();
+        while (insertAttempts < 5 && !dbWriteSuccess) {
+          insertAttempts++;
+          const { data, error: orderError } = await adminSupabase
+            .from("orders")
+            .insert({
+              customer_id: customerId,
+              status: "pending",
+              payment_method: input.paymentMethod,
+              payment_status: "pending",
+              subtotal,
+              shipping_charge: shippingCharge,
+              discount_amount: discountAmount,
+              total_amount: totalAmount,
+              shipping_address: shippingAddressSnapshot,
+              billing_address: shippingAddressSnapshot,
+              coupon_code: validatedCouponCode,
+              notes: `[idempotency_key: ${input.idempotencyKey}]${codHandlingFee > 0 ? ` [COD handling fee: ₹${codHandlingFee}]` : ""}${guestAccountCreated ? " [guest_account_created: true]" : ""}`,
+            })
+            .select("id, order_number")
+            .single();
 
-        if (!orderError && orderData) {
-          orderId = orderData.id;
-          orderNumber = orderData.order_number;
-          dbWriteSuccess = true;
+          if (orderError) {
+            console.warn(
+              `[OrderInsert:Attempt ${insertAttempts}] Insert failed: ${orderError.message} (code: ${orderError.code})`
+            );
+            if (orderError.code === "23505" && orderError.message?.includes("orders_order_number_key")) {
+              // Sequence was behind seed data, retry with next generated order number
+              continue;
+            }
+            break;
+          } else if (data) {
+            orderData = data;
+            orderId = orderData.id;
+            orderNumber = orderData.order_number;
+            dbWriteSuccess = true;
+          }
+        }
+
+        if (dbWriteSuccess && orderData) {
 
           // Insert order items
           const orderItemsRows = verifiedItems.map((item) => ({
@@ -409,8 +505,27 @@ export async function createOrderAction(
               .eq("id", item.variantId);
           }
 
-          // If customer asked to save address and is logged in
-          if (customerId && input.shippingAddress.saveAddress) {
+          // Increment coupon usage_count if a valid coupon was applied
+          if (validatedCouponCode) {
+            const { data: cRow } = await adminSupabase
+              .from("coupons")
+              .select("id, usage_count")
+              .eq("code", validatedCouponCode)
+              .maybeSingle();
+
+            if (cRow) {
+              await adminSupabase
+                .from("coupons")
+                .update({
+                  usage_count: (cRow.usage_count || 0) + 1,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("id", cRow.id);
+            }
+          }
+
+          // If customer asked to save address and is an existing customer (skip if newly created guest account to prevent duplicate address insertion)
+          if (customerId && !guestAccountCreated && input.shippingAddress.saveAddress) {
             await adminSupabase.from("addresses").insert({
               customer_id: customerId,
               full_name: input.shippingAddress.fullName,
@@ -565,6 +680,7 @@ export async function createOrderAction(
             totalAmount,
             shippingAddress: shippingAddressSnapshot,
             orderViewUrl,
+            accountCreatedFromGuest: guestAccountCreated,
           }),
 
         });

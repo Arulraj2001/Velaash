@@ -106,7 +106,7 @@ export function HeaderClient({
               <button
                 type="button"
                 onClick={() => setIsSearchOpen(true)}
-                className="text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="text-brand-muted hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
                 aria-label="Search collections"
                 title="Search"
               >
@@ -116,7 +116,7 @@ export function HeaderClient({
               {/* Wishlist Link with Count Badge */}
               <Link
                 href="/account/wishlist"
-                className="text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold relative hidden rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:inline-flex"
+                className="text-brand-muted hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold relative hidden rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:inline-flex"
                 aria-label={`Saved items in wishlist (${wishlistCount})`}
                 title="Wishlist"
               >
@@ -132,7 +132,7 @@ export function HeaderClient({
               {/* Cart Drawer Trigger with Count Badge */}
               <Link
                 href="/cart"
-                className="text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold relative rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="text-brand-muted hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold relative rounded-full p-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
                 aria-label={`Shopping bag containing ${cartCount} items`}
                 title="Bag"
               >

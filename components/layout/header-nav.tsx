@@ -50,7 +50,7 @@ export function HeaderNav({ categories }: HeaderNavProps) {
             <div className="flex items-center gap-1 py-4">
               <Link
                 href={`/collections/${cat.slug}`}
-                className="text-brand-dark/85 hover:text-brand-accent after:bg-brand-gold relative py-1 text-xs font-medium tracking-widest uppercase transition-colors duration-150 after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:w-0 after:transition-all hover:after:w-full"
+                className="text-brand-muted hover:text-brand-accent after:bg-brand-gold relative py-1 text-xs font-medium tracking-widest uppercase transition-colors duration-150 after:absolute after:bottom-0 after:left-0 after:h-[1.5px] after:w-0 after:transition-all hover:after:w-full"
                 onFocus={() => setActiveDropdown(cat.id)}
               >
                 {cat.name}
@@ -60,7 +60,7 @@ export function HeaderNav({ categories }: HeaderNavProps) {
                   type="button"
                   aria-expanded={isOpen}
                   aria-label={`${cat.name} subcategories`}
-                  className="text-brand-dark/50 hover:text-brand-accent rounded p-1"
+                  className="text-brand-muted hover:text-brand-accent rounded p-1"
                   onClick={() => setActiveDropdown(isOpen ? null : cat.id)}
                 >
                   <ChevronDown
@@ -86,7 +86,7 @@ export function HeaderNav({ categories }: HeaderNavProps) {
                   <Link
                     href={`/collections/${cat.slug}`}
                     onClick={() => setActiveDropdown(null)}
-                    className="text-brand-dark/70 hover:text-brand-accent flex items-center gap-0.5 text-[11px] font-medium hover:underline"
+                    className="text-brand-muted hover:text-brand-accent flex items-center gap-0.5 text-[11px] font-medium hover:underline"
                   >
                     <span>View all</span>
                     <ArrowRight className="h-3 w-3" />
@@ -105,7 +105,7 @@ export function HeaderNav({ categories }: HeaderNavProps) {
                         {sub.name}
                       </span>
                       {sub.description && (
-                        <span className="text-brand-dark/50 truncate text-[11px]">
+                        <span className="text-brand-muted truncate text-[11px]">
                           {sub.description}
                         </span>
                       )}

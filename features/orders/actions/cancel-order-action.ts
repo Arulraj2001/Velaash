@@ -23,9 +23,10 @@ export async function executeOrderCancellation(
     userId: string;
     userEmail?: string | null;
     reason?: string;
+    isAdmin?: boolean;
   }
 ): Promise<CancelOrderResult> {
-  const { orderNumber, userId, userEmail, reason } = params;
+  const { orderNumber, userId, userEmail, reason, isAdmin } = params;
 
   // 1. Fetch the target order
   const { data: order, error: orderErr } = await adminSupabase
@@ -41,19 +42,21 @@ export async function executeOrderCancellation(
     };
   }
 
-  // 2. Strict ownership check
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const shipAddr = (order.shipping_address as any) || {};
-  const isOwner =
-    order.customer_id === userId ||
-    (userEmail && shipAddr.email && userEmail.toLowerCase() === shipAddr.email.toLowerCase());
+  // 2. Strict ownership check (bypassed if called by authenticated admin with manage_orders)
+  if (!isAdmin) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const shipAddr = (order.shipping_address as any) || {};
+    const isOwner =
+      order.customer_id === userId ||
+      (userEmail && shipAddr.email && userEmail.toLowerCase() === shipAddr.email.toLowerCase());
 
-  if (!isOwner) {
-    // Do not reveal that the order exists to unauthorized parties (return 404 equivalent)
-    return {
-      success: false,
-      error: "Order not found.",
-    };
+    if (!isOwner) {
+      // Do not reveal that the order exists to unauthorized parties (return 404 equivalent)
+      return {
+        success: false,
+        error: "Order not found.",
+      };
+    }
   }
 
   // 3. Status eligibility check
@@ -110,8 +113,8 @@ export async function executeOrderCancellation(
 
   // 5. Update Order Status in Database
   const cancelNote = reason?.trim()
-    ? `Cancelled by customer: ${reason.trim()}`
-    : "Cancelled by customer via Account Dashboard";
+    ? (isAdmin ? `Cancelled by admin: ${reason.trim()}` : `Cancelled by customer: ${reason.trim()}`)
+    : (isAdmin ? "Cancelled by admin" : "Cancelled by customer via Account Dashboard");
 
   const { error: updateErr } = await adminSupabase
     .from("orders")

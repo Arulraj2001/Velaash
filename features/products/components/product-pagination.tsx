@@ -72,7 +72,7 @@ export function ProductPagination({ currentPage, totalPages }: ProductPagination
           <span className="hidden sm:inline">Previous</span>
         </Link>
       ) : (
-        <span className="border-brand-border/40 text-brand-dark/30 flex h-9 cursor-not-allowed items-center gap-1 rounded-lg border bg-neutral-100 px-3">
+        <span className="border-brand-border/40 text-brand-subtle flex h-9 cursor-not-allowed items-center gap-1 rounded-lg border bg-neutral-100 px-3">
           <ChevronLeft className="h-4 w-4" />
           <span className="hidden sm:inline">Previous</span>
         </span>
@@ -85,7 +85,7 @@ export function ProductPagination({ currentPage, totalPages }: ProductPagination
             return (
               <span
                 key={`ellipsis-${idx}`}
-                className="text-brand-dark/40 flex h-9 w-8 items-center justify-center"
+                className="text-brand-subtle flex h-9 w-8 items-center justify-center"
               >
                 ...
               </span>
@@ -121,7 +121,7 @@ export function ProductPagination({ currentPage, totalPages }: ProductPagination
           <ChevronRight className="h-4 w-4" />
         </Link>
       ) : (
-        <span className="border-brand-border/40 text-brand-dark/30 flex h-9 cursor-not-allowed items-center gap-1 rounded-lg border bg-neutral-100 px-3">
+        <span className="border-brand-border/40 text-brand-subtle flex h-9 cursor-not-allowed items-center gap-1 rounded-lg border bg-neutral-100 px-3">
           <span className="hidden sm:inline">Next</span>
           <ChevronRight className="h-4 w-4" />
         </span>

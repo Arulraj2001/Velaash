@@ -110,7 +110,7 @@ export default async function OrderConfirmationPage({
             <CheckCircle2 className="h-9 w-9 text-emerald-600 stroke-[1.75]" />
           </div>
 
-          <span className="text-xs font-semibold uppercase tracking-widest text-brand-accent">
+          <span className="text-xs font-semibold uppercase tracking-widest text-brand-accent-dark">
             Order Confirmed
           </span>
 
@@ -118,7 +118,7 @@ export default async function OrderConfirmationPage({
             Thank you for your order, {order.shippingAddress.fullName.split(" ")[0]}!
           </h1>
 
-          <p className="mt-2 text-sm text-brand-dark/70 max-w-xl mx-auto leading-relaxed">
+          <p className="mt-2 text-sm text-brand-muted max-w-xl mx-auto leading-relaxed">
             Your order has been registered and is being prepared for dispatch. We will send tracking
             updates to{" "}
             <span className="font-medium text-brand-dark">{order.shippingAddress.email}</span>.
@@ -127,7 +127,7 @@ export default async function OrderConfirmationPage({
           {/* Reference Box */}
           <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-3 sm:gap-6 rounded-xl bg-brand-cream/60 border border-brand-border/60 px-5 py-3 text-xs">
             <div>
-              <span className="text-brand-dark/50 block text-[11px] uppercase tracking-wider">
+              <span className="text-brand-muted block text-[11px] uppercase tracking-wider">
                 Order Reference
               </span>
               <span className="font-heading text-base font-bold text-brand-dark tracking-wider select-all">
@@ -136,14 +136,14 @@ export default async function OrderConfirmationPage({
             </div>
             <div className="hidden sm:block h-6 w-px bg-brand-border" />
             <div>
-              <span className="text-brand-dark/50 block text-[11px] uppercase tracking-wider">
+              <span className="text-brand-muted block text-[11px] uppercase tracking-wider">
                 Order Date
               </span>
               <span className="font-medium text-brand-dark">{orderDateFormatted}</span>
             </div>
             <div className="hidden sm:block h-6 w-px bg-brand-border" />
             <div>
-              <span className="text-brand-dark/50 block text-[11px] uppercase tracking-wider">
+              <span className="text-brand-muted block text-[11px] uppercase tracking-wider">
                 Payment Method
               </span>
               <span className="inline-flex items-center gap-1.5 font-medium text-brand-dark">
@@ -162,7 +162,7 @@ export default async function OrderConfirmationPage({
             </div>
             <div className="hidden sm:block h-6 w-px bg-brand-border" />
             <div>
-              <span className="text-brand-dark/50 block text-[11px] uppercase tracking-wider">
+              <span className="text-brand-muted block text-[11px] uppercase tracking-wider">
                 Payment Status
               </span>
               <span
@@ -187,9 +187,9 @@ export default async function OrderConfirmationPage({
                 </p>
                 <p className="mt-1 text-emerald-800 leading-relaxed">
                   As requested during checkout, we have provisioned your customer account for{" "}
-                  <strong>{order.shippingAddress.email}</strong>. Please check your inbox for an
-                  invitation email with a link to set your password and access your order history
-                  anytime.
+                  <strong>{order.shippingAddress.email}</strong> and saved your delivery address
+                  as your default address. You can log in anytime using this email — we&apos;ll send
+                  you a one-time code, no password needed.
                 </p>
               </div>
             </div>
@@ -220,7 +220,7 @@ export default async function OrderConfirmationPage({
             {/* What Happens Next Roadmap */}
             <div className="rounded-2xl border border-brand-border/80 bg-white p-6 shadow-sm">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-dark flex items-center gap-2">
-                <Clock className="h-4 w-4 text-brand-gold" />
+                <Clock className="h-4 w-4 text-brand-accent" />
                 <span>What Happens Next?</span>
               </h2>
 
@@ -233,7 +233,7 @@ export default async function OrderConfirmationPage({
                     </span>
                     <span className="text-xs font-semibold text-emerald-800">Confirmed</span>
                   </div>
-                  <p className="text-[11px] text-brand-dark/60 leading-tight">
+                  <p className="text-[11px] text-brand-muted leading-tight">
                     Order registered in our system.
                   </p>
                 </div>
@@ -246,7 +246,7 @@ export default async function OrderConfirmationPage({
                     </span>
                     <span className="text-xs font-semibold text-brand-dark">Quality Check</span>
                   </div>
-                  <p className="text-[11px] text-brand-dark/60 leading-tight">
+                  <p className="text-[11px] text-brand-muted leading-tight">
                     Your order is checked and prepared for dispatch.
                   </p>
                 </div>
@@ -254,12 +254,12 @@ export default async function OrderConfirmationPage({
                 {/* Step 3 */}
                 <div className="text-center sm:text-left">
                   <div className="flex items-center gap-2 mb-2 sm:justify-start justify-center">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-cream text-brand-dark/60 text-xs font-bold border border-brand-border">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-cream text-brand-muted text-xs font-bold border border-brand-border">
                       3
                     </span>
-                    <span className="text-xs font-semibold text-brand-dark/70">Dispatched</span>
+                    <span className="text-xs font-semibold text-brand-muted">Dispatched</span>
                   </div>
-                  <p className="text-[11px] text-brand-dark/60 leading-tight">
+                  <p className="text-[11px] text-brand-muted leading-tight">
                     Handed to courier with tracking details.
                   </p>
                 </div>
@@ -267,12 +267,12 @@ export default async function OrderConfirmationPage({
                 {/* Step 4 */}
                 <div className="text-center sm:text-left">
                   <div className="flex items-center gap-2 mb-2 sm:justify-start justify-center">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-cream text-brand-dark/60 text-xs font-bold border border-brand-border">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-cream text-brand-muted text-xs font-bold border border-brand-border">
                       4
                     </span>
-                    <span className="text-xs font-semibold text-brand-dark/70">Delivered</span>
+                    <span className="text-xs font-semibold text-brand-muted">Delivered</span>
                   </div>
-                  <p className="text-[11px] text-brand-dark/60 leading-tight">
+                  <p className="text-[11px] text-brand-muted leading-tight">
                     Safe delivery to your doorstep.
                   </p>
                 </div>
@@ -283,10 +283,10 @@ export default async function OrderConfirmationPage({
             <div className="rounded-2xl border border-brand-border/80 bg-white p-6 shadow-sm">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-dark flex items-center justify-between pb-4 border-b border-brand-border/60">
                 <span className="flex items-center gap-2">
-                  <Package className="h-4 w-4 text-brand-gold" />
+                  <Package className="h-4 w-4 text-brand-accent" />
                   <span>Items Ordered ({order.items.length})</span>
                 </span>
-                <span className="text-xs font-normal text-brand-dark/60 lowercase">
+                <span className="text-xs font-normal text-brand-muted lowercase">
                   review your selections
                 </span>
               </h2>
@@ -296,14 +296,14 @@ export default async function OrderConfirmationPage({
                 {order.items.map((item, idx) => (
                   <div key={idx} className="py-4 flex items-center gap-4">
                     {/* Item Thumbnail / Placeholder */}
-                    <div className="h-16 w-16 shrink-0 rounded-lg bg-brand-cream/60 border border-brand-border/60 flex items-center justify-center text-brand-dark/40 overflow-hidden">
+                    <div className="h-16 w-16 shrink-0 rounded-lg bg-brand-cream/60 border border-brand-border/60 flex items-center justify-center text-brand-subtle overflow-hidden">
                       <ShoppingBag className="h-6 w-6" />
                     </div>
 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-medium text-brand-dark truncate">{item.title}</h3>
-                      <div className="mt-1 flex flex-wrap gap-2 text-xs text-brand-dark/60">
+                      <div className="mt-1 flex flex-wrap gap-2 text-xs text-brand-muted">
                         <span className="rounded bg-brand-cream/70 px-2 py-0.5 border border-brand-border/50">
                           Size: {item.size}
                         </span>
@@ -320,7 +320,7 @@ export default async function OrderConfirmationPage({
                         ₹{item.subtotal.toLocaleString("en-IN")}
                       </span>
                       {item.quantity > 1 && (
-                        <span className="block text-[11px] text-brand-dark/50">
+                        <span className="block text-[11px] text-brand-muted">
                           ₹{item.unitPrice.toLocaleString("en-IN")} each
                         </span>
                       )}
@@ -340,7 +340,7 @@ export default async function OrderConfirmationPage({
               </h2>
 
               <div className="space-y-3 text-xs">
-                <div className="flex justify-between text-brand-dark/70">
+                <div className="flex justify-between text-brand-muted">
                   <span>Bag Subtotal</span>
                   <span className="font-medium text-brand-dark">
                     ₹{order.subtotal.toLocaleString("en-IN")}
@@ -356,7 +356,7 @@ export default async function OrderConfirmationPage({
                   </div>
                 )}
 
-                <div className="flex justify-between text-brand-dark/70">
+                <div className="flex justify-between text-brand-muted">
                   <span>Shipping & Delivery</span>
                   <span className="font-medium text-brand-dark">
                     {order.shippingCharge === 0
@@ -366,7 +366,7 @@ export default async function OrderConfirmationPage({
                 </div>
 
                 {order.codHandlingFee && order.codHandlingFee > 0 ? (
-                  <div className="flex justify-between text-brand-dark/70">
+                  <div className="flex justify-between text-brand-muted">
                     <span>COD Convenience Fee</span>
                     <span className="font-medium text-brand-dark">
                       ₹{order.codHandlingFee.toLocaleString("en-IN")}
@@ -377,7 +377,7 @@ export default async function OrderConfirmationPage({
                 <div className="pt-3 border-t border-brand-border/80 flex justify-between items-baseline">
                   <div>
                     <span className="text-sm font-bold text-brand-dark">Total Paid / Payable</span>
-                    <span className="block text-[11px] text-brand-dark/50 font-normal">
+                    <span className="block text-[11px] text-brand-muted font-normal">
                       Includes all applicable GST taxes
                     </span>
                   </div>
@@ -392,7 +392,7 @@ export default async function OrderConfirmationPage({
             <div className="rounded-2xl border border-brand-border/80 bg-white p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-brand-border/60 pb-3">
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-dark flex items-center gap-2">
-                  <Truck className="h-4 w-4 text-brand-gold" />
+                  <Truck className="h-4 w-4 text-brand-accent" />
                   <span>Delivery Destination</span>
                 </h2>
                 {order.accessLevel === "FULL" ? (
@@ -409,7 +409,7 @@ export default async function OrderConfirmationPage({
               </div>
 
               {/* Address content */}
-              <div className="text-xs text-brand-dark/70 space-y-1 leading-relaxed">
+              <div className="text-xs text-brand-muted space-y-1 leading-relaxed">
                 <p className="font-semibold text-brand-dark text-sm">
                   {order.shippingAddress.fullName}
                 </p>
@@ -421,7 +421,7 @@ export default async function OrderConfirmationPage({
                     {order.shippingAddress.pincode}
                   </span>
                 </p>
-                <p className="pt-1 text-brand-dark/60">
+                <p className="pt-1 text-brand-muted">
                   Contact Phone:{" "}
                   <span className="font-medium text-brand-dark">
                     {order.shippingAddress.phone}
@@ -433,7 +433,7 @@ export default async function OrderConfirmationPage({
               <div className="rounded-xl bg-brand-cream/60 border border-brand-border/60 p-3 flex items-center gap-3">
                 <Clock className="h-5 w-5 text-brand-accent shrink-0" />
                 <div>
-                  <span className="text-[11px] text-brand-dark/60 block uppercase tracking-wider">
+                  <span className="text-[11px] text-brand-muted block uppercase tracking-wider">
                     Estimated Delivery Window
                   </span>
                   <span className="text-xs font-semibold text-brand-dark">
@@ -444,9 +444,9 @@ export default async function OrderConfirmationPage({
             </div>
 
             {/* Assistance Card */}
-            <div className="rounded-2xl border border-brand-border/60 bg-brand-cream/30 p-5 text-xs text-brand-dark/70 space-y-2">
+            <div className="rounded-2xl border border-brand-border/60 bg-brand-cream/30 p-5 text-xs text-brand-muted space-y-2">
               <h3 className="font-semibold text-brand-dark flex items-center gap-1.5">
-                <HelpCircle className="h-4 w-4 text-brand-gold" />
+                <HelpCircle className="h-4 w-4 text-brand-accent" />
                 Need help with this order?
               </h3>
               <p>
@@ -477,7 +477,7 @@ export default async function OrderConfirmationPage({
             href="/account"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-none border border-brand-border/80 bg-white px-6 py-3 text-xs font-semibold uppercase tracking-wider text-brand-dark transition-colors hover:bg-brand-cream/50"
           >
-            <ShoppingBag className="h-4 w-4 text-brand-dark/60" />
+            <ShoppingBag className="h-4 w-4 text-brand-muted" />
             <span>View My Account</span>
           </Link>
         </div>

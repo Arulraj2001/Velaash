@@ -99,7 +99,7 @@ export function ProductFiltersDrawer({
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="text-brand-dark/70 hover:bg-brand-light/40 hover:text-brand-dark rounded-full p-1.5"
+                className="text-brand-muted hover:bg-brand-light/40 hover:text-brand-dark rounded-full p-1.5"
                 aria-label="Close filters"
               >
                 <X className="h-5 w-5" />

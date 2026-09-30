@@ -64,9 +64,9 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowPro
               </Link>
 
               {/* Variant Specs */}
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-brand-dark/70">
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-brand-muted">
                 <span className="flex items-center gap-1.5">
-                  <span className="font-medium text-brand-dark/90">Color:</span> {item.color}
+                  <span className="font-medium text-brand-muted">Color:</span> {item.color}
                   {item.colorHex && (
                     <span
                       className="inline-block h-3 w-3 rounded-full border border-black/10"
@@ -77,7 +77,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowPro
                 </span>
                 <span className="text-brand-border">&bull;</span>
                 <span>
-                  <span className="font-medium text-brand-dark/90">Size:</span> {item.size}
+                  <span className="font-medium text-brand-muted">Size:</span> {item.size}
                 </span>
               </div>
             </div>
@@ -86,7 +86,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowPro
             <button
               type="button"
               onClick={() => onRemove(item.id)}
-              className="text-brand-dark/40 hover:text-red-600 transition-colors p-1 -mt-1 -mr-1"
+              className="text-brand-muted hover:text-red-600 transition-colors p-1 -mt-1 -mr-1"
               aria-label={`Remove ${item.title} from cart`}
               title="Remove item"
             >
@@ -100,7 +100,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowPro
               ₹{item.price.toLocaleString("en-IN")}
             </span>
             {item.compareAtPrice && item.compareAtPrice > item.price && (
-              <span className="text-xs text-brand-dark/40 line-through">
+              <span className="text-xs text-brand-subtle line-through">
                 ₹{item.compareAtPrice.toLocaleString("en-IN")}
               </span>
             )}
@@ -172,7 +172,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowPro
               </div>
 
               {isMaxReached && (
-                <span className="text-[11px] text-brand-dark/50 hidden sm:inline">
+                <span className="text-[11px] text-brand-muted hidden sm:inline">
                   Max stock reached ({maxStock})
                 </span>
               )}
@@ -183,10 +183,10 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowPro
 
           {/* Line Subtotal */}
           <div className="text-right">
-            <span className="text-xs text-brand-dark/50 mr-1.5 sm:hidden">Total:</span>
+            <span className="text-xs text-brand-muted mr-1.5 sm:hidden">Total:</span>
             <span
               className={`text-sm sm:text-base font-semibold ${
-                !isAvailable ? "text-brand-dark/40 line-through" : "text-brand-dark"
+                !isAvailable ? "text-brand-subtle line-through" : "text-brand-dark"
               }`}
             >
               ₹{lineSubtotal.toLocaleString("en-IN")}

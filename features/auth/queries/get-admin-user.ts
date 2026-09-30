@@ -1,36 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import type { AdminRole } from "@/types/database.types";
 import type { AdminPermission, AdminUserSession } from "../types";
 
-const ROLE_PERMISSIONS: Record<AdminRole, readonly AdminPermission[]> = {
-  owner: [
-    "view_dashboard",
-    "manage_orders",
-    "update_order_status",
-    "manage_products",
-    "delete_products",
-    "manage_categories",
-    "manage_coupons",
-    "manage_reviews",
-    "manage_settings",
-    "manage_admin_users",
-  ],
-  staff: [
-    "view_dashboard",
-    "manage_orders",
-    "update_order_status",
-    "manage_products",
-    "manage_categories",
-    "manage_reviews",
-  ],
-};
 
-/**
- * Checks whether an admin role has a specific permission.
- */
-export function hasAdminPermission(role: AdminRole, permission: AdminPermission): boolean {
-  return ROLE_PERMISSIONS[role]?.includes(permission) ?? false;
-}
+import { hasAdminPermission } from "@/features/admin/permissions";
+export { hasAdminPermission };
 
 /**
  * Retrieves the current authenticated admin user session and role.

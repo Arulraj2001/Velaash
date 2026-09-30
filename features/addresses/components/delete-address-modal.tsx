@@ -75,7 +75,7 @@ export function DeleteAddressModal({
               <h3 id="delete-address-title" className="font-heading text-lg font-semibold text-brand-dark">
                 Delete Address
               </h3>
-              <p className="text-xs text-brand-dark/60 font-sans">
+              <p className="text-xs text-brand-muted font-sans">
                 {addressToDelete.fullName} – {addressToDelete.city}
               </p>
             </div>
@@ -84,7 +84,7 @@ export function DeleteAddressModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-brand-dark/50 hover:text-brand-dark hover:bg-brand-cream/60 transition-colors"
+            className="p-1.5 rounded-lg text-brand-muted hover:text-brand-dark hover:bg-brand-cream/60 transition-colors"
             aria-label="Close dialog"
           >
             <X className="h-4 w-4" />
@@ -100,7 +100,7 @@ export function DeleteAddressModal({
         {/* If deleting a default address and other addresses exist, require picking new default */}
         {requiresNewDefaultSelection ? (
           <div className="space-y-3 font-sans text-xs">
-            <p className="text-brand-dark/80 leading-relaxed font-medium">
+            <p className="text-brand-muted leading-relaxed font-medium">
               This is currently your <strong>default delivery address</strong>. Before deleting it, please choose which of your remaining addresses should become your new default:
             </p>
 
@@ -128,11 +128,11 @@ export function DeleteAddressModal({
                       <span className="font-semibold text-brand-dark text-xs truncate">
                         {addr.fullName}
                       </span>
-                      <span className="uppercase text-[10px] text-brand-dark/50 font-medium px-1.5 py-0.2 rounded bg-brand-light/50">
+                      <span className="uppercase text-[10px] text-brand-muted font-medium px-1.5 py-0.2 rounded bg-brand-light/50">
                         {addr.addressType}
                       </span>
                     </div>
-                    <p className="text-[11px] text-brand-dark/70 truncate">
+                    <p className="text-[11px] text-brand-muted truncate">
                       {addr.addressLine1}, {addr.city}
                     </p>
                   </div>
@@ -141,7 +141,7 @@ export function DeleteAddressModal({
             </div>
           </div>
         ) : (
-          <p className="text-xs text-brand-dark/80 leading-relaxed font-sans">
+          <p className="text-xs text-brand-muted leading-relaxed font-sans">
             Are you sure you want to delete this address? This action cannot be undone.
           </p>
         )}

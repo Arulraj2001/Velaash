@@ -41,7 +41,7 @@ export function OrderReviewSidebar({
         <h2 className="font-heading text-lg font-semibold text-brand-dark tracking-tight">
           Order Summary
         </h2>
-        <span className="text-xs text-brand-dark/60 font-medium">
+        <span className="text-xs text-brand-muted font-medium">
           {totalItemCount} {totalItemCount === 1 ? "item" : "items"}
         </span>
       </div>
@@ -64,7 +64,7 @@ export function OrderReviewSidebar({
               <p className="font-heading text-xs font-semibold text-brand-dark truncate">
                 {item.title}
               </p>
-              <p className="text-[11px] text-brand-dark/70 mt-0.5">
+              <p className="text-[11px] text-brand-muted mt-0.5">
                 {item.color} &bull; Size {item.size} &bull; Qty {item.quantity}
               </p>
               <p className="text-xs font-semibold text-brand-dark mt-1">
@@ -77,7 +77,7 @@ export function OrderReviewSidebar({
 
       {/* 2. Price Breakdown */}
       <div className="mt-5 pt-4 border-t border-brand-border/60 space-y-2.5 text-xs">
-        <div className="flex justify-between text-brand-dark/80">
+        <div className="flex justify-between text-brand-muted">
           <span>Subtotal</span>
           <span className="font-medium text-brand-dark">₹{subtotal.toLocaleString("en-IN")}</span>
         </div>
@@ -94,7 +94,7 @@ export function OrderReviewSidebar({
         )}
 
         {/* Shipping Fee */}
-        <div className="flex justify-between text-brand-dark/80">
+        <div className="flex justify-between text-brand-muted">
           <span>Standard Delivery</span>
           {isFreeShipping ? (
             <span className="font-semibold text-emerald-700 tracking-wide">FREE</span>
@@ -105,7 +105,7 @@ export function OrderReviewSidebar({
 
         {/* COD Handling Fee */}
         {paymentMethod === "cod" && codFee > 0 && (
-          <div className="flex justify-between text-brand-dark/80">
+          <div className="flex justify-between text-brand-muted">
             <span>COD Handling Fee</span>
             <span className="font-medium text-brand-dark">₹{codFee.toLocaleString("en-IN")}</span>
           </div>
@@ -118,7 +118,7 @@ export function OrderReviewSidebar({
             <span className="font-heading text-lg font-bold text-brand-dark">
               ₹{totalAmount.toLocaleString("en-IN")}
             </span>
-            <p className="text-[10px] text-brand-dark/50">Inclusive of all taxes</p>
+            <p className="text-[10px] text-brand-muted">Inclusive of all taxes</p>
           </div>
         </div>
       </div>
@@ -137,20 +137,20 @@ export function OrderReviewSidebar({
             </>
           ) : paymentMethod === "cod" ? (
             <>
-              <Lock className="h-3.5 w-3.5 text-brand-gold" />
+              <Lock className="h-3.5 w-3.5 text-brand-accent" />
               <span>Place Order (Pay on Delivery)</span>
               <ArrowRight className="h-4 w-4" />
             </>
           ) : (
             <>
-              <Lock className="h-3.5 w-3.5 text-brand-gold" />
+              <Lock className="h-3.5 w-3.5 text-brand-accent" />
               <span>Pay ₹{totalAmount.toLocaleString("en-IN")}</span>
               <ArrowRight className="h-4 w-4" />
             </>
           )}
         </button>
 
-        <p className="mt-2 text-center text-[10px] text-brand-dark/50">
+        <p className="mt-2 text-center text-[10px] text-brand-muted">
           By clicking Place Order, you agree to our Terms of Sale.
         </p>
       </div>
@@ -159,7 +159,7 @@ export function OrderReviewSidebar({
       <div className="mt-4 pt-3 border-t border-brand-border/50 text-center">
         <Link
           href="/cart"
-          className="text-xs font-semibold text-brand-dark/70 hover:text-brand-dark underline underline-offset-4 transition-colors"
+          className="text-xs font-semibold text-brand-muted hover:text-brand-dark underline underline-offset-4 transition-colors"
         >
           Modify items in bag
         </Link>
@@ -167,12 +167,12 @@ export function OrderReviewSidebar({
 
       {/* 4. Trust Badges Row */}
       <div className="mt-6 border-t border-brand-border/60 pt-4 grid grid-cols-2 gap-3">
-        <div className="flex items-center gap-2 text-[11px] text-brand-dark/70">
-          <ShieldCheck className="h-4 w-4 text-brand-gold shrink-0" />
+        <div className="flex items-center gap-2 text-[11px] text-brand-muted">
+          <ShieldCheck className="h-4 w-4 text-brand-accent shrink-0" />
           <span>Secure Checkout</span>
         </div>
-        <div className="flex items-center gap-2 text-[11px] text-brand-dark/70">
-          <RotateCcw className="h-4 w-4 text-brand-gold shrink-0" />
+        <div className="flex items-center gap-2 text-[11px] text-brand-muted">
+          <RotateCcw className="h-4 w-4 text-brand-accent shrink-0" />
           <span>{returnWindowDays}-Day Easy Returns</span>
         </div>
       </div>

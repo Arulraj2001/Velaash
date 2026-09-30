@@ -116,7 +116,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           {category.name}
         </h1>
         {category.description && (
-          <p className="text-brand-dark/70 max-w-2xl text-xs leading-relaxed sm:text-sm">
+          <p className="text-brand-muted max-w-2xl text-xs leading-relaxed sm:text-sm">
             {category.description}
           </p>
         )}

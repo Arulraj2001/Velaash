@@ -60,7 +60,10 @@ export interface CustomerOrderDetail {
   totalAmount: number;
   couponCode?: string | null;
   notes?: string | null;
+  adminNotes?: string | null;
   cancelReason?: string | null;
+  trackingNumber?: string | null;
+  courierName?: string | null;
   createdAt: string;
   updatedAt: string;
   shippingAddress: {

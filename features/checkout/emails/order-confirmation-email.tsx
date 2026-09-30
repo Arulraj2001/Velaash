@@ -1,3 +1,12 @@
+/**
+ * Established Velaash Brand Tokens for Transactional Emails:
+ * - Primary Gold: #F2A900
+ * - Deep Accent: #CC6F00
+ * - Dark Brand Brown: #4D2A00
+ * - Light Gold Background: #F9E6A8
+ * - Cream Base: #FFFBF0
+ */
+
 import * as React from "react";
 import {
   Body,
@@ -45,6 +54,7 @@ export interface OrderConfirmationEmailProps {
     pincode: string;
   };
   orderViewUrl: string;
+  accountCreatedFromGuest?: boolean;
 }
 
 export const OrderConfirmationEmail = ({
@@ -62,6 +72,7 @@ export const OrderConfirmationEmail = ({
   totalAmount,
   shippingAddress,
   orderViewUrl,
+  accountCreatedFromGuest = false,
 }: OrderConfirmationEmailProps) => {
   const isPaid = paymentStatus === "paid";
   const paymentMethodLabel =
@@ -86,6 +97,18 @@ export const OrderConfirmationEmail = ({
               Your order <strong style={{ color: "#4D2A00" }}>{orderNumber}</strong> placed on{" "}
               {orderDate} has been confirmed and is being prepared for dispatch.
             </Text>
+
+            {/* Account Created Banner (Passwordless OTP instructions) */}
+            {accountCreatedFromGuest && (
+              <Section style={accountNoticeStyle}>
+                <Text style={accountNoticeTitleStyle}>Velaash Account Created</Text>
+                <Text style={accountNoticeTextStyle}>
+                  As requested during checkout, we have set up your customer account and saved your
+                  delivery address as your default address. You can log in anytime using your email —
+                  we&apos;ll send you a one-time access code, no password needed.
+                </Text>
+              </Section>
+            )}
 
             {/* Status Pills */}
             <Section style={statusContainerStyle}>
@@ -406,3 +429,28 @@ const legalTextStyle: React.CSSProperties = {
   margin: 0,
   letterSpacing: "1px",
 };
+
+const accountNoticeStyle: React.CSSProperties = {
+  backgroundColor: "#F0FDF4",
+  border: "1px solid #BBF7D0",
+  borderRadius: "8px",
+  padding: "14px 18px",
+  marginTop: "16px",
+  marginBottom: "16px",
+  textAlign: "left",
+};
+
+const accountNoticeTitleStyle: React.CSSProperties = {
+  fontSize: "13px",
+  fontWeight: "600",
+  color: "#166534",
+  margin: "0 0 4px 0",
+};
+
+const accountNoticeTextStyle: React.CSSProperties = {
+  fontSize: "12px",
+  color: "#15803D",
+  lineHeight: "18px",
+  margin: 0,
+};
+

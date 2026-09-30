@@ -24,7 +24,7 @@ export function ProductGridEmpty() {
         No matching designs found
       </h3>
 
-      <p className="text-brand-dark/70 mb-6 max-w-md text-xs leading-relaxed sm:text-sm">
+      <p className="text-brand-muted mb-6 max-w-md text-xs leading-relaxed sm:text-sm">
         We couldn&apos;t find any pieces matching your chosen combination of filters. Try adjusting
         your size, color, or price preferences.
       </p>

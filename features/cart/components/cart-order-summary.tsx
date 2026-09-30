@@ -124,7 +124,7 @@ export function CartOrderSummary({
 
       {/* 2. Subtotal & Breakdown */}
       <div className="mt-6 space-y-3 text-sm">
-        <div className="flex justify-between text-brand-dark/80">
+        <div className="flex justify-between text-brand-muted">
           <span>Subtotal</span>
           <span className="font-medium text-brand-dark">₹{subtotal.toLocaleString("en-IN")}</span>
         </div>
@@ -152,7 +152,7 @@ export function CartOrderSummary({
         )}
 
         {/* Shipping Fee */}
-        <div className="flex justify-between text-brand-dark/80">
+        <div className="flex justify-between text-brand-muted">
           <span>Standard Shipping</span>
           {isFreeShipping ? (
             <span className="font-semibold text-emerald-700 tracking-wide">FREE</span>
@@ -170,7 +170,7 @@ export function CartOrderSummary({
             <span className="font-heading text-xl font-bold text-brand-dark">
               ₹{total.toLocaleString("en-IN")}
             </span>
-            <p className="text-[10px] text-brand-dark/50 mt-0.5">Inclusive of all taxes</p>
+            <p className="text-[10px] text-brand-muted mt-0.5">Inclusive of all taxes</p>
           </div>
         </div>
       </div>
@@ -191,7 +191,7 @@ export function CartOrderSummary({
             }}
             placeholder="Enter coupon code"
             disabled={isSubmittingCoupon || Boolean(appliedCoupon)}
-            className="flex-1 rounded-none border border-brand-border/80 bg-white px-3 py-2 text-xs uppercase placeholder:normal-case placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none disabled:opacity-50"
+            className="flex-1 rounded-none border border-brand-border/80 bg-white px-3 py-2 text-xs uppercase placeholder:normal-case placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none disabled:opacity-50"
           />
           <button
             type="submit"
@@ -255,12 +255,12 @@ export function CartOrderSummary({
 
       {/* 5. Trust Badges Row */}
       <div className="mt-6 border-t border-brand-border/60 pt-4 grid grid-cols-2 gap-3">
-        <div className="flex items-center gap-2 text-[11px] text-brand-dark/70">
-          <ShieldCheck className="h-4 w-4 text-brand-gold shrink-0" />
+        <div className="flex items-center gap-2 text-[11px] text-brand-muted">
+          <ShieldCheck className="h-4 w-4 text-brand-accent shrink-0" />
           <span>Secure Checkout</span>
         </div>
-        <div className="flex items-center gap-2 text-[11px] text-brand-dark/70">
-          <RotateCcw className="h-4 w-4 text-brand-gold shrink-0" />
+        <div className="flex items-center gap-2 text-[11px] text-brand-muted">
+          <RotateCcw className="h-4 w-4 text-brand-accent shrink-0" />
           <span>{returnWindowDays}-Day Easy Returns</span>
         </div>
       </div>

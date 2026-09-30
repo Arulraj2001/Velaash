@@ -162,7 +162,7 @@ export function ProductCard({
               }`}
             />
           ) : (
-            <div className="bg-brand-light/30 text-brand-dark/40 flex h-full w-full items-center justify-center text-xs">
+            <div className="bg-brand-light/30 text-brand-muted flex h-full w-full items-center justify-center text-xs">
               Velaash
             </div>
           )}
@@ -223,7 +223,7 @@ export function ProductCard({
               className={`h-4 w-4 transition-colors ${
                 isWishlisted
                   ? "fill-rose-600 text-rose-600"
-                  : "text-brand-dark/70 hover:text-brand-dark"
+                  : "text-brand-muted hover:text-brand-dark"
               }`}
             />
           </button>
@@ -239,8 +239,8 @@ export function ProductCard({
         {/* Product Details Section Below Image */}
         <div className="space-y-1.5 p-3 sm:p-4">
           {/* Category Tag & Rating Row */}
-          <div className="text-brand-dark/60 flex items-center justify-between text-[11px]">
-            <span className="text-brand-accent truncate text-[10px] font-medium tracking-wider uppercase">
+          <div className="text-brand-muted flex items-center justify-between text-[11px]">
+            <span className="text-brand-accent-dark truncate text-[11px] font-semibold tracking-wider uppercase">
               {product.category_name || "Velaash"}
             </span>
 
@@ -249,7 +249,7 @@ export function ProductCard({
               <div className="text-brand-dark flex items-center gap-1 font-medium">
                 <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
                 <span>{product.rating.average.toFixed(1)}</span>
-                <span className="text-brand-dark/40 text-[10px]">({product.rating.count})</span>
+                <span className="text-brand-muted text-[10px]">({product.rating.count})</span>
               </div>
             )}
           </div>
@@ -269,7 +269,7 @@ export function ProductCard({
             </span>
 
             {isSale && product.compare_at_price && (
-              <span className="text-brand-dark/40 text-xs line-through">
+              <span className="text-brand-subtle text-xs line-through">
                 {formatCurrency(product.compare_at_price)}
               </span>
             )}
@@ -301,7 +301,7 @@ export function ProductCard({
             })}
 
             {product.colors.length > 4 && (
-              <span className="text-brand-dark/60 pl-0.5 text-[10px] font-medium">
+              <span className="text-brand-muted pl-0.5 text-[10px] font-medium">
                 +{product.colors.length - 4} more
               </span>
             )}

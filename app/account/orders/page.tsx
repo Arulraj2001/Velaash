@@ -63,7 +63,7 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
           <h1 className="font-heading text-2xl font-semibold text-brand-dark tracking-tight">
             Order History
           </h1>
-          <p className="text-xs text-brand-dark/60 mt-1">
+          <p className="text-xs text-brand-muted mt-1">
             Review and track all your previous and active clothing orders.
           </p>
         </div>
@@ -75,7 +75,7 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
       <div className="rounded-2xl border border-brand-border/70 bg-white p-6 shadow-sm">
         {orders.length === 0 ? (
           <div className="py-16 text-center space-y-4">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-light/30 text-brand-dark/50">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-light/30 text-brand-muted">
               <ShoppingBag className="h-7 w-7" />
             </div>
             <div className="space-y-1">
@@ -84,7 +84,7 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
                   ? "No orders found"
                   : `No ${statusFilter} orders found`}
               </h3>
-              <p className="text-xs text-brand-dark/60 max-w-sm mx-auto">
+              <p className="text-xs text-brand-muted max-w-sm mx-auto">
                 {statusFilter === "all"
                   ? "You have not placed any orders yet. Begin exploring our curated handcrafted Indian wear edits."
                   : `There are currently no orders matching the '${statusFilter}' status filter.`}
@@ -128,7 +128,7 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
                           className="object-cover object-top"
                         />
                       ) : (
-                        <div className="h-full w-full flex items-center justify-center text-brand-dark/30">
+                        <div className="h-full w-full flex items-center justify-center text-brand-subtle">
                           <Package className="h-7 w-7" />
                         </div>
                       )}
@@ -145,13 +145,13 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
                       <h4 className="text-xs font-medium text-brand-dark line-clamp-1">
                         {order.firstItemTitle || "Handcrafted Outfit"}
                         {order.itemCount > 1 && (
-                          <span className="text-brand-dark/50 font-normal ml-1">
+                          <span className="text-brand-muted font-normal ml-1">
                             +{order.itemCount - 1} more
                           </span>
                         )}
                       </h4>
 
-                      <div className="flex items-center gap-3 text-[11px] text-brand-dark/60 font-sans flex-wrap">
+                      <div className="flex items-center gap-3 text-[11px] text-brand-muted font-sans flex-wrap">
                         <span>Ordered on {formattedDate}</span>
                         <span>•</span>
                         <span>{order.itemCount} {order.itemCount === 1 ? "item" : "items"}</span>
@@ -174,7 +174,7 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
                   {/* Right: Total & Action */}
                   <div className="flex items-center justify-between md:flex-col md:items-end gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-brand-border/40">
                     <div className="md:text-right">
-                      <p className="text-[11px] uppercase tracking-wider text-brand-dark/50 font-medium">
+                      <p className="text-[11px] uppercase tracking-wider text-brand-muted font-medium">
                         Total Amount
                       </p>
                       <p className="font-heading text-lg font-semibold text-brand-dark">
@@ -196,7 +196,7 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-brand-border/60 pt-5 mt-6 text-xs text-brand-dark/70">
+          <div className="flex items-center justify-between border-t border-brand-border/60 pt-5 mt-6 text-xs text-brand-muted">
             <span>
               Page <strong className="text-brand-dark">{currentPage}</strong> of{" "}
               <strong className="text-brand-dark">{totalPages}</strong> ({totalCount} total orders)

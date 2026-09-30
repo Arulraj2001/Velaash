@@ -87,7 +87,7 @@ export function MobileNavDrawer({
             type="button"
             onClick={onClose}
             aria-label="Close navigation menu"
-            className="text-brand-dark/70 hover:text-brand-dark hover:bg-brand-light/30 rounded-full p-2 transition-colors"
+            className="text-brand-muted hover:text-brand-dark hover:bg-brand-light/30 rounded-full p-2 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -116,7 +116,7 @@ export function MobileNavDrawer({
                       >
                         <span>{cat.name}</span>
                         <ChevronDown
-                          className={`text-brand-dark/60 h-4 w-4 transition-transform duration-200 ${
+                          className={`text-brand-muted h-4 w-4 transition-transform duration-200 ${
                             isExpanded ? "text-brand-accent rotate-180" : ""
                           }`}
                         />
@@ -138,7 +138,7 @@ export function MobileNavDrawer({
                               key={sub.id}
                               href={`/collections/${sub.slug}`}
                               onClick={onClose}
-                              className="text-brand-dark/80 hover:text-brand-accent block py-1 text-xs transition-colors"
+                              className="text-brand-muted hover:text-brand-accent block py-1 text-xs transition-colors"
                             >
                               {sub.name}
                             </Link>
@@ -171,7 +171,7 @@ export function MobileNavDrawer({
                   key={link.label}
                   href={link.href}
                   onClick={onClose}
-                  className="text-brand-dark/80 hover:text-brand-accent block px-2 py-1.5 text-xs transition-colors"
+                  className="text-brand-muted hover:text-brand-accent block px-2 py-1.5 text-xs transition-colors"
                 >
                   {link.label}
                 </Link>

@@ -50,14 +50,6 @@ export interface AdminUserSession {
   role: AdminRole;
 }
 
-export type AdminPermission =
-  | "view_dashboard"
-  | "manage_orders"
-  | "update_order_status"
-  | "manage_products"
-  | "delete_products"
-  | "manage_categories"
-  | "manage_coupons"
-  | "manage_reviews"
-  | "manage_settings"
-  | "manage_admin_users";
+import type { AdminPermissionKey } from "@/features/admin/permissions";
+
+export type AdminPermission = AdminPermissionKey;

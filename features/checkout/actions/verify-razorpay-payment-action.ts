@@ -169,6 +169,7 @@ export async function verifyRazorpayPaymentAction(
                 totalAmount: mockOrder.totalAmount,
                 shippingAddress: mockOrder.shippingAddress,
                 orderViewUrl,
+                accountCreatedFromGuest: mockOrder.accountCreatedFromGuest,
               }),
             });
           } catch (emailErr) {

@@ -295,6 +295,11 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
       q = q.in("id", matchingProductIds);
     }
 
+    // Apply SQL WHERE: id IN (productIds)
+    if (params.productIds && params.productIds.length > 0) {
+      q = q.in("id", params.productIds);
+    }
+
     // Apply SQL WHERE: base_price >= minPrice
     if (params.minPrice !== undefined && !isNaN(params.minPrice)) {
       q = q.gte("base_price", params.minPrice);

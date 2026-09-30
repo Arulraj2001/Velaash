@@ -8,14 +8,14 @@ export function CartEmptyState() {
       {/* Decorative Icon Circle */}
       <div className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-brand-cream/80 ring-1 ring-brand-gold/30">
         <div className="absolute inset-0 rounded-full animate-ping opacity-15 bg-brand-gold" />
-        <ShoppingBag className="h-10 w-10 text-brand-dark/70 stroke-[1.5]" />
+        <ShoppingBag className="h-10 w-10 text-brand-muted stroke-[1.5]" />
       </div>
 
       <h1 className="font-heading text-2xl md:text-3xl font-normal text-brand-dark tracking-tight">
         Your Shopping Bag is Empty
       </h1>
 
-      <p className="mt-3 max-w-md text-sm md:text-base text-brand-dark/70 leading-relaxed">
+      <p className="mt-3 max-w-md text-sm md:text-base text-brand-muted leading-relaxed">
         Looks like you haven&apos;t added any pieces to your cart yet. Explore our newest arrivals
         and handcrafted silhouettes to curate your wardrobe.
       </p>

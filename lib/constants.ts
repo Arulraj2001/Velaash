@@ -36,6 +36,7 @@ export const DEFAULT_ANNOUNCEMENT = {
 };
 
 export const CUSTOMER_SERVICE_LINKS = [
+  { label: "About Us", href: "/about" },
   { label: "Contact Us", href: "/contact" },
   { label: "Shipping & Returns", href: "/shipping-returns" },
   { label: "Size & Fit Guide", href: "/size-guide" },
@@ -45,6 +46,6 @@ export const CUSTOMER_SERVICE_LINKS = [
 
 export const LEGAL_LINKS = [
   { label: "Privacy Policy", href: "/privacy-policy" },
-  { label: "Terms of Service", href: "/terms" },
-  { label: "Shipping Policy", href: "/shipping-policy" },
+  { label: "Terms & Conditions", href: "/terms-conditions" },
+  { label: "Shipping & Returns", href: "/shipping-returns" },
 ] as const;

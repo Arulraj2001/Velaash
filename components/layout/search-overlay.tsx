@@ -83,7 +83,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
             <button
               type="button"
               onClick={handleClose}
-              className="text-brand-dark/70 hover:text-brand-dark hover:bg-brand-light/40 focus-visible:ring-brand-gold rounded-full p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              className="text-brand-muted hover:text-brand-dark hover:bg-brand-light/40 focus-visible:ring-brand-gold rounded-full p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
               aria-label="Close search"
             >
               <X className="h-5 w-5" />
@@ -98,13 +98,13 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search dresses, kurtas, co-ords, trousers..."
-              className="border-brand-border bg-brand-card text-brand-dark placeholder:text-brand-dark/40 focus-visible:border-brand-gold focus-visible:ring-brand-gold/30 h-14 w-full rounded-xl border pr-12 pl-14 text-base shadow-inner focus-visible:ring-2 focus-visible:outline-none sm:text-lg"
+              className="border-brand-border bg-brand-card text-brand-dark placeholder:text-brand-subtle focus-visible:border-brand-gold focus-visible:ring-brand-gold/30 h-14 w-full rounded-xl border pr-12 pl-14 text-base shadow-inner focus-visible:ring-2 focus-visible:outline-none sm:text-lg"
             />
             {query && (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="text-brand-dark/50 hover:text-brand-dark absolute right-4 rounded-full p-1"
+                className="text-brand-muted hover:text-brand-dark absolute right-4 rounded-full p-1"
                 aria-label="Clear search input"
               >
                 <X className="h-4 w-4" />
@@ -114,7 +114,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
 
           {/* Popular Search Suggestions */}
           <div className="mt-5 space-y-2">
-            <p className="text-brand-dark/60 text-[11px] font-semibold tracking-wider uppercase">
+            <p className="text-brand-muted text-[11px] font-semibold tracking-wider uppercase">
               Popular Searches
             </p>
             <div className="flex flex-wrap gap-2">

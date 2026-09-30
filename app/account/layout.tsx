@@ -51,7 +51,7 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
                 <h1 className="font-heading text-2xl sm:text-3xl font-medium text-brand-dark tracking-tight">
                   Hello, {customerName}
                 </h1>
-                <p className="text-xs text-brand-dark/70 font-mono">
+                <p className="text-xs text-brand-muted font-mono">
                   {user.email}
                 </p>
               </div>
@@ -75,7 +75,7 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
             {/* Desktop Sidebar Navigation */}
             <aside className="hidden md:block md:col-span-1 rounded-2xl border border-brand-border/70 bg-white p-4 shadow-sm sticky top-24">
               <div className="px-3 py-2 mb-2 border-b border-brand-border/60">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-brand-dark/50">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-brand-muted">
                   Account Navigation
                 </p>
               </div>

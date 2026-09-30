@@ -35,14 +35,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="text-brand-dark/80 block text-xs font-medium tracking-wider uppercase"
+            className="text-brand-muted block text-xs font-medium tracking-wider uppercase"
           >
             {label}
           </label>
         )}
         <div className="relative flex items-center">
           {leftIcon && (
-            <div className="text-brand-dark/50 pointer-events-none absolute left-3 flex items-center">
+            <div className="text-brand-muted pointer-events-none absolute left-3 flex items-center">
               {leftIcon}
             </div>
           )}
@@ -54,7 +54,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             aria-invalid={Boolean(error)}
             aria-describedby={error ? errorId : helperText ? helperId : undefined}
             className={cn(
-              "border-brand-border bg-brand-card text-brand-dark placeholder:text-brand-dark/40 flex h-11 w-full rounded-md border px-3.5 py-2 text-sm transition-colors duration-150",
+              "border-brand-border bg-brand-card text-brand-dark placeholder:text-brand-subtle flex h-11 w-full rounded-md border px-3.5 py-2 text-sm transition-colors duration-150",
               "focus-visible:border-brand-gold focus-visible:ring-brand-gold/30 focus-visible:ring-2 focus-visible:outline-none",
               "disabled:bg-brand-cream/50 disabled:cursor-not-allowed disabled:opacity-60",
               leftIcon && "pl-10",
@@ -65,7 +65,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {rightIcon && (
-            <div className="text-brand-dark/50 absolute right-3 flex items-center">{rightIcon}</div>
+            <div className="text-brand-muted absolute right-3 flex items-center">{rightIcon}</div>
           )}
         </div>
         {error && (
@@ -74,7 +74,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           </p>
         )}
         {!error && helperText && (
-          <p id={helperId} className="text-brand-dark/60 text-xs">
+          <p id={helperId} className="text-brand-muted text-xs">
             {helperText}
           </p>
         )}

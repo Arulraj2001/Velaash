@@ -1,8 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { X, Ruler, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { X, Ruler } from "lucide-react";
 import type { SizeChartData } from "../types";
+import { SizeChartTable } from "./size-chart-table";
 
 interface SizeGuideModalProps {
   isOpen: boolean;
@@ -12,8 +14,6 @@ interface SizeGuideModalProps {
 }
 
 export function SizeGuideModal({ isOpen, onClose, sizeChart, productName }: SizeGuideModalProps) {
-  const [unit, setUnit] = React.useState<"inches" | "cm">("inches");
-
   // Prevent background scroll when modal is open
   React.useEffect(() => {
     if (isOpen) {
@@ -44,28 +44,6 @@ export function SizeGuideModal({ isOpen, onClose, sizeChart, productName }: Size
     "Measurements are garment dimensions. For a relaxed fit, select one size up.",
   ];
 
-  // Helper to convert inch string to cm if unit is cm
-  const formatValue = (val: string, colIndex: number) => {
-    if (colIndex === 0 || unit === "inches") return val;
-    // Attempt conversion
-    const num = parseFloat(val);
-    if (!isNaN(num)) {
-      return (num * 2.54).toFixed(1);
-    }
-    if (val.includes("-")) {
-      const parts = val.split("-").map((p) => parseFloat(p.trim()));
-      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-        return `${(parts[0] * 2.54).toFixed(0)}-${(parts[1] * 2.54).toFixed(0)}`;
-      }
-    }
-    return val;
-  };
-
-  const displayHeaders = headers.map((h, i) => {
-    if (i === 0) return h;
-    return unit === "inches" ? h : h.replace(/\(in\)/gi, "(cm)");
-  });
-
   return (
     <div
       role="dialog"
@@ -85,7 +63,7 @@ export function SizeGuideModal({ isOpen, onClose, sizeChart, productName }: Size
         <div className="border-brand-border/60 flex items-start justify-between border-b pb-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Ruler className="text-brand-gold h-5 w-5" />
+              <Ruler className="text-brand-accent h-5 w-5" />
               <span className="text-brand-accent text-[11px] font-semibold tracking-widest uppercase">
                 Size Guide
               </span>
@@ -96,7 +74,7 @@ export function SizeGuideModal({ isOpen, onClose, sizeChart, productName }: Size
             >
               Size Chart & Fit Guide
             </h2>
-            <p className="text-brand-dark/70 text-xs">
+            <p className="text-brand-muted text-xs">
               Measurements tailored for{" "}
               <span className="text-brand-dark font-medium">{productName}</span>
             </p>
@@ -105,94 +83,35 @@ export function SizeGuideModal({ isOpen, onClose, sizeChart, productName }: Size
           <button
             type="button"
             onClick={onClose}
-            className="text-brand-dark/60 hover:bg-brand-light/60 hover:text-brand-dark rounded-full p-2 transition-colors"
+            className="text-brand-muted hover:bg-brand-light/60 hover:text-brand-dark rounded-full p-2 transition-colors"
             aria-label="Close size guide"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Unit Selector Toggle */}
-        <div className="my-5 flex items-center justify-between">
-          <span className="text-brand-dark/70 text-xs font-medium">Measurement Unit:</span>
-          <div className="border-brand-border bg-brand-light/30 flex rounded-lg border p-1">
-            <button
-              type="button"
-              onClick={() => setUnit("inches")}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
-                unit === "inches"
-                  ? "text-brand-dark bg-white shadow-xs"
-                  : "text-brand-dark/60 hover:text-brand-dark"
-              }`}
+        {/* Reused Size Chart Table & Measurements */}
+        <div className="pt-5">
+          <SizeChartTable
+            headers={headers}
+            rows={rows}
+            tips={tips}
+            defaultUnit={sizeChart?.measurement_unit || "inches"}
+          />
+        </div>
+
+        {/* Footer info & Alternate Route Link */}
+        <div className="text-brand-muted border-brand-border/60 mt-6 flex flex-col items-center justify-between gap-3 border-t pt-4 text-xs sm:flex-row">
+          <div className="flex items-center gap-1.5">
+            <span>Looking for other categories?</span>
+            <Link
+              href="/size-guide"
+              onClick={onClose}
+              className="text-brand-accent hover:text-brand-dark font-medium underline underline-offset-2 transition-colors"
             >
-              Inches (&quot;)
-            </button>
-            <button
-              type="button"
-              onClick={() => setUnit("cm")}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
-                unit === "cm"
-                  ? "text-brand-dark bg-white shadow-xs"
-                  : "text-brand-dark/60 hover:text-brand-dark"
-              }`}
-            >
-              Centimeters (cm)
-            </button>
+              View full size guide &rarr;
+            </Link>
           </div>
-        </div>
-
-        {/* Size Chart Table */}
-        <div className="border-brand-border/80 overflow-x-auto rounded-xl border">
-          <table className="w-full text-left font-sans text-xs">
-            <thead className="bg-brand-light/40 border-brand-border text-brand-dark border-b font-medium">
-              <tr>
-                {displayHeaders.map((header, idx) => (
-                  <th
-                    key={header}
-                    className={`px-4 py-3 ${idx === 0 ? "text-brand-accent font-bold" : ""}`}
-                  >
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-brand-border/50 text-brand-dark/80 divide-y">
-              {rows.map((row, rIdx) => (
-                <tr key={rIdx} className={rIdx % 2 === 1 ? "bg-brand-cream/30" : "bg-white"}>
-                  {headers.map((h, cIdx) => (
-                    <td
-                      key={h}
-                      className={`px-4 py-3 whitespace-nowrap ${
-                        cIdx === 0 ? "text-brand-dark font-semibold" : ""
-                      }`}
-                    >
-                      {formatValue(row[h] || "-", cIdx)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* How to Measure Instructions */}
-        <div className="bg-brand-light/30 border-brand-border/60 mt-6 rounded-xl border p-4 sm:p-5">
-          <h3 className="text-brand-accent mb-3 text-xs font-bold tracking-wider uppercase">
-            How to Take Your Measurements
-          </h3>
-          <ul className="text-brand-dark/80 space-y-2 text-xs">
-            {tips.map((tip, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <CheckCircle2 className="text-brand-gold mt-0.5 h-4 w-4 shrink-0" />
-                <span>{tip}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Footer info */}
-        <div className="text-brand-dark/60 border-brand-border/60 mt-6 flex flex-col items-center justify-between gap-3 border-t pt-4 text-xs sm:flex-row">
-          <p>Have sizing questions or between sizes?</p>
           <button
             type="button"
             onClick={onClose}
@@ -205,3 +124,4 @@ export function SizeGuideModal({ isOpen, onClose, sizeChart, productName }: Size
     </div>
   );
 }
+

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   Button,
   Card,
@@ -15,7 +15,6 @@ import { signInAdminAction } from "../actions/admin-auth.actions";
 import { ShieldCheck, Lock, Mail, AlertTriangle, ArrowRight } from "lucide-react";
 
 export function AdminLoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("returnUrl") || "/admin";
   const urlError = searchParams.get("error");
@@ -42,9 +41,10 @@ export function AdminLoginForm() {
       }
 
       setSuccess(res.message || "Authorized. Accessing administrative console...");
+      // Hard redirect so the browser makes a full HTTP request and the server
+      // reads the freshly-set Supabase session cookies correctly.
       setTimeout(() => {
-        router.push(returnUrl);
-        router.refresh();
+        window.location.href = returnUrl;
       }, 700);
     } catch {
       setError("Access denied. Invalid credentials.");

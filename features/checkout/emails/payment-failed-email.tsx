@@ -1,3 +1,12 @@
+/**
+ * Established Velaash Brand Tokens for Transactional Emails:
+ * - Primary Gold: #F2A900
+ * - Deep Accent: #CC6F00
+ * - Dark Brand Brown: #4D2A00
+ * - Light Gold Background: #F9E6A8
+ * - Cream Base: #FFFBF0
+ */
+
 import * as React from "react";
 import {
   Body,

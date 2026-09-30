@@ -37,7 +37,7 @@ export function PincodeChecker({ freeShippingThreshold = 999 }: PincodeCheckerPr
   return (
     <div className="border-brand-border/70 bg-brand-light/20 rounded-xl border p-4 font-sans">
       <div className="mb-2.5 flex items-center gap-2">
-        <Truck className="text-brand-gold h-4 w-4" />
+        <Truck className="text-brand-accent h-4 w-4" />
         <span className="text-brand-dark text-xs font-semibold tracking-wider uppercase">
           Check Delivery Serviceability
         </span>
@@ -57,7 +57,7 @@ export function PincodeChecker({ freeShippingThreshold = 999 }: PincodeCheckerPr
               }
             }}
             placeholder="Enter 6-digit Pincode (e.g. 560001)"
-            className="border-brand-border text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-accent focus:ring-brand-accent w-full rounded-lg border bg-white px-3.5 py-2 text-xs focus:ring-1 focus:outline-none"
+            className="border-brand-border text-brand-dark placeholder:text-brand-subtle focus:border-brand-accent focus:ring-brand-accent w-full rounded-lg border bg-white px-3.5 py-2 text-xs focus:ring-1 focus:outline-none"
           />
         </div>
         <button
@@ -85,7 +85,7 @@ export function PincodeChecker({ freeShippingThreshold = 999 }: PincodeCheckerPr
       )}
 
       {status === "idle" && (
-        <p className="text-brand-dark/50 mt-2 text-[11px]">
+        <p className="text-brand-muted mt-2 text-[11px]">
           Pre-paid orders above {formatCurrency(freeShippingThreshold)} qualify for free delivery.
         </p>
       )}

@@ -28,7 +28,7 @@ export function WishlistView({ initialProducts }: WishlistViewProps) {
           <h2 className="font-heading text-xl sm:text-2xl font-semibold text-brand-dark">
             Saved Wishlist
           </h2>
-          <p className="text-xs text-brand-dark/70 font-sans">
+          <p className="text-xs text-brand-muted font-sans">
             {products.length === 0
               ? "No saved items"
               : products.length === 1
@@ -60,7 +60,7 @@ export function WishlistView({ initialProducts }: WishlistViewProps) {
             <h3 className="font-heading text-lg font-semibold text-brand-dark">
               Your Wishlist is Empty
             </h3>
-            <p className="text-xs text-brand-dark/65 leading-relaxed font-sans">
+            <p className="text-xs text-brand-muted leading-relaxed font-sans">
               Save your favorite kurtas, coord sets, and contemporary dresses by tapping the heart icon on any product.
             </p>
           </div>

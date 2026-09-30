@@ -152,7 +152,7 @@ export function ProductDetailView({
       {/* 1. Breadcrumbs */}
       <nav
         aria-label="Breadcrumbs"
-        className="text-brand-dark/60 flex items-center gap-1.5 font-sans text-xs"
+        className="text-brand-muted flex items-center gap-1.5 font-sans text-xs"
       >
         <Link href="/" className="hover:text-brand-accent transition-colors">
           Home
@@ -200,7 +200,7 @@ export function ProductDetailView({
           {/* Category Subtitle & Title */}
           <div className="space-y-1.5">
             {product.category_name && (
-              <span className="text-brand-accent text-[11px] font-semibold tracking-widest uppercase">
+              <span className="text-brand-accent-dark text-[11px] font-semibold tracking-widest uppercase">
                 {product.category_name}
               </span>
             )}
@@ -243,7 +243,7 @@ export function ProductDetailView({
             </span>
             {isSale && compareAtPrice && (
               <>
-                <span className="text-brand-dark/50 text-base line-through">
+                <span className="text-brand-subtle text-base line-through">
                   {formatCurrency(compareAtPrice)}
                 </span>
                 <span className="bg-brand-rose/15 text-brand-rose rounded-full px-2.5 py-0.5 text-xs font-bold">
@@ -251,14 +251,14 @@ export function ProductDetailView({
                 </span>
               </>
             )}
-            <div className="text-brand-dark/60 w-full text-[11px]">
+            <div className="text-brand-muted w-full text-[11px]">
               Inclusive of all taxes & duties &bull; Free shipping over {formatCurrency(freeShippingThreshold)}
             </div>
           </div>
 
           {/* Short Description */}
           {product.description && (
-            <div className="text-brand-dark/80 text-xs leading-relaxed sm:text-sm">
+            <div className="text-brand-muted text-xs leading-relaxed sm:text-sm">
               <p
                 className={
                   !isDescriptionExpanded && product.description.length > 150 ? "line-clamp-2" : ""
@@ -284,7 +284,7 @@ export function ProductDetailView({
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-brand-dark font-semibold">
-                    Color: <span className="text-brand-dark/80 font-normal">{selectedColor}</span>
+                    Color: <span className="text-brand-muted font-normal">{selectedColor}</span>
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
@@ -319,16 +319,25 @@ export function ProductDetailView({
               <div className="flex items-center justify-between text-xs">
                 <span className="text-brand-dark font-semibold">
                   Select Size:{" "}
-                  <span className="text-brand-dark/80 font-normal">{selectedSize}</span>
+                  <span className="text-brand-muted font-normal">{selectedSize}</span>
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setIsSizeGuideOpen(true)}
-                  className="text-brand-accent flex items-center gap-1 font-semibold underline-offset-2 transition-colors hover:underline"
-                >
-                  <Sparkles className="text-brand-gold h-3 w-3" />
-                  Size Guide
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsSizeGuideOpen(true)}
+                    className="text-brand-accent flex items-center gap-1 font-semibold underline-offset-2 transition-colors hover:underline"
+                  >
+                    <Sparkles className="text-brand-accent h-3 w-3" />
+                    Size Guide
+                  </button>
+                  <span className="text-brand-border text-xs">&bull;</span>
+                  <Link
+                    href="/size-guide"
+                    className="text-brand-muted hover:text-brand-dark text-xs underline underline-offset-2 transition-colors"
+                  >
+                    View full size guide
+                  </Link>
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -347,7 +356,7 @@ export function ProductDetailView({
                           ? "border-brand-dark bg-brand-dark text-white shadow-xs"
                           : isStocked
                             ? "border-brand-border text-brand-dark hover:border-brand-dark hover:bg-brand-light/20 bg-white"
-                            : "border-brand-border/60 bg-brand-light/30 text-brand-dark/40 cursor-pointer line-through"
+                            : "border-brand-border/60 bg-brand-light/30 text-brand-subtle cursor-pointer line-through"
                       }`}
                       title={!isStocked ? "Currently out of stock in this color" : undefined}
                     >
@@ -407,7 +416,7 @@ export function ProductDetailView({
                       <Plus className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <span className="text-brand-dark/50 text-[11px]">
+                  <span className="text-brand-muted text-[11px]">
                     (Max {Math.min(maxStock, 10)} per order)
                   </span>
                 </div>
@@ -433,7 +442,7 @@ export function ProductDetailView({
                 disabled={!isAvailable}
                 className="border-brand-dark text-brand-dark hover:bg-brand-light/40 flex w-full items-center justify-center gap-2 rounded-xl border bg-white px-6 py-3.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50"
               >
-                <Zap className="text-brand-gold fill-brand-gold h-4 w-4" />
+                <Zap className="text-brand-accent fill-brand-accent h-4 w-4" />
                 <span>Buy Now with 1-Click</span>
               </button>
             </div>
@@ -456,12 +465,12 @@ export function ProductDetailView({
 
             {/* Trust Badges Row */}
             <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="border-brand-border/60 text-brand-dark/80 flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]">
-                <ShieldCheck className="text-brand-gold h-4 w-4 shrink-0" />
+              <div className="border-brand-border/60 text-brand-muted flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]">
+                <ShieldCheck className="text-brand-accent h-4 w-4 shrink-0" />
                 <span>Quality Checked</span>
               </div>
-              <div className="border-brand-border/60 text-brand-dark/80 flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]">
-                <RotateCcw className="text-brand-gold h-4 w-4 shrink-0" />
+              <div className="border-brand-border/60 text-brand-muted flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]">
+                <RotateCcw className="text-brand-accent h-4 w-4 shrink-0" />
                 <span>{`${returnWindowDays}-Day Returns`}</span>
               </div>
             </div>

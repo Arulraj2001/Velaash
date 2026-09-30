@@ -37,7 +37,7 @@ export function ProductSort() {
 
   return (
     <div className="flex items-center gap-2 font-sans text-xs">
-      <label htmlFor="catalog-sort" className="text-brand-dark/60 hidden font-medium sm:inline">
+      <label htmlFor="catalog-sort" className="text-brand-muted hidden font-medium sm:inline">
         Sort by:
       </label>
       <div className="relative inline-flex items-center">
@@ -53,7 +53,7 @@ export function ProductSort() {
             </option>
           ))}
         </select>
-        <ArrowUpDown className="text-brand-dark/50 pointer-events-none absolute right-2.5 h-3.5 w-3.5" />
+        <ArrowUpDown className="text-brand-muted pointer-events-none absolute right-2.5 h-3.5 w-3.5" />
       </div>
     </div>
   );

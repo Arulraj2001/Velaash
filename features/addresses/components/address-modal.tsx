@@ -112,14 +112,14 @@ function AddressFormModalInner({
             <h3 className="font-heading text-xl font-semibold text-brand-dark">
               {isEditing ? "Edit Delivery Address" : "Add New Delivery Address"}
             </h3>
-            <p className="text-xs text-brand-dark/60 font-sans">
+            <p className="text-xs text-brand-muted font-sans">
               Enter recipient contact details and doorstep delivery destination.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-full text-brand-dark/60 hover:text-brand-dark hover:bg-brand-cream/80 transition-colors"
+            className="p-1.5 rounded-full text-brand-muted hover:text-brand-dark hover:bg-brand-cream/80 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -152,7 +152,7 @@ function AddressFormModalInner({
                   className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-medium border transition-all ${
                     formData.addressType === type
                       ? "border-brand-gold bg-brand-gold/15 text-brand-dark font-semibold shadow-xs"
-                      : "border-brand-border/80 text-brand-dark/70 hover:bg-brand-cream/50"
+                      : "border-brand-border/80 text-brand-muted hover:bg-brand-cream/50"
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
@@ -173,7 +173,7 @@ function AddressFormModalInner({
                 placeholder="e.g. Priya Sundaram"
                 value={formData.fullName}
                 onChange={(e) => handleChange("fullName", e.target.value)}
-                className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:ring-1 transition-all ${
+                className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-subtle focus:outline-none focus:ring-1 transition-all ${
                   errors.fullName
                     ? "border-rose-400 focus:ring-rose-500 bg-rose-50/20"
                     : "border-brand-border/80 focus:border-brand-gold focus:ring-brand-gold"
@@ -191,7 +191,7 @@ function AddressFormModalInner({
                 Phone Number (10 digits) <span className="text-rose-500">*</span>
               </label>
               <div className="flex">
-                <span className="inline-flex items-center px-2.5 rounded-l-xl border border-r-0 border-brand-border/80 bg-brand-cream/50 text-xs text-brand-dark/70 font-mono">
+                <span className="inline-flex items-center px-2.5 rounded-l-xl border border-r-0 border-brand-border/80 bg-brand-cream/50 text-xs text-brand-muted font-mono">
                   +91
                 </span>
                 <input
@@ -200,7 +200,7 @@ function AddressFormModalInner({
                   value={formData.phone}
                   onChange={(e) => handleChange("phone", e.target.value)}
                   maxLength={10}
-                  className={`w-full px-3 py-2 rounded-r-xl border text-xs text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:ring-1 transition-all ${
+                  className={`w-full px-3 py-2 rounded-r-xl border text-xs text-brand-dark placeholder:text-brand-subtle focus:outline-none focus:ring-1 transition-all ${
                     errors.phone
                       ? "border-rose-400 focus:ring-rose-500 bg-rose-50/20"
                       : "border-brand-border/80 focus:border-brand-gold focus:ring-brand-gold"
@@ -225,7 +225,7 @@ function AddressFormModalInner({
               placeholder="e.g. Flat 4B, Ananya Heights"
               value={formData.addressLine1}
               onChange={(e) => handleChange("addressLine1", e.target.value)}
-              className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:ring-1 transition-all ${
+              className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-subtle focus:outline-none focus:ring-1 transition-all ${
                 errors.addressLine1
                   ? "border-rose-400 focus:ring-rose-500 bg-rose-50/20"
                   : "border-brand-border/80 focus:border-brand-gold focus:ring-brand-gold"
@@ -241,14 +241,14 @@ function AddressFormModalInner({
           {/* Address Line 2 (Optional) */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-brand-dark">
-              Street, Area, Landmark <span className="text-brand-dark/50 text-[11px] font-normal">(Optional)</span>
+              Street, Area, Landmark <span className="text-brand-subtle text-[11px] font-normal">(Optional)</span>
             </label>
             <input
               type="text"
               placeholder="e.g. Near Lakshmi Mills Junction, Avinashi Road"
               value={formData.addressLine2 || ""}
               onChange={(e) => handleChange("addressLine2", e.target.value)}
-              className="w-full px-3.5 py-2 rounded-xl border border-brand-border/80 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition-all"
+              className="w-full px-3.5 py-2 rounded-xl border border-brand-border/80 text-xs text-brand-dark placeholder:text-brand-subtle focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold transition-all"
             />
           </div>
 
@@ -263,7 +263,7 @@ function AddressFormModalInner({
                 placeholder="e.g. Coimbatore"
                 value={formData.city}
                 onChange={(e) => handleChange("city", e.target.value)}
-                className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:ring-1 transition-all ${
+                className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-subtle focus:outline-none focus:ring-1 transition-all ${
                   errors.city
                     ? "border-rose-400 focus:ring-rose-500 bg-rose-50/20"
                     : "border-brand-border/80 focus:border-brand-gold focus:ring-brand-gold"
@@ -286,7 +286,7 @@ function AddressFormModalInner({
                 value={formData.pincode}
                 onChange={(e) => handleChange("pincode", e.target.value)}
                 maxLength={6}
-                className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-dark/40 focus:outline-none focus:ring-1 transition-all ${
+                className={`w-full px-3.5 py-2 rounded-xl border text-xs text-brand-dark placeholder:text-brand-subtle focus:outline-none focus:ring-1 transition-all ${
                   errors.pincode
                     ? "border-rose-400 focus:ring-rose-500 bg-rose-50/20"
                     : "border-brand-border/80 focus:border-brand-gold focus:ring-brand-gold"
@@ -338,7 +338,7 @@ function AddressFormModalInner({
                   Set as default delivery address
                 </span>
                 {totalAddressesCount === 0 && (
-                  <span className="text-[11px] text-brand-dark/50 block">
+                  <span className="text-[11px] text-brand-muted block">
                     Your first address is automatically set as the default.
                   </span>
                 )}

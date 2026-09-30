@@ -80,7 +80,7 @@ export default async function AccountPage() {
         {/* Card 1: Total Orders */}
         <Card className="p-5 bg-white border border-brand-border/70 hover:border-brand-gold/60 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-brand-dark/60">
+            <span className="text-xs font-semibold uppercase tracking-wider text-brand-muted">
               Total Orders
             </span>
             <div className="p-2 rounded-lg bg-brand-light/30 text-brand-dark">
@@ -103,7 +103,7 @@ export default async function AccountPage() {
         {/* Card 2: Active Orders */}
         <Card className="p-5 bg-white border border-brand-border/70 hover:border-brand-gold/60 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-brand-dark/60">
+            <span className="text-xs font-semibold uppercase tracking-wider text-brand-muted">
               Active Orders
             </span>
             <div className="p-2 rounded-lg bg-emerald-50 text-emerald-700">
@@ -123,7 +123,7 @@ export default async function AccountPage() {
         {/* Card 3: Membership Status */}
         <Card className="p-5 bg-white border border-brand-border/70 hover:border-brand-gold/60 transition-colors">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-brand-dark/60">
+            <span className="text-xs font-semibold uppercase tracking-wider text-brand-muted">
               Membership
             </span>
             <div className="p-2 rounded-lg bg-brand-gold/20 text-brand-dark">
@@ -148,7 +148,7 @@ export default async function AccountPage() {
             <h2 className="font-heading text-xl font-semibold text-brand-dark">
               Recent Orders
             </h2>
-            <p className="text-xs text-brand-dark/60">
+            <p className="text-xs text-brand-muted">
               Preview of your most recent apparel purchases and delivery states.
             </p>
           </div>
@@ -165,14 +165,14 @@ export default async function AccountPage() {
 
         {orders.length === 0 ? (
           <div className="py-12 text-center space-y-4">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-light/30 text-brand-dark/60">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-light/30 text-brand-muted">
               <ShoppingBag className="h-7 w-7" />
             </div>
             <div className="space-y-1">
               <h3 className="font-heading text-lg font-medium text-brand-dark">
                 No orders yet
               </h3>
-              <p className="text-xs text-brand-dark/60 max-w-sm mx-auto">
+              <p className="text-xs text-brand-muted max-w-sm mx-auto">
                 Explore our handcrafted Indian ethnic wear, festive ensembles, and breezy everyday luxury.
               </p>
             </div>
@@ -208,7 +208,7 @@ export default async function AccountPage() {
                           className="object-cover object-top"
                         />
                       ) : (
-                        <div className="h-full w-full flex items-center justify-center text-brand-dark/40">
+                        <div className="h-full w-full flex items-center justify-center text-brand-subtle">
                           <Package className="h-6 w-6" />
                         </div>
                       )}
@@ -223,16 +223,16 @@ export default async function AccountPage() {
                         <OrderStatusBadge status={order.status} size="sm" />
                       </div>
 
-                      <p className="text-xs text-brand-dark/80 line-clamp-1">
+                      <p className="text-xs text-brand-muted line-clamp-1">
                         {order.firstItemTitle || "Ethnic apparel ensemble"}
                         {order.itemCount > 1 && (
-                          <span className="text-brand-dark/50 ml-1">
+                          <span className="text-brand-muted ml-1">
                             +{order.itemCount - 1} more item{order.itemCount > 2 ? "s" : ""}
                           </span>
                         )}
                       </p>
 
-                      <p className="text-[11px] text-brand-dark/50">
+                      <p className="text-[11px] text-brand-muted">
                         Placed on {formattedDate}
                       </p>
                     </div>

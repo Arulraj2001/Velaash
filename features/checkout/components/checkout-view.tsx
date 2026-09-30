@@ -123,13 +123,13 @@ export function CheckoutView({
         saveAddress: false,
       },
       shippingMethod: "standard",
-      paymentMethod: "razorpay",
+      paymentMethod: siteSettings.paymentSettings.razorpay_enabled ? "razorpay" : "cod",
       appliedCouponCode: appliedCoupon?.code || null,
       idempotencyKey,
     },
   });
 
-  const selectedPaymentMethod = useWatch({ control, name: "paymentMethod" }) || "razorpay";
+  const selectedPaymentMethod = useWatch({ control, name: "paymentMethod" }) || (siteSettings.paymentSettings.razorpay_enabled ? "razorpay" : "cod");
 
   // Calculate live preview totals
   const pricingCalculation = calculateCartTotals({
@@ -378,10 +378,10 @@ export function CheckoutView({
     return (
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-cream">
-          <ShoppingBag className="h-8 w-8 text-brand-dark/50" />
+          <ShoppingBag className="h-8 w-8 text-brand-muted" />
         </div>
         <h1 className="font-heading text-xl font-medium text-brand-dark">Your bag is empty</h1>
-        <p className="mt-2 text-xs text-brand-dark/60">Redirecting to cart...</p>
+        <p className="mt-2 text-xs text-brand-muted">Redirecting to cart...</p>
         <Link
           href="/shop"
           className="mt-6 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-brand-dark underline"
@@ -401,7 +401,7 @@ export function CheckoutView({
           <h1 className="font-heading text-2xl sm:text-3xl font-normal text-brand-dark tracking-tight">
             Checkout
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-brand-dark/60">
+          <p className="mt-1 text-xs sm:text-sm text-brand-muted">
             Complete your order with secure shipping and payment
           </p>
         </div>
@@ -493,6 +493,7 @@ export function CheckoutView({
               codEnabled={siteSettings.paymentSettings.cod_enabled}
               codMaxOrderValue={siteSettings.paymentSettings.cod_max_order_value}
               codHandlingFee={siteSettings.paymentSettings.cod_handling_fee}
+              razorpayEnabled={siteSettings.paymentSettings.razorpay_enabled}
             />
           </div>
 

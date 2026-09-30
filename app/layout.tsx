@@ -23,65 +23,97 @@ const plusJakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: `${BRAND.name} | Modern Everyday Luxury & Contemporary Clothing`,
-    template: `%s | ${BRAND.name}`,
-  },
-  description: BRAND.description,
-  keywords: [
-    "Velaash",
-    "Contemporary Clothing",
-    "Kurtas and Sets",
-    "Designer Dresses",
-    "Co-ord Sets",
-    "Contemporary Womenswear",
-    "VELAASH TRADER'S",
-  ],
-  authors: [{ name: BRAND.legalName }],
-  openGraph: {
-    title: `${BRAND.name} | Modern Everyday Luxury & Contemporary Clothing`,
-    description: BRAND.description,
-    siteName: BRAND.name,
-    locale: "en_IN",
-    type: "website",
-  },
-};
+import { getSiteSettings } from "@/features/settings";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { storeProfile, seoDefaults } = await getSiteSettings();
+  const brandName = storeProfile.name || BRAND.name;
+  const titleDefault = seoDefaults.meta_title || `${brandName} | Modern Everyday Luxury & Contemporary Clothing`;
+  const descriptionDefault = seoDefaults.meta_description || BRAND.description;
+
+  return {
+    title: {
+      default: titleDefault,
+      template: `%s | ${brandName}`,
+    },
+    description: descriptionDefault,
+    keywords: [
+      brandName,
+      storeProfile.legal_name || BRAND.legalName,
+      "Contemporary Clothing",
+      "Kurtas and Sets",
+      "Designer Dresses",
+      "Co-ord Sets",
+      "Contemporary Womenswear",
+      "VELAASH TRADER'S",
+    ],
+    authors: [{ name: storeProfile.legal_name || BRAND.legalName }],
+    icons: {
+      icon: storeProfile.favicon_url || "/favicon.ico",
+    },
+    openGraph: {
+      title: titleDefault,
+      description: descriptionDefault,
+      siteName: brandName,
+      locale: "en_IN",
+      type: "website",
+    },
+  };
+}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Detect admin routes via the x-pathname header injected by middleware.
+  // Admin pages have their own sidebar + topbar shell — no customer nav/footer needed.
+  let isAdminRoute = false;
+  try {
+    const { headers } = await import("next/headers");
+    const headersList = await headers();
+    const pathname = headersList.get("x-pathname") ?? "";
+    isAdminRoute = pathname.startsWith("/admin");
+  } catch {
+    // Outside request context — default to showing the customer shell
+  }
+
   let initialUser = null;
   let initialWishlistIds: string[] = [];
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    initialUser = user;
-    if (user) {
-      initialWishlistIds = await getWishlistProductIds(user.id);
+  if (!isAdminRoute) {
+    try {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      initialUser = user;
+      if (user) {
+        initialWishlistIds = await getWishlistProductIds(user.id);
+      }
+    } catch (error: unknown) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "digest" in error &&
+        (error as { digest: string }).digest === "DYNAMIC_SERVER_USAGE"
+      ) {
+        throw error;
+      }
+      initialUser = null;
     }
-  } catch (error: unknown) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "digest" in error &&
-      (error as { digest: string }).digest === "DYNAMIC_SERVER_USAGE"
-    ) {
-      throw error;
-    }
-    initialUser = null;
   }
 
   return (
     <html lang="en" className={`${cormorant.variable} ${plusJakarta.variable} scroll-smooth`}>
       <body className="bg-brand-cream text-brand-dark selection:bg-brand-gold selection:text-brand-dark flex min-h-screen flex-col font-sans antialiased">
-        <AuthProvider initialUser={initialUser}>
-          <WishlistSync initialWishlistIds={initialWishlistIds} />
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <CartToast />
-        </AuthProvider>
+        {isAdminRoute ? (
+          // Admin shell: no customer header/footer — admin/layout.tsx handles its own chrome
+          <>{children}</>
+        ) : (
+          <AuthProvider initialUser={initialUser}>
+            <WishlistSync initialWishlistIds={initialWishlistIds} />
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <CartToast />
+          </AuthProvider>
+        )}
       </body>
     </html>
   );

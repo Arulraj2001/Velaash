@@ -229,13 +229,13 @@ export function CartView({ shippingPolicy, returnWindowDays }: CartViewProps) {
           <h1 className="font-heading text-2xl sm:text-3xl font-normal text-brand-dark tracking-tight">
             Shopping Bag
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-brand-dark/60">
+          <p className="mt-1 text-xs sm:text-sm text-brand-muted">
             {totalItemCount} {totalItemCount === 1 ? "item" : "items"} currently in your bag
           </p>
         </div>
 
         {isValidating && (
-          <div className="flex items-center gap-1.5 text-xs text-brand-dark/50">
+          <div className="flex items-center gap-1.5 text-xs text-brand-muted">
             <RefreshCw className="h-3.5 w-3.5 animate-spin" />
             <span>Verifying stock &amp; pricing...</span>
           </div>

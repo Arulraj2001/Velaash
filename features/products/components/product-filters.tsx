@@ -110,10 +110,10 @@ export function ProductFilters({
               <li key={cat.slug}>
                 <Link
                   href={`/category/${cat.slug}`}
-                  className="text-brand-dark/70 hover:text-brand-accent flex items-center justify-between py-1 transition-colors"
+                  className="text-brand-muted hover:text-brand-accent flex items-center justify-between py-1 transition-colors"
                 >
                   <span>{cat.name}</span>
-                  <span className="text-brand-dark/40 font-mono text-[11px]">({cat.count})</span>
+                  <span className="text-brand-muted font-mono text-[11px]">({cat.count})</span>
                 </Link>
               </li>
             ))}
@@ -167,7 +167,7 @@ export function ProductFilters({
                   className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xs transition-all ${
                     isSelected
                       ? "border-brand-accent bg-brand-light/30 text-brand-dark ring-brand-accent/50 font-medium ring-1"
-                      : "border-brand-border/70 text-brand-dark/80 hover:border-brand-gold bg-white/60"
+                      : "border-brand-border/70 text-brand-muted hover:border-brand-gold bg-white/60"
                   }`}
                   aria-pressed={isSelected}
                 >
@@ -194,7 +194,7 @@ export function ProductFilters({
             return (
               <label
                 key={range.label}
-                className="text-brand-dark/80 hover:text-brand-dark flex cursor-pointer items-center gap-2.5 py-1 text-xs"
+                className="text-brand-muted hover:text-brand-dark flex cursor-pointer items-center gap-2.5 py-1 text-xs"
               >
                 <input
                   type="radio"

@@ -114,7 +114,7 @@ export function ShippingAddressStep({
           <button
             type="button"
             onClick={() => handleSelectSavedAddress(savedAddresses[0])}
-            className="text-xs font-semibold text-brand-dark/70 hover:text-brand-dark underline transition-colors"
+            className="text-xs font-semibold text-brand-muted hover:text-brand-dark underline transition-colors"
           >
             Use Saved Address
           </button>
@@ -155,14 +155,14 @@ export function ShippingAddressStep({
                   </div>
 
                   <p className="mt-2 text-sm font-semibold text-brand-dark">{addr.fullName}</p>
-                  <p className="text-xs text-brand-dark/70 mt-1 leading-relaxed">
+                  <p className="text-xs text-brand-muted mt-1 leading-relaxed">
                     {addr.addressLine1}
                     {addr.addressLine2 ? `, ${addr.addressLine2}` : ""}
                   </p>
-                  <p className="text-xs text-brand-dark/70">
+                  <p className="text-xs text-brand-muted">
                     {addr.city}, {addr.state} - {addr.pincode}
                   </p>
-                  <p className="text-xs text-brand-dark/60 mt-1.5">Phone: +91 {addr.phone}</p>
+                  <p className="text-xs text-brand-muted mt-1.5">Phone: +91 {addr.phone}</p>
                 </div>
 
                 <div className="mt-3 flex items-center justify-between pt-2 border-t border-brand-border/40">
@@ -196,7 +196,7 @@ export function ShippingAddressStep({
                 autoComplete="name"
                 placeholder="Receiver's name"
                 {...register("shippingAddress.fullName")}
-                className={`w-full rounded-none border px-3 py-2 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${
+                className={`w-full rounded-none border px-3 py-2 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${
                   errors.shippingAddress?.fullName
                     ? "border-red-500 bg-red-50/20"
                     : "border-brand-border/80 bg-white"
@@ -213,7 +213,7 @@ export function ShippingAddressStep({
                 Delivery Phone <span className="text-red-600">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-xs font-medium text-brand-dark/60 select-none">
+                <span className="absolute left-3 top-2 text-xs font-medium text-brand-muted select-none">
                   +91
                 </span>
                 <input
@@ -223,7 +223,7 @@ export function ShippingAddressStep({
                   autoComplete="tel"
                   placeholder="9876543210"
                   {...register("shippingAddress.phone")}
-                  className={`w-full rounded-none border px-3 py-2 pl-12 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${
+                  className={`w-full rounded-none border px-3 py-2 pl-12 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${
                     errors.shippingAddress?.phone
                       ? "border-red-500 bg-red-50/20"
                       : "border-brand-border/80 bg-white"
@@ -247,7 +247,7 @@ export function ShippingAddressStep({
               autoComplete="street-address"
               placeholder="e.g. Flat 302, Royal Palms, 5th Cross"
               {...register("shippingAddress.addressLine1")}
-              className={`w-full rounded-none border px-3 py-2 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${
+              className={`w-full rounded-none border px-3 py-2 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${
                 errors.shippingAddress?.addressLine1
                   ? "border-red-500 bg-red-50/20"
                   : "border-brand-border/80 bg-white"
@@ -261,14 +261,14 @@ export function ShippingAddressStep({
           {/* Address Line 2 */}
           <div>
             <label htmlFor="address-line2" className="block text-xs font-semibold uppercase tracking-wider text-brand-dark mb-1.5">
-              Area, Colony, Sector, Landmark <span className="text-brand-dark/40 font-normal">(Optional)</span>
+              Area, Colony, Sector, Landmark <span className="text-brand-subtle font-normal">(Optional)</span>
             </label>
             <input
               id="address-line2"
               type="text"
               placeholder="e.g. Near City Center Mall"
               {...register("shippingAddress.addressLine2")}
-              className="w-full rounded-none border border-brand-border/80 bg-white px-3 py-2 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors"
+              className="w-full rounded-none border border-brand-border/80 bg-white px-3 py-2 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors"
             />
           </div>
 
@@ -287,13 +287,13 @@ export function ShippingAddressStep({
                   autoComplete="postal-code"
                   placeholder="560001"
                   {...register("shippingAddress.pincode")}
-                  className={`w-full rounded-none border px-3 py-2 pl-8 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${
+                  className={`w-full rounded-none border px-3 py-2 pl-8 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${
                     errors.shippingAddress?.pincode
                       ? "border-red-500 bg-red-50/20"
                       : "border-brand-border/80 bg-white"
                   }`}
                 />
-                <MapPin className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-brand-dark/40" />
+                <MapPin className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-brand-muted" />
               </div>
               {errors.shippingAddress?.pincode && (
                 <p className="mt-1 text-[11px] text-red-600">{errors.shippingAddress.pincode.message}</p>
@@ -311,7 +311,7 @@ export function ShippingAddressStep({
                 autoComplete="address-level2"
                 placeholder="Bengaluru"
                 {...register("shippingAddress.city")}
-                className={`w-full rounded-none border px-3 py-2 text-xs text-brand-dark placeholder:text-brand-dark/40 focus:border-brand-dark focus:outline-none transition-colors ${
+                className={`w-full rounded-none border px-3 py-2 text-xs text-brand-dark placeholder:text-brand-subtle focus:border-brand-dark focus:outline-none transition-colors ${
                   errors.shippingAddress?.city
                     ? "border-red-500 bg-red-50/20"
                     : "border-brand-border/80 bg-white"
@@ -386,7 +386,7 @@ export function ShippingAddressStep({
                   {...register("shippingAddress.saveAddress")}
                   className="h-4 w-4 rounded border-brand-border text-brand-dark focus:ring-brand-accent"
                 />
-                <span className="text-xs text-brand-dark/80">Save this address to my profile</span>
+                <span className="text-xs text-brand-muted">Save this address to my profile</span>
               </label>
             )}
           </div>

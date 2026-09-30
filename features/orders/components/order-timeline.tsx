@@ -149,7 +149,7 @@ export function OrderTimeline({ currentStatus, history, createdAt }: OrderTimeli
                     "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition-colors relative z-10",
                     isCompleted && "border-brand-gold bg-brand-gold text-brand-dark shadow-sm",
                     isCurrent && "border-brand-gold bg-brand-cream text-brand-dark ring-4 ring-brand-gold/20 shadow-sm",
-                    isFuture && "border-brand-border/80 bg-white text-brand-dark/40"
+                    isFuture && "border-brand-border/80 bg-white text-brand-subtle"
                   )}
                 >
                   {isCompleted ? (
@@ -164,12 +164,12 @@ export function OrderTimeline({ currentStatus, history, createdAt }: OrderTimeli
                   <p
                     className={cn(
                       "text-xs font-semibold tracking-wide",
-                      isCurrent ? "text-brand-dark font-bold" : isCompleted ? "text-brand-dark" : "text-brand-dark/50"
+                      isCurrent ? "text-brand-dark font-bold" : isCompleted ? "text-brand-dark" : "text-brand-muted"
                     )}
                   >
                     {step.label}
                   </p>
-                  <p className="text-[11px] text-brand-dark/60 leading-tight hidden sm:block max-w-[140px]">
+                  <p className="text-[11px] text-brand-muted leading-tight hidden sm:block max-w-[140px]">
                     {step.description}
                   </p>
                   {eventTime && (isCompleted || isCurrent) && (

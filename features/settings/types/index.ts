@@ -19,8 +19,7 @@ export interface SocialLinksSetting {
 
 /**
  * Shipping policy configuration
- * NOTE: Placeholder default values.
- * TODO: Confirm actual free shipping threshold with client (VELAASH TRADER'S) before launch.
+ * Single source of truth across Cart, Checkout, and PDP.
  */
 export interface ShippingPolicySetting {
   free_shipping_threshold: number;
@@ -29,8 +28,7 @@ export interface ShippingPolicySetting {
 
 /**
  * Returns and exchanges policy configuration
- * NOTE: Placeholder default values.
- * TODO: Confirm actual return window and terms with client (VELAASH TRADER'S) before launch.
+ * Single source of truth across PDP accordion, cart badges, and returns pages.
  */
 export interface ReturnsPolicySetting {
   return_window_days: number;
@@ -39,7 +37,6 @@ export interface ReturnsPolicySetting {
 
 /**
  * Top notification announcement bar
- * TODO: Real promotions, coupons, or banners must be configured by client in admin before launch.
  */
 export interface AnnouncementSetting {
   is_enabled: boolean;
@@ -57,6 +54,24 @@ export interface PaymentPolicySetting {
   cod_handling_fee: number;
 }
 
+/**
+ * Tax and Indian GST configuration
+ * Feeds invoice PDF generation (Tax Invoice vs Bill of Supply).
+ */
+export interface TaxPolicySetting {
+  gst_enabled: boolean;
+  gstin: string | null;
+  default_gst_rate?: number;
+}
+
+/**
+ * Site-wide SEO fallback configuration
+ */
+export interface SeoDefaultsSetting {
+  meta_title: string;
+  meta_description: string;
+}
+
 export interface SiteSettingsData {
   storeProfile: StoreProfileSetting;
   socialLinks: SocialLinksSetting;
@@ -64,4 +79,8 @@ export interface SiteSettingsData {
   returnsPolicy: ReturnsPolicySetting;
   announcement: AnnouncementSetting;
   paymentSettings: PaymentPolicySetting;
+  taxSettings: TaxPolicySetting;
+  seoDefaults: SeoDefaultsSetting;
 }
+
+export type SiteSettings = SiteSettingsData;

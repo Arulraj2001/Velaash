@@ -8,20 +8,17 @@ import type {
   ReturnsPolicySetting,
   AnnouncementSetting,
   PaymentPolicySetting,
+  TaxPolicySetting,
+  SeoDefaultsSetting,
 } from "../types";
 
-/**
- * TODO: [PRE-LAUNCH VERIFICATION REQUIRED WITH CLIENT: VELAASH TRADER'S]
- * The free shipping threshold (₹999) and return window (7 days) are placeholder defaults.
- * Confirm actual business terms and policies with the client before launch.
- */
 export const DEFAULT_SHIPPING_POLICY: ShippingPolicySetting = {
-  free_shipping_threshold: 999, // Placeholder default — MUST be confirmed by client
+  free_shipping_threshold: 999,
   standard_shipping_fee: 100,
 };
 
 export const DEFAULT_RETURNS_POLICY: ReturnsPolicySetting = {
-  return_window_days: 7, // Placeholder default — MUST be confirmed by client
+  return_window_days: 7,
   policy_description:
     "We accept size exchanges and returns within 7 calendar days of receipt for items that are unused, unaltered, and retained with original tags intact.",
 };
@@ -39,12 +36,23 @@ export const DEFAULT_PAYMENT_POLICY: PaymentPolicySetting = {
   cod_handling_fee: 99,
 };
 
+export const DEFAULT_TAX_POLICY: TaxPolicySetting = {
+  gst_enabled: true,
+  gstin: null,
+  default_gst_rate: 5.0,
+};
+
+export const DEFAULT_SEO_DEFAULTS: SeoDefaultsSetting = {
+  meta_title: "Velaash | Modern Everyday Luxury & Contemporary Clothing",
+  meta_description:
+    "Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe.",
+};
+
 export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   storeProfile: {
     name: BRAND.name,
     legal_name: BRAND.legalName,
     tagline: BRAND.tagline,
-    // Temporary contact email until a professional domain email is provisioned
     email: BRAND.contactEmail,
     phone: BRAND.supportPhone,
     whatsapp_number: BRAND.whatsappNumber,
@@ -60,14 +68,15 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   returnsPolicy: DEFAULT_RETURNS_POLICY,
   announcement: DEFAULT_ANNOUNCEMENT_SETTING,
   paymentSettings: DEFAULT_PAYMENT_POLICY,
+  taxSettings: DEFAULT_TAX_POLICY,
+  seoDefaults: DEFAULT_SEO_DEFAULTS,
 };
 
 /**
- * Server query function to fetch store profile, social links, announcement text, and policies
- * from the site_settings table in Supabase.
+ * Server query function to fetch store profile, social links, announcement text, policies,
+ * tax configuration, and SEO defaults from the site_settings table in Supabase.
  *
- * Editable via site_settings in Supabase or admin panel so policies and banners are dynamic.
- * Falls back safely to DEFAULT_SITE_SETTINGS during build prerendering or database offline.
+ * Single source of truth across the application.
  */
 export async function getSiteSettings(): Promise<SiteSettingsData> {
   try {
@@ -80,9 +89,12 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
         "store_profile",
         "social_links",
         "shipping_policy",
+        "shipping_rules",
         "returns_policy",
         "announcement_bar",
         "payment_settings",
+        "tax_settings",
+        "seo_defaults",
       ]);
 
     if (error || !data || data.length === 0) {
@@ -92,16 +104,24 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     const storeProfileRow = data.find((row) => row.key === "store_profile");
     const socialLinksRow = data.find((row) => row.key === "social_links");
     const shippingPolicyRow = data.find((row) => row.key === "shipping_policy");
+    const shippingRulesRow = data.find((row) => row.key === "shipping_rules");
     const returnsPolicyRow = data.find((row) => row.key === "returns_policy");
     const announcementRow = data.find((row) => row.key === "announcement_bar");
     const paymentSettingsRow = data.find((row) => row.key === "payment_settings");
+    const taxSettingsRow = data.find((row) => row.key === "tax_settings");
+    const seoDefaultsRow = data.find((row) => row.key === "seo_defaults");
 
     const rawStoreProfile = (storeProfileRow?.value as Partial<StoreProfileSetting>) || {};
     const rawSocialLinks = (socialLinksRow?.value as Partial<SocialLinksSetting>) || {};
-    const rawShippingPolicy = (shippingPolicyRow?.value as Partial<ShippingPolicySetting>) || {};
+    const rawShippingPolicy =
+      (shippingPolicyRow?.value as Partial<ShippingPolicySetting>) ||
+      (shippingRulesRow?.value as Record<string, unknown>) ||
+      {};
     const rawReturnsPolicy = (returnsPolicyRow?.value as Partial<ReturnsPolicySetting>) || {};
     const rawAnnouncement = (announcementRow?.value as Partial<AnnouncementSetting>) || {};
     const rawPayment = (paymentSettingsRow?.value as Partial<PaymentPolicySetting>) || {};
+    const rawTax = (taxSettingsRow?.value as Partial<TaxPolicySetting>) || {};
+    const rawSeo = (seoDefaultsRow?.value as Partial<SeoDefaultsSetting>) || {};
 
     const storeProfile: StoreProfileSetting = {
       name: rawStoreProfile.name || BRAND.name,
@@ -114,6 +134,8 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       whatsapp_url:
         rawStoreProfile.whatsapp_url ||
         `https://wa.me/${(rawStoreProfile.whatsapp_number || BRAND.whatsappNumber).replace(/\D/g, "")}`,
+      logo_url: rawStoreProfile.logo_url || "/brand/logo.svg",
+      favicon_url: rawStoreProfile.favicon_url || "/favicon.ico",
     };
 
     const socialLinks: SocialLinksSetting = {
@@ -124,24 +146,37 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       pinterest: rawSocialLinks.pinterest || BRAND.socialLinks.pinterest,
     };
 
+    // Free shipping threshold can come from free_shipping_threshold in shipping_policy or shipping_rules
+    const shippingRecord = rawShippingPolicy as Record<string, unknown>;
+    const freeShippingThresholdVal =
+      typeof shippingRecord.free_shipping_threshold === "number"
+        ? shippingRecord.free_shipping_threshold
+        : typeof shippingRecord.free_shipping_threshold === "string"
+          ? Number(shippingRecord.free_shipping_threshold)
+          : DEFAULT_SHIPPING_POLICY.free_shipping_threshold;
+
+    const standardShippingFeeVal =
+      typeof shippingRecord.standard_shipping_fee === "number"
+        ? shippingRecord.standard_shipping_fee
+        : typeof shippingRecord.standard_shipping_charge === "number"
+          ? (shippingRecord.standard_shipping_charge as number)
+          : DEFAULT_SHIPPING_POLICY.standard_shipping_fee;
+
     const shippingPolicy: ShippingPolicySetting = {
-      free_shipping_threshold:
-        typeof rawShippingPolicy.free_shipping_threshold === "number"
-          ? rawShippingPolicy.free_shipping_threshold
-          : DEFAULT_SHIPPING_POLICY.free_shipping_threshold,
-      standard_shipping_fee:
-        typeof rawShippingPolicy.standard_shipping_fee === "number"
-          ? rawShippingPolicy.standard_shipping_fee
-          : DEFAULT_SHIPPING_POLICY.standard_shipping_fee,
+      free_shipping_threshold: freeShippingThresholdVal,
+      standard_shipping_fee: standardShippingFeeVal,
     };
 
+    const returnsRecord = rawReturnsPolicy as Record<string, unknown>;
     const returnsPolicy: ReturnsPolicySetting = {
       return_window_days:
         typeof rawReturnsPolicy.return_window_days === "number"
           ? rawReturnsPolicy.return_window_days
           : DEFAULT_RETURNS_POLICY.return_window_days,
       policy_description:
-        rawReturnsPolicy.policy_description || DEFAULT_RETURNS_POLICY.policy_description,
+        rawReturnsPolicy.policy_description ||
+        (typeof returnsRecord.conditions === "string" ? returnsRecord.conditions : "") ||
+        DEFAULT_RETURNS_POLICY.policy_description,
     };
 
     const announcement: AnnouncementSetting = {
@@ -150,6 +185,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       link: rawAnnouncement.link || DEFAULT_ANNOUNCEMENT_SETTING.link,
     };
 
+    const paymentRecord = rawPayment as Record<string, unknown>;
     const paymentSettings: PaymentPolicySetting = {
       razorpay_enabled: rawPayment.razorpay_enabled ?? DEFAULT_PAYMENT_POLICY.razorpay_enabled,
       cod_enabled: rawPayment.cod_enabled ?? DEFAULT_PAYMENT_POLICY.cod_enabled,
@@ -160,7 +196,23 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       cod_handling_fee:
         typeof rawPayment.cod_handling_fee === "number"
           ? rawPayment.cod_handling_fee
-          : DEFAULT_PAYMENT_POLICY.cod_handling_fee,
+          : typeof paymentRecord.cod_fee === "number"
+            ? paymentRecord.cod_fee
+            : DEFAULT_PAYMENT_POLICY.cod_handling_fee,
+    };
+
+    const taxSettings: TaxPolicySetting = {
+      gst_enabled: rawTax.gst_enabled ?? DEFAULT_TAX_POLICY.gst_enabled,
+      gstin: rawTax.gstin ? String(rawTax.gstin).trim().toUpperCase() : null,
+      default_gst_rate:
+        typeof rawTax.default_gst_rate === "number"
+          ? rawTax.default_gst_rate
+          : DEFAULT_TAX_POLICY.default_gst_rate,
+    };
+
+    const seoDefaults: SeoDefaultsSetting = {
+      meta_title: rawSeo.meta_title || DEFAULT_SEO_DEFAULTS.meta_title,
+      meta_description: rawSeo.meta_description || DEFAULT_SEO_DEFAULTS.meta_description,
     };
 
     return {
@@ -170,6 +222,8 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       returnsPolicy,
       announcement,
       paymentSettings,
+      taxSettings,
+      seoDefaults,
     };
   } catch (error: unknown) {
     if (

@@ -34,7 +34,7 @@ export function OrderStatusFilter() {
 
   return (
     <div className="flex items-center gap-2">
-      <Filter className="h-4 w-4 text-brand-dark/50 shrink-0" />
+      <Filter className="h-4 w-4 text-brand-muted shrink-0" />
       <select
         id="order-status-filter-select"
         value={currentStatus}

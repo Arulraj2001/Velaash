@@ -9,7 +9,12 @@ import type { Database } from "@/types/database.types";
  * Used inside Server Components, Route Handlers, and Server Actions.
  */
 export async function createClient(): Promise<SupabaseClient<Database>> {
-  const cookieStore = await cookies();
+  let cookieStore: Awaited<ReturnType<typeof cookies>> | null = null;
+  try {
+    cookieStore = await cookies();
+  } catch {
+    // Outside request context (e.g. CLI tests, worker scripts)
+  }
 
   const client = createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
@@ -17,12 +22,13 @@ export async function createClient(): Promise<SupabaseClient<Database>> {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll();
+          return cookieStore ? cookieStore.getAll() : [];
         },
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+          if (!cookieStore) return;
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore!.set(name, value, options)
             );
           } catch {
             // The `setAll` method was called from a Server Component.

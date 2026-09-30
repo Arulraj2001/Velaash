@@ -72,14 +72,14 @@ export function AddressCard({
           <h3 className="font-heading text-base font-semibold text-brand-dark">
             {address.fullName}
           </h3>
-          <p className="flex items-center gap-1.5 text-xs text-brand-dark/70 font-sans">
-            <Phone className="h-3 w-3 text-brand-dark/50" />
+          <p className="flex items-center gap-1.5 text-xs text-brand-muted font-sans">
+            <Phone className="h-3 w-3 text-brand-muted" />
             <span>{address.phone}</span>
           </p>
         </div>
 
         {/* Address Lines */}
-        <div className="text-xs text-brand-dark/80 font-sans space-y-0.5 leading-relaxed pt-1">
+        <div className="text-xs text-brand-muted font-sans space-y-0.5 leading-relaxed pt-1">
           <p>{address.addressLine1}</p>
           {address.addressLine2 && <p>{address.addressLine2}</p>}
           <p>

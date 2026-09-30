@@ -24,7 +24,7 @@ export function AccountHeaderButton() {
   if (isLoading) {
     return (
       <div className="bg-brand-light/30 flex h-9 w-9 animate-pulse items-center justify-center rounded-full">
-        <User className="text-brand-dark/40 h-4 w-4" />
+        <User className="text-brand-muted h-4 w-4" />
       </div>
     );
   }
@@ -33,7 +33,7 @@ export function AccountHeaderButton() {
     return (
       <Link
         href="/account/login"
-        className="text-brand-dark/80 hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold flex items-center gap-1.5 rounded-full p-2 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+        className="text-brand-muted hover:text-brand-accent hover:bg-brand-light/30 focus-visible:ring-brand-gold flex items-center gap-1.5 rounded-full p-2 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
         aria-label="Sign In to Your Account"
         title="Sign In"
       >
@@ -63,7 +63,7 @@ export function AccountHeaderButton() {
         <span className="text-brand-dark hidden max-w-[100px] truncate text-xs font-medium lg:inline">
           {userIdentifier}
         </span>
-        <ChevronDown className="text-brand-dark/60 hidden h-3 w-3 lg:inline" />
+        <ChevronDown className="text-brand-muted hidden h-3 w-3 lg:inline" />
       </button>
 
       {/* Dropdown Menu */}

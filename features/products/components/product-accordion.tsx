@@ -41,20 +41,20 @@ export function ProductAccordion({
           className="flex w-full items-center justify-between py-4 text-left transition-colors hover:text-brand-accent focus:outline-none"
         >
           <div className="flex items-center gap-2.5">
-            <Sparkles className="h-4 w-4 text-brand-gold" />
+            <Sparkles className="h-4 w-4 text-brand-accent" />
             <span className="font-heading text-lg font-semibold text-brand-dark">
               Product Details
             </span>
           </div>
           <ChevronDown
-            className={`h-4 w-4 text-brand-dark/60 transition-transform duration-200 ${
+            className={`h-4 w-4 text-brand-muted transition-transform duration-200 ${
               openSections.details ? "rotate-180" : ""
             }`}
           />
         </button>
 
         {openSections.details && (
-          <div className="space-y-4 pb-5 pt-1 text-xs sm:text-sm text-brand-dark/80 leading-relaxed animate-in fade-in duration-200">
+          <div className="space-y-4 pb-5 pt-1 text-xs sm:text-sm text-brand-muted leading-relaxed animate-in fade-in duration-200">
             {product.fabric && (
               <div>
                 <span className="font-semibold text-brand-dark">Fabric: </span>
@@ -77,7 +77,7 @@ export function ProductAccordion({
             )}
 
             {product.hsn_code && (
-              <div className="text-[11px] text-brand-dark/60">
+              <div className="text-[11px] text-brand-muted">
                 HSN Code: {product.hsn_code} &bull; GST: {product.gst_rate ?? 5}% included
               </div>
             )}
@@ -94,20 +94,20 @@ export function ProductAccordion({
           className="flex w-full items-center justify-between py-4 text-left transition-colors hover:text-brand-accent focus:outline-none"
         >
           <div className="flex items-center gap-2.5">
-            <Truck className="h-4 w-4 text-brand-gold" />
+            <Truck className="h-4 w-4 text-brand-accent" />
             <span className="font-heading text-lg font-semibold text-brand-dark">
               Shipping & Returns
             </span>
           </div>
           <ChevronDown
-            className={`h-4 w-4 text-brand-dark/60 transition-transform duration-200 ${
+            className={`h-4 w-4 text-brand-muted transition-transform duration-200 ${
               openSections.shipping ? "rotate-180" : ""
             }`}
           />
         </button>
 
         {openSections.shipping && (
-          <div className="space-y-3 pb-5 pt-1 text-xs sm:text-sm text-brand-dark/80 leading-relaxed animate-in fade-in duration-200">
+          <div className="space-y-3 pb-5 pt-1 text-xs sm:text-sm text-brand-muted leading-relaxed animate-in fade-in duration-200">
             <p>
               <strong className="text-brand-dark">Free Shipping: </strong>
               Delivery across India with free shipping on prepaid orders exceeding {formatCurrency(freeShippingThreshold)}.
@@ -133,20 +133,20 @@ export function ProductAccordion({
           className="flex w-full items-center justify-between py-4 text-left transition-colors hover:text-brand-accent focus:outline-none"
         >
           <div className="flex items-center gap-2.5">
-            <Ruler className="h-4 w-4 text-brand-gold" />
+            <Ruler className="h-4 w-4 text-brand-accent" />
             <span className="font-heading text-lg font-semibold text-brand-dark">
               Size & Fit Guidance
             </span>
           </div>
           <ChevronDown
-            className={`h-4 w-4 text-brand-dark/60 transition-transform duration-200 ${
+            className={`h-4 w-4 text-brand-muted transition-transform duration-200 ${
               openSections.fit ? "rotate-180" : ""
             }`}
           />
         </button>
 
         {openSections.fit && (
-          <div className="space-y-3 pb-5 pt-1 text-xs sm:text-sm text-brand-dark/80 leading-relaxed animate-in fade-in duration-200">
+          <div className="space-y-3 pb-5 pt-1 text-xs sm:text-sm text-brand-muted leading-relaxed animate-in fade-in duration-200">
             <p>
               <strong className="text-brand-dark">Fit: </strong>
               Designed for a standard, comfortable fit. Please consult the Size Guide for detailed garment measurements.

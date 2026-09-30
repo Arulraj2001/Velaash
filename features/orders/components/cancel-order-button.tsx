@@ -83,7 +83,7 @@ export function CancelOrderButton({ orderNumber, className }: CancelOrderButtonP
                 <h3 className="font-heading text-lg font-semibold text-brand-dark">
                   Cancel Order #{orderNumber}?
                 </h3>
-                <p className="text-xs text-brand-dark/70 leading-relaxed">
+                <p className="text-xs text-brand-muted leading-relaxed">
                   Are you sure you want to cancel this order? This action cannot be undone and your items will be returned to inventory.
                 </p>
               </div>

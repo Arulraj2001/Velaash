@@ -73,7 +73,7 @@ export function ActiveFilterChips({ totalCount }: ActiveFilterChipsProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 pb-4 font-sans">
       {/* Product count */}
-      <span className="text-brand-dark/60 text-xs font-medium">
+      <span className="text-brand-muted text-xs font-medium">
         Showing <span className="text-brand-dark font-semibold">{totalCount}</span>{" "}
         {totalCount === 1 ? "design" : "designs"}
       </span>
@@ -90,7 +90,7 @@ export function ActiveFilterChips({ totalCount }: ActiveFilterChipsProps) {
               <button
                 type="button"
                 onClick={() => removeFilter("size", size)}
-                className="text-brand-dark/60 hover:text-brand-dark"
+                className="text-brand-muted hover:text-brand-dark"
                 aria-label={`Remove ${size} size filter`}
               >
                 <X className="h-3 w-3" />
@@ -107,7 +107,7 @@ export function ActiveFilterChips({ totalCount }: ActiveFilterChipsProps) {
               <button
                 type="button"
                 onClick={() => removeFilter("color", color)}
-                className="text-brand-dark/60 hover:text-brand-dark"
+                className="text-brand-muted hover:text-brand-dark"
                 aria-label={`Remove ${color} color filter`}
               >
                 <X className="h-3 w-3" />
@@ -121,7 +121,7 @@ export function ActiveFilterChips({ totalCount }: ActiveFilterChipsProps) {
               <button
                 type="button"
                 onClick={() => removeFilter("price")}
-                className="text-brand-dark/60 hover:text-brand-dark"
+                className="text-brand-muted hover:text-brand-dark"
                 aria-label="Remove price filter"
               >
                 <X className="h-3 w-3" />

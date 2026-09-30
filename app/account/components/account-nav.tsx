@@ -72,21 +72,21 @@ export function AccountNav() {
               "flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-xs font-medium transition-all duration-150",
               isActive
                 ? "bg-brand-gold/15 text-brand-dark font-semibold border-l-4 border-brand-gold shadow-sm"
-                : "text-brand-dark/70 hover:bg-brand-cream/80 hover:text-brand-dark border-l-4 border-transparent"
+                : "text-brand-muted hover:bg-brand-cream/80 hover:text-brand-dark border-l-4 border-transparent"
             )}
           >
             <div className="flex items-center gap-3">
               <Icon
                 className={cn(
                   "h-4 w-4 shrink-0 transition-colors",
-                  isActive ? "text-brand-dark" : "text-brand-dark/50"
+                  isActive ? "text-brand-dark" : "text-brand-muted"
                 )}
               />
               <span>{item.name}</span>
             </div>
 
             {item.badge && (
-              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-brand-light/60 text-brand-dark/60 tracking-wider">
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-brand-light/60 text-brand-muted tracking-wider">
                 {item.badge}
               </span>
             )}
@@ -129,7 +129,7 @@ export function AccountMobileTabs() {
               "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap shrink-0 transition-colors",
               isActive
                 ? "bg-brand-gold/20 text-brand-dark font-semibold"
-                : "text-brand-dark/70 hover:bg-brand-cream/80 hover:text-brand-dark"
+                : "text-brand-muted hover:bg-brand-cream/80 hover:text-brand-dark"
             )}
           >
             <Icon className="h-3.5 w-3.5" />

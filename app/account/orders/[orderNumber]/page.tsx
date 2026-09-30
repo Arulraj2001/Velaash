@@ -8,6 +8,7 @@ import {
   getCustomerOrderDetail,
   OrderStatusBadge,
   OrderTimeline,
+  CourierTrackingBanner,
   CancelOrderButton,
 } from "@/features/orders";
 import { Button, Badge } from "@/components/ui";
@@ -79,7 +80,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <Link
           href="/account/orders"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-dark/70 hover:text-brand-accent transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-muted hover:text-brand-accent transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to all orders
@@ -100,13 +101,13 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
               </span>
               <OrderStatusBadge status={order.status} size="md" />
             </div>
-            <p className="text-xs text-brand-dark/60 font-sans">
+            <p className="text-xs text-brand-muted font-sans">
               Placed on {formattedDate}
             </p>
           </div>
 
           <div className="sm:text-right">
-            <p className="text-[11px] uppercase tracking-wider text-brand-dark/50 font-medium">
+            <p className="text-[11px] uppercase tracking-wider text-brand-muted font-medium">
               Order Total
             </p>
             <p className="font-heading text-2xl font-semibold text-brand-dark">
@@ -117,7 +118,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
 
         {/* Status Timeline */}
         <div className="space-y-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-brand-dark/60">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-brand-muted">
             Fulfillment Journey
           </h3>
           <OrderTimeline
@@ -126,6 +127,14 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
             createdAt={order.createdAt}
           />
         </div>
+
+        {/* Courier Tracking Details Banner */}
+        {order.trackingNumber && (
+          <CourierTrackingBanner
+            courierName={order.courierName}
+            trackingNumber={order.trackingNumber}
+          />
+        )}
       </div>
 
       {/* Two Column Layout: Items (Left) & Summary / Shipping (Right) */}
@@ -158,7 +167,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
                         className="object-cover object-top"
                       />
                     ) : (
-                      <div className="h-full w-full flex items-center justify-center text-brand-dark/30">
+                      <div className="h-full w-full flex items-center justify-center text-brand-subtle">
                         <Package className="h-8 w-8" />
                       </div>
                     )}
@@ -169,20 +178,20 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
                       {item.title}
                     </h4>
 
-                    <div className="flex items-center gap-2 flex-wrap text-xs text-brand-dark/70">
+                    <div className="flex items-center gap-2 flex-wrap text-xs text-brand-muted">
                       <span>Size: <strong>{item.size}</strong></span>
                       <span>•</span>
                       <span>Color: <strong>{item.color}</strong></span>
                     </div>
 
                     {item.sku && (
-                      <p className="text-[11px] font-mono text-brand-dark/50">
+                      <p className="text-[11px] font-mono text-brand-muted">
                         SKU: {item.sku}
                       </p>
                     )}
 
                     <div className="flex items-center justify-between pt-1">
-                      <span className="text-xs text-brand-dark/70">
+                      <span className="text-xs text-brand-muted">
                         Qty: <strong>{item.quantity}</strong> × ₹{item.unitPrice.toLocaleString("en-IN")}
                       </span>
                       <span className="text-xs font-semibold text-brand-dark">
@@ -205,7 +214,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
                 <h4 className="font-heading text-base font-semibold text-brand-dark">
                   Need Help with this Order?
                 </h4>
-                <p className="text-xs text-brand-dark/70 leading-relaxed">
+                <p className="text-xs text-brand-muted leading-relaxed">
                   Have questions about size alteration, fabric care, or delivery timing? Our customer support team is directly reachable via WhatsApp.
                 </p>
               </div>
@@ -258,7 +267,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
               </h3>
             </div>
 
-            <div className="space-y-1 text-xs text-brand-dark/80 font-sans leading-relaxed">
+            <div className="space-y-1 text-xs text-brand-muted font-sans leading-relaxed">
               <p className="font-semibold text-brand-dark text-sm">
                 {order.shippingAddress.fullName}
               </p>
@@ -271,13 +280,13 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
                 <span className="font-mono font-medium">{order.shippingAddress.pincode}</span>
               </p>
 
-              <div className="pt-2 border-t border-brand-border/40 mt-3 space-y-1 text-[11px] text-brand-dark/70">
+              <div className="pt-2 border-t border-brand-border/40 mt-3 space-y-1 text-[11px] text-brand-muted">
                 <p className="flex items-center gap-2">
-                  <Phone className="h-3 w-3 text-brand-dark/50" />
+                  <Phone className="h-3 w-3 text-brand-muted" />
                   <span>{order.shippingAddress.phone || "No phone provided"}</span>
                 </p>
                 <p className="flex items-center gap-2">
-                  <Mail className="h-3 w-3 text-brand-dark/50" />
+                  <Mail className="h-3 w-3 text-brand-muted" />
                   <span>{order.shippingAddress.email}</span>
                 </p>
               </div>
@@ -310,7 +319,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
             </div>
 
             <div className="space-y-2 text-xs">
-              <div className="flex justify-between text-brand-dark/70">
+              <div className="flex justify-between text-brand-muted">
                 <span>Subtotal</span>
                 <span>₹{order.subtotal.toLocaleString("en-IN")}</span>
               </div>
@@ -325,7 +334,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
                 </div>
               )}
 
-              <div className="flex justify-between text-brand-dark/70">
+              <div className="flex justify-between text-brand-muted">
                 <span>Standard Delivery</span>
                 <span>
                   {order.shippingCharge === 0 ? (
@@ -337,7 +346,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
               </div>
 
               {order.codHandlingFee ? (
-                <div className="flex justify-between text-brand-dark/70">
+                <div className="flex justify-between text-brand-muted">
                   <span>COD Handling Fee</span>
                   <span>₹{order.codHandlingFee.toLocaleString("en-IN")}</span>
                 </div>
@@ -351,7 +360,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
               </div>
             </div>
 
-            <div className="pt-2 text-[11px] text-brand-dark/60 font-sans border-t border-brand-border/40">
+            <div className="pt-2 text-[11px] text-brand-muted font-sans border-t border-brand-border/40">
               <p>
                 Method:{" "}
                 <strong className="text-brand-dark">

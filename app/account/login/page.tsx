@@ -5,9 +5,9 @@ import { CustomerLoginForm } from "@/features/auth";
 import { Container } from "@/components/ui";
 
 export const metadata: Metadata = {
-  title: "Sign In | Velaash",
+  title: "Sign In or Register | Velaash",
   description:
-    "Sign in to your Velaash account to view order history, manage addresses, or access your wishlist.",
+    "Enter your email to sign in or create your Velaash account with a one-time access code. Track orders, manage addresses, and access your wishlist.",
 };
 
 export default async function CustomerLoginPage(props: {

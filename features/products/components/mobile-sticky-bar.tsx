@@ -63,7 +63,7 @@ export function MobileStickyBar({
           </div>
           <div className="min-w-0">
             <p className="text-brand-dark truncate text-xs font-semibold">{productName}</p>
-            <div className="text-brand-dark/70 flex items-center gap-1.5 text-[11px]">
+            <div className="text-brand-muted flex items-center gap-1.5 text-[11px]">
               <span className="text-brand-dark font-semibold">{formatCurrency(price)}</span>
               <span>&bull;</span>
               <span className="truncate">
