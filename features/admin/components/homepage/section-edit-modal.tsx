@@ -121,6 +121,58 @@ function SectionEditModalInner({
     return [];
   };
 
+  interface SlideItemState {
+    id: string;
+    tag?: string;
+    headline: string;
+    subtitle?: string;
+    cta_text: string;
+    cta_link: string;
+    secondary_cta_text?: string;
+    secondary_cta_link?: string;
+    bg_image: string;
+  }
+
+  const getSlides = (): SlideItemState[] => {
+    if (Array.isArray(content.slides)) {
+      return content.slides as SlideItemState[];
+    }
+    return [];
+  };
+
+  const handleAddSlide = () => {
+    const current = getSlides();
+    const newSlide: SlideItemState = {
+      id: `slide-${Date.now()}`,
+      tag: "New Season Arrivals",
+      headline: getString("headline") || "Modern Everyday Luxury",
+      subtitle:
+        getString("subtitle") ||
+        "Effortless silhouettes, refined textures, and contemporary wardrobe essentials.",
+      cta_text: getString("cta_text") || "Explore Collection",
+      cta_link: getString("cta_link") || "/shop",
+      secondary_cta_text: "Kurtas & Sets",
+      secondary_cta_link: "/collections/kurtas-sets",
+      bg_image:
+        getString("bg_image") ||
+        "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=2000&q=85",
+    };
+    handleFieldChange("slides", [...current, newSlide]);
+  };
+
+  const handleUpdateSlide = (index: number, field: keyof SlideItemState, val: string) => {
+    const current = [...getSlides()];
+    if (current[index]) {
+      current[index] = { ...current[index], [field]: val };
+      handleFieldChange("slides", current);
+    }
+  };
+
+  const handleRemoveSlide = (index: number) => {
+    const current = getSlides().filter((_, i) => i !== index);
+    handleFieldChange("slides", current);
+  };
+
   // Image Upload handler for hero banner
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -376,6 +428,139 @@ function SectionEditModalInner({
                     className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
                   />
                 </div>
+              </div>
+
+              {/* Multi-Slide Carousel Manager */}
+              <div className="pt-6 border-t border-slate-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Rotating Carousel Slides (Optional)
+                    </h3>
+                    <p className="text-[11px] text-slate-500">
+                      Add multiple slides to automatically turn your hero into an interactive rotating banner.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddSlide}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-colors shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Slide</span>
+                  </button>
+                </div>
+
+                {getSlides().length === 0 ? (
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                    <p className="text-xs text-slate-500">
+                      No extra slides added yet. The single hero banner above will be used. Click &quot;Add Slide&quot; to build a multi-slide hero carousel.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {getSlides().map((slide, idx) => (
+                      <div
+                        key={slide.id || idx}
+                        className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Slide {idx + 1}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSlide(idx)}
+                            className="text-rose-500 hover:text-rose-700 p-1 rounded-md hover:bg-rose-50 transition-colors"
+                            title="Delete slide"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                              Tag / Capsule
+                            </label>
+                            <input
+                              type="text"
+                              value={slide.tag || ""}
+                              onChange={(e) => handleUpdateSlide(idx, "tag", e.target.value)}
+                              placeholder="e.g. Festive Capsule"
+                              className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                              Headline
+                            </label>
+                            <input
+                              type="text"
+                              value={slide.headline || ""}
+                              onChange={(e) => handleUpdateSlide(idx, "headline", e.target.value)}
+                              placeholder="e.g. Modern Everyday Luxury"
+                              className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                            Subtitle
+                          </label>
+                          <input
+                            type="text"
+                            value={slide.subtitle || ""}
+                            onChange={(e) => handleUpdateSlide(idx, "subtitle", e.target.value)}
+                            placeholder="e.g. Effortless silhouettes and contemporary styles..."
+                            className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                              Button Text
+                            </label>
+                            <input
+                              type="text"
+                              value={slide.cta_text || ""}
+                              onChange={(e) => handleUpdateSlide(idx, "cta_text", e.target.value)}
+                              placeholder="e.g. Explore Collection"
+                              className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                              Button Link
+                            </label>
+                            <input
+                              type="text"
+                              value={slide.cta_link || ""}
+                              onChange={(e) => handleUpdateSlide(idx, "cta_link", e.target.value)}
+                              placeholder="e.g. /shop"
+                              className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                            Background Image URL
+                          </label>
+                          <input
+                            type="text"
+                            value={slide.bg_image || ""}
+                            onChange={(e) => handleUpdateSlide(idx, "bg_image", e.target.value)}
+                            placeholder="https://images.unsplash.com/..."
+                            className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-mono"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

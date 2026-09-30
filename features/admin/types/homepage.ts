@@ -31,7 +31,21 @@ export const TRUST_ICON_KEYS = [
 
 export type TrustIconKey = (typeof TRUST_ICON_KEYS)[number];
 
-// 1. Hero Banner Content Schema
+// 1. Hero Slide & Hero Banner Content Schema
+export const HeroSlideSchema = z.object({
+  id: z.string().default(() => Math.random().toString(36).slice(2, 9)),
+  tag: z.string().trim().default("New Season Arrivals"),
+  headline: z.string().trim().min(1, "Headline is required"),
+  subtitle: z.string().trim().default(""),
+  cta_text: z.string().trim().min(1, "CTA button label is required"),
+  cta_link: z.string().trim().min(1, "CTA link URL is required"),
+  secondary_cta_text: z.string().trim().optional().default(""),
+  secondary_cta_link: z.string().trim().optional().default(""),
+  bg_image: z.string().trim().min(1, "Background image URL is required"),
+});
+
+export type HeroSlide = z.infer<typeof HeroSlideSchema>;
+
 export const HeroBannerContentSchema = z.object({
   headline: z.string().trim().min(1, "Headline is required"),
   subtitle: z.string().trim().default(""),
@@ -40,6 +54,7 @@ export const HeroBannerContentSchema = z.object({
   secondary_cta_text: z.string().trim().optional().default(""),
   secondary_cta_link: z.string().trim().optional().default(""),
   bg_image: z.string().trim().min(1, "Background image URL is required"),
+  slides: z.array(HeroSlideSchema).optional().default([]),
 });
 
 export type HeroBannerContent = z.infer<typeof HeroBannerContentSchema>;

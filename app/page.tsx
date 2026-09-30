@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -24,6 +25,12 @@ import { env } from "@/lib/env";
 const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 import { getHomepageSections } from "@/features/homepage";
 import { HomepageNewsletter } from "@/components/homepage/homepage-newsletter";
+import { HeroCarousel } from "@/components/homepage/hero-carousel";
+import { OccasionStrip } from "@/components/homepage/occasion-strip";
+import { FeaturedProductsShowcase } from "@/components/homepage/featured-products-showcase";
+import { BrandStory } from "@/components/homepage/brand-story";
+import { ClientTestimonials } from "@/components/homepage/client-testimonials";
+import type { HeroSlide } from "@/features/admin/types/homepage";
 
 // SEO: Generate homepage metadata using dynamic site settings and brand fallbacks
 export async function generateMetadata(): Promise<Metadata> {
@@ -180,78 +187,30 @@ export default async function HomePage() {
           switch (section.section_type) {
             case "hero_banner": {
               const content = (section.content as Record<string, unknown>) || {};
-              const headline = (content.headline as string) || "Modern Everyday Luxury";
-              const subtitle =
-                (content.subtitle as string) ||
-                (content.subheading as string) ||
-                "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.";
-              const ctaText =
-                (content.cta_text as string) || (content.cta_label as string) || "Explore Collection";
-              const ctaLink = (content.cta_link as string) || "/shop";
-              const secondaryText = (content.secondary_cta_text as string) || "";
-              const secondaryLink = (content.secondary_cta_link as string) || "";
-              const bgImage =
-                (content.bg_image as string) ||
-                (content.image_url as string) ||
-                "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85";
+              const slides = Array.isArray(content.slides) ? (content.slides as HeroSlide[]) : [];
 
               return (
-                <section
+                <HeroCarousel
                   key={section.id}
-                  className="relative w-full min-h-[75vh] sm:min-h-[85vh] flex items-center justify-center overflow-hidden bg-brand-dark"
-                >
-                  {/* Background Image with subtle gradient overlays */}
-                  <div className="absolute inset-0 z-0">
-                    <Image
-                      src={bgImage}
-                      alt={headline}
-                      fill
-                      priority
-                      className="object-cover object-center brightness-90 contrast-105"
-                      sizes="100vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/90 via-brand-dark/40 to-black/30" />
-                    <div className="absolute inset-0 bg-brand-dark/20 backdrop-blur-[0.5px]" />
-                  </div>
-
-                  {/* Hero Content */}
-                  <Container size="lg" className="relative z-10 py-16 text-center">
-                    <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-700">
-                      <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-gold/40 bg-brand-dark/60 text-brand-gold text-xs font-semibold tracking-widest uppercase backdrop-blur-md">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>New Season Arrivals</span>
-                      </div>
-
-                      <h1 className="font-heading text-4xl sm:text-6xl md:text-7xl font-semibold text-white tracking-tight leading-[1.08]">
-                        {headline}
-                      </h1>
-
-                      <p className="max-w-xl mx-auto text-brand-cream/85 font-sans text-sm sm:text-base md:text-lg leading-relaxed">
-                        {subtitle}
-                      </p>
-
-                      <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-                        <Link href={ctaLink} className="w-full sm:w-auto">
-                          <Button variant="primary" size="lg" className="w-full sm:w-auto shadow-luxury">
-                            <span>{ctaText}</span>
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                          </Button>
-                        </Link>
-                        {secondaryText && secondaryLink ? (
-                          <Link href={secondaryLink} className="w-full sm:w-auto">
-                            <Button
-                              variant="outline"
-                              size="lg"
-                              className="w-full sm:w-auto border-white/40 text-white hover:bg-white/10 hover:text-white"
-                            >
-                              {secondaryText}
-                            </Button>
-                          </Link>
-                        ) : null}
-                      </div>
-                    </div>
-                  </Container>
-                </section>
+                  slides={slides}
+                  fallbackHeadline={(content.headline as string) || "Modern Everyday Luxury"}
+                  fallbackSubtitle={
+                    (content.subtitle as string) ||
+                    (content.subheading as string) ||
+                    "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance."
+                  }
+                  fallbackCtaText={
+                    (content.cta_text as string) || (content.cta_label as string) || "Explore Collection"
+                  }
+                  fallbackCtaLink={(content.cta_link as string) || "/shop"}
+                  fallbackSecondaryText={(content.secondary_cta_text as string) || "Kurtas & Sets"}
+                  fallbackSecondaryLink={(content.secondary_cta_link as string) || "/collections/kurtas-sets"}
+                  fallbackBgImage={
+                    (content.bg_image as string) ||
+                    (content.image_url as string) ||
+                    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85"
+                  }
+                />
               );
             }
 
@@ -262,56 +221,62 @@ export default async function HomePage() {
                 (content.subtitle as string) || "Thoughtfully tailored pieces across modern everyday silhouettes.";
 
               return (
-                <section key={section.id} className="py-16 sm:py-24 border-b border-brand-border/60">
-                  <Container size="xl">
-                    {/* Section Header */}
-                    <div className="max-w-2xl mx-auto text-center space-y-2 mb-10 sm:mb-14">
-                      <span className="text-brand-accent-dark text-xs font-semibold tracking-widest uppercase">
-                        Curated Collections
-                      </span>
-                      <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-brand-dark tracking-tight">
-                        {title}
-                      </h2>
-                      <p className="text-brand-muted text-xs sm:text-sm font-sans">{subtitle}</p>
-                    </div>
+                <React.Fragment key={section.id}>
+                  {/* Curated Occasion & Mood Navigation */}
+                  <OccasionStrip />
 
-                    {/* Category Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-                      {categories.map((category) => {
-                        const categoryImage =
-                          category.image_url ||
-                          DEFAULT_CATEGORY_IMAGES[category.slug] ||
-                          "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80";
+                  {/* Main Category Grid */}
+                  <section className="py-16 sm:py-24 border-b border-brand-border/60 bg-white">
+                    <Container size="xl">
+                      {/* Section Header */}
+                      <div className="max-w-2xl mx-auto text-center space-y-2 mb-10 sm:mb-14">
+                        <span className="text-brand-accent-dark text-xs font-semibold tracking-widest uppercase">
+                          Curated Collections
+                        </span>
+                        <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-brand-dark tracking-tight">
+                          {title}
+                        </h2>
+                        <p className="text-brand-muted text-xs sm:text-sm font-sans">{subtitle}</p>
+                      </div>
 
-                        return (
-                          <Link
-                            key={category.id}
-                            href={`/collections/${category.slug}`}
-                            className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-xs hover:shadow-luxury transition-all duration-300 border border-brand-border/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
-                          >
-                            <Image
-                              src={categoryImage}
-                              alt={category.name}
-                              fill
-                              className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/85 via-brand-dark/25 to-transparent transition-opacity duration-300 group-hover:from-brand-dark/95" />
-                            <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 flex flex-col justify-end text-left">
-                              <h3 className="font-heading text-lg sm:text-2xl font-semibold text-white tracking-tight">
-                                {category.name}
-                              </h3>
-                              <div className="mt-1 flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-brand-gold group-hover:text-brand-gold/90 transition-colors">
-                                <span>Explore</span>
-                                <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                      {/* Category Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+                        {categories.map((category) => {
+                          const categoryImage =
+                            category.image_url ||
+                            DEFAULT_CATEGORY_IMAGES[category.slug] ||
+                            "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80";
+
+                          return (
+                            <Link
+                              key={category.id}
+                              href={`/collections/${category.slug}`}
+                              className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-xs hover:shadow-luxury transition-all duration-300 border border-brand-border/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
+                            >
+                              <Image
+                                src={categoryImage}
+                                alt={category.name}
+                                fill
+                                className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/85 via-brand-dark/25 to-transparent transition-opacity duration-300 group-hover:from-brand-dark/95" />
+                              <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 flex flex-col justify-end text-left">
+                                <h3 className="font-heading text-lg sm:text-2xl font-semibold text-white tracking-tight">
+                                  {category.name}
+                                </h3>
+                                <div className="mt-1 flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-brand-gold group-hover:text-brand-gold/90 transition-colors">
+                                  <span>Explore</span>
+                                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                                </div>
                               </div>
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </Container>
-                </section>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </Container>
+                  </section>
+                </React.Fragment>
               );
             }
 
@@ -321,52 +286,19 @@ export default async function HomePage() {
               const subtitle = (content.subtitle as string) || "Handpicked styles from our collection.";
 
               return (
-                <section
-                  key={section.id}
-                  className="py-16 sm:py-24 bg-brand-light/10 border-b border-brand-border/60"
-                >
-                  <Container size="xl">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 mb-10 sm:mb-12">
-                      <div className="space-y-1">
-                        <span className="text-brand-accent-dark text-xs font-semibold tracking-widest uppercase">
-                          Handpicked Styles
-                        </span>
-                        <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-brand-dark tracking-tight">
-                          {title}
-                        </h2>
-                        {subtitle ? (
-                          <p className="text-brand-muted text-xs sm:text-sm font-sans">{subtitle}</p>
-                        ) : null}
-                      </div>
-                      <Link
-                        href="/shop"
-                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-dark hover:text-brand-accent transition-colors"
-                      >
-                        <span>View Full Catalog</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </div>
+                <React.Fragment key={section.id}>
+                  <FeaturedProductsShowcase
+                    title={title}
+                    subtitle={subtitle}
+                    products={featuredProducts}
+                  />
 
-                    {featuredProducts.length > 0 ? (
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-                        {featuredProducts.map((product) => (
-                          <ProductCard key={product.id} product={product} />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-16 bg-white rounded-2xl border border-brand-border/70 p-8">
-                        <p className="text-brand-muted text-sm">
-                          Catalog updates in progress. Explore our collection categories above.
-                        </p>
-                        <Link href="/shop" className="mt-4 inline-block">
-                          <Button variant="primary" size="sm">
-                            Browse All Products
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
-                  </Container>
-                </section>
+                  {/* Brand Craftsmanship & Fabric Story */}
+                  <BrandStory />
+
+                  {/* Client Reviews & Social Proof */}
+                  <ClientTestimonials />
+                </React.Fragment>
               );
             }
 
