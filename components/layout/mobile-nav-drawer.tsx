@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { X, ChevronDown, MessageCircle, User, ArrowRight } from "lucide-react";
 import type { NavigationCategory } from "@/features/navigation";
 import { BRAND, CUSTOMER_SERVICE_LINKS } from "@/lib/constants";
@@ -11,6 +12,8 @@ interface MobileNavDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   categories: NavigationCategory[];
+  logoUrl?: string;
+  storeName?: string;
   whatsappNumber?: string;
   whatsappUrl?: string;
 }
@@ -19,6 +22,8 @@ export function MobileNavDrawer({
   isOpen,
   onClose,
   categories,
+  logoUrl,
+  storeName,
   whatsappNumber,
   whatsappUrl,
 }: MobileNavDrawerProps) {
@@ -79,9 +84,20 @@ export function MobileNavDrawer({
           <Link
             href="/"
             onClick={onClose}
-            className="font-heading text-brand-dark text-2xl font-semibold tracking-tight"
+            className="flex items-center gap-2.5 font-heading text-brand-dark text-2xl font-semibold tracking-tight"
           >
-            {BRAND.name}
+            {logoUrl && (
+              <div className="relative h-9 w-9 rounded-full overflow-hidden shrink-0 border border-brand-gold/30 bg-white/70 shadow-xs">
+                <Image
+                  src={logoUrl}
+                  alt={storeName || BRAND.name}
+                  fill
+                  className="object-cover"
+                  sizes="36px"
+                />
+              </div>
+            )}
+            <span>{storeName || BRAND.name}</span>
           </Link>
           <button
             type="button"

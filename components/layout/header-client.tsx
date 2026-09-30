@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Search, ShoppingBag, Heart, Menu } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { BRAND } from "@/lib/constants";
@@ -17,6 +18,8 @@ import { useWishlistStore } from "@/features/wishlist/store/wishlist-store";
 
 interface HeaderClientProps {
   categories: NavigationCategory[];
+  logoUrl?: string;
+  storeName?: string;
   whatsappNumber?: string;
   whatsappUrl?: string;
   announcement?: AnnouncementSetting;
@@ -24,6 +27,8 @@ interface HeaderClientProps {
 
 export function HeaderClient({
   categories,
+  logoUrl,
+  storeName,
   whatsappNumber,
   whatsappUrl,
   announcement,
@@ -80,19 +85,35 @@ export function HeaderClient({
               </button>
             </div>
 
-            {/* Logo Wordmark */}
+            {/* Logo Wordmark & Emblem */}
             <div className="flex items-center">
               <Link
                 href="/"
-                className="group focus-visible:ring-brand-gold flex items-center rounded-sm px-1 focus-visible:ring-2 focus-visible:outline-none"
-                aria-label={`${BRAND.name} Home`}
+                className="group focus-visible:ring-brand-gold flex items-center gap-2.5 rounded-sm px-1 focus-visible:ring-2 focus-visible:outline-none"
+                aria-label={`${storeName || BRAND.name} Home`}
               >
+                {logoUrl && (
+                  <div
+                    className={`relative rounded-full overflow-hidden shrink-0 border border-brand-gold/30 bg-white/70 shadow-xs transition-all duration-300 ${
+                      isScrolled ? "h-9 w-9 sm:h-10 sm:w-10" : "h-10 w-10 sm:h-11 sm:w-11"
+                    }`}
+                  >
+                    <Image
+                      src={logoUrl}
+                      alt={storeName || BRAND.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 40px, 44px"
+                      priority
+                    />
+                  </div>
+                )}
                 <span
                   className={`font-heading text-brand-dark group-hover:text-brand-accent font-semibold tracking-tight transition-all duration-300 ${
                     isScrolled ? "text-2xl sm:text-2xl" : "text-2xl sm:text-3xl"
                   }`}
                 >
-                  {BRAND.name}
+                  {storeName || BRAND.name}
                 </span>
               </Link>
             </div>
@@ -154,6 +175,8 @@ export function HeaderClient({
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         categories={categories}
+        logoUrl={logoUrl}
+        storeName={storeName}
         whatsappNumber={whatsappNumber}
         whatsappUrl={whatsappUrl}
       />

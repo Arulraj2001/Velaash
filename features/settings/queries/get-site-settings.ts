@@ -134,7 +134,10 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       whatsapp_url:
         rawStoreProfile.whatsapp_url ||
         `https://wa.me/${(rawStoreProfile.whatsapp_number || BRAND.whatsappNumber).replace(/\D/g, "")}`,
-      logo_url: rawStoreProfile.logo_url || "/brand/logo.svg",
+      logo_url:
+        rawStoreProfile.logo_url && rawStoreProfile.logo_url !== "/brand/logo.svg"
+          ? rawStoreProfile.logo_url
+          : "/logo.png",
       favicon_url: rawStoreProfile.favicon_url || "/favicon.ico",
     };
 

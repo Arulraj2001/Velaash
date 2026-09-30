@@ -18,7 +18,7 @@ export const StoreProfileSchema = z.object({
   phone: z.string().trim().min(8, "Please enter a valid phone number"),
   whatsapp_number: z.string().trim().min(8, "Please enter a valid WhatsApp number"),
   whatsapp_url: z.string().trim().url("Please enter a valid WhatsApp URL").or(z.literal("")),
-  logo_url: z.string().trim().optional().default("/brand/logo.svg"),
+  logo_url: z.string().trim().optional().default("/logo.png"),
   favicon_url: z.string().trim().optional().default("/favicon.ico"),
 });
 

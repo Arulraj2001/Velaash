@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   Store,
   Share2,
@@ -347,8 +348,19 @@ function StoreProfileForm({
         <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
           <label className="block text-xs font-semibold text-slate-700">Store Logo</label>
           {form.logo_url && (
-            <div className="p-2 bg-slate-900 rounded-lg inline-block">
-              <span className="text-brand-gold font-heading text-lg font-bold">Velaash</span>
+            <div className="flex items-center gap-3 p-2.5 bg-slate-900 rounded-xl inline-flex">
+              <div className="relative w-12 h-12 rounded-full overflow-hidden border border-brand-gold/40 bg-white/20 shrink-0">
+                <Image
+                  src={form.logo_url}
+                  alt="Store Logo"
+                  fill
+                  className="object-cover"
+                  sizes="48px"
+                />
+              </div>
+              <span className="text-brand-gold font-heading text-lg font-bold pr-2">
+                {form.name || "Velaash"}
+              </span>
             </div>
           )}
           <div>

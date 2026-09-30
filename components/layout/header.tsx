@@ -12,6 +12,8 @@ export async function Header() {
   return (
     <HeaderClient
       categories={categories}
+      logoUrl={storeProfile.logo_url || "/logo.png"}
+      storeName={storeProfile.name}
       whatsappNumber={storeProfile.whatsapp_number}
       whatsappUrl={storeProfile.whatsapp_url}
       announcement={announcement}
