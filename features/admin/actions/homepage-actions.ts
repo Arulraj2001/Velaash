@@ -502,20 +502,23 @@ export async function reorderHomepageSectionsAction(
     }
 
     const adminClient = createAdminClient();
+    const now = new Date().toISOString();
 
-    for (const item of updates) {
-      const { error } = await adminClient
+    const updatePromises = updates.map((item) =>
+      adminClient
         .from("homepage_sections")
         .update({
           display_order: item.display_order,
-          updated_at: new Date().toISOString(),
+          updated_at: now,
         })
-        .eq("id", item.id);
+        .eq("id", item.id)
+    );
 
-      if (error) {
-        console.error(`Failed to update display order for section ${item.id}:`, error);
-        return { success: false, error: `Failed to update display order: ${error.message}` };
-      }
+    const results = await Promise.all(updatePromises);
+    const failedResult = results.find((r) => r.error);
+    if (failedResult?.error) {
+      console.error("Failed to update display order:", failedResult.error);
+      return { success: false, error: `Failed to update display order: ${failedResult.error.message}` };
     }
 
     revalidateHomepagePaths();

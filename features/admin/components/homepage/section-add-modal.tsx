@@ -12,6 +12,7 @@ import {
   Loader2,
   AlertCircle,
   Plus,
+  CheckCircle2,
   LucideIcon,
 } from "lucide-react";
 import type { HomepageSectionKind } from "../../types/homepage";
@@ -21,6 +22,7 @@ interface SectionAddModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdded: (msg: string) => void;
+  existingTypes?: HomepageSectionKind[];
 }
 
 const AVAILABLE_SECTIONS: {
@@ -88,10 +90,27 @@ const AVAILABLE_SECTIONS: {
   },
 ];
 
-export function SectionAddModal({ isOpen, onClose, onAdded }: SectionAddModalProps) {
-  const [selectedType, setSelectedType] = useState<HomepageSectionKind>("hero_banner");
+export function SectionAddModal({
+  isOpen,
+  onClose,
+  onAdded,
+  existingTypes = [],
+}: SectionAddModalProps) {
+  const existingSet = React.useMemo(() => new Set(existingTypes), [existingTypes]);
+  const availableTypes = AVAILABLE_SECTIONS.filter((s) => !existingSet.has(s.type));
+  const isAllAdded = availableTypes.length === 0;
+
+  const [selectedType, setSelectedType] = useState<HomepageSectionKind>(() => {
+    return availableTypes[0]?.type || "hero_banner";
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (existingSet.has(selectedType) && availableTypes.length > 0) {
+      setSelectedType(availableTypes[0].type);
+    }
+  }, [existingSet, selectedType, availableTypes]);
 
   if (!isOpen) return null;
 
@@ -146,24 +165,40 @@ export function SectionAddModal({ isOpen, onClose, onAdded }: SectionAddModalPro
             </div>
           )}
 
+          {isAllAdded && (
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <p className="leading-relaxed">
+                All 8 storefront sections are already present in your homepage builder. You can customize, reorder, or toggle visibility for any section directly on the main page.
+              </p>
+            </div>
+          )}
+
           <div className="space-y-3">
             {AVAILABLE_SECTIONS.map((sec) => {
               const Icon = sec.icon;
-              const isSelected = selectedType === sec.type;
+              const isAlreadyAdded = existingSet.has(sec.type);
+              const isSelected = selectedType === sec.type && !isAlreadyAdded;
 
               return (
                 <div
                   key={sec.type}
-                  onClick={() => setSelectedType(sec.type)}
-                  className={`p-4 rounded-xl border flex items-start gap-4 cursor-pointer transition-all ${
-                    isSelected
-                      ? "border-amber-500 bg-amber-50/50 ring-2 ring-amber-500/20 shadow-xs"
-                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
+                  onClick={() => {
+                    if (!isAlreadyAdded) setSelectedType(sec.type);
+                  }}
+                  className={`p-4 rounded-xl border flex items-start gap-4 transition-all ${
+                    isAlreadyAdded
+                      ? "border-slate-200/70 bg-slate-50/70 opacity-60 cursor-not-allowed"
+                      : isSelected
+                      ? "border-amber-500 bg-amber-50/50 ring-2 ring-amber-500/20 shadow-xs cursor-pointer"
+                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/50 cursor-pointer"
                   }`}
                 >
                   <div
                     className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border ${
-                      isSelected
+                      isAlreadyAdded
+                        ? "bg-slate-100 border-slate-200 text-slate-400"
+                        : isSelected
                         ? "bg-amber-100 border-amber-300 text-amber-900"
                         : "bg-slate-100 border-slate-200 text-slate-600"
                     }`}
@@ -172,11 +207,16 @@ export function SectionAddModal({ isOpen, onClose, onAdded }: SectionAddModalPro
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-sm font-bold text-slate-900">{sec.title}</h3>
                       <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
                         {sec.badge}
                       </span>
+                      {isAlreadyAdded && (
+                        <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          In Builder
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                       {sec.description}
@@ -201,7 +241,7 @@ export function SectionAddModal({ isOpen, onClose, onAdded }: SectionAddModalPro
           <button
             type="button"
             onClick={handleAdd}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isAllAdded}
             className="inline-flex items-center gap-2 px-5 py-2 bg-slate-900 hover:bg-black text-white text-sm font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
           >
             {isSubmitting ? (

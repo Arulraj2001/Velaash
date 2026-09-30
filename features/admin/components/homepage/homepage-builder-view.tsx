@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   AlertCircle,
   HelpCircle,
+  Loader2,
 } from "lucide-react";
 import type { AdminHomepageSection } from "../../types/homepage";
 import { SectionSortableRow } from "./section-sortable-row";
@@ -49,6 +50,7 @@ export function HomepageBuilderView({
   const [editingSection, setEditingSection] = useState<AdminHomepageSection | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [sectionToDelete, setSectionToDelete] = useState<AdminHomepageSection | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -129,19 +131,27 @@ export function HomepageBuilderView({
 
   // Delete section confirmation & execution
   const handleDeleteConfirm = async () => {
-    if (!sectionToDelete) return;
+    if (!sectionToDelete || isDeleting) return;
     const targetId = sectionToDelete.id;
+    setIsDeleting(true);
 
-    startTransition(async () => {
+    try {
       const res = await deleteHomepageSectionAction(targetId);
       if (res.success) {
-        setSections((prev) => prev.filter((s) => s.id !== targetId));
+        setSections((prev) => {
+          const remaining = prev.filter((s) => s.id !== targetId);
+          return remaining.map((s, idx) => ({ ...s, display_order: idx + 1 }));
+        });
         setSectionToDelete(null);
         showToast("Section deleted successfully.");
       } else {
         setErrorMessage(res.error || "Failed to delete section.");
       }
-    });
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : "Failed to delete section.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -278,6 +288,7 @@ export function HomepageBuilderView({
       <SectionAddModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        existingTypes={sections.map((s) => s.section_type)}
         onAdded={(msg) => {
           showToast(msg);
           window.location.reload();
@@ -298,16 +309,25 @@ export function HomepageBuilderView({
               <button
                 type="button"
                 onClick={() => setSectionToDelete(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
+                disabled={isDeleting}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleDeleteConfirm}
-                className="px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-sm"
+                disabled={isDeleting}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-sm disabled:opacity-50"
               >
-                Confirm Delete
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Confirm Delete</span>
+                )}
               </button>
             </div>
           </div>
