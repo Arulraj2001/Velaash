@@ -880,7 +880,11 @@ function SectionEditModalInner({
                         {getOccasionItems().length > 1 && (
                           <button
                             type="button"
-                            onClick={() => handleRemoveOccasion(idx)}
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to remove '${item.name || `Card ${idx + 1}`}'?`)) {
+                                handleRemoveOccasion(idx);
+                              }
+                            }}
                             className="text-rose-500 hover:text-rose-700 p-1 rounded-md hover:bg-rose-50 transition-colors"
                             title="Delete card"
                           >
@@ -938,7 +942,7 @@ function SectionEditModalInner({
                         </label>
                         <div className="space-y-2">
                           {item.image ? (
-                            <div className="relative aspect-[16/9] sm:aspect-[4/3] max-w-[200px] rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+                            <div className="relative aspect-[4/5] max-w-[140px] rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-xs">
                               <Image
                                 src={item.image}
                                 alt={item.name || "Occasion"}
@@ -950,8 +954,17 @@ function SectionEditModalInner({
 
                           <div className="flex items-center gap-2">
                             <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-                              <Upload className="w-3.5 h-3.5 text-slate-600" />
-                              <span>Upload Image</span>
+                              {isUploading ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+                                  <span>Uploading...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-3.5 h-3.5 text-slate-600" />
+                                  <span>Upload Image</span>
+                                </>
+                              )}
                               <input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp"
@@ -962,6 +975,10 @@ function SectionEditModalInner({
                             </label>
                             <span className="text-[11px] text-slate-400">or enter image URL below</span>
                           </div>
+
+                          <p className="text-[10px] text-slate-400">
+                            Recommended: 800 × 1000px (Portrait 4:5), JPG or WebP under 5MB.
+                          </p>
 
                           <input
                             type="text"

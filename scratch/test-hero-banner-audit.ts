@@ -1,7 +1,12 @@
-import { HeroSlideSchema, HeroBannerContentSchema } from "../features/admin/types/homepage";
+import {
+  HeroSlideSchema,
+  HeroBannerContentSchema,
+  OccasionCardSchema,
+  OccasionStripContentSchema,
+} from "../features/admin/types/homepage";
 
-function runHeroBannerAuditTests() {
-  console.log("=== RUNNING HERO BANNER AUDIT SUITE ===");
+function runHomepageAuditTests() {
+  console.log("=== RUNNING HOMEPAGE BUILDER AUDIT SUITE ===");
   let passed = 0;
   let failed = 0;
 
@@ -15,7 +20,7 @@ function runHeroBannerAuditTests() {
     }
   }
 
-  // Test 1: Valid Hero Slide schema
+  // --- SECTION 1: HERO BANNER TESTS ---
   const validSlide = {
     id: "slide-test-1",
     tag: "Spring 2026",
@@ -30,23 +35,18 @@ function runHeroBannerAuditTests() {
   const slideRes = HeroSlideSchema.safeParse(validSlide);
   assert("HeroSlideSchema accepts valid slide", slideRes.success);
 
-  // Test 2: Hero Slide requires headline
   const invalidHeadline = { ...validSlide, headline: "   " };
-  const headlineRes = HeroSlideSchema.safeParse(invalidHeadline);
-  assert("HeroSlideSchema rejects empty headline", !headlineRes.success);
+  assert("HeroSlideSchema rejects empty headline", !HeroSlideSchema.safeParse(invalidHeadline).success);
 
-  // Test 3: Hero Slide requires cta_text and cta_link
   const invalidCta = { ...validSlide, cta_text: "" };
   assert("HeroSlideSchema rejects empty cta_text", !HeroSlideSchema.safeParse(invalidCta).success);
 
   const invalidLink = { ...validSlide, cta_link: "" };
   assert("HeroSlideSchema rejects empty cta_link", !HeroSlideSchema.safeParse(invalidLink).success);
 
-  // Test 4: Hero Slide requires bg_image
   const invalidImage = { ...validSlide, bg_image: "  " };
   assert("HeroSlideSchema rejects empty bg_image", !HeroSlideSchema.safeParse(invalidImage).success);
 
-  // Test 5: HeroBannerContentSchema accepts root content and slides array
   const bannerContent = {
     headline: "Contemporary Indian Luxury",
     subtitle: "Airy fabrics and timeless silhouettes.",
@@ -55,10 +55,39 @@ function runHeroBannerAuditTests() {
     bg_image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d",
     slides: [validSlide],
   };
-  const bannerRes = HeroBannerContentSchema.safeParse(bannerContent);
-  assert("HeroBannerContentSchema validates correctly", bannerRes.success);
+  assert("HeroBannerContentSchema validates correctly", HeroBannerContentSchema.safeParse(bannerContent).success);
 
-  // Test 6: URL normalization logic
+  // --- SECTION 2: OCCASION STRIP TESTS ---
+  const validOccasion = {
+    id: "occ-1",
+    name: "Festive Capsule",
+    subtitle: "Zari & Silk Blends",
+    slug: "festive",
+    image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b",
+    href: "/collections/kurtas-sets",
+  };
+  assert("OccasionCardSchema accepts valid card", OccasionCardSchema.safeParse(validOccasion).success);
+
+  const invalidOccasionName = { ...validOccasion, name: "  " };
+  assert("OccasionCardSchema rejects empty name", !OccasionCardSchema.safeParse(invalidOccasionName).success);
+
+  const invalidOccasionHref = { ...validOccasion, href: "" };
+  assert("OccasionCardSchema rejects empty href", !OccasionCardSchema.safeParse(invalidOccasionHref).success);
+
+  const invalidOccasionImg = { ...validOccasion, image: " " };
+  assert("OccasionCardSchema rejects empty image", !OccasionCardSchema.safeParse(invalidOccasionImg).success);
+
+  const occasionStripContent = {
+    title: "Shop by Occasion",
+    subtitle: "Thoughtfully curated palettes and cuts.",
+    items: [validOccasion],
+  };
+  assert(
+    "OccasionStripContentSchema validates correctly",
+    OccasionStripContentSchema.safeParse(occasionStripContent).success
+  );
+
+  // URL normalization logic
   const normalizeLink = (url: string | undefined): string => {
     if (!url) return "";
     const trimmed = url.trim();
@@ -82,7 +111,10 @@ function runHeroBannerAuditTests() {
     "normalizeLink leaves https://example.com unchanged",
     normalizeLink("https://example.com") === "https://example.com"
   );
-  assert("normalizeLink handles collections/kurtas-sets", normalizeLink("collections/kurtas-sets") === "/collections/kurtas-sets");
+  assert(
+    "normalizeLink handles collections/kurtas-sets",
+    normalizeLink("collections/kurtas-sets") === "/collections/kurtas-sets"
+  );
 
   console.log(`\nResults: ${passed} passed, ${failed} failed.`);
   if (failed > 0) {
@@ -90,4 +122,4 @@ function runHeroBannerAuditTests() {
   }
 }
 
-runHeroBannerAuditTests();
+runHomepageAuditTests();
