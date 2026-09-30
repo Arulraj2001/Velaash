@@ -16,6 +16,7 @@ import {
   type AdminHomepageSection,
   type ReorderSectionUpdate,
   HeroBannerContentSchema,
+  OccasionStripContentSchema,
   CategoryGridContentSchema,
   FeaturedProductsContentSchema,
   CoutureSpotlightContentSchema,
@@ -94,16 +95,57 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
     },
   },
   {
+    section_type: "occasion_strip",
+    title: "Shop by Occasion",
+    display_order: 2,
+    is_active: true,
+    content: {
+      title: "Shop by Occasion",
+      subtitle: "Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise.",
+      items: [
+        {
+          id: "occ-1",
+          name: "Festive Capsule",
+          subtitle: "Zari, Silk Blends & Brocades",
+          slug: "festive",
+          image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80",
+          href: "/collections/kurtas-sets",
+        },
+        {
+          id: "occ-2",
+          name: "Workday Grace",
+          subtitle: "Clean cuts & breathable comfort",
+          slug: "workwear",
+          image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=600&q=80",
+          href: "/shop?sort=newest",
+        },
+        {
+          id: "occ-3",
+          name: "Evening Soirées",
+          subtitle: "Statement Co-Ords & Drapes",
+          slug: "evening",
+          image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+          href: "/collections/co-ord-sets",
+        },
+        {
+          id: "occ-4",
+          name: "Casual Brunches",
+          subtitle: "Airy silhouettes & subtle prints",
+          slug: "brunch",
+          image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=600&q=80",
+          href: "/collections/dresses",
+        },
+      ],
+    },
+  },
+  {
     section_type: "category_grid",
     title: "Explore by Category",
-    display_order: 2,
+    display_order: 3,
     is_active: true,
     content: {
       title: "Explore by Category",
       subtitle: "Thoughtfully tailored pieces across modern everyday silhouettes.",
-      show_occasions: true,
-      occasions_title: "Shop by Occasion",
-      occasions_subtitle: "Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise.",
     },
   },
   {
@@ -268,6 +310,23 @@ export async function getAdminHomepageSectionsAction(): Promise<AdminHomepageSec
       const section = normalizeSectionRow(row);
       // If we haven't seen this type yet, keep it
       if (!seenTypes.has(section.section_type)) {
+        // Ensure hero_banner has all 3 slides in admin builder if empty
+        if (section.section_type === "hero_banner") {
+          const currentSlides = Array.isArray(section.content.slides) ? section.content.slides : [];
+          if (currentSlides.length === 0) {
+            const heroDefault = DEFAULT_INITIAL_SECTIONS.find((s) => s.section_type === "hero_banner");
+            const defaultSlides = (heroDefault?.content as Record<string, unknown>)?.slides;
+            section.content.slides = defaultSlides;
+            // Persist to DB so it doesn't get lost
+            adminClient
+              .from("homepage_sections")
+              .update({
+                content: section.content as unknown as Json,
+              })
+              .eq("id", section.id)
+              .then();
+          }
+        }
         seenTypes.add(section.section_type);
         normalized.push(section);
       }
@@ -356,6 +415,12 @@ export async function updateHomepageSectionAction(
 
     if (sectionType === "hero_banner") {
       const parsed = HeroBannerContentSchema.safeParse(input.content);
+      if (!parsed.success) {
+        return { success: false, error: parsed.error.issues[0]?.message };
+      }
+      validatedContent = parsed.data;
+    } else if (sectionType === "occasion_strip") {
+      const parsed = OccasionStripContentSchema.safeParse(input.content);
       if (!parsed.success) {
         return { success: false, error: parsed.error.issues[0]?.message };
       }
@@ -544,6 +609,82 @@ export async function createHomepageSectionAction(
         secondary_cta_text: "",
         secondary_cta_link: "",
         bg_image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+        slides: [
+          {
+            id: "slide-1",
+            tag: "New Season Arrivals",
+            headline: "Modern Everyday Luxury",
+            subtitle: "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+            cta_text: "Explore Collection",
+            cta_link: "/shop",
+            secondary_cta_text: "Kurtas & Sets",
+            secondary_cta_link: "/collections/kurtas-sets",
+            bg_image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+          },
+          {
+            id: "slide-2",
+            tag: "Festive Capsule",
+            headline: "Timeless Grace, Artisanal Craft",
+            subtitle: "Handcrafted threadwork, rich jewel tones, and opulent fabrics tailored for your special celebrations.",
+            cta_text: "Shop Festive",
+            cta_link: "/collections/kurtas-sets",
+            secondary_cta_text: "Dresses",
+            secondary_cta_link: "/collections/dresses",
+            bg_image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=2000&q=85",
+          },
+          {
+            id: "slide-3",
+            tag: "Contemporary Co-Ords",
+            headline: "The Art of Breathable Dressing",
+            subtitle: "Pure cottons and relaxed co-ords designed to keep you poised from morning meetings to evening dinners.",
+            cta_text: "Discover Co-ords",
+            cta_link: "/collections/co-ord-sets",
+            secondary_cta_text: "View All",
+            secondary_cta_link: "/shop",
+            bg_image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=85",
+          },
+        ],
+        ...defaultContent,
+      };
+    } else if (section_type === "occasion_strip") {
+      defaultTitle = defaultTitle || "Shop by Occasion";
+      defaultContent = {
+        title: "Shop by Occasion",
+        subtitle: "Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise.",
+        items: [
+          {
+            id: "occ-1",
+            name: "Festive Capsule",
+            subtitle: "Zari, Silk Blends & Brocades",
+            slug: "festive",
+            image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80",
+            href: "/collections/kurtas-sets",
+          },
+          {
+            id: "occ-2",
+            name: "Workday Grace",
+            subtitle: "Clean cuts & breathable comfort",
+            slug: "workwear",
+            image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=600&q=80",
+            href: "/shop?sort=newest",
+          },
+          {
+            id: "occ-3",
+            name: "Evening Soirées",
+            subtitle: "Statement Co-Ords & Drapes",
+            slug: "evening",
+            image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+            href: "/collections/co-ord-sets",
+          },
+          {
+            id: "occ-4",
+            name: "Casual Brunches",
+            subtitle: "Airy silhouettes & subtle prints",
+            slug: "brunch",
+            image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=600&q=80",
+            href: "/collections/dresses",
+          },
+        ],
         ...defaultContent,
       };
     } else if (section_type === "category_grid") {

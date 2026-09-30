@@ -26,7 +26,7 @@ const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/
 import { getHomepageSections } from "@/features/homepage";
 import { HomepageNewsletter } from "@/components/homepage/homepage-newsletter";
 import { HeroCarousel } from "@/components/homepage/hero-carousel";
-import { OccasionStrip } from "@/components/homepage/occasion-strip";
+import { OccasionStrip, type OccasionItem } from "@/components/homepage/occasion-strip";
 import { FeaturedProductsShowcase } from "@/components/homepage/featured-products-showcase";
 import { BrandStory } from "@/components/homepage/brand-story";
 import { ClientTestimonials } from "@/components/homepage/client-testimonials";
@@ -214,26 +214,32 @@ export default async function HomePage() {
               );
             }
 
+            case "occasion_strip": {
+              const content = (section.content as Record<string, unknown>) || {};
+              const title = (content.title as string) || "Shop by Occasion";
+              const subtitle =
+                (content.subtitle as string) ||
+                "Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise.";
+              const items = Array.isArray(content.items) ? (content.items as OccasionItem[]) : undefined;
+
+              return (
+                <OccasionStrip
+                  key={section.id}
+                  title={title}
+                  subtitle={subtitle}
+                  items={items}
+                />
+              );
+            }
+
             case "category_grid": {
               const content = (section.content as Record<string, unknown>) || {};
               const title = (content.title as string) || "Explore by Category";
               const subtitle =
                 (content.subtitle as string) || "Thoughtfully tailored pieces across modern everyday silhouettes.";
-              const showOccasions = content.show_occasions !== false;
-              const occasionsTitle = (content.occasions_title as string) || "Shop by Occasion";
-              const occasionsSubtitle =
-                (content.occasions_subtitle as string) ||
-                "Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise.";
 
               return (
-                <React.Fragment key={section.id}>
-                  {/* Curated Occasion & Mood Navigation (Togglable in Admin) */}
-                  {showOccasions && (
-                    <OccasionStrip title={occasionsTitle} subtitle={occasionsSubtitle} />
-                  )}
-
-                  {/* Main Category Grid */}
-                  <section className="py-16 sm:py-24 border-b border-brand-border/60 bg-white">
+                <section key={section.id} className="py-16 sm:py-24 border-b border-brand-border/60 bg-white">
                     <Container size="xl">
                       {/* Section Header */}
                       <div className="max-w-2xl mx-auto text-center space-y-2 mb-10 sm:mb-14">
@@ -283,7 +289,6 @@ export default async function HomePage() {
                       </div>
                     </Container>
                   </section>
-                </React.Fragment>
               );
             }
 

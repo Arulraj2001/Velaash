@@ -10,6 +10,7 @@ import { z } from "zod";
 
 export const HOMEPAGE_SECTION_TYPES = [
   "hero_banner",
+  "occasion_strip",
   "category_grid",
   "featured_products",
   "couture_spotlight",
@@ -61,13 +62,30 @@ export const HeroBannerContentSchema = z.object({
 
 export type HeroBannerContent = z.infer<typeof HeroBannerContentSchema>;
 
-// 2. Category Grid Content Schema
+// 2. Occasion Strip Content Schema
+export const OccasionCardSchema = z.object({
+  id: z.string().default(() => Math.random().toString(36).slice(2, 9)),
+  name: z.string().trim().min(1, "Occasion name is required"),
+  subtitle: z.string().trim().default(""),
+  slug: z.string().trim().default(""),
+  image: z.string().trim().min(1, "Image URL is required"),
+  href: z.string().trim().min(1, "Link URL is required"),
+});
+
+export type OccasionCard = z.infer<typeof OccasionCardSchema>;
+
+export const OccasionStripContentSchema = z.object({
+  title: z.string().trim().default("Shop by Occasion"),
+  subtitle: z.string().trim().default("Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise."),
+  items: z.array(OccasionCardSchema).default([]),
+});
+
+export type OccasionStripContent = z.infer<typeof OccasionStripContentSchema>;
+
+// 3. Category Grid Content Schema
 export const CategoryGridContentSchema = z.object({
   title: z.string().trim().default("Explore Categories"),
   subtitle: z.string().trim().default("Thoughtfully tailored pieces across modern everyday silhouettes."),
-  show_occasions: z.boolean().default(true),
-  occasions_title: z.string().trim().default("Shop by Occasion"),
-  occasions_subtitle: z.string().trim().default("Thoughtfully curated palettes and cuts styled for life's celebrations and daily poise."),
 });
 
 export type CategoryGridContent = z.infer<typeof CategoryGridContentSchema>;

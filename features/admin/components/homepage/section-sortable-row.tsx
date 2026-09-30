@@ -29,6 +29,12 @@ const SECTION_TYPE_CONFIG: Record<
     icon: Sliders,
     badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
   },
+  occasion_strip: {
+    label: "Shop by Occasion",
+    description: "Curated occasion cards (Festive, Workwear, Evening, Brunch) with custom links",
+    icon: Sparkles,
+    badgeColor: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  },
   category_grid: {
     label: "Category Tiles",
     description: "Visual grid linking to live collection categories",

@@ -134,29 +134,70 @@ function SectionEditModalInner({
     bg_image: string;
   }
 
+  const DEFAULT_HERO_SLIDES: SlideItemState[] = [
+    {
+      id: "slide-1",
+      tag: "Spring / Summer 2026",
+      headline: getString("headline") || "Modern Everyday Luxury",
+      subtitle:
+        getString("subtitle") ||
+        "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+      cta_text: getString("cta_text") || "Explore Collection",
+      cta_link: getString("cta_link") || "/shop",
+      secondary_cta_text: getString("secondary_cta_text") || "Kurtas & Sets",
+      secondary_cta_link: getString("secondary_cta_link") || "/collections/kurtas-sets",
+      bg_image:
+        getString("bg_image") ||
+        "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+    },
+    {
+      id: "slide-2",
+      tag: "Festive Capsule",
+      headline: "Timeless Grace, Artisanal Craft",
+      subtitle:
+        "Handcrafted threadwork, rich jewel tones, and opulent fabrics tailored for your special celebrations.",
+      cta_text: "Shop Festive",
+      cta_link: "/collections/kurtas-sets",
+      secondary_cta_text: "Dresses",
+      secondary_cta_link: "/collections/dresses",
+      bg_image:
+        "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=2000&q=85",
+    },
+    {
+      id: "slide-3",
+      tag: "Contemporary Co-Ords",
+      headline: "The Art of Breathable Dressing",
+      subtitle:
+        "Pure cottons and relaxed co-ords designed to keep you poised from morning meetings to evening dinners.",
+      cta_text: "Discover Co-ords",
+      cta_link: "/collections/co-ord-sets",
+      secondary_cta_text: "View All",
+      secondary_cta_link: "/shop",
+      bg_image:
+        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=85",
+    },
+  ];
+
   const getSlides = (): SlideItemState[] => {
-    if (Array.isArray(content.slides)) {
+    if (Array.isArray(content.slides) && content.slides.length > 0) {
       return content.slides as SlideItemState[];
     }
-    return [];
+    return DEFAULT_HERO_SLIDES;
   };
 
   const handleAddSlide = () => {
     const current = getSlides();
     const newSlide: SlideItemState = {
       id: `slide-${Date.now()}`,
-      tag: "New Season Arrivals",
-      headline: getString("headline") || "Modern Everyday Luxury",
-      subtitle:
-        getString("subtitle") ||
-        "Effortless silhouettes, refined textures, and contemporary wardrobe essentials.",
-      cta_text: getString("cta_text") || "Explore Collection",
-      cta_link: getString("cta_link") || "/shop",
-      secondary_cta_text: "Kurtas & Sets",
-      secondary_cta_link: "/collections/kurtas-sets",
+      tag: "New Arrivals",
+      headline: "New Luxury Silhouette",
+      subtitle: "Effortless silhouettes, refined textures, and contemporary wardrobe essentials.",
+      cta_text: "Explore Collection",
+      cta_link: "/shop",
+      secondary_cta_text: "",
+      secondary_cta_link: "",
       bg_image:
-        getString("bg_image") ||
-        "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=2000&q=85",
+        "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
     };
     handleFieldChange("slides", [...current, newSlide]);
   };
@@ -165,13 +206,60 @@ function SectionEditModalInner({
     const current = [...getSlides()];
     if (current[index]) {
       current[index] = { ...current[index], [field]: val };
-      handleFieldChange("slides", current);
+      const updates: Record<string, unknown> = { slides: current };
+      if (index === 0) {
+        if (field === "headline") updates.headline = val;
+        if (field === "subtitle") updates.subtitle = val;
+        if (field === "cta_text") updates.cta_text = val;
+        if (field === "cta_link") updates.cta_link = val;
+        if (field === "secondary_cta_text") updates.secondary_cta_text = val;
+        if (field === "secondary_cta_link") updates.secondary_cta_link = val;
+        if (field === "bg_image") updates.bg_image = val;
+      }
+      setContent((prev) => ({ ...prev, ...updates }));
     }
   };
 
   const handleRemoveSlide = (index: number) => {
     const current = getSlides().filter((_, i) => i !== index);
-    handleFieldChange("slides", current);
+    const updates: Record<string, unknown> = { slides: current };
+    if (current[0]) {
+      updates.headline = current[0].headline;
+      updates.subtitle = current[0].subtitle;
+      updates.cta_text = current[0].cta_text;
+      updates.cta_link = current[0].cta_link;
+      updates.secondary_cta_text = current[0].secondary_cta_text;
+      updates.secondary_cta_link = current[0].secondary_cta_link;
+      updates.bg_image = current[0].bg_image;
+    }
+    setContent((prev) => ({ ...prev, ...updates }));
+  };
+
+  const handleSlideImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      setErrorMessage(null);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await uploadHomepageImageAction(formData);
+      if (res.success && res.url) {
+        handleUpdateSlide(index, "bg_image", res.url);
+      } else {
+        setErrorMessage(res.error || "Failed to upload image.");
+      }
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : "Image upload failed.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Image Upload handler for hero banner & couture spotlight
@@ -192,6 +280,110 @@ function SectionEditModalInner({
       const res = await uploadHomepageImageAction(formData);
       if (res.success && res.url) {
         handleFieldChange(targetField, res.url);
+      } else {
+        setErrorMessage(res.error || "Failed to upload image.");
+      }
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : "Image upload failed.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  interface OccasionItemState {
+    id: string;
+    name: string;
+    subtitle: string;
+    slug?: string;
+    image: string;
+    href: string;
+  }
+
+  const DEFAULT_OCCASION_ITEMS: OccasionItemState[] = [
+    {
+      id: "occ-1",
+      name: "Festive Capsule",
+      subtitle: "Zari, Silk Blends & Brocades",
+      slug: "festive",
+      image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80",
+      href: "/collections/kurtas-sets",
+    },
+    {
+      id: "occ-2",
+      name: "Workday Grace",
+      subtitle: "Clean cuts & breathable comfort",
+      slug: "workwear",
+      image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=600&q=80",
+      href: "/shop?sort=newest",
+    },
+    {
+      id: "occ-3",
+      name: "Evening Soirées",
+      subtitle: "Statement Co-Ords & Drapes",
+      slug: "evening",
+      image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+      href: "/collections/co-ord-sets",
+    },
+    {
+      id: "occ-4",
+      name: "Casual Brunches",
+      subtitle: "Airy silhouettes & subtle prints",
+      slug: "brunch",
+      image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=600&q=80",
+      href: "/collections/dresses",
+    },
+  ];
+
+  const getOccasionItems = (): OccasionItemState[] => {
+    if (Array.isArray(content.items) && content.items.length > 0) {
+      return content.items as OccasionItemState[];
+    }
+    return DEFAULT_OCCASION_ITEMS;
+  };
+
+  const handleAddOccasion = () => {
+    const current = getOccasionItems();
+    const newItem: OccasionItemState = {
+      id: `occ-${Date.now()}`,
+      name: "New Occasion",
+      subtitle: "Curated collection",
+      slug: "new-occasion",
+      image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80",
+      href: "/shop",
+    };
+    handleFieldChange("items", [...current, newItem]);
+  };
+
+  const handleUpdateOccasion = (index: number, field: keyof OccasionItemState, val: string) => {
+    const current = [...getOccasionItems()];
+    if (current[index]) {
+      current[index] = { ...current[index], [field]: val };
+      handleFieldChange("items", current);
+    }
+  };
+
+  const handleRemoveOccasion = (index: number) => {
+    const current = getOccasionItems().filter((_, i) => i !== index);
+    handleFieldChange("items", current);
+  };
+
+  const handleOccasionImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      setErrorMessage(null);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await uploadHomepageImageAction(formData);
+      if (res.success && res.url) {
+        handleUpdateOccasion(index, "image", res.url);
       } else {
         setErrorMessage(res.error || "Failed to upload image.");
       }
@@ -256,10 +448,33 @@ function SectionEditModalInner({
     setIsSubmitting(true);
 
     try {
+      const finalContent = { ...content };
+
+      if (section.section_type === "hero_banner") {
+        const slides = getSlides();
+        finalContent.slides = slides;
+        if (slides[0]) {
+          finalContent.headline = slides[0].headline;
+          finalContent.subtitle = slides[0].subtitle;
+          finalContent.cta_text = slides[0].cta_text;
+          finalContent.cta_link = slides[0].cta_link;
+          finalContent.secondary_cta_text = slides[0].secondary_cta_text;
+          finalContent.secondary_cta_link = slides[0].secondary_cta_link;
+          finalContent.bg_image = slides[0].bg_image;
+        }
+      } else if (section.section_type === "occasion_strip") {
+        finalContent.items = getOccasionItems();
+        if (!finalContent.title) finalContent.title = "Shop by Occasion";
+        if (!finalContent.subtitle) {
+          finalContent.subtitle =
+            "Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise.";
+        }
+      }
+
       const res = await updateHomepageSectionAction(section.id, {
         title,
         is_active: isActive,
-        content,
+        content: finalContent,
       });
 
       if (res.success) {
@@ -345,151 +560,20 @@ function SectionEditModalInner({
 
           {/* 1. HERO BANNER */}
           {section.section_type === "hero_banner" && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Headline <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={getString("headline")}
-                  onChange={(e) => handleFieldChange("headline", e.target.value)}
-                  placeholder="e.g. Modern Everyday Luxury"
-                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Subtitle / Subheading
-                </label>
-                <textarea
-                  rows={2}
-                  value={getString("subtitle") || getString("subheading")}
-                  onChange={(e) => handleFieldChange("subtitle", e.target.value)}
-                  placeholder="e.g. Effortless silhouettes and contemporary styles..."
-                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Primary CTA Button Text <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={getString("cta_text") || getString("cta_label")}
-                    onChange={(e) => handleFieldChange("cta_text", e.target.value)}
-                    placeholder="e.g. Explore Collection"
-                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Primary CTA Link <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={getString("cta_link")}
-                    onChange={(e) => handleFieldChange("cta_link", e.target.value)}
-                    placeholder="e.g. /shop"
-                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Secondary CTA Button Text (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={getString("secondary_cta_text")}
-                    onChange={(e) => handleFieldChange("secondary_cta_text", e.target.value)}
-                    placeholder="e.g. Kurtas & Sets"
-                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Secondary CTA Link (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={getString("secondary_cta_link")}
-                    onChange={(e) => handleFieldChange("secondary_cta_link", e.target.value)}
-                    placeholder="e.g. /collections/kurtas-sets"
-                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-              </div>
-
-              {/* Background Image Upload & Preview */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Hero Background Image <span className="text-rose-500">*</span>
-                </label>
-                <div className="space-y-3">
-                  {getString("bg_image") ? (
-                    <div className="relative aspect-[16/7] w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-                      <Image
-                        src={getString("bg_image")}
-                        alt="Hero preview"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  ) : null}
-
-                  <div className="flex items-center gap-3">
-                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-                      {isUploading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
-                          <span>Uploading...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-4 h-4 text-slate-600" />
-                          <span>Upload Image</span>
-                        </>
-                      )}
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={handleImageUpload}
-                        disabled={isUploading}
-                        className="hidden"
-                      />
-                    </label>
-                    <span className="text-xs text-slate-400">or enter image URL below</span>
-                  </div>
-
-                  <input
-                    type="text"
-                    required
-                    value={getString("bg_image") || getString("image_url")}
-                    onChange={(e) => handleFieldChange("bg_image", e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
-                    className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
-                  />
-                </div>
+            <div className="space-y-6">
+              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs leading-relaxed">
+                <strong>Hero Carousel Slides:</strong> Manage all slides rotating on your storefront hero banner. Each slide features its own high-resolution image, tag capsule, headline, subtitle, and call-to-action buttons.
               </div>
 
               {/* Multi-Slide Carousel Manager */}
-              <div className="pt-6 border-t border-slate-200 space-y-4">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                      Rotating Carousel Slides (Optional)
+                      Carousel Slides ({getSlides().length})
                     </h3>
                     <p className="text-[11px] text-slate-500">
-                      Add multiple slides to automatically turn your hero into an interactive rotating banner.
+                      Edit text, images, and buttons for each slide. Slide 1 serves as the primary initial banner.
                     </p>
                   </div>
                   <button
@@ -502,23 +586,24 @@ function SectionEditModalInner({
                   </button>
                 </div>
 
-                {getSlides().length === 0 ? (
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
-                    <p className="text-xs text-slate-500">
-                      No extra slides added yet. The single hero banner above will be used. Click &quot;Add Slide&quot; to build a multi-slide hero carousel.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {getSlides().map((slide, idx) => (
-                      <div
-                        key={slide.id || idx}
-                        className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3"
-                      >
-                        <div className="flex items-center justify-between">
+                <div className="space-y-4">
+                  {getSlides().map((slide, idx) => (
+                    <div
+                      key={slide.id || idx}
+                      className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                             Slide {idx + 1}
                           </span>
+                          {idx === 0 && (
+                            <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                              Primary Banner
+                            </span>
+                          )}
+                        </div>
+                        {getSlides().length > 1 && (
                           <button
                             type="button"
                             onClick={() => handleRemoveSlide(idx)}
@@ -527,81 +612,141 @@ function SectionEditModalInner({
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
-                        </div>
+                        )}
+                      </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                              Tag / Capsule
-                            </label>
-                            <input
-                              type="text"
-                              value={slide.tag || ""}
-                              onChange={(e) => handleUpdateSlide(idx, "tag", e.target.value)}
-                              placeholder="e.g. Festive Capsule"
-                              className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                              Headline
-                            </label>
-                            <input
-                              type="text"
-                              value={slide.headline || ""}
-                              onChange={(e) => handleUpdateSlide(idx, "headline", e.target.value)}
-                              placeholder="e.g. Modern Everyday Luxury"
-                              className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
-                            />
-                          </div>
-                        </div>
-
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                            Subtitle
+                            Tag / Capsule Badge
                           </label>
                           <input
                             type="text"
-                            value={slide.subtitle || ""}
-                            onChange={(e) => handleUpdateSlide(idx, "subtitle", e.target.value)}
-                            placeholder="e.g. Effortless silhouettes and contemporary styles..."
+                            value={slide.tag || ""}
+                            onChange={(e) => handleUpdateSlide(idx, "tag", e.target.value)}
+                            placeholder="e.g. Spring / Summer 2026"
                             className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
                           />
                         </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                              Button Text
-                            </label>
-                            <input
-                              type="text"
-                              value={slide.cta_text || ""}
-                              onChange={(e) => handleUpdateSlide(idx, "cta_text", e.target.value)}
-                              placeholder="e.g. Explore Collection"
-                              className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                              Button Link
-                            </label>
-                            <input
-                              type="text"
-                              value={slide.cta_link || ""}
-                              onChange={(e) => handleUpdateSlide(idx, "cta_link", e.target.value)}
-                              placeholder="e.g. /shop"
-                              className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-mono"
-                            />
-                          </div>
-                        </div>
-
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                            Background Image URL
+                            Headline <span className="text-rose-500">*</span>
                           </label>
                           <input
                             type="text"
+                            required
+                            value={slide.headline || ""}
+                            onChange={(e) => handleUpdateSlide(idx, "headline", e.target.value)}
+                            placeholder="e.g. Modern Everyday Luxury"
+                            className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          Subtitle
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={slide.subtitle || ""}
+                          onChange={(e) => handleUpdateSlide(idx, "subtitle", e.target.value)}
+                          placeholder="e.g. Effortless silhouettes, refined textures, and contemporary essentials..."
+                          className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                            Primary Button Text <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={slide.cta_text || ""}
+                            onChange={(e) => handleUpdateSlide(idx, "cta_text", e.target.value)}
+                            placeholder="e.g. Explore Collection"
+                            className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                            Primary Button Link <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={slide.cta_link || ""}
+                            onChange={(e) => handleUpdateSlide(idx, "cta_link", e.target.value)}
+                            placeholder="e.g. /shop"
+                            className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                            Secondary Button Text (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={slide.secondary_cta_text || ""}
+                            onChange={(e) => handleUpdateSlide(idx, "secondary_cta_text", e.target.value)}
+                            placeholder="e.g. Kurtas & Sets"
+                            className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                            Secondary Button Link (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={slide.secondary_cta_link || ""}
+                            onChange={(e) => handleUpdateSlide(idx, "secondary_cta_link", e.target.value)}
+                            placeholder="e.g. /collections/kurtas-sets"
+                            className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Slide Image */}
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          Background Image <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="space-y-2">
+                          {slide.bg_image ? (
+                            <div className="relative aspect-[16/7] w-full rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+                              <Image
+                                src={slide.bg_image}
+                                alt={`Slide ${idx + 1} preview`}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : null}
+
+                          <div className="flex items-center gap-2">
+                            <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                              <Upload className="w-3.5 h-3.5 text-slate-600" />
+                              <span>Upload Image</span>
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={(e) => handleSlideImageUpload(e, idx)}
+                                disabled={isUploading}
+                                className="hidden"
+                              />
+                            </label>
+                            <span className="text-[11px] text-slate-400">or enter image URL below</span>
+                          </div>
+
+                          <input
+                            type="text"
+                            required
                             value={slide.bg_image || ""}
                             onChange={(e) => handleUpdateSlide(idx, "bg_image", e.target.value)}
                             placeholder="https://images.unsplash.com/..."
@@ -609,14 +754,185 @@ function SectionEditModalInner({
                           />
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
-          {/* 2. CATEGORY GRID */}
+          {/* 2. OCCASION STRIP */}
+          {section.section_type === "occasion_strip" && (
+            <div className="space-y-6">
+              <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs leading-relaxed">
+                <strong>Shop by Occasion:</strong> Curated styling cards that guide customers to distinct collections based on occasions (e.g. Festive, Workwear, Evening, Casual). Customize card titles, imagery, and destination links below.
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Section Header Title <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={getString("title", "Shop by Occasion")}
+                  onChange={(e) => handleFieldChange("title", e.target.value)}
+                  placeholder="e.g. Shop by Occasion"
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Section Subtitle
+                </label>
+                <textarea
+                  rows={2}
+                  value={getString(
+                    "subtitle",
+                    "Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise."
+                  )}
+                  onChange={(e) => handleFieldChange("subtitle", e.target.value)}
+                  placeholder="e.g. Thoughtfully curated palettes and cuts..."
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              {/* Occasion Cards Manager */}
+              <div className="space-y-4 pt-2 border-t border-slate-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Occasion Cards ({getOccasionItems().length})
+                    </h3>
+                    <p className="text-[11px] text-slate-500">
+                      Manage each occasion card displayed on the storefront.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddOccasion}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-colors shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Occasion Card</span>
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {getOccasionItems().map((item, idx) => (
+                    <div
+                      key={item.id || idx}
+                      className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Card {idx + 1}: {item.name || "Untitled"}
+                        </span>
+                        {getOccasionItems().length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveOccasion(idx)}
+                            className="text-rose-500 hover:text-rose-700 p-1 rounded-md hover:bg-rose-50 transition-colors"
+                            title="Delete card"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                            Occasion Title <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={item.name}
+                            onChange={(e) => handleUpdateOccasion(idx, "name", e.target.value)}
+                            placeholder="e.g. Festive Capsule"
+                            className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                            Subtitle / Tagline
+                          </label>
+                          <input
+                            type="text"
+                            value={item.subtitle}
+                            onChange={(e) => handleUpdateOccasion(idx, "subtitle", e.target.value)}
+                            placeholder="e.g. Zari, Silk Blends & Brocades"
+                            className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          Destination Link URL <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={item.href}
+                          onChange={(e) => handleUpdateOccasion(idx, "href", e.target.value)}
+                          placeholder="e.g. /collections/kurtas-sets"
+                          className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-mono"
+                        />
+                      </div>
+
+                      {/* Card Image */}
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                          Card Image <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="space-y-2">
+                          {item.image ? (
+                            <div className="relative aspect-[16/9] sm:aspect-[4/3] max-w-[200px] rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+                              <Image
+                                src={item.image}
+                                alt={item.name || "Occasion"}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : null}
+
+                          <div className="flex items-center gap-2">
+                            <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                              <Upload className="w-3.5 h-3.5 text-slate-600" />
+                              <span>Upload Image</span>
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={(e) => handleOccasionImageUpload(e, idx)}
+                                disabled={isUploading}
+                                className="hidden"
+                              />
+                            </label>
+                            <span className="text-[11px] text-slate-400">or enter image URL below</span>
+                          </div>
+
+                          <input
+                            type="text"
+                            required
+                            value={item.image}
+                            onChange={(e) => handleUpdateOccasion(idx, "image", e.target.value)}
+                            placeholder="https://images.unsplash.com/..."
+                            className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 3. CATEGORY GRID */}
           {section.section_type === "category_grid" && (
             <div className="space-y-4">
               <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs leading-relaxed">
@@ -651,62 +967,8 @@ function SectionEditModalInner({
                 />
               </div>
 
-              {/* Shop by Occasion Navigation Strip Options */}
-              <div className="pt-4 border-t border-slate-200 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                      Shop by Occasion Strip
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      Display curated Festive, Workday, Evening, and Brunch occasion pills above category tiles.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="showOccasionsToggle"
-                      checked={content.show_occasions !== false}
-                      onChange={(e) => handleFieldChange("show_occasions", e.target.checked)}
-                      className="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer"
-                    />
-                    <label htmlFor="showOccasionsToggle" className="text-xs font-medium text-slate-700 cursor-pointer">
-                      {content.show_occasions !== false ? "Visible" : "Hidden"}
-                    </label>
-                  </div>
-                </div>
-
-                {content.show_occasions !== false && (
-                  <div className="space-y-3 pt-2">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Occasions Strip Title
-                      </label>
-                      <input
-                        type="text"
-                        value={getString("occasions_title", "Shop by Occasion")}
-                        onChange={(e) => handleFieldChange("occasions_title", e.target.value)}
-                        placeholder="e.g. Shop by Occasion"
-                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Occasions Strip Subtitle
-                      </label>
-                      <input
-                        type="text"
-                        value={getString(
-                          "occasions_subtitle",
-                          "Thoughtfully curated palettes and cuts styled for life's celebrations and daily poise."
-                        )}
-                        onChange={(e) => handleFieldChange("occasions_subtitle", e.target.value)}
-                        placeholder="e.g. Thoughtfully curated palettes..."
-                        className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
-                    </div>
-                  </div>
-                )}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500">
+                💡 <strong>Note:</strong> To configure the curated occasion cards (Festive, Workwear, etc.), use the dedicated <strong>Shop by Occasion</strong> section in your homepage list.
               </div>
             </div>
           )}

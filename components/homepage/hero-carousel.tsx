@@ -29,7 +29,7 @@ export function HeroCarousel({
   fallbackSecondaryLink = "/collections/kurtas-sets",
   fallbackBgImage = "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
 }: HeroCarouselProps) {
-  // Normalize slides: if slides array is empty, generate from fallback values
+  // Normalize slides: use slides from database, or fallback to single slide if none provided
   const activeSlides: HeroSlide[] =
     slides.length > 0
       ? slides
@@ -44,32 +44,6 @@ export function HeroCarousel({
             secondary_cta_text: fallbackSecondaryText,
             secondary_cta_link: fallbackSecondaryLink,
             bg_image: fallbackBgImage,
-          },
-          {
-            id: "slide-2",
-            tag: "Festive Capsule",
-            headline: "Timeless Grace, Artisanal Craft",
-            subtitle:
-              "Handcrafted threadwork, rich jewel tones, and opulent fabrics tailored for your special celebrations.",
-            cta_text: "Shop Festive",
-            cta_link: "/collections/kurtas-sets",
-            secondary_cta_text: "Dresses",
-            secondary_cta_link: "/collections/dresses",
-            bg_image:
-              "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=2000&q=85",
-          },
-          {
-            id: "slide-3",
-            tag: "Contemporary Co-Ords",
-            headline: "The Art of Breathable Dressing",
-            subtitle:
-              "Pure cottons and relaxed co-ords designed to keep you poised from morning meetings to evening dinners.",
-            cta_text: "Discover Co-ords",
-            cta_link: "/collections/co-ord-sets",
-            secondary_cta_text: "View All",
-            secondary_cta_link: "/shop",
-            bg_image:
-              "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=85",
           },
         ];
 
@@ -219,30 +193,22 @@ export function HeroCarousel({
         </>
       )}
 
-      {/* Slide Indicators & Counter (Bottom) */}
+      {/* Slide Indicators (Bottom) */}
       {totalSlides > 1 && (
-        <div className="absolute bottom-6 inset-x-0 z-20 flex items-center justify-center gap-4">
-          {/* Numbers Counter */}
-          <span className="font-heading text-xs tracking-widest text-brand-cream/80">
-            0{currentIndex + 1} <span className="text-brand-cream/40">/</span> 0{totalSlides}
-          </span>
-
-          {/* Dots */}
-          <div className="flex items-center gap-2">
-            {activeSlides.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setCurrentIndex(idx)}
-                aria-label={`Go to slide ${idx + 1}`}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  idx === currentIndex
-                    ? "w-8 bg-brand-gold shadow-xs"
-                    : "w-2 bg-white/40 hover:bg-white/70"
-                }`}
-              />
-            ))}
-          </div>
+        <div className="absolute bottom-6 inset-x-0 z-20 flex items-center justify-center gap-2">
+          {activeSlides.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setCurrentIndex(idx)}
+              aria-label={`Go to slide ${idx + 1}`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                idx === currentIndex
+                  ? "w-8 bg-brand-gold shadow-xs"
+                  : "w-2 bg-white/40 hover:bg-white/70"
+              }`}
+            />
+          ))}
         </div>
       )}
     </section>

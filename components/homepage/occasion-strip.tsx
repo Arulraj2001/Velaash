@@ -4,16 +4,16 @@ import Image from "next/image";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Container } from "@/components/ui/container";
 
-interface OccasionItem {
+export interface OccasionItem {
   id: string;
   name: string;
   subtitle: string;
-  slug: string;
+  slug?: string;
   image: string;
   href: string;
 }
 
-const OCCASIONS: OccasionItem[] = [
+export const DEFAULT_OCCASIONS: OccasionItem[] = [
   {
     id: "festive",
     name: "Festive Capsule",
@@ -51,12 +51,16 @@ const OCCASIONS: OccasionItem[] = [
 export interface OccasionStripProps {
   title?: string;
   subtitle?: string;
+  items?: OccasionItem[];
 }
 
 export function OccasionStrip({
   title = "Shop by Occasion",
   subtitle = "Thoughtfully curated palettes and cuts styled for life's special celebrations and effortless daily poise.",
+  items,
 }: OccasionStripProps) {
+  const displayItems = items && items.length > 0 ? items : DEFAULT_OCCASIONS;
+
   return (
     <section className="py-12 sm:py-16 bg-brand-cream/40 border-b border-brand-border/60">
       <Container size="xl">
@@ -78,7 +82,7 @@ export function OccasionStrip({
 
         {/* Occasion Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {OCCASIONS.map((item) => (
+          {displayItems.map((item) => (
             <Link
               key={item.id}
               href={item.href}

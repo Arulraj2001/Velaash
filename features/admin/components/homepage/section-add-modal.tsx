@@ -38,6 +38,13 @@ const AVAILABLE_SECTIONS: {
     icon: Sliders,
   },
   {
+    type: "occasion_strip",
+    title: "Shop by Occasion",
+    badge: "Navigation",
+    description: "Curated styling cards (Festive, Workwear, Evening, Casual) with custom images and links.",
+    icon: Sparkles,
+  },
+  {
     type: "category_grid",
     title: "Category Tiles",
     badge: "Navigation",

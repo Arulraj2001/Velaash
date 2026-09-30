@@ -25,10 +25,11 @@ export type AdminRole = "owner" | "staff";
 
 export type HomepageSectionType =
   | "hero_banner"
-  | "featured_products"
+  | "occasion_strip"
   | "category_grid"
-  | "testimonials"
+  | "featured_products"
   | "couture_spotlight"
+  | "testimonials"
   | "value_strip"
   | "newsletter"
   | "custom_html";

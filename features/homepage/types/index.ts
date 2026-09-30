@@ -1,6 +1,7 @@
 import type {
   HomepageSectionKind,
   HeroBannerContent,
+  OccasionStripContent,
   CategoryGridContent,
   FeaturedProductsContent,
   CoutureSpotlightContent,
@@ -17,6 +18,7 @@ export interface LiveHomepageSection {
   is_active: boolean;
   content:
     | HeroBannerContent
+    | OccasionStripContent
     | CategoryGridContent
     | FeaturedProductsContent
     | CoutureSpotlightContent
@@ -25,3 +27,4 @@ export interface LiveHomepageSection {
     | NewsletterContent
     | Record<string, unknown>;
 }
+
