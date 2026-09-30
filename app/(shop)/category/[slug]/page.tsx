@@ -15,6 +15,9 @@ import {
   type ProductSortOption,
 } from "@/features/products";
 import { BRAND } from "@/lib/constants";
+import { env } from "@/lib/env";
+
+const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.com").replace(/\/$/, "");
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -41,12 +44,12 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     title,
     description,
     alternates: {
-      canonical: `https://velaash.com/category/${slug}`,
+      canonical: `${BASE_URL}/category/${slug}`,
     },
     openGraph: {
       title,
       description,
-      url: `https://velaash.com/category/${slug}`,
+      url: `${BASE_URL}/category/${slug}`,
       siteName: BRAND.name,
       locale: "en_IN",
       type: "website",

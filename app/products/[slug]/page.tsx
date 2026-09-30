@@ -7,6 +7,9 @@ import { getProductBySlug } from "@/features/products/queries/get-product-by-slu
 import { getRelatedProducts } from "@/features/products/queries/get-related-products";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
 import { BRAND } from "@/lib/constants";
+import { env } from "@/lib/env";
+
+const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.com").replace(/\/$/, "");
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -48,7 +51,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     openGraph: {
       title,
       description,
-      url: `https://velaash.com/products/${product.slug}`,
+      url: `${BASE_URL}/products/${product.slug}`,
       siteName: BRAND.name,
       locale: "en_IN",
       type: "website",
@@ -99,7 +102,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     },
     offers: {
       "@type": "Offer",
-      url: `https://velaash.com/products/${product.slug}`,
+      url: `${BASE_URL}/products/${product.slug}`,
       priceCurrency: "INR",
       price: product.base_price,
       itemCondition: "https://schema.org/NewCondition",

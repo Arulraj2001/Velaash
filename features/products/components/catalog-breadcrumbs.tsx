@@ -1,6 +1,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { env } from "@/lib/env";
+
+const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.com").replace(/\/$/, "");
 
 export interface BreadcrumbItem {
   label: string;
@@ -20,7 +23,7 @@ export function CatalogBreadcrumbs({ items }: CatalogBreadcrumbsProps) {
       "@type": "ListItem",
       position: index + 1,
       name: item.label,
-      item: item.href ? `https://velaash.com${item.href}` : undefined,
+      item: item.href ? `${BASE_URL}${item.href}` : undefined,
     })),
   };
 

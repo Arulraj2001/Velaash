@@ -30,6 +30,7 @@ import { AlertCircle, ShoppingBag, ArrowLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useCartStore } from "@/features/cart/store/cart-store";
 import { calculateCartTotals } from "@/features/cart/utils/pricing";
+import { trackBeginCheckout } from "@/features/analytics";
 import { ContactInfoStep } from "./contact-info-step";
 import { ShippingAddressStep } from "./shipping-address-step";
 import { ShippingMethodStep } from "./shipping-method-step";
@@ -157,6 +158,28 @@ export function CheckoutView({
       router.replace("/cart");
     }
   }, [isHydrated, items, router]);
+
+  // 2. Analytics: Track begin_checkout event once on checkout view mount (consent-gated)
+  const hasTrackedBeginCheckout = React.useRef(false);
+  useEffect(() => {
+    if (!isHydrated || items.length === 0 || hasTrackedBeginCheckout.current) return;
+    hasTrackedBeginCheckout.current = true;
+
+    trackBeginCheckout({
+      total: totalAmount,
+      itemCount: items.reduce((acc, i) => acc + i.quantity, 0),
+      coupon: appliedCoupon?.code,
+      items: items.map((item) => ({
+        variantId: item.variantId,
+        productId: item.productId,
+        title: item.title,
+        price: item.price,
+        quantity: item.quantity,
+        size: item.size,
+        color: item.color,
+      })),
+    });
+  }, [isHydrated, items, totalAmount, appliedCoupon]);
 
   /**
    * Opens the Razorpay Checkout modal with pre-configured parameters.

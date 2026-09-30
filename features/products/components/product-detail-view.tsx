@@ -24,6 +24,7 @@ import { PincodeChecker } from "./pincode-checker";
 import { ProductAccordion } from "./product-accordion";
 import { MobileStickyBar } from "./mobile-sticky-bar";
 import { ProductReviewsSection } from "@/features/reviews/components/product-reviews-section";
+import { trackViewItem, trackAddToCart } from "@/features/analytics";
 
 interface ProductDetailViewProps {
   product: ProductDetailItem;
@@ -102,6 +103,18 @@ export function ProductDetailView({
     ? Math.round(((compareAtPrice! - price) / compareAtPrice!) * 100)
     : null;
 
+  // Track product view (fires once on mount / product change if consent is granted)
+  React.useEffect(() => {
+    trackViewItem({
+      productId: product.id,
+      variantId: selectedVariant?.id,
+      name: product.name,
+      category: product.category_id || undefined,
+      price: product.base_price,
+      compareAtPrice: product.compare_at_price,
+    });
+  }, [product.id, product.name, product.category_id, product.base_price, product.compare_at_price, selectedVariant?.id]);
+
   // 8. Add to cart handler
   const handleAddToCart = () => {
     if (!selectedVariant || !isAvailable) return;
@@ -131,6 +144,18 @@ export function ProductDetailView({
       },
       quantity
     );
+
+    // E-commerce analytics tracking (consent-gated)
+    trackAddToCart({
+      productId: product.id,
+      variantId: selectedVariant.id,
+      name: product.name,
+      category: product.category_id || undefined,
+      price,
+      quantity,
+      size: selectedVariant.size,
+      color: selectedVariant.color,
+    });
   };
 
   // 9. Buy now handler

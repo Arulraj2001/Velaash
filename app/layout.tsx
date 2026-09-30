@@ -8,6 +8,8 @@ import { AuthProvider } from "@/features/auth/components/auth-provider";
 import { createClient } from "@/lib/supabase/server";
 import { CartToast } from "@/features/cart";
 import { WishlistSync, getWishlistProductIds } from "@/features/wishlist";
+import { AnalyticsScripts, CookieConsentBanner } from "@/features/analytics";
+import { env } from "@/lib/env";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -58,6 +60,16 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "en_IN",
       type: "website",
     },
+    // Google Search Console HTML-tag verification.
+    // Set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION in your environment to activate.
+    // Obtain this value from Search Console → Settings → Ownership verification → HTML tag.
+    ...(env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+      ? {
+          verification: {
+            google: env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+          },
+        }
+      : {}),
   };
 }
 
@@ -112,6 +124,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <main className="flex-1">{children}</main>
             <Footer />
             <CartToast />
+            <AnalyticsScripts />
+            <CookieConsentBanner />
           </AuthProvider>
         )}
       </body>

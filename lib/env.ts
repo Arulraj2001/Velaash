@@ -17,6 +17,13 @@ export const env = createEnv({
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
     NEXT_PUBLIC_APP_URL: z.string().url().optional().default("http://localhost:3000"),
     NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().optional(),
+    NEXT_PUBLIC_GA4_MEASUREMENT_ID: z.string().optional(),
+    NEXT_PUBLIC_META_PIXEL_ID: z.string().optional(),
+    NEXT_PUBLIC_CLARITY_PROJECT_ID: z.string().optional(),
+    // Optional: set to the verification content value from Google Search Console.
+    // When set, renders <meta name="google-site-verification" content="..."> in the root layout.
+    // If not set, no tag is rendered (graceful skip — no code change needed later).
+    NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: z.string().optional(),
   },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
@@ -31,6 +38,10 @@ export const env = createEnv({
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+    NEXT_PUBLIC_GA4_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID,
+    NEXT_PUBLIC_META_PIXEL_ID: process.env.NEXT_PUBLIC_META_PIXEL_ID,
+    NEXT_PUBLIC_CLARITY_PROJECT_ID: process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID,
+    NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
   // Allows build to pass during CI/CD if dummy placeholders are used
   emptyStringAsUndefined: true,

@@ -19,6 +19,9 @@ import { BRAND } from "@/lib/constants";
 import { getNavigationCategories } from "@/features/navigation";
 import { getProducts, ProductCard, type ProductListItem } from "@/features/products";
 import { getSiteSettings } from "@/features/settings";
+import { env } from "@/lib/env";
+
+const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.com").replace(/\/$/, "");
 import { getHomepageSections } from "@/features/homepage";
 import { HomepageNewsletter } from "@/components/homepage/homepage-newsletter";
 
@@ -48,7 +51,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      url: "https://velaash.com",
+      url: BASE_URL,
       siteName: brandName,
       locale: "en_IN",
       type: "website",
@@ -130,14 +133,28 @@ export default async function HomePage() {
   }
 
   // Organization Schema.org JSON-LD using strictly verified business information
+  // Audit: added logo and sameAs to improve Knowledge Panel eligibility
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: siteSettings.storeProfile.name || BRAND.name,
     legalName: siteSettings.storeProfile.legal_name || BRAND.legalName,
-    url: "https://velaash.com",
+    url: BASE_URL,
     email: siteSettings.storeProfile.email || BRAND.contactEmail,
     telephone: siteSettings.storeProfile.whatsapp_number || BRAND.supportPhone,
+    ...(siteSettings.storeProfile.logo_url
+      ? {
+          logo: {
+            "@type": "ImageObject",
+            url: siteSettings.storeProfile.logo_url,
+          },
+        }
+      : {}),
+    sameAs: [
+      siteSettings.socialLinks.instagram || BRAND.socialLinks.instagram,
+      siteSettings.socialLinks.facebook || BRAND.socialLinks.facebook,
+      BRAND.whatsappUrl,
+    ].filter(Boolean),
     contactPoint: [
       {
         "@type": "ContactPoint",

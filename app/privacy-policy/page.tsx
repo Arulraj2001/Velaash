@@ -14,7 +14,10 @@ import {
   FileText,
   Clock,
   MapPin,
+  CheckCircle2,
+  Sliders,
 } from "lucide-react";
+import { CookiePreferencesButton } from "@/features/analytics";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
@@ -47,6 +50,41 @@ export default async function PrivacyPolicyPage() {
 
   const gstEnabled = taxSettings.gst_enabled;
   const invoiceType = gstEnabled ? "tax invoices" : "invoices and bills of supply";
+
+  // Check which analytics tools are actively configured via environment variables
+  const ga4Id = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID?.trim() || "";
+  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || "";
+  const clarityId = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID?.trim() || "";
+
+  const analyticsTools = [
+    {
+      id: "ga4",
+      name: "Google Analytics 4 (GA4)",
+      configured: Boolean(ga4Id),
+      badgeText: ga4Id ? "Configured (Active Opt-In)" : "Not Configured in this Deployment",
+      purpose: "Aggregated page views, traffic sources, and standard e-commerce interaction metrics.",
+      details:
+        "Measures page views, session duration, device types, and standard shopping journey events (viewing products, adding items to cart, proceeding to checkout, order purchases). Helps us optimize platform performance, monitor site reliability, and ensure popular apparel remains in stock.",
+    },
+    {
+      id: "meta_pixel",
+      name: "Meta Pixel",
+      configured: Boolean(pixelId),
+      badgeText: pixelId ? "Configured (Active Opt-In)" : "Not Configured in this Deployment",
+      purpose: "Digital marketing campaign attribution and conversion measurement on Meta platforms.",
+      details:
+        "Evaluates the effectiveness of digital advertisements across Instagram and Facebook. Tracks conversion milestones so we can deliver tailored garment announcements to interested shoppers without transferring personal banking, cardholder, or address data to Meta.",
+    },
+    {
+      id: "clarity",
+      name: "Microsoft Clarity",
+      configured: Boolean(clarityId),
+      badgeText: clarityId ? "Configured (Active Opt-In)" : "Not Configured in this Deployment",
+      purpose: "Visual heatmaps, scroll depth tracking, and anonymous session replays.",
+      details:
+        "Provides visual heatmaps and anonymized interaction replays to help our development team identify usability friction points, layout bugs, and navigation roadblocks. Sensitive text inputs (passwords, phone numbers, delivery addresses) are masked client-side and never recorded.",
+    },
+  ];
 
   const lastUpdated = new Intl.DateTimeFormat("en-IN", {
     month: "long",
@@ -262,24 +300,104 @@ export default async function PrivacyPolicyPage() {
             </article>
 
             {/* Section 7: Cookies & Tracking Technologies */}
-            <article className="rounded-2xl border border-brand-border/80 bg-white p-6 sm:p-8 shadow-xs space-y-4">
+            <article className="rounded-2xl border border-brand-border/80 bg-white p-6 sm:p-8 shadow-xs space-y-5">
               <div className="flex items-center gap-3 pb-2 border-b border-brand-border/50">
                 <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand-accent">
                   <Cookie className="w-4 h-4" />
                 </div>
                 <h2 className="font-heading text-xl sm:text-2xl font-semibold text-brand-dark">
-                  7. Cookies & Tracking Technologies
+                  7. Cookies &amp; Tracking Technologies
                 </h2>
               </div>
-              <div className="space-y-3 text-xs sm:text-sm text-brand-muted leading-relaxed">
+              <div className="space-y-4 text-xs sm:text-sm text-brand-muted leading-relaxed">
                 <p>
-                  We believe in minimal, purposeful client-side storage:
+                  At Velaash, we believe in transparent, consent-first technology. We classify client-side storage and cookies into two distinct tiers: essential functionality and optional web analytics.
                 </p>
-                <ul className="list-disc list-inside space-y-1.5 pl-1">
-                  <li><strong>Authentication Cookies:</strong> We utilize essential, secure HTTP cookies set by Supabase Auth (e.g. <code className="text-[11px] bg-brand-light/60 px-1 py-0.5 rounded">sb-*-auth-token</code>) strictly to maintain your logged-in session.</li>
-                  <li><strong>Browser Local Storage:</strong> Used to maintain your active shopping cart items on your device across page reloads.</li>
-                  <li><strong>No Third-Party Advertising Trackers:</strong> We do not deploy third-party advertising tracking cookies or cross-site tracking pixels (such as Google Analytics / GA4, Meta Pixel, or Microsoft Clarity). We rely solely on internal database metrics for order processing and inventory management.</li>
-                </ul>
+
+                {/* Sub-tier 1: Essential Cookies */}
+                <div className="rounded-xl border border-brand-border/70 bg-brand-light/20 p-4 space-y-2">
+                  <h3 className="font-semibold text-brand-dark text-xs sm:text-sm flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    Essential Functional Storage (Always Active)
+                  </h3>
+                  <p className="text-xs text-brand-muted">
+                    These storage items are strictly necessary for the core security and functionality of the store. They do not track you across other websites:
+                  </p>
+                  <ul className="list-disc list-inside space-y-1 text-xs text-brand-muted pl-1">
+                    <li>
+                      <strong>Authentication Session Cookies:</strong> Secure, HTTP-only tokens issued by Supabase Auth (<code className="text-[11px] bg-brand-light/60 px-1 py-0.5 rounded">sb-*-auth-token</code>) strictly to maintain your logged-in customer session.
+                    </li>
+                    <li>
+                      <strong>Shopping Bag (LocalStorage):</strong> Preserves your chosen garment sizes, quantities, and active items in your browser so your bag does not vanish when browsing different pages.
+                    </li>
+                    <li>
+                      <strong>Cookie Consent Choice:</strong> Stored in <code className="text-[11px] bg-brand-light/60 px-1 py-0.5 rounded">localStorage</code> under <code className="text-[11px] bg-brand-light/60 px-1 py-0.5 rounded">velaash_cookie_consent</code> to remember whether you selected &quot;Accept All&quot; or &quot;Essential Only&quot;.
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Sub-tier 2: Optional Analytics & Attribution */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-brand-dark text-xs sm:text-sm flex items-center gap-1.5">
+                    <Sliders className="w-4 h-4 text-brand-accent shrink-0" />
+                    Web Analytics &amp; Performance Tools (Strictly Consent-Gated)
+                  </h3>
+                  <p className="text-xs text-brand-muted">
+                    We deploy web analytics, ad attribution, and diagnostic heatmaps only to improve site speed and tailor our collections. <strong>Zero tracking scripts are loaded on initial visit without your permission.</strong> If you select &quot;Essential Only&quot; or reject optional cookies, these scripts are completely omitted from your browser session.
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-3 pt-1">
+                    {analyticsTools.map((tool) => (
+                      <div
+                        key={tool.id}
+                        className="rounded-xl border border-brand-border/60 bg-white p-4 space-y-1.5 shadow-2xs"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-medium text-xs sm:text-sm text-brand-dark">
+                            {tool.name}
+                          </span>
+                          <span
+                            className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                              tool.configured
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                : "bg-neutral-100 text-neutral-600 border border-neutral-200"
+                            }`}
+                          >
+                            {tool.badgeText}
+                          </span>
+                        </div>
+                        <p className="text-xs text-brand-dark/90 font-medium">
+                          {tool.purpose}
+                        </p>
+                        <p className="text-[11px] sm:text-xs text-brand-muted leading-relaxed">
+                          {tool.details}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sub-tier 3: Consent Management */}
+                <div className="rounded-xl border border-brand-accent/20 bg-brand-light/30 p-4 space-y-2.5">
+                  <h4 className="font-semibold text-brand-dark text-xs sm:text-sm">
+                    How to Manage or Change Your Cookie Preferences
+                  </h4>
+                  <p className="text-xs text-brand-muted leading-relaxed">
+                    You have complete control over whether analytics tools run during your visits. You can revisit and change your consent choice at any time. Simply click the button below or the permanent <strong>Cookie Preferences</strong> link in the website footer on any page:
+                  </p>
+                  <div>
+                    <CookiePreferencesButton
+                      showIcon={true}
+                      label="Manage Cookie & Analytics Preferences"
+                      className="inline-flex items-center gap-2 rounded-xl bg-brand-accent px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-brand-accent-deep focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                    />
+                  </div>
+                </div>
+
+                {/* Commitment */}
+                <div className="p-3.5 rounded-xl bg-brand-cream/60 border border-brand-border/60 text-xs font-medium text-brand-dark">
+                  <strong>Zero Sale of Personal Data:</strong> We never sell, rent, monetize, or trade your personal data, shopping interactions, or browsing behavior to third-party data brokers or marketing aggregators.
+                </div>
               </div>
             </article>
 

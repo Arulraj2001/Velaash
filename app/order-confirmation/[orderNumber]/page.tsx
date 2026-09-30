@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { getOrderByNumber } from "@/features/checkout/queries/get-order-by-number";
+import { OrderConfirmationTracker } from "@/features/analytics";
 
 export const metadata: Metadata = {
   title: "Order Confirmed | Velaash",
@@ -103,6 +104,7 @@ export default async function OrderConfirmationPage({
 
   return (
     <main className="min-h-screen bg-brand-cream/30 py-10 sm:py-16 px-4 sm:px-6 lg:px-8">
+      <OrderConfirmationTracker order={order} />
       <div className="mx-auto max-w-5xl">
         {/* Top Header Card */}
         <div className="rounded-2xl border border-brand-border/80 bg-white p-6 sm:p-10 shadow-sm text-center">

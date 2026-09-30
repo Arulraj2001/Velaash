@@ -115,9 +115,19 @@ async function main() {
   }
 
   assert(
-    privHtml.includes("We do not deploy third-party advertising tracking cookies") ||
-    privHtml.includes("We do not deploy third-party advertising trackers"),
-    "Privacy Policy explicitly clarifies absence of third-party advertising/tracking cookies"
+    privHtml.includes("Cookies &amp; Tracking Technologies") || privHtml.includes("Cookies & Tracking Technologies"),
+    "Privacy Policy contains Cookies & Tracking Technologies section"
+  );
+
+  assert(
+    privHtml.includes("Zero tracking scripts are loaded on initial visit without your permission") ||
+    privHtml.includes("Strictly Consent-Gated"),
+    "Privacy Policy explicitly states tracking tools are strictly consent-gated"
+  );
+
+  assert(
+    privHtml.includes("Manage Cookie &amp; Analytics Preferences") || privHtml.includes("Manage Cookie & Analytics Preferences"),
+    "Privacy Policy includes direct Cookie Preferences management button"
   );
 
   // 2. Confirm true implementation details

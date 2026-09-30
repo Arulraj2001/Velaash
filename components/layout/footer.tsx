@@ -6,6 +6,7 @@ import { getNavigationCategories } from "@/features/navigation";
 import { getSiteSettings } from "@/features/settings";
 import { FooterAccordionItem } from "./footer-accordion-item";
 import { NewsletterForm } from "./newsletter-form";
+import { CookiePreferencesButton } from "@/features/analytics";
 import {
   Instagram,
   MessageCircle,
@@ -168,7 +169,7 @@ export async function Footer() {
               rights reserved.
             </p>
 
-            <div className="text-brand-cream/60 flex items-center gap-5 text-xs">
+            <div className="text-brand-cream/60 flex flex-wrap items-center gap-5 text-xs">
               {LEGAL_LINKS.map((link) => (
                 <Link
                   key={link.label}
@@ -178,6 +179,7 @@ export async function Footer() {
                   {link.label}
                 </Link>
               ))}
+              <CookiePreferencesButton />
             </div>
           </div>
         </Container>
