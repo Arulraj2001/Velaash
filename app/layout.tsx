@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CartToast } from "@/features/cart";
 import { WishlistSync, getWishlistProductIds } from "@/features/wishlist";
 import { AnalyticsScripts, CookieConsentBanner } from "@/features/analytics";
+import { BrandPreloader } from "@/components/ui";
 import { env } from "@/lib/env";
 
 const cormorant = Cormorant_Garamond({
@@ -117,9 +118,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   let initialUser = null;
   let initialWishlistIds: string[] = [];
+  let logoUrl: string | null = null;
   if (!isAdminRoute) {
     try {
-      const supabase = await createClient();
+      const [{ storeProfile }, supabase] = await Promise.all([
+        getSiteSettings(),
+        createClient(),
+      ]);
+      logoUrl = storeProfile.logo_url || null;
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -154,6 +161,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               footer={<Footer />}
               overlays={
                 <>
+                  <BrandPreloader logoUrl={logoUrl} />
                   <CartToast />
                   <CookieConsentBanner />
                 </>

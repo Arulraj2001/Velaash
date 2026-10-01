@@ -76,3 +76,13 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #cc6f00;
 }
+
+/* Luxury preloader golden shimmer keyframe */
+@keyframes preloaderShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
