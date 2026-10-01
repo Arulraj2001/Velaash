@@ -190,7 +190,7 @@ function SectionEditModalInner({
   const handleAddSlide = () => {
     const current = getSlides();
     const newSlide: SlideItemState = {
-      id: `slide-${Date.now()}`,
+      id: `slide-${current.length + 1}`,
       tag: "New Arrivals",
       headline: "New Luxury Silhouette",
       subtitle: "Effortless silhouettes, refined textures, and contemporary wardrobe essentials.",
@@ -346,7 +346,7 @@ function SectionEditModalInner({
   const handleAddOccasion = () => {
     const current = getOccasionItems();
     const newItem: OccasionItemState = {
-      id: `occ-${Date.now()}`,
+      id: `occ-${current.length + 1}`,
       name: "New Occasion",
       subtitle: "Curated collection",
       slug: "new-occasion",

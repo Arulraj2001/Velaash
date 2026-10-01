@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/features/auth";
-import { getCustomerOrders, OrderStatusBadge } from "@/features/orders";
+import { getCustomerOrders, OrderStatusBadge, BuyAgainButton } from "@/features/orders";
 import { Button } from "@/components/ui";
 import { OrderStatusFilter } from "./components/order-status-filter";
 import {
@@ -182,11 +182,18 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
                       </p>
                     </div>
 
-                    <Link href={`/account/orders/${order.orderNumber}`}>
-                      <Button variant="outline" size="sm" className="text-xs font-medium">
-                        View Details
-                      </Button>
-                    </Link>
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      <BuyAgainButton
+                        orderId={order.id}
+                        orderNumber={order.orderNumber}
+                        status={order.status}
+                      />
+                      <Link href={`/account/orders/${order.orderNumber}`}>
+                        <Button variant="outline" size="sm" className="text-xs font-medium">
+                          View Details
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               );

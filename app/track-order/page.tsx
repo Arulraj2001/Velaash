@@ -1,7 +1,8 @@
 import React from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ChevronRight, Truck, Package, MessageCircle, Clock } from "lucide-react";
+import { Package, MessageCircle, Clock } from "lucide-react";
+import { PageHeaderBanner } from "@/components/ui";
+import { getSiteSettings } from "@/features/settings";
 import { GuestTrackingForm } from "@/features/orders/components/guest-tracking-form";
 
 export const metadata: Metadata = {
@@ -10,40 +11,34 @@ export const metadata: Metadata = {
     "Track the live delivery progress, courier status, and fulfillment journey of your Velaash apparel order without logging in.",
 };
 
-export default function TrackOrderPage() {
+export default async function TrackOrderPage() {
+  const settings = await getSiteSettings();
+  const trackBanner = settings.pageBanners?.track_order;
+
   const whatsappNumber = "918508643832";
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
     "Hi Velaash, I have a question regarding order tracking and delivery status."
   )}`;
 
   return (
-    <main className="min-h-screen bg-brand-cream/20 py-10 sm:py-16 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl space-y-10">
-        {/* Breadcrumb Navigation */}
-        <nav
-          aria-label="Breadcrumb"
-          className="flex items-center gap-1.5 text-xs text-brand-muted"
-        >
-          <Link href="/" className="hover:text-brand-dark transition-colors">
-            Home
-          </Link>
-          <ChevronRight className="h-3 w-3 text-brand-border" />
-          <span className="text-brand-dark font-medium">Track Order</span>
-        </nav>
+    <main className="min-h-screen bg-brand-cream/40 font-sans pb-24">
+      {/* 1. Universal Page Header Banner (Minimal by default; letterbox hero if image configured) */}
+      <PageHeaderBanner
+        badge="Fulfillment & Delivery Tracking"
+        title={trackBanner?.headline?.trim() || "Track Your Order"}
+        description={
+          trackBanner?.subtitle?.trim() ||
+          "Check the real-time status of your handcrafted garments from initial tailoring to courier dispatch and final doorstep delivery."
+        }
+        imageUrl={trackBanner?.image_url}
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "Track Order" },
+        ]}
+      />
 
-        {/* Hero Title Section */}
-        <header className="space-y-3 text-center sm:text-left border-b border-brand-border/60 pb-8">
-          <div className="inline-flex items-center gap-2 rounded-full bg-brand-light/60 border border-brand-border/70 px-3.5 py-1 text-xs font-semibold text-brand-accent-dark">
-            <Truck className="h-3.5 w-3.5 text-brand-accent" />
-            <span>Fulfillment &amp; Delivery Tracking</span>
-          </div>
-          <h1 className="font-heading text-3xl sm:text-5xl font-medium tracking-tight text-brand-dark">
-            Track Your Order
-          </h1>
-          <p className="max-w-2xl text-xs sm:text-sm text-brand-muted leading-relaxed">
-            Check the real-time status of your handcrafted garments from initial tailoring to courier dispatch and final doorstep delivery.
-          </p>
-        </header>
+      <div className="mx-auto max-w-4xl space-y-10 px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+
 
         {/* Guest Tracking Form & Results Display */}
         <GuestTrackingForm />

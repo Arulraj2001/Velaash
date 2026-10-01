@@ -11,6 +11,7 @@ import type {
   TaxPolicySetting,
   SeoDefaultsSetting,
   ShiprocketSetting,
+  PageBannersSetting,
 } from "../types";
 
 export const DEFAULT_SHIPPING_POLICY: ShippingPolicySetting = {
@@ -57,6 +58,15 @@ export const DEFAULT_SHIPROCKET_SETTING: ShiprocketSetting = {
   auto_push_on_pack: false,
 };
 
+export const DEFAULT_PAGE_BANNERS_SETTING: PageBannersSetting = {
+  shop: {},
+  about: {},
+  contact: {},
+  faq: {},
+  shipping_returns: {},
+  track_order: {},
+};
+
 export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   storeProfile: {
     name: BRAND.name,
@@ -80,6 +90,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   taxSettings: DEFAULT_TAX_POLICY,
   seoDefaults: DEFAULT_SEO_DEFAULTS,
   shiprocketSettings: DEFAULT_SHIPROCKET_SETTING,
+  pageBanners: DEFAULT_PAGE_BANNERS_SETTING,
 };
 
 /**
@@ -106,6 +117,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
         "tax_settings",
         "seo_defaults",
         "shiprocket_settings",
+        "page_banners",
       ]);
 
     if (error || !data || data.length === 0) {
@@ -244,6 +256,15 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       auto_push_on_pack: Boolean(rawShiprocket.auto_push_on_pack),
     };
 
+    const pageBannersRow = data.find((row) => row.key === "page_banners");
+    let pageBanners: PageBannersSetting = DEFAULT_PAGE_BANNERS_SETTING;
+    if (pageBannersRow && pageBannersRow.value && typeof pageBannersRow.value === "object") {
+      pageBanners = {
+        ...DEFAULT_PAGE_BANNERS_SETTING,
+        ...(pageBannersRow.value as PageBannersSetting),
+      };
+    }
+
     return {
       storeProfile,
       socialLinks,
@@ -254,6 +275,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       taxSettings,
       seoDefaults,
       shiprocketSettings,
+      pageBanners,
     };
   } catch (error: unknown) {
     if (

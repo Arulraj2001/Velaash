@@ -141,3 +141,22 @@ export const ShiprocketSettingsSchema = z.object({
 });
 
 export type ShiprocketSettingsFormData = z.infer<typeof ShiprocketSettingsSchema>;
+
+// 10. Page Banners
+export const PageBannerItemSchema = z.object({
+  image_url: z.string().trim().optional().default(""),
+  headline: z.string().trim().optional().default(""),
+  subtitle: z.string().trim().optional().default(""),
+});
+
+export const PageBannersSchema = z.object({
+  shop: PageBannerItemSchema.optional().default({}),
+  about: PageBannerItemSchema.optional().default({}),
+  contact: PageBannerItemSchema.optional().default({}),
+  faq: PageBannerItemSchema.optional().default({}),
+  shipping_returns: PageBannerItemSchema.optional().default({}),
+  track_order: PageBannerItemSchema.optional().default({}),
+});
+
+export type PageBannersFormData = z.infer<typeof PageBannersSchema>;
+

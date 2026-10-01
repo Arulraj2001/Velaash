@@ -7,6 +7,7 @@ import { useCartStore } from "../store/cart-store";
 import { CartEmptyState } from "./cart-empty-state";
 import { CartItemRow } from "./cart-item-row";
 import { CartOrderSummary } from "./cart-order-summary";
+import { CartSuggestions } from "./cart-suggestions";
 import { revalidateCartAction } from "../actions/revalidate-cart-action";
 import { validateCouponAction } from "../actions/validate-coupon-action";
 import type { ShippingPolicyData, CartItem } from "../types";
@@ -297,6 +298,9 @@ export function CartView({ shippingPolicy, returnWindowDays }: CartViewProps) {
           />
         </div>
       </div>
+
+      {/* Cart Cross-Sell Suggestions */}
+      <CartSuggestions cartProductIds={items.map((i) => i.productId)} />
 
       {/* Undo Toast */}
       {undoState && (

@@ -122,6 +122,7 @@ export interface ProductFilterParams {
   page?: number;
   limit?: number;
   productIds?: string[];
+  search?: string;
 }
 
 /**
@@ -132,6 +133,7 @@ export interface ProductCategoryMetadata {
   name: string;
   slug: string;
   description?: string | null;
+  image_url?: string | null;
   seo_title?: string | null;
   seo_description?: string | null;
   parent_id?: string | null;

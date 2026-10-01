@@ -136,7 +136,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="bg-brand-cream/30 min-h-screen py-8 sm:py-12">
+      <div className="bg-brand-cream/40 min-h-screen py-8 sm:py-12">
         <Container size="xl">
           {/* Interactive PDP View (Gallery, Sizing, Cart Actions, Accordion, Reviews) */}
           <ProductDetailView

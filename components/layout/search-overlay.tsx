@@ -61,7 +61,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
-    router.push(`/products?search=${encodeURIComponent(query.trim())}`);
+    router.push(`/shop?search=${encodeURIComponent(query.trim())}`);
     handleClose();
   };
 
@@ -125,7 +125,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                   key={term}
                   type="button"
                   onClick={() => {
-                    router.push(`/products?search=${encodeURIComponent(term)}`);
+                    router.push(`/shop?search=${encodeURIComponent(term)}`);
                     handleClose();
                   }}
                   className="border-brand-border/80 bg-brand-card hover:bg-brand-light/30 hover:border-brand-gold text-brand-dark inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs transition-colors"

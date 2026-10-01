@@ -20,6 +20,8 @@ import {
   ExternalLink,
   PackageCheck,
   Info,
+  Image as ImageIcon,
+  Trash2,
 } from "lucide-react";
 import type { SiteSettingsData } from "@/features/settings";
 import {
@@ -32,11 +34,13 @@ import {
   updateAnnouncementSettingsAction,
   updateSeoSettingsAction,
   updateShiprocketSettingsAction,
+  updatePageBannersAction,
   uploadBrandAssetAction,
 } from "../../actions/settings-actions";
 
 type SettingsTab =
   | "store_profile"
+  | "page_banners"
   | "social_links"
   | "shipping"
   | "logistics"
@@ -48,6 +52,7 @@ type SettingsTab =
 
 const TABS: { id: SettingsTab; label: string; icon: React.ElementType; description: string }[] = [
   { id: "store_profile", label: "Store Profile", icon: Store, description: "Brand name, legal entity, contact info & logos" },
+  { id: "page_banners", label: "Page Banners", icon: ImageIcon, description: "Configure & upload header banner images for customer pages" },
   { id: "social_links", label: "Social Links", icon: Share2, description: "Instagram, Facebook, WhatsApp & Pinterest URLs" },
   { id: "shipping", label: "Shipping & Rates", icon: Truck, description: "Free shipping threshold & standard shipping fees" },
   { id: "logistics", label: "Logistics & Shiprocket", icon: PackageCheck, description: "Warehouse pickup pincode & dispatch location" },
@@ -138,6 +143,13 @@ export function SiteSettingsView({ initialSettings }: { initialSettings: SiteSet
             <StoreProfileForm
               initial={initialSettings.storeProfile}
               onSaved={() => showToast("Store profile saved successfully.")}
+            />
+          )}
+
+          {activeTab === "page_banners" && (
+            <PageBannersForm
+              initial={initialSettings.pageBanners}
+              onSaved={() => showToast("Page header banners saved successfully.")}
             />
           )}
 
@@ -414,32 +426,92 @@ function StoreProfileForm({
           </div>
         </div>
 
-        <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
-          <label className="block text-xs font-semibold text-slate-700">Browser Favicon</label>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded border bg-white flex items-center justify-center text-xs font-bold">
-              V
-            </div>
-            <span className="text-xs text-slate-500">Preview</span>
+        <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-semibold text-slate-700">Browser Favicon</label>
+            {form.favicon_url === "/favicon.ico" ? (
+              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100/70 border border-emerald-300 px-2 py-0.5 rounded-full">
+                Multi-Device Brand Suite Active
+              </span>
+            ) : (
+              <span className="text-[10px] font-semibold text-amber-700 bg-amber-100/70 border border-amber-300 px-2 py-0.5 rounded-full">
+                Custom Upload Active
+              </span>
+            )}
           </div>
-          <div>
-            <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-white transition-colors">
-              {uploadingFavicon ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-              <span>Upload New Favicon</span>
+
+          {/* Browser Tab Simulation Preview */}
+          <div className="space-y-1.5">
+            <span className="text-[11px] font-medium text-slate-500">Live Tab Simulation:</span>
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Light Theme Tab Preview */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white shadow-xs max-w-xs">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={form.favicon_url || "/favicon.ico"}
+                  alt="Favicon light preview"
+                  className="w-4 h-4 rounded-xs object-contain"
+                />
+                <span className="text-[11px] font-medium text-slate-700 truncate max-w-[130px]">
+                  {form.name || "Velaash"} — Online
+                </span>
+                <span className="text-[10px] text-slate-400 ml-auto">Light</span>
+              </div>
+
+              {/* Dark Theme Tab Preview */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xs max-w-xs">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={form.favicon_url || "/favicon.ico"}
+                  alt="Favicon dark preview"
+                  className="w-4 h-4 rounded-xs object-contain"
+                />
+                <span className="text-[11px] font-medium text-zinc-200 truncate max-w-[130px]">
+                  {form.name || "Velaash"} — Online
+                </span>
+                <span className="text-[10px] text-zinc-500 ml-auto">Dark</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-white transition-colors shadow-xs">
+                {uploadingFavicon ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                <span>Upload Custom Favicon</span>
+                <input
+                  type="file"
+                  accept="image/x-icon,image/png,image/svg+xml"
+                  onChange={(e) => handleUpload(e, "favicon")}
+                  disabled={uploadingFavicon}
+                  className="hidden"
+                />
+              </label>
+
+              {form.favicon_url !== "/favicon.ico" && (
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, favicon_url: "/favicon.ico" })}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium shadow-xs transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Reset to Brand Suite</span>
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-1 pt-1">
               <input
-                type="file"
-                accept="image/x-icon,image/png,image/svg+xml"
-                onChange={(e) => handleUpload(e, "favicon")}
-                disabled={uploadingFavicon}
-                className="hidden"
+                type="text"
+                value={form.favicon_url}
+                onChange={(e) => setForm({ ...form, favicon_url: e.target.value })}
+                placeholder="/favicon.ico or https://..."
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-mono"
               />
-            </label>
-            <input
-              type="text"
-              value={form.favicon_url}
-              onChange={(e) => setForm({ ...form, favicon_url: e.target.value })}
-              className="w-full mt-2 px-2.5 py-1 text-xs border border-slate-200 rounded bg-white font-mono"
-            />
+              <p className="text-[10px] text-slate-500 leading-tight">
+                Built-in suite delivers multi-device assets: SVG (vector), ICO (16/32/48px), Apple Touch (180px), and Android PWA (192/512px). If uploading custom, use a 512×512 square PNG or SVG.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -1366,7 +1438,7 @@ function LogisticsSettingsForm({
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-500 mt-0.5 shrink-0">②</span>
-                    <span>Confirm the order → Pack it → Click <strong>"Mark as Shipped"</strong></span>
+                    <span>Confirm the order → Pack it → Click <strong>&quot;Mark as Shipped&quot;</strong></span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-500 mt-0.5 shrink-0">③</span>
@@ -1398,7 +1470,7 @@ function LogisticsSettingsForm({
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-indigo-500 mt-0.5 shrink-0">②</span>
-                    <span>Pack the order → Click <strong>"Push to Shiprocket"</strong> in the order detail view</span>
+                    <span>Pack the order → Click <strong>&quot;Push to Shiprocket&quot;</strong> in the order detail view</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-indigo-500 mt-0.5 shrink-0">③</span>
@@ -1593,3 +1665,346 @@ function LogisticsSettingsForm({
     </>
   );
 }
+
+// ============================================================================
+// 10. PAGE BANNERS FORM
+// ============================================================================
+type BannerPageKey = "shop" | "about" | "contact" | "faq" | "shipping_returns" | "track_order";
+
+interface BannerPageConfig {
+  key: BannerPageKey;
+  label: string;
+  route: string;
+  defaultTitle: string;
+  defaultSubtitle: string;
+}
+
+const BANNER_PAGES: BannerPageConfig[] = [
+  {
+    key: "shop",
+    label: "Shop / All Collections",
+    route: "/shop",
+    defaultTitle: "The Collection",
+    defaultSubtitle: "Explore our signature collection of handcrafted sarees and kurtas.",
+  },
+  {
+    key: "about",
+    label: "About Us",
+    route: "/about",
+    defaultTitle: "Our Heritage & Craft",
+    defaultSubtitle: "Woven with passion, rooted in timeless South Indian heritage.",
+  },
+  {
+    key: "contact",
+    label: "Contact Us",
+    route: "/contact",
+    defaultTitle: "Connect With Us",
+    defaultSubtitle: "We are here to assist with personalized styling and order inquiries.",
+  },
+  {
+    key: "faq",
+    label: "FAQ & Help",
+    route: "/faq",
+    defaultTitle: "Frequently Asked Questions",
+    defaultSubtitle: "Clear answers to your queries on sizing, shipping, care, and payments.",
+  },
+  {
+    key: "shipping_returns",
+    label: "Shipping & Returns",
+    route: "/shipping-returns",
+    defaultTitle: "Delivery & Returns",
+    defaultSubtitle: "Seamless, insured doorstep delivery across India and transparent returns.",
+  },
+  {
+    key: "track_order",
+    label: "Track Order",
+    route: "/track-order",
+    defaultTitle: "Order Tracking",
+    defaultSubtitle: "Real-time courier tracking and updates for your order.",
+  },
+];
+
+function PageBannersForm({
+  initial,
+  onSaved,
+}: {
+  initial: SiteSettingsData["pageBanners"];
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState<SiteSettingsData["pageBanners"]>({
+    shop: { image_url: initial?.shop?.image_url || "", headline: initial?.shop?.headline || "", subtitle: initial?.shop?.subtitle || "" },
+    about: { image_url: initial?.about?.image_url || "", headline: initial?.about?.headline || "", subtitle: initial?.about?.subtitle || "" },
+    contact: { image_url: initial?.contact?.image_url || "", headline: initial?.contact?.headline || "", subtitle: initial?.contact?.subtitle || "" },
+    faq: { image_url: initial?.faq?.image_url || "", headline: initial?.faq?.headline || "", subtitle: initial?.faq?.subtitle || "" },
+    shipping_returns: { image_url: initial?.shipping_returns?.image_url || "", headline: initial?.shipping_returns?.headline || "", subtitle: initial?.shipping_returns?.subtitle || "" },
+    track_order: { image_url: initial?.track_order?.image_url || "", headline: initial?.track_order?.headline || "", subtitle: initial?.track_order?.subtitle || "" },
+  });
+  const [uploadingKey, setUploadingKey] = useState<BannerPageKey | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: BannerPageKey) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingKey(key);
+      setErrorMsg(null);
+
+      const fd = new FormData();
+      fd.append("file", file);
+
+      const res = await uploadBrandAssetAction(fd, "banner");
+      if (res.success && res.url) {
+        setForm((prev) => ({
+          ...prev,
+          [key]: {
+            ...prev?.[key],
+            image_url: res.url,
+          },
+        }));
+      } else {
+        setErrorMsg(res.error || "Failed to upload banner image.");
+      }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to upload banner.");
+    } finally {
+      setUploadingKey(null);
+    }
+  };
+
+  const updateField = (key: BannerPageKey, field: "image_url" | "headline" | "subtitle", value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev?.[key],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleClearImage = (key: BannerPageKey) => {
+    updateField(key, "image_url", "");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg(null);
+
+    const res = await updatePageBannersAction(form);
+    setIsSubmitting(false);
+
+    if (res.success) {
+      onSaved();
+    } else {
+      setErrorMsg(res.error || "Failed to save page banners.");
+    }
+  };
+
+  return (
+    <>
+      <div className="border-b border-slate-100 pb-5 mb-6">
+        <h3 className="text-base font-bold text-slate-900">Page Header Banners</h3>
+        <p className="text-xs text-slate-500 mt-0.5">
+          Configure hero banner images and custom headings for customer-facing pages. When an image is set, a sleek letterbox banner is rendered. When empty, pages use an ultra-sleek, compact (~90px) minimal bar.
+        </p>
+      </div>
+
+      {errorMsg && (
+        <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {/* Informational Guidance Callout */}
+      <div className="mb-6 p-4 rounded-xl bg-amber-50/70 border border-amber-200 text-amber-900 text-xs leading-relaxed space-y-1.5">
+        <div className="flex items-center gap-2 font-semibold">
+          <Info className="w-4 h-4 text-amber-700 shrink-0" />
+          <span>Banner Design Best Practices</span>
+        </div>
+        <p className="text-amber-800">
+          • <strong>Recommended Dimensions:</strong> 1920 × 400 px (or min. 1400 × 350 px) landscape letterbox.
+        </p>
+        <p className="text-amber-800">
+          • <strong>Minimal by Default:</strong> Leaving the image URL blank keeps the page header ultra-minimal and high-converting, displaying products immediately above the fold.
+        </p>
+        <p className="text-amber-800">
+          • <strong>Category Pages (<code className="font-mono text-[11px]">/category/[slug]</code>):</strong> Category banners automatically display the category image configured in <strong>Admin → Categories</strong>.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {BANNER_PAGES.map((page) => {
+          const item = form?.[page.key] || { image_url: "", headline: "", subtitle: "" };
+          const imageUrl = item.image_url || "";
+          const hasImage = Boolean(imageUrl.trim());
+          const isUploading = uploadingKey === page.key;
+          const displayHeadline = item.headline || page.defaultTitle;
+          const displaySubtitle = item.subtitle || page.defaultSubtitle;
+
+          return (
+            <div
+              key={page.key}
+              className="p-4 sm:p-5 rounded-xl border border-slate-200 bg-slate-50/40 space-y-4 transition-all"
+            >
+              {/* Header row */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200/80">
+                <div className="flex items-center gap-2.5">
+                  <span className="font-mono text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-200 text-slate-800">
+                    {page.route}
+                  </span>
+                  <h4 className="text-sm font-bold text-slate-900">{page.label}</h4>
+                </div>
+                <div>
+                  {hasImage ? (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 bg-amber-100/70 border border-amber-300/80 px-2.5 py-0.5 rounded-full">
+                      <ImageIcon className="w-3 h-3 text-amber-700" />
+                      Image Banner Active
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-100/70 border border-emerald-300/80 px-2.5 py-0.5 rounded-full">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                      Minimal Header Active
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Banner Image Preview / Actions */}
+              <div className="space-y-3">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Banner Image
+                </label>
+
+                {hasImage ? (
+                  <div className="space-y-3">
+                    {/* Live Letterbox Preview */}
+                    <div className="relative h-28 w-full rounded-lg overflow-hidden border border-slate-300 shadow-inner bg-zinc-900 group">
+                      <Image
+                        src={imageUrl}
+                        alt={page.label}
+                        fill
+                        className="object-cover object-center"
+                        sizes="(max-width: 768px) 100vw, 700px"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/30" />
+                      <div className="absolute inset-0 p-4 flex flex-col justify-end">
+                        <span className="text-white text-base sm:text-lg font-serif font-semibold drop-shadow-md">
+                          {displayHeadline}
+                        </span>
+                        <span className="text-white/80 text-[11px] line-clamp-1 drop-shadow-sm">
+                          {displaySubtitle}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium cursor-pointer shadow-xs transition-colors">
+                        {isUploading ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />
+                        ) : (
+                          <Upload className="w-3.5 h-3.5 text-slate-500" />
+                        )}
+                        <span>{isUploading ? "Uploading..." : "Replace Image"}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={isUploading}
+                          onChange={(e) => handleUpload(e, page.key)}
+                          className="hidden"
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={() => handleClearImage(page.key)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium shadow-xs transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                        <span>Remove (Revert to Minimal)</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
+                    <label className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg border border-dashed border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium cursor-pointer shadow-xs transition-colors">
+                      {isUploading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />
+                      ) : (
+                        <Upload className="w-3.5 h-3.5 text-slate-500" />
+                      )}
+                      <span>{isUploading ? "Uploading..." : "Upload Banner Image"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={isUploading}
+                        onChange={(e) => handleUpload(e, page.key)}
+                        className="hidden"
+                      />
+                    </label>
+
+                    <span className="text-[11px] text-slate-400 text-center sm:text-left">or enter image URL directly:</span>
+
+                    <input
+                      type="text"
+                      value={imageUrl}
+                      onChange={(e) => updateField(page.key, "image_url", e.target.value)}
+                      placeholder="https://... or /banners/shop.jpg"
+                      className="flex-1 px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white font-mono"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Optional Custom Heading & Subtitle Overrides */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    Custom Headline (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={item.headline || ""}
+                    onChange={(e) => updateField(page.key, "headline", e.target.value)}
+                    placeholder={page.defaultTitle}
+                    className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-0.5">Leave blank to use default &ldquo;{page.defaultTitle}&rdquo;</p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    Custom Subtitle (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={item.subtitle || ""}
+                    onChange={(e) => updateField(page.key, "subtitle", e.target.value)}
+                    placeholder={page.defaultSubtitle}
+                    className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-0.5">Leave blank to use default subtitle</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        <div className="pt-4 border-t border-slate-100 flex justify-end">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-colors disabled:opacity-50"
+          >
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <span>Save Page Banners</span>
+          </button>
+        </div>
+      </form>
+    </>
+  );
+}
+

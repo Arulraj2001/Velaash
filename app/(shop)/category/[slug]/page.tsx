@@ -10,10 +10,10 @@ import {
   ProductSort,
   ProductPagination,
   ProductGridEmpty,
-  CatalogBreadcrumbs,
   type BreadcrumbItem,
   type ProductSortOption,
 } from "@/features/products";
+import { Container, PageHeaderBanner } from "@/components/ui";
 import { BRAND } from "@/lib/constants";
 import { env } from "@/lib/env";
 
@@ -90,6 +90,12 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     inStock,
   });
 
+  // If 0 products found, fetch 4 featured products for empty state suggestions
+  const featuredSuggestions =
+    products.length === 0
+      ? (await getProducts({ limit: 4, sort: "featured" })).products
+      : [];
+
   // Construct Breadcrumbs
   const breadcrumbItems: BreadcrumbItem[] = [
     { label: "Home", href: "/" },
@@ -107,64 +113,65 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   return (
     <div className="space-y-6 font-sans sm:space-y-8">
-      {/* Breadcrumbs with JSON-LD Schema */}
-      <CatalogBreadcrumbs items={breadcrumbItems} />
+      {/* 1. Full-Bleed Page Header Banner (Minimal by default; letterbox hero if category has image) */}
+      <PageHeaderBanner
+        badge={category.parent_name ? `${category.parent_name} Collection` : "Curated Collection"}
+        title={category.name}
+        description={
+          category.description ||
+          `Discover contemporary ${category.name.toLowerCase()} thoughtfully designed with refined fabrics, effortless cuts, and everyday grace.`
+        }
+        imageUrl={category.image_url}
+        breadcrumbs={breadcrumbItems}
+        extraMeta={
+          <span className="inline-block text-xs font-medium text-brand-gold">
+            Showing {totalCount} Handcrafted {totalCount === 1 ? "Design" : "Designs"}
+          </span>
+        }
+      />
 
-      {/* Category Header Banner */}
-      <div className="border-brand-border/60 space-y-2 border-b pb-6">
-        <span className="text-brand-accent text-xs font-semibold tracking-widest uppercase">
-          {category.parent_name ? `${category.parent_name} Collection` : "Collection"}
-        </span>
-        <h1 className="font-heading text-brand-dark text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
-          {category.name}
-        </h1>
-        {category.description && (
-          <p className="text-brand-muted max-w-2xl text-xs leading-relaxed sm:text-sm">
-            {category.description}
-          </p>
-        )}
-      </div>
+      <Container size="xl" className="space-y-6 sm:space-y-8">
+        {/* Controls Bar */}
+        <div className="border-brand-border/40 flex items-center justify-between gap-4 border-b pb-4">
+          {/* Mobile Filter Drawer */}
+          <ProductFiltersDrawer availableFilters={availableFilters} currentCategorySlug={slug} />
 
-      {/* Controls Bar */}
-      <div className="border-brand-border/40 flex items-center justify-between gap-4 border-b pb-4">
-        {/* Mobile Filter Drawer */}
-        <ProductFiltersDrawer availableFilters={availableFilters} currentCategorySlug={slug} />
-
-        {/* Sort Dropdown */}
-        <div className="ml-auto">
-          <ProductSort />
+          {/* Sort Dropdown */}
+          <div className="ml-auto">
+            <ProductSort />
+          </div>
         </div>
-      </div>
 
-      {/* Main Catalog Layout */}
-      <div className="flex items-start gap-8 lg:gap-10">
-        {/* Desktop Filter Sidebar */}
-        <aside className="sticky top-24 hidden w-56 shrink-0 md:block lg:w-64">
-          <ProductFilters availableFilters={availableFilters} currentCategorySlug={slug} />
-        </aside>
+        {/* Main Catalog Layout */}
+        <div className="flex items-start gap-8 lg:gap-10">
+          {/* Desktop Filter Sidebar */}
+          <aside className="sticky top-24 hidden w-56 shrink-0 md:block lg:w-64">
+            <ProductFilters availableFilters={availableFilters} currentCategorySlug={slug} />
+          </aside>
 
-        {/* Product Grid Area */}
-        <main className="min-w-0 flex-1">
-          {/* Active Filter Chips */}
-          <ActiveFilterChips totalCount={totalCount} />
+          {/* Product Grid Area */}
+          <main className="min-w-0 flex-1">
+            {/* Active Filter Chips */}
+            <ActiveFilterChips totalCount={totalCount} />
 
-          {/* Grid or Empty State */}
-          {products.length === 0 ? (
-            <ProductGridEmpty />
-          ) : (
-            <div className="space-y-8">
-              <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {products.map((product, idx) => (
-                  <ProductCard key={product.id} product={product} priority={idx < 4} />
-                ))}
+            {/* Grid or Empty State */}
+            {products.length === 0 ? (
+              <ProductGridEmpty featuredProducts={featuredSuggestions} />
+            ) : (
+              <div className="space-y-8">
+                <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {products.map((product, idx) => (
+                    <ProductCard key={product.id} product={product} priority={idx < 4} />
+                  ))}
+                </div>
+
+                {/* URL-based Server-rendered Pagination */}
+                <ProductPagination currentPage={page} totalPages={totalPages} />
               </div>
-
-              {/* URL-based Server-rendered Pagination */}
-              <ProductPagination currentPage={page} totalPages={totalPages} />
-            </div>
-          )}
-        </main>
-      </div>
+            )}
+          </main>
+        </div>
+      </Container>
     </div>
   );
 }

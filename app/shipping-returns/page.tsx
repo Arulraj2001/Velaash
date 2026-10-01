@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Container } from "@/components/ui";
+import { Container, PageHeaderBanner } from "@/components/ui";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
 import {
   Truck,
@@ -40,25 +40,24 @@ export default async function ShippingReturnsPage() {
   const whatsappNum = storeProfile.whatsapp_number || storeProfile.phone || "+91 8508643832";
   const cleanPhone = whatsappNum.replace(/[^0-9]/g, "");
   const contactEmail = storeProfile.email || "bestrchandra@gmail.com";
+  const shippingBanner = settings.pageBanners?.shipping_returns;
 
   return (
-    <main className="min-h-screen bg-brand-light/20 font-sans pb-24">
-      {/* 1. Header Banner */}
-      <section className="bg-brand-cream/40 border-b border-brand-border/60 py-14 sm:py-20">
-        <Container size="xl">
-          <div className="max-w-3xl mx-auto text-center space-y-3">
-            <span className="text-xs font-semibold uppercase tracking-widest text-brand-gold">
-              Store Policies & Guidelines
-            </span>
-            <h1 className="font-heading text-3xl sm:text-5xl font-semibold text-brand-dark tracking-tight">
-              Shipping & Returns Policy
-            </h1>
-            <p className="text-sm sm:text-base text-brand-muted leading-relaxed">
-              {`Complete, authoritative details regarding order dispatch, domestic delivery across India, and our ${returnDays}-day return policy.`}
-            </p>
-          </div>
-        </Container>
-      </section>
+    <main className="min-h-screen bg-brand-cream/40 font-sans pb-24">
+      {/* 1. Universal Page Header Banner (Minimal by default; letterbox hero if image configured) */}
+      <PageHeaderBanner
+        badge="Store Policies & Guidelines"
+        title={shippingBanner?.headline?.trim() || "Shipping & Returns Policy"}
+        description={
+          shippingBanner?.subtitle?.trim() ||
+          `Complete, authoritative details regarding order dispatch, domestic delivery across India, and our ${returnDays}-day return policy.`
+        }
+        imageUrl={shippingBanner?.image_url}
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "Shipping & Returns" },
+        ]}
+      />
 
       {/* 2. Key Terms Summary Strip */}
       <section className="py-8 bg-white border-b border-brand-border/60">

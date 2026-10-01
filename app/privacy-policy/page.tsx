@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Container } from "@/components/ui";
+import { Container, PageHeaderBanner } from "@/components/ui";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
 import {
   ShieldAlert,
@@ -93,24 +93,23 @@ export default async function PrivacyPolicyPage() {
   }).format(new Date());
 
   return (
-    <main className="min-h-screen bg-brand-light/20 font-sans pb-24">
-      {/* 1. Header Banner */}
-      <section className="bg-brand-cream/40 border-b border-brand-border/60 py-14 sm:py-20">
-        <Container size="xl">
-          <div className="max-w-3xl mx-auto text-center space-y-3">
-            <span className="text-xs font-semibold uppercase tracking-widest text-brand-gold">
-              Legal Transparency & Data Protection
-            </span>
-            <h1 className="font-heading text-3xl sm:text-5xl font-semibold text-brand-dark tracking-tight">
-              Privacy Policy
-            </h1>
-            <p className="text-xs sm:text-sm text-brand-muted flex items-center justify-center gap-1.5 pt-1">
-              <Clock className="w-3.5 h-3.5 text-brand-gold" />
-              <span>Last Updated: {lastUpdated}</span>
-            </p>
-          </div>
-        </Container>
-      </section>
+    <main className="min-h-screen bg-brand-cream/40 font-sans pb-24">
+      {/* 1. Universal Page Header Banner */}
+      <PageHeaderBanner
+        badge="Legal Transparency & Data Protection"
+        title="Privacy Policy"
+        description="Comprehensive information regarding how personal customer data, payment information, and delivery records are securely handled at Velaash."
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "Privacy Policy" },
+        ]}
+        extraMeta={
+          <p className="text-xs text-brand-muted flex items-center justify-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-brand-gold" />
+            <span>Last Updated: {lastUpdated}</span>
+          </p>
+        }
+      />
 
       {/* 2. Prominent Legal Review Notice Box */}
       <section className="py-6 border-b border-amber-200/80 bg-amber-50/60">

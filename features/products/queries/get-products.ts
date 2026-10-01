@@ -127,7 +127,7 @@ export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMe
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("categories")
-    .select("id, name, slug, description, seo_title, seo_description, parent_id")
+    .select("id, name, slug, description, image_url, seo_title, seo_description, parent_id")
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle();
@@ -161,6 +161,7 @@ export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMe
     name: data.name,
     slug: data.slug,
     description: data.description,
+    image_url: data.image_url ?? null,
     seo_title: data.seo_title,
     seo_description: data.seo_description,
     parent_id: data.parent_id,
@@ -298,6 +299,12 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
     // Apply SQL WHERE: id IN (productIds)
     if (params.productIds && params.productIds.length > 0) {
       q = q.in("id", params.productIds);
+    }
+
+    // Apply SQL WHERE: name ILIKE or description ILIKE
+    if (params.search && params.search.trim().length > 0) {
+      const cleanSearch = params.search.trim().replace(/[%_]/g, "\\$&");
+      q = q.or(`name.ilike.%${cleanSearch}%,description.ilike.%${cleanSearch}%`);
     }
 
     // Apply SQL WHERE: base_price >= minPrice

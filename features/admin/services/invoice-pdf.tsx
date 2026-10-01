@@ -495,7 +495,7 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
   const totalAmount = Number(order.totalAmount || 0);
   const subtotal = Number(order.subtotal || 0);
   const discountAmount = Number(order.discountAmount || 0);
-  const shippingFee = Number(order.shippingCharge ?? (order as any).shippingFee ?? 0);
+  const shippingFee = Number(order.shippingCharge ?? (order as { shippingFee?: number }).shippingFee ?? 0);
 
   const destinationState = order.shippingAddress?.state || "Tamil Nadu";
 
@@ -833,15 +833,13 @@ export async function generateInvoicePdfBuffer(
   logoDataUriOverride?: string | null
 ): Promise<Buffer> {
   const logoDataUri = logoDataUriOverride ?? getLogoDataUri();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const doc = React.createElement(InvoiceDocument, {
     order,
     gstEnabled,
     gstin,
     storeProfile,
     logoDataUri,
-  } as any);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return await renderToBuffer(doc as any);
+  });
+  return await renderToBuffer(doc as unknown as Parameters<typeof renderToBuffer>[0]);
 }
 

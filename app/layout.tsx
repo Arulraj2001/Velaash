@@ -52,8 +52,42 @@ export async function generateMetadata(): Promise<Metadata> {
     ],
     authors: [{ name: storeProfile.legal_name || BRAND.legalName }],
     icons: {
-      icon: storeProfile.favicon_url || "/favicon.ico",
+      icon:
+        storeProfile.favicon_url &&
+        storeProfile.favicon_url.trim().length > 0 &&
+        storeProfile.favicon_url !== "/favicon.ico"
+          ? [
+              { url: storeProfile.favicon_url },
+              { url: "/favicon.svg", type: "image/svg+xml" },
+              { url: "/favicon.ico", sizes: "any" },
+            ]
+          : [
+              { url: "/favicon.ico", sizes: "any" },
+              { url: "/favicon.svg", type: "image/svg+xml" },
+              { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+              { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+            ],
+      shortcut: [
+        storeProfile.favicon_url &&
+        storeProfile.favicon_url.trim().length > 0 &&
+        storeProfile.favicon_url !== "/favicon.ico"
+          ? storeProfile.favicon_url
+          : "/favicon.ico",
+      ],
+      apple: [
+        {
+          url:
+            storeProfile.favicon_url &&
+            storeProfile.favicon_url.trim().length > 0 &&
+            storeProfile.favicon_url !== "/favicon.ico"
+              ? storeProfile.favicon_url
+              : "/apple-touch-icon.png",
+          sizes: "180x180",
+          type: "image/png",
+        },
+      ],
     },
+    manifest: "/site.webmanifest",
     openGraph: {
       title: titleDefault,
       description: descriptionDefault,

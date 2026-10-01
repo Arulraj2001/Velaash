@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Container } from "@/components/ui";
+import { Container, PageHeaderBanner } from "@/components/ui";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
 import { Truck, RotateCcw, ShieldCheck, Headphones, MessageCircle, Mail, ArrowRight } from "lucide-react";
 
@@ -55,25 +55,24 @@ export default async function AboutPage() {
     },
   ];
 
+  const aboutBanner = settings.pageBanners?.about;
+
   return (
-    <main className="min-h-screen bg-brand-light/20 font-sans pb-20">
-      {/* 1. Hero Header Section */}
-      <section className="bg-brand-cream/40 border-b border-brand-border/60 py-16 sm:py-24">
-        <Container size="xl">
-          <div className="max-w-3xl mx-auto text-center space-y-4">
-            <span className="text-xs font-semibold uppercase tracking-widest text-brand-gold">
-              Welcome to Velaash
-            </span>
-            <h1 className="font-heading text-3xl sm:text-5xl font-semibold text-brand-dark tracking-tight">
-              Contemporary Clothing for Everyday Elegance
-            </h1>
-            <p className="text-sm sm:text-base text-brand-muted leading-relaxed max-w-2xl mx-auto">
-              Velaash offers contemporary clothing designed for everyday elegance. Thoughtfully tailored
-              silhouettes crafted for modern living.
-            </p>
-          </div>
-        </Container>
-      </section>
+    <main className="min-h-screen bg-brand-cream/40 font-sans pb-20">
+      {/* 1. Universal Page Header Banner (Minimal by default; letterbox hero if image configured) */}
+      <PageHeaderBanner
+        badge="About Our Label"
+        title={aboutBanner?.headline?.trim() || "Contemporary Clothing for Everyday Elegance"}
+        description={
+          aboutBanner?.subtitle?.trim() ||
+          "Velaash crafts contemporary clothing designed for everyday elegance. Thoughtfully tailored silhouettes crafted for modern living with rich fabrics and timeless poise."
+        }
+        imageUrl={aboutBanner?.image_url}
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "About Us" },
+        ]}
+      />
 
       {/* 2. Core Ethos Section (Generic, Honest Placeholder) */}
       {/* 

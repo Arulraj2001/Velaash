@@ -181,7 +181,7 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
 
-      <div className="flex flex-col min-h-screen bg-brand-cream/30 text-brand-dark">
+      <div className="flex flex-col min-h-screen bg-brand-cream/40 text-brand-dark">
         {/* Render Sections in their Admin-Configured Display Order */}
         {sections.map((section) => {
           switch (section.section_type) {

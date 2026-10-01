@@ -91,6 +91,24 @@ export interface ShiprocketSetting {
   auto_push_on_pack: boolean;
 }
 
+/**
+ * Editorial header banner image and title configuration per customer page
+ */
+export interface PageBannerItem {
+  image_url?: string;
+  headline?: string;
+  subtitle?: string;
+}
+
+export interface PageBannersSetting {
+  shop?: PageBannerItem;
+  about?: PageBannerItem;
+  contact?: PageBannerItem;
+  faq?: PageBannerItem;
+  shipping_returns?: PageBannerItem;
+  track_order?: PageBannerItem;
+}
+
 export interface SiteSettingsData {
   storeProfile: StoreProfileSetting;
   socialLinks: SocialLinksSetting;
@@ -101,6 +119,8 @@ export interface SiteSettingsData {
   taxSettings: TaxPolicySetting;
   seoDefaults: SeoDefaultsSetting;
   shiprocketSettings: ShiprocketSetting;
+  pageBanners: PageBannersSetting;
 }
 
 export type SiteSettings = SiteSettingsData;
+

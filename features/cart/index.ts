@@ -9,5 +9,6 @@ export * from "./components/cart-empty-state";
 export * from "./components/cart-item-row";
 export * from "./components/cart-order-summary";
 export * from "./components/cart-view";
+export * from "./components/cart-suggestions";
 
 

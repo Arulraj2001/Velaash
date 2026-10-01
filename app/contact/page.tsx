@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { Container } from "@/components/ui";
+import { Container, PageHeaderBanner } from "@/components/ui";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
 import { ContactForm } from "@/features/contact/components/contact-form";
 import { ContactDetails } from "@/features/contact/components/contact-details";
@@ -24,25 +24,24 @@ export const dynamic = "force-dynamic";
 
 export default async function ContactPage() {
   const settings = await getSiteSettings();
+  const contactBanner = settings.pageBanners?.contact;
 
   return (
-    <main className="min-h-screen bg-brand-light/20 font-sans pb-24">
-      {/* 1. Page Header */}
-      <section className="bg-brand-cream/40 border-b border-brand-border/60 py-14 sm:py-20">
-        <Container size="xl">
-          <div className="max-w-2xl mx-auto text-center space-y-3">
-            <span className="text-xs font-semibold uppercase tracking-widest text-brand-gold">
-              Customer Support & Inquiries
-            </span>
-            <h1 className="font-heading text-3xl sm:text-5xl font-semibold text-brand-dark tracking-tight">
-              Contact Us
-            </h1>
-            <p className="text-sm sm:text-base text-brand-muted leading-relaxed">
-              We are here to assist with garment sizing, existing order tracking, domestic returns, and general inquiries.
-            </p>
-          </div>
-        </Container>
-      </section>
+    <main className="min-h-screen bg-brand-cream/40 font-sans pb-24">
+      {/* 1. Universal Page Header Banner (Minimal by default; letterbox hero if image configured) */}
+      <PageHeaderBanner
+        badge="Customer Support & Inquiries"
+        title={contactBanner?.headline?.trim() || "Contact Us"}
+        description={
+          contactBanner?.subtitle?.trim() ||
+          "We are here to assist with garment sizing, delivery timelines, domestic returns, and product inquiries. Reach out to our concierge team directly."
+        }
+        imageUrl={contactBanner?.image_url}
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "Contact Us" },
+        ]}
+      />
 
       {/* 2. Form & Contact Details Grid */}
       <section className="py-12 sm:py-16">

@@ -108,7 +108,8 @@ export function SectionAddModal({
 
   React.useEffect(() => {
     if (existingSet.has(selectedType) && availableTypes.length > 0) {
-      setSelectedType(availableTypes[0].type);
+      const fallback = availableTypes[0].type;
+      queueMicrotask(() => setSelectedType(fallback));
     }
   }, [existingSet, selectedType, availableTypes]);
 

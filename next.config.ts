@@ -21,6 +21,15 @@ const nextConfig: NextConfig = {
     ],
   },
   serverExternalPackages: ["@react-pdf/renderer"],
+  async redirects() {
+    return [
+      {
+        source: "/products",
+        destination: "/shop",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withSentryConfig(nextConfig, {

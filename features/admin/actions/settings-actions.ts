@@ -18,6 +18,7 @@ import {
   AnnouncementSettingsSchema,
   SeoDefaultsSchema,
   ShiprocketSettingsSchema,
+  PageBannersSchema,
   type StoreProfileFormData,
   type SocialLinksFormData,
   type ShippingSettingsFormData,
@@ -27,6 +28,7 @@ import {
   type AnnouncementSettingsFormData,
   type SeoDefaultsFormData,
   type ShiprocketSettingsFormData,
+  type PageBannersFormData,
 } from "../types/settings";
 
 export interface SettingsActionResult {
@@ -40,6 +42,7 @@ export interface SettingsActionResult {
  */
 function revalidateSettingsPaths() {
   revalidatePath("/admin/settings");
+  revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/cart");
   revalidatePath("/checkout");
@@ -452,7 +455,7 @@ export async function updateShiprocketSettingsAction(
  */
 export async function uploadBrandAssetAction(
   formData: FormData,
-  assetType: "logo" | "favicon"
+  assetType: "logo" | "favicon" | "banner" = "banner"
 ): Promise<{ success: boolean; url?: string; error?: string }> {
   try {
     await requireAdmin("manage_settings");
@@ -500,3 +503,52 @@ export async function uploadBrandAssetAction(
     };
   }
 }
+
+/**
+ * 10. Update Page Banners (Images and custom headings per page)
+ */
+export async function updatePageBannersAction(
+  raw: unknown
+): Promise<SettingsActionResult> {
+  try {
+    const admin = await requireAdmin();
+    if (!admin) {
+      return { success: false, error: "Unauthorized: Admin privileges required." };
+    }
+
+    const parsed = PageBannersSchema.safeParse(raw);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues.map((i) => i.message).join(", "),
+      };
+    }
+
+    const result = await upsertSiteSetting(
+      "page_banners",
+      parsed.data as Record<string, unknown>,
+      "Hero banner image and header settings for customer pages"
+    );
+
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    revalidateSettingsPaths();
+    revalidatePath("/about");
+    revalidatePath("/contact");
+    revalidatePath("/faq");
+    revalidatePath("/shipping-returns");
+    revalidatePath("/track-order");
+    revalidatePath("/privacy-policy");
+    revalidatePath("/terms-conditions");
+
+    return { success: true, message: "Page banners updated successfully." };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to update page banners.",
+    };
+  }
+}
+
