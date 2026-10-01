@@ -19,6 +19,15 @@ export interface AdminProductListItem {
   thumbnail_url: string | null;
   variants_count: number;
   skus: string[];
+  variants: {
+    id: string;
+    size: string;
+    color: string;
+    sku: string;
+    stock_quantity: number;
+    price_override?: number | null;
+    is_active?: boolean;
+  }[];
   updated_at: string;
   created_at: string;
   has_orders: boolean;
@@ -64,11 +73,15 @@ export interface AdminProductDetail {
   compare_at_price: number | null;
   fabric: string | null;
   care_instructions: string | null;
+  craftsmanship: string | null;
   is_active: boolean;
   is_featured: boolean;
   is_made_to_order: boolean;
   stock_status: StockStatus;
   weight_grams: number | null;
+  length_cm: number | null;
+  width_cm: number | null;
+  height_cm: number | null;
   hsn_code: string | null;
   gst_rate: number;
   blouse_included: boolean | null;
@@ -137,9 +150,23 @@ export const AdminProductFormSchema = z.object({
     .or(z.literal(0).transform(() => null)),
   fabric: z.string().trim().optional().nullable(),
   care_instructions: z.string().trim().optional().nullable(),
+  craftsmanship: z.string().trim().optional().nullable(),
   is_active: z.boolean().default(true),
-
   is_featured: z.boolean().default(false),
+  is_made_to_order: z.boolean().default(false),
+
+  // Indian Logistics & Taxation (Shiprocket & GST compliance)
+  weight_grams: z.coerce.number().int().positive("Weight must be positive").optional().nullable(),
+  length_cm: z.coerce.number().positive("Length must be positive").optional().nullable(),
+  width_cm: z.coerce.number().positive("Width must be positive").optional().nullable(),
+  height_cm: z.coerce.number().positive("Height must be positive").optional().nullable(),
+  hsn_code: z.string().trim().default("6204").optional().nullable(),
+  gst_rate: z.coerce.number().min(0, "GST rate must be at least 0").max(28, "GST rate cannot exceed 28%").default(5),
+
+  // Garment Specific Attributes
+  blouse_included: z.boolean().optional().nullable(),
+  saree_length_meters: z.coerce.number().positive("Saree length must be positive").optional().nullable(),
+
   seo_title: z
     .string()
     .trim()

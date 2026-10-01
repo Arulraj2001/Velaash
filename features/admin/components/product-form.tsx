@@ -115,6 +115,20 @@ export function ProductForm({
     initialData?.compare_at_price ?? ""
   );
 
+  // Indian Logistics & Taxation State
+  const [weightGrams, setWeightGrams] = useState<number | "">(initialData?.weight_grams ?? "");
+  const [lengthCm, setLengthCm] = useState<number | "">(initialData?.length_cm ?? "");
+  const [widthCm, setWidthCm] = useState<number | "">(initialData?.width_cm ?? "");
+  const [heightCm, setHeightCm] = useState<number | "">(initialData?.height_cm ?? "");
+  const [hsnCode, setHsnCode] = useState<string>(initialData?.hsn_code || "6204");
+  const [gstRate, setGstRate] = useState<number>(initialData?.gst_rate ?? 5);
+
+  // Garment Specific Attributes
+  const [craftsmanship, setCraftsmanship] = useState<string>(initialData?.craftsmanship || "");
+  const [isMadeToOrder, setIsMadeToOrder] = useState<boolean>(initialData?.is_made_to_order ?? false);
+  const [blouseIncluded, setBlouseIncluded] = useState<boolean>(Boolean(initialData?.blouse_included));
+  const [sareeLengthMeters, setSareeLengthMeters] = useState<number | "">(initialData?.saree_length_meters ?? "");
+
   const [seoTitle, setSeoTitle] = useState(initialData?.seo_title || "");
   const [seoDescription, setSeoDescription] = useState(
     initialData?.seo_description || ""
@@ -204,8 +218,23 @@ export function ProductForm({
       compare_at_price: compareAtPrice ? Number(compareAtPrice) : null,
       fabric,
       care_instructions: careInstructions,
+      craftsmanship: craftsmanship || null,
       is_active: publishImmediately,
       is_featured: isFeatured,
+      is_made_to_order: isMadeToOrder,
+
+      // Logistics & GST Compliance
+      weight_grams: weightGrams ? Number(weightGrams) : null,
+      length_cm: lengthCm ? Number(lengthCm) : null,
+      width_cm: widthCm ? Number(widthCm) : null,
+      height_cm: heightCm ? Number(heightCm) : null,
+      hsn_code: hsnCode || "6204",
+      gst_rate: Number(gstRate) || 5,
+
+      // Garment Attributes
+      blouse_included: blouseIncluded,
+      saree_length_meters: sareeLengthMeters ? Number(sareeLengthMeters) : null,
+
       seo_title: seoTitle || null,
       seo_description: seoDescription || null,
       seo_keywords: seoKeywordsRaw
@@ -434,6 +463,90 @@ export function ProductForm({
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
                 />
               </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Craftsmanship &amp; Artisan Technique
+                </label>
+                <input
+                  type="text"
+                  value={craftsmanship}
+                  onChange={(e) => setCraftsmanship(e.target.value)}
+                  placeholder="e.g. Handcrafted gota patti work with hand-spun threads"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Card: Shipping Logistics & Parcel Dimensions (for Shiprocket) */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4">
+            <div>
+              <h3 className="font-semibold text-slate-900 text-sm">Shipping Logistics &amp; Parcel Dimensions</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Required for Shiprocket automated shipping label generation and courier volumetric calculation.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Weight (grams)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={weightGrams}
+                  onChange={(e) => setWeightGrams(e.target.value ? parseInt(e.target.value) : "")}
+                  placeholder="e.g. 500"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Length (cm)
+                </label>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value={lengthCm}
+                  onChange={(e) => setLengthCm(e.target.value ? parseFloat(e.target.value) : "")}
+                  placeholder="e.g. 30"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Width (cm)
+                </label>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value={widthCm}
+                  onChange={(e) => setWidthCm(e.target.value ? parseFloat(e.target.value) : "")}
+                  placeholder="e.g. 25"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Height (cm)
+                </label>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value={heightCm}
+                  onChange={(e) => setHeightCm(e.target.value ? parseFloat(e.target.value) : "")}
+                  placeholder="e.g. 5"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
             </div>
           </div>
 
@@ -505,6 +618,90 @@ export function ProductForm({
                 <p className="text-[10px] text-slate-400 mt-1">
                   Displays strikethrough original price for promotional discount display.
                 </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card: Indian GST & Compliance */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4">
+            <h3 className="font-semibold text-slate-900 text-sm">Taxation &amp; Garment Attributes</h3>
+
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    HSN Code
+                  </label>
+                  <input
+                    type="text"
+                    value={hsnCode}
+                    onChange={(e) => setHsnCode(e.target.value)}
+                    placeholder="6204"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 font-mono focus:border-indigo-500 focus:outline-none"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Default 6204</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    GST Rate (%)
+                  </label>
+                  <select
+                    value={gstRate}
+                    onChange={(e) => setGstRate(parseFloat(e.target.value))}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
+                  >
+                    <option value="0">0% (Exempt)</option>
+                    <option value="5">5% (Apparel &le; ₹1,000)</option>
+                    <option value="12">12% (Luxury Pret &gt; ₹1,000)</option>
+                    <option value="18">18% (Standard)</option>
+                    <option value="28">28%</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Made to order toggle */}
+              <label className="flex items-center justify-between rounded-lg border border-slate-100 p-2.5 hover:bg-slate-50 cursor-pointer transition-colors">
+                <div className="space-y-0.5">
+                  <span className="text-xs font-semibold text-slate-800">Made to Order / Measure</span>
+                  <p className="text-[11px] text-slate-500">
+                    Bespoke couture piece crafted upon order.
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isMadeToOrder}
+                  onChange={(e) => setIsMadeToOrder(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                />
+              </label>
+
+              {/* Saree attributes */}
+              <div className="grid grid-cols-2 gap-3 pt-1 border-t border-slate-100">
+                <label className="flex items-center gap-2 cursor-pointer mt-2">
+                  <input
+                    type="checkbox"
+                    checked={blouseIncluded}
+                    onChange={(e) => setBlouseIncluded(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-xs text-slate-700 font-medium">Blouse Included</span>
+                </label>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Saree Length (m)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="1"
+                    value={sareeLengthMeters}
+                    onChange={(e) => setSareeLengthMeters(e.target.value ? parseFloat(e.target.value) : "")}
+                    placeholder="e.g. 5.5"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
+                  />
+                </div>
               </div>
             </div>
           </div>

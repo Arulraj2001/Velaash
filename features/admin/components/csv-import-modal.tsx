@@ -33,6 +33,7 @@ export function CsvImportModal({
   const [isPending, startTransition] = useTransition();
   const [validationResults, setValidationResults] = useState<RowValidationResult[] | null>(null);
   const [importSummary, setImportSummary] = useState<string | null>(null);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
 
   if (!isOpen) return null;
 
@@ -58,6 +59,7 @@ export function CsvImportModal({
     if (!file) return;
 
     setImportSummary(null);
+    setImportWarnings([]);
     const text = await file.text();
     const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
 
@@ -113,10 +115,15 @@ export function CsvImportModal({
       const res = await importProductsCsvAction(validRows);
       if (res.success) {
         setImportSummary(res.message || "Import completed successfully.");
+        if (res.warnings && res.warnings.length > 0) {
+          setImportWarnings(res.warnings);
+        }
         if (onSuccess) onSuccess();
-        setTimeout(() => {
-          onClose();
-        }, 1500);
+        if (!res.warnings || res.warnings.length === 0) {
+          setTimeout(() => {
+            onClose();
+          }, 1500);
+        }
       } else {
         alert(res.error || "CSV import failed.");
       }
@@ -188,6 +195,21 @@ export function CsvImportModal({
           <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
             <span>{importSummary}</span>
+          </div>
+        )}
+
+        {/* Warnings from import (e.g. skipped category slugs) */}
+        {importWarnings.length > 0 && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 space-y-1">
+            <div className="flex items-center gap-1.5 font-semibold text-amber-900 mb-1">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+              <span>Import Notice ({importWarnings.length} row(s) skipped):</span>
+            </div>
+            <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
+              {importWarnings.map((w, idx) => (
+                <li key={idx}>{w}</li>
+              ))}
+            </ul>
           </div>
         )}
 

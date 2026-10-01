@@ -230,7 +230,7 @@ async function runAdminProductsTests() {
   const testSlug = `test-apparel-${Date.now().toString(36)}`;
   const testSku = `VEL-TEST-${Date.now().toString(36).slice(-4).toUpperCase()}-M`;
 
-  // 1. Create a clean test product
+  // 1. Create a clean test product with full Indian logistics, GST, and garment attributes
   const { data: createdProduct, error: createErr } = await adminClient
     .from("products")
     .insert({
@@ -241,20 +241,45 @@ async function runAdminProductsTests() {
       compare_at_price: 4999,
       fabric: "100% Chanderi Silk",
       care_instructions: "Dry clean only",
+      craftsmanship: "Hand-embroidered zardozi and gota patti work",
       is_active: true,
       is_featured: false,
-      stock_status: "in_stock",
+      is_made_to_order: true,
+      stock_status: "made_to_measure",
+      weight_grams: 650,
+      length_cm: 32.5,
+      width_cm: 24.0,
+      height_cm: 4.5,
+      hsn_code: "6204",
+      gst_rate: 12.0,
+      blouse_included: false,
+      saree_length_meters: null,
       seo_title: "Test Kurta SEO",
       seo_description: "Test Kurta SEO Description",
       seo_keywords: ["test", "kurta"],
     })
-    .select("id")
+    .select("id, weight_grams, length_cm, width_cm, height_cm, hsn_code, gst_rate, craftsmanship, is_made_to_order")
     .single();
 
   assert(
     createErr === null && createdProduct !== null,
     "Successfully inserted test product into database",
     `Created ID: ${createdProduct?.id}`
+  );
+
+  assert(
+    createdProduct?.weight_grams === 650 &&
+    Number(createdProduct?.length_cm) === 32.5 &&
+    Number(createdProduct?.width_cm) === 24.0 &&
+    Number(createdProduct?.height_cm) === 4.5,
+    "Product logistics dead weight (650g) and parcel dimensions (32.5x24x4.5cm) persisted accurately"
+  );
+
+  assert(
+    createdProduct?.hsn_code === "6204" &&
+    Number(createdProduct?.gst_rate) === 12.0 &&
+    createdProduct?.is_made_to_order === true,
+    "Indian taxation (HSN 6204, GST 12%) and Made-to-Order flag persisted accurately"
   );
 
   const testProductId = createdProduct!.id;
@@ -301,7 +326,27 @@ async function runAdminProductsTests() {
     "Verified database variant stock reflects updated value: 24 units"
   );
 
-  // 4. Test Storage File Extraction & Cleanup Logic
+  // 4. Test Product-Specific Size Chart Linkage
+  const { data: testChart, error: chartInsErr } = await adminClient
+    .from("size_charts")
+    .insert({
+      name: "Automated Test Size Guide",
+      product_id: testProductId,
+      measurement_unit: "inches",
+      chart_data: {
+        headers: ["Size", "Bust", "Waist"],
+        rows: [{ Size: "M", Bust: "36", Waist: "30" }],
+      },
+    })
+    .select("id, product_id")
+    .single();
+
+  assert(
+    chartInsErr === null && testChart?.product_id === testProductId,
+    "Product-specific size chart override successfully linked to product_id"
+  );
+
+  // 5. Test Storage File Extraction & Cleanup Logic
   const dummyStorageUrl = `https://mock.supabase.co/storage/v1/object/public/${PRODUCT_IMAGES_BUCKET}/products/test-image-123.webp`;
   const extractedPath = extractStoragePathFromUrl(dummyStorageUrl);
   assert(
@@ -310,7 +355,8 @@ async function runAdminProductsTests() {
     `Extracted: "${extractedPath}"`
   );
 
-  // 5. Clean up the test product (0 orders -> hard delete)
+  // 6. Clean up the test product (0 orders -> hard delete)
+  await adminClient.from("size_charts").delete().eq("product_id", testProductId);
   const { error: delVarErr } = await adminClient
     .from("product_variants")
     .delete()

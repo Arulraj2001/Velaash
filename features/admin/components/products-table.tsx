@@ -803,13 +803,7 @@ export function ProductsTable({
       {quickEditProduct && (
         <StockQuickEditModal
           product={quickEditProduct}
-          variants={quickEditProduct.skus.map((sku, idx) => ({
-            id: `variant-${quickEditProduct.id}-${idx}`,
-            size: "Standard",
-            color: "Assorted",
-            sku,
-            stock_quantity: Math.floor(quickEditProduct.total_stock / (quickEditProduct.skus.length || 1)),
-          }))}
+          variants={quickEditProduct.variants || []}
           isOpen={Boolean(quickEditProduct)}
           onClose={() => setQuickEditProduct(null)}
           onSuccess={() => window.location.reload()}
