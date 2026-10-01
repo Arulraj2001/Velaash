@@ -8,6 +8,7 @@ import type {
   AdminOrderDetail,
   OrderStatus,
 } from "../types/orders";
+import type { LogisticsMode } from "@/features/settings/types";
 import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_STYLES,
@@ -44,13 +45,16 @@ import {
 interface AdminOrderDetailViewProps {
   order: AdminOrderDetail;
   role: AdminRole;
+  logisticsMode: LogisticsMode;
 }
 
 export function AdminOrderDetailView({
   order: initialOrder,
   role,
+  logisticsMode,
 }: AdminOrderDetailViewProps) {
   const isOwner = role === "owner";
+  const isShiprocketMode = logisticsMode === "shiprocket";
   const [order, setOrder] = useState<AdminOrderDetail>(initialOrder);
   const [isPending, startTransition] = useTransition();
 
@@ -330,24 +334,38 @@ export function AdminOrderDetailView({
             Resend Email
           </button>
 
-          {/* Push to Shiprocket — only for packed orders */}
+          {/* Fulfillment Action for Packed Orders — mode-aware */}
           {order.status === "packed" && (
-            <button
-              type="button"
-              disabled={isPending || shiprocketPushing}
-              onClick={handlePushToShiprocket}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-300 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-800 hover:bg-indigo-100 disabled:opacity-50 transition-colors shadow-2xs"
-            >
-              {shiprocketPushing ? (
-                <svg className="h-3.5 w-3.5 animate-spin text-indigo-600" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                </svg>
-              ) : (
-                <Truck className="h-3.5 w-3.5 text-indigo-600" />
-              )}
-              {shiprocketPushing ? "Pushing..." : "Push to Shiprocket"}
-            </button>
+            isShiprocketMode ? (
+              /* SHIPROCKET MODE: one-click API dispatch */
+              <button
+                type="button"
+                disabled={isPending || shiprocketPushing}
+                onClick={handlePushToShiprocket}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-300 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-800 hover:bg-indigo-100 disabled:opacity-50 transition-colors shadow-2xs"
+              >
+                {shiprocketPushing ? (
+                  <svg className="h-3.5 w-3.5 animate-spin text-indigo-600" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                ) : (
+                  <Truck className="h-3.5 w-3.5 text-indigo-600" />
+                )}
+                {shiprocketPushing ? "Pushing..." : "Push to Shiprocket"}
+              </button>
+            ) : (
+              /* MANUAL MODE: enter courier + tracking number yourself */
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={() => handleTransition("shipped")}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 transition-colors shadow-2xs"
+              >
+                <Truck className="h-3.5 w-3.5 text-emerald-600" />
+                Mark as Shipped
+              </button>
+            )
           )}
 
           {/* Owner-Only: Mark as Refunded */}

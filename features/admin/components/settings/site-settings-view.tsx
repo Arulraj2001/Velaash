@@ -19,6 +19,7 @@ import {
   Loader2,
   ExternalLink,
   PackageCheck,
+  Info,
 } from "lucide-react";
 import type { SiteSettingsData } from "@/features/settings";
 import {
@@ -1275,7 +1276,7 @@ function SeoDefaultsForm({
 }
 
 // ============================================================================
-// 9. LOGISTICS & SHIPROCKET SETTINGS FORM
+// 9. LOGISTICS SETTINGS FORM (Mode Toggle + Lightbox Guide)
 // ============================================================================
 function LogisticsSettingsForm({
   initial,
@@ -1285,6 +1286,7 @@ function LogisticsSettingsForm({
   onSaved: () => void;
 }) {
   const [form, setForm] = useState({
+    logistics_mode: (initial.logistics_mode ?? "manual") as "manual" | "shiprocket",
     pickup_postcode: initial.pickup_postcode || "600001",
     pickup_location_name: initial.pickup_location_name || "Primary",
     default_weight_kg: initial.default_weight_kg ?? 0.5,
@@ -1292,6 +1294,7 @@ function LogisticsSettingsForm({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showGuide, setShowGuide] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1312,91 +1315,281 @@ function LogisticsSettingsForm({
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <h2 className="text-lg font-heading font-semibold text-slate-900">Logistics &amp; Shiprocket</h2>
-        <p className="text-xs text-slate-500">
-          Configure warehouse dispatch details, pickup location name, and parcel weight used for live courier rates and automated fulfillment.
-        </p>
-      </div>
+  const isManual = form.logistics_mode === "manual";
 
-      {errorMsg && (
-        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{errorMsg}</span>
+  return (
+    <>
+      {/* ── HOW-IT-WORKS LIGHTBOX ── */}
+      {showGuide && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setShowGuide(false)}
+        >
+          <div
+            className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Lightbox Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50">
+              <div className="flex items-center gap-2">
+                <PackageCheck className="w-5 h-5 text-slate-700" />
+                <h2 className="text-sm font-bold text-slate-900">Logistics Mode — How It Works</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGuide(false)}
+                className="text-slate-400 hover:text-slate-700 transition-colors rounded-lg p-1"
+                aria-label="Close guide"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Lightbox Content */}
+            <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+
+              {/* Manual Mode Section */}
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">✦</span>
+                  <h3 className="text-sm font-bold text-emerald-800">Manual / Self-Ship</h3>
+                  <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                    Recommended for Startups
+                  </span>
+                </div>
+                <ul className="space-y-1.5 text-xs text-emerald-900">
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-500 mt-0.5 shrink-0">①</span>
+                    <span>Customer places order → you receive it in the Admin Orders panel</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-500 mt-0.5 shrink-0">②</span>
+                    <span>Confirm the order → Pack it → Click <strong>"Mark as Shipped"</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-500 mt-0.5 shrink-0">③</span>
+                    <span>Enter courier name (e.g. DTDC, Delhivery) and tracking number manually</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-500 mt-0.5 shrink-0">④</span>
+                    <span>Customer can track via their account dashboard using the tracking number</span>
+                  </li>
+                </ul>
+                <div className="pt-1 border-t border-emerald-100 text-[11px] text-emerald-700 font-medium">
+                  ✅ No API key needed · Free · Full control
+                </div>
+              </div>
+
+              {/* Shiprocket Mode Section */}
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🚀</span>
+                  <h3 className="text-sm font-bold text-indigo-800">Shiprocket API Mode</h3>
+                  <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">
+                    For Scale (10+ orders/day)
+                  </span>
+                </div>
+                <ul className="space-y-1.5 text-xs text-indigo-900">
+                  <li className="flex items-start gap-2">
+                    <span className="text-indigo-500 mt-0.5 shrink-0">①</span>
+                    <span>Requires a paid Shiprocket account + API credentials in your environment</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-indigo-500 mt-0.5 shrink-0">②</span>
+                    <span>Pack the order → Click <strong>"Push to Shiprocket"</strong> in the order detail view</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-indigo-500 mt-0.5 shrink-0">③</span>
+                    <span>Shiprocket automatically assigns the best courier and generates AWB number</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-indigo-500 mt-0.5 shrink-0">④</span>
+                    <span>Pickup is scheduled from your warehouse address configured below</span>
+                  </li>
+                </ul>
+                <div className="pt-1 border-t border-indigo-100 text-[11px] text-indigo-700 font-medium">
+                  ⚡ Faster at scale · Auto-courier selection · COD remittance management
+                </div>
+              </div>
+
+              {/* Switching Note */}
+              <div className="rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-900">
+                <strong>💡 Switching modes is instant.</strong> You can toggle anytime from this Settings panel — no data is lost.
+                Active mode is read on every order page so it always reflects your current setting.
+                <br /><br />
+                <strong>Upgrade tip:</strong> Move to Shiprocket when you are consistently shipping more than 10 orders per day and want automated label printing and courier negotiation.
+              </div>
+            </div>
+
+            {/* Lightbox Footer */}
+            <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowGuide(false)}
+                className="px-4 py-2 text-xs font-semibold bg-slate-900 text-white rounded-lg hover:bg-black transition-colors"
+              >
+                Got it, close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 text-amber-900 text-xs leading-relaxed">
-        <strong>Dispatch Hub:</strong> The pickup pincode is used as the origin when querying real-time delivery estimates and courier rates for customer destination pincodes. The pickup location name must exactly match a registered pickup address in your Shiprocket dashboard.
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Warehouse Pickup Pincode (Origin) <span className="text-rose-500">*</span>
-          </label>
-          <input
-            type="text"
-            required
-            maxLength={6}
-            value={form.pickup_postcode}
-            onChange={(e) => setForm({ ...form, pickup_postcode: e.target.value.replace(/\D/g, "").slice(0, 6) })}
-            placeholder="600001"
-            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
-          />
-          <p className="text-[11px] text-slate-500 mt-1">6-digit Indian PIN code of your dispatch warehouse or workshop.</p>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Shiprocket Pickup Location Name <span className="text-rose-500">*</span>
-          </label>
-          <input
-            type="text"
-            required
-            value={form.pickup_location_name}
-            onChange={(e) => setForm({ ...form, pickup_location_name: e.target.value })}
-            placeholder="Primary"
-            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
-          />
-          <p className="text-[11px] text-slate-500 mt-1">Exact nickname configured under Settings &rarr; Pickup Addresses in Shiprocket.</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Default Package Weight (kg) <span className="text-rose-500">*</span>
-          </label>
-          <div className="relative">
-            <input
-              type="number"
-              step="0.05"
-              min="0.05"
-              max="50"
-              required
-              value={form.default_weight_kg}
-              onChange={(e) => setForm({ ...form, default_weight_kg: Number(e.target.value) })}
-              className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900"
-            />
-            <span className="absolute right-3 top-2 text-xs font-semibold text-slate-400">kg</span>
+      {/* ── MAIN FORM ── */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Header + Guide Button */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-heading font-semibold text-slate-900">Logistics & Fulfilment</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Choose how you ship orders. Switch freely between manual self-ship and Shiprocket API at any time.
+            </p>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">Estimated parcel weight if individual product weight is not specified.</p>
+          <button
+            type="button"
+            onClick={() => setShowGuide(true)}
+            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg px-3 py-1.5 bg-white hover:bg-slate-50 transition-colors shadow-2xs"
+          >
+            <Info className="w-3.5 h-3.5" />
+            How it works?
+          </button>
         </div>
-      </div>
 
-      <div className="pt-4 border-t border-slate-100 flex justify-end">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-colors disabled:opacity-50"
-        >
-          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          <span>Save Logistics Settings</span>
-        </button>
-      </div>
-    </form>
+        {errorMsg && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {/* ── MODE TOGGLE PILL ── */}
+        <div className="space-y-2">
+          <label className="block text-xs font-semibold text-slate-700">Active Logistics Provider</label>
+          <div className="flex rounded-xl border border-slate-200 p-1 bg-slate-50 gap-1">
+            {/* Manual Option */}
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, logistics_mode: "manual" })}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                isManual
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-white"
+              }`}
+            >
+              <span className={isManual ? "text-white" : "text-slate-400"}>✦</span>
+              Manual / Self-Ship
+            </button>
+
+            {/* Shiprocket Option */}
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, logistics_mode: "shiprocket" })}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                !isManual
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-white"
+              }`}
+            >
+              <span className={!isManual ? "text-white" : "text-slate-400"}>🚀</span>
+              Shiprocket API
+            </button>
+          </div>
+
+          {/* Live Status Banner */}
+          {isManual ? (
+            <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs text-emerald-800 animate-in fade-in duration-200">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>
+                <strong>Manual mode active.</strong> Orders are fulfilled by entering courier name and tracking number manually. No API calls are made.
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2.5 text-xs text-indigo-800 animate-in fade-in duration-200">
+              <ExternalLink className="w-4 h-4 text-indigo-600 shrink-0" />
+              <span>
+                <strong>Shiprocket API active.</strong> Packed orders can be dispatched with one click. Ensure your Shiprocket API credentials are set in environment variables.
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* ── SHIPROCKET CONFIG (only shown in Shiprocket mode) ── */}
+        {!isManual && (
+          <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-amber-900 text-xs leading-relaxed">
+              <strong>Dispatch Hub:</strong> The pickup pincode is used as the origin when querying courier rates. The pickup location name must exactly match a registered address in your Shiprocket dashboard (Settings → Pickup Addresses).
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Warehouse Pickup Pincode <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required={!isManual}
+                  maxLength={6}
+                  value={form.pickup_postcode}
+                  onChange={(e) => setForm({ ...form, pickup_postcode: e.target.value.replace(/\D/g, "").slice(0, 6) })}
+                  placeholder="600001"
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">6-digit PIN code of your dispatch warehouse.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Shiprocket Pickup Location Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required={!isManual}
+                  value={form.pickup_location_name}
+                  onChange={(e) => setForm({ ...form, pickup_location_name: e.target.value })}
+                  placeholder="Primary"
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">Exact nickname from Shiprocket → Pickup Addresses.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Default Package Weight (kg) <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.05"
+                    min="0.05"
+                    max="50"
+                    required={!isManual}
+                    value={form.default_weight_kg}
+                    onChange={(e) => setForm({ ...form, default_weight_kg: Number(e.target.value) })}
+                    className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900"
+                  />
+                  <span className="absolute right-3 top-2 text-xs font-semibold text-slate-400">kg</span>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">Fallback parcel weight for courier rate calculation.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="pt-4 border-t border-slate-100 flex justify-end">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-colors disabled:opacity-50"
+          >
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <span>Save Logistics Settings</span>
+          </button>
+        </div>
+      </form>
+    </>
   );
 }

@@ -133,7 +133,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
           <CourierTrackingBanner
             courierName={order.courierName}
             trackingNumber={order.trackingNumber}
-            enableLiveTracking={true}
+            isShiprocketManaged={!!order.shiprocketOrderId}
           />
         )}
       </div>

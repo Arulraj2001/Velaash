@@ -123,6 +123,8 @@ export type SeoDefaultsFormData = z.infer<typeof SeoDefaultsSchema>;
 
 // 9. Logistics & Shiprocket Settings
 export const ShiprocketSettingsSchema = z.object({
+  /** "manual" = self-ship (free, default). "shiprocket" = paid API. */
+  logistics_mode: z.enum(["manual", "shiprocket"]).default("manual"),
   pickup_postcode: z
     .string()
     .trim()

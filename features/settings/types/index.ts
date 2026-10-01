@@ -73,9 +73,18 @@ export interface SeoDefaultsSetting {
 }
 
 /**
+ * Logistics provider mode toggle.
+ * "manual" = free self-ship, no API needed.
+ * "shiprocket" = paid Shiprocket API integration.
+ */
+export type LogisticsMode = "manual" | "shiprocket";
+
+/**
  * Logistics and Shiprocket integration configuration
  */
 export interface ShiprocketSetting {
+  /** Active logistics provider. Defaults to "manual" if absent. */
+  logistics_mode: LogisticsMode;
   pickup_postcode: string;
   pickup_location_name: string;
   default_weight_kg: number;

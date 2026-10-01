@@ -629,11 +629,30 @@ export async function pushToShiprocketAction(
 
       if (srRow?.value) {
         const srSettings = srRow.value as {
+          logistics_mode?: string;
           pickup_location_name?: string;
           default_weight_kg?: number;
         };
+
+        // Safety guard: block Shiprocket API if manual mode is active
+        const logisticsMode = srSettings.logistics_mode ?? "manual";
+        if (logisticsMode !== "shiprocket") {
+          return {
+            success: false,
+            error:
+              "Shiprocket is currently disabled. Switch to 'Shiprocket Mode' in Admin → Settings → Logistics to enable API dispatch.",
+          };
+        }
+
         pickupLocation = srSettings.pickup_location_name ?? pickupLocation;
         defaultWeightKg = srSettings.default_weight_kg ?? defaultWeightKg;
+      } else {
+        // No settings row found — default is manual, block the call
+        return {
+          success: false,
+          error:
+            "Logistics mode is not configured. Please set it to 'Shiprocket Mode' in Admin → Settings → Logistics.",
+        };
       }
     } catch {
       // Non-critical — use defaults

@@ -46,6 +46,8 @@ export interface GuestTrackOrderResult {
     createdAt: string;
     trackingNumber: string | null;
     courierName: string | null;
+    /** null = manually shipped; non-null = Shiprocket API-dispatched (enables live tracking) */
+    shiprocketOrderId: string | null;
     statusHistory: OrderStatusHistoryRecord[];
     items: GuestTrackOrderItem[];
     maskedShipping: {
@@ -298,6 +300,7 @@ export async function trackGuestOrderAction(
       createdAt: order.created_at,
       trackingNumber: trackingInfo.trackingNumber,
       courierName: trackingInfo.courierName,
+      shiprocketOrderId: order.shiprocket_order_id ?? null,
       statusHistory,
       items,
       maskedShipping: {

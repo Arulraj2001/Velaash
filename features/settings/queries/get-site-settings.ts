@@ -50,6 +50,7 @@ export const DEFAULT_SEO_DEFAULTS: SeoDefaultsSetting = {
 };
 
 export const DEFAULT_SHIPROCKET_SETTING: ShiprocketSetting = {
+  logistics_mode: "manual",
   pickup_postcode: "600001",
   pickup_location_name: "Primary",
   default_weight_kg: 0.5,
@@ -231,6 +232,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
 
     const rawShiprocket = (shiprocketRow?.value as Partial<ShiprocketSetting>) || {};
     const shiprocketSettings: ShiprocketSetting = {
+      logistics_mode: rawShiprocket.logistics_mode ?? "manual",
       pickup_postcode: String(rawShiprocket.pickup_postcode || DEFAULT_SHIPROCKET_SETTING.pickup_postcode).trim(),
       pickup_location_name: String(
         rawShiprocket.pickup_location_name || DEFAULT_SHIPROCKET_SETTING.pickup_location_name
