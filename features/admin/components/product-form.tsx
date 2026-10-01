@@ -30,7 +30,7 @@ import {
 
 interface ProductFormProps {
   initialData?: AdminProductDetail | null;
-  categories: { id: string; name: string; slug: string; parent_id: string | null }[];
+  categories: { id: string; name: string; slug: string; parent_id: string | null; is_active?: boolean }[];
   sizeCharts: { id: string; name: string; measurement_unit: string }[];
 }
 
@@ -57,6 +57,55 @@ export function ProductForm({
   const [careInstructions, setCareInstructions] = useState(
     initialData?.care_instructions || ""
   );
+
+  // Hierarchical category options formatted with parent context
+  const formattedCategoryOptions = React.useMemo(() => {
+    const topLevel: typeof categories = [];
+    const subCategories: typeof categories = [];
+
+    for (const c of categories) {
+      if (!c.parent_id) {
+        topLevel.push(c);
+      } else {
+        subCategories.push(c);
+      }
+    }
+
+    const items: { id: string; label: string; isTopLevel: boolean }[] = [];
+
+    for (const parent of topLevel) {
+      const parentInactive = parent.is_active === false ? " (Inactive)" : "";
+      items.push({
+        id: parent.id,
+        label: `${parent.name}${parentInactive}`,
+        isTopLevel: true,
+      });
+
+      const children = subCategories.filter((sub) => sub.parent_id === parent.id);
+      for (const child of children) {
+        const childInactive = child.is_active === false ? " (Inactive)" : "";
+        items.push({
+          id: child.id,
+          label: `  ↳ ${child.name}${childInactive}`,
+          isTopLevel: false,
+        });
+      }
+    }
+
+    // Include any subcategories whose parent wasn't in topLevel (edge case fallback)
+    for (const sub of subCategories) {
+      if (!items.some((i) => i.id === sub.id)) {
+        const inactive = sub.is_active === false ? " (Inactive)" : "";
+        items.push({
+          id: sub.id,
+          label: `${sub.name}${inactive}`,
+          isTopLevel: false,
+        });
+      }
+    }
+
+    return items;
+  }, [categories]);
 
 
   const [basePrice, setBasePrice] = useState<number | "">(
@@ -337,9 +386,9 @@ export function ProductForm({
                   onChange={(e) => setCategoryId(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
                 >
-                  {categories.map((c) => (
+                  {formattedCategoryOptions.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name}
+                      {c.label}
                     </option>
                   ))}
                 </select>

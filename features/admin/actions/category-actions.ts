@@ -12,6 +12,7 @@ import {
   MAX_IMAGE_SIZE_BYTES,
   ALLOWED_IMAGE_TYPES,
   ensureProductImagesBucket,
+  deleteProductImagesFromStorage,
 } from "../utils/storage";
 
 /**
@@ -220,6 +221,13 @@ export async function updateCategoryAction(
   const valid = validation.data;
   const adminClient = createAdminClient();
 
+  // Check current category details (for image cleanup if replaced)
+  const { data: currentCat } = await adminClient
+    .from("categories")
+    .select("id, image_url")
+    .eq("id", categoryId)
+    .maybeSingle();
+
   // Check slug uniqueness excluding self
   const { data: existingSlug } = await adminClient
     .from("categories")
@@ -310,6 +318,11 @@ export async function updateCategoryAction(
       .eq("category_id", categoryId);
   }
 
+  // If image was replaced or removed, clean up old storage file
+  if (currentCat?.image_url && currentCat.image_url !== valid.image_url) {
+    await deleteProductImagesFromStorage([currentCat.image_url]);
+  }
+
   revalidateCategoryPaths(valid.slug);
 
   return {
@@ -322,15 +335,16 @@ export async function updateCategoryAction(
 
 /**
  * Safeguarded deletion of a category.
- * - Blocks deletion if active products are assigned (reports exact count).
+ * - Blocks deletion if ANY products are assigned (both active and draft/inactive).
  * - Blocks deletion if sub-categories exist (reports exact count).
+ * - Deletes size charts and cleans up storage banner image.
  * Permission: manage_categories (Owner only).
  */
 export async function deleteCategoryAction(categoryId: string): Promise<{
   success: boolean;
   message?: string;
   error?: string;
-  activeProductCount?: number;
+  totalProductCount?: number;
   subCategoryCount?: number;
 }> {
   await requireAdmin("manage_categories");
@@ -341,12 +355,11 @@ export async function deleteCategoryAction(categoryId: string): Promise<{
 
   const adminClient = createAdminClient();
 
-  // 1. Safeguard: Check active products in this category
+  // 1. Safeguard: Check ALL products in this category (active and inactive)
   const { count: productCount, error: prodCountErr } = await adminClient
     .from("products")
     .select("id", { count: "exact", head: true })
-    .eq("category_id", categoryId)
-    .eq("is_active", true);
+    .eq("category_id", categoryId);
 
   if (prodCountErr) {
     return { success: false, error: "Failed to verify category product dependencies." };
@@ -355,8 +368,8 @@ export async function deleteCategoryAction(categoryId: string): Promise<{
   if (productCount && productCount > 0) {
     return {
       success: false,
-      activeProductCount: productCount,
-      error: `This category has ${productCount} active products. Reassign or deactivate them first.`,
+      totalProductCount: productCount,
+      error: `This category has ${productCount} assigned product(s). Reassign or delete them first before deleting this category.`,
     };
   }
 
@@ -378,6 +391,13 @@ export async function deleteCategoryAction(categoryId: string): Promise<{
     };
   }
 
+  // Fetch category image before deletion for storage cleanup
+  const { data: catToDelete } = await adminClient
+    .from("categories")
+    .select("image_url")
+    .eq("id", categoryId)
+    .maybeSingle();
+
   // 3. Delete size chart and category
   await adminClient.from("size_charts").delete().eq("category_id", categoryId);
 
@@ -389,6 +409,11 @@ export async function deleteCategoryAction(categoryId: string): Promise<{
   if (delErr) {
     console.error("Failed to delete category:", delErr);
     return { success: false, error: delErr.message || "Failed to delete category." };
+  }
+
+  // Clean up banner image in storage if present
+  if (catToDelete?.image_url) {
+    await deleteProductImagesFromStorage([catToDelete.image_url]);
   }
 
   revalidateCategoryPaths();
@@ -431,6 +456,7 @@ export async function toggleCategoryActiveAction(
 
 /**
  * Batch update category display orders (supports drag-and-drop reordering).
+ * Runs concurrent updates via Promise.all.
  * Permission: manage_categories (Owner only).
  */
 export async function reorderCategoriesAction(
@@ -444,19 +470,25 @@ export async function reorderCategoriesAction(
 
   const adminClient = createAdminClient();
 
-  for (const item of updates) {
-    const { error } = await adminClient
-      .from("categories")
-      .update({
-        display_order: item.display_order,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", item.id);
+  const results = await Promise.all(
+    updates.map((item) =>
+      adminClient
+        .from("categories")
+        .update({
+          display_order: item.display_order,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", item.id)
+    )
+  );
 
-    if (error) {
-      console.error(`Failed to update display order for category ${item.id}:`, error);
-      return { success: false, error: `Failed to update display order: ${error.message}` };
-    }
+  const failedResult = results.find((r) => r.error);
+  if (failedResult?.error) {
+    console.error("Failed to update display order:", failedResult.error);
+    return {
+      success: false,
+      error: `Failed to update display order: ${failedResult.error.message}`,
+    };
   }
 
   revalidateCategoryPaths();

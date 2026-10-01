@@ -16,7 +16,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function AdminProductsPage() {
+interface AdminProductsPageProps {
+  searchParams?: Promise<{ category?: string }>;
+}
+
+export default async function AdminProductsPage({ searchParams }: AdminProductsPageProps) {
   const admin = await getAdminUser();
 
   if (!admin) {
@@ -25,6 +29,9 @@ export default async function AdminProductsPage() {
 
   // Ensure caller has at least view_products permission
   await requireAdmin("view_products");
+
+  const resolvedParams = searchParams ? await searchParams : {};
+  const initialCategoryFilter = resolvedParams.category || "all";
 
   const [products, categories] = await Promise.all([
     getAdminProductsList(),
@@ -102,6 +109,7 @@ export default async function AdminProductsPage() {
         products={products}
         categories={categories}
         role={admin.role}
+        initialCategoryFilter={initialCategoryFilter}
       />
     </div>
   );

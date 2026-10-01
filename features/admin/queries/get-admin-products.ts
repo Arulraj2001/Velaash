@@ -250,16 +250,15 @@ export async function getAdminProductById(
 }
 
 /**
- * Retrieves categories for dropdown selection.
+ * Retrieves categories for dropdown selection with hierarchy and status.
  */
 export async function getCategoriesForSelect(): Promise<
-  { id: string; name: string; slug: string; parent_id: string | null }[]
+  { id: string; name: string; slug: string; parent_id: string | null; is_active: boolean }[]
 > {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("categories")
-    .select("id, name, slug, parent_id, display_order")
-    .eq("is_active", true)
+    .select("id, name, slug, parent_id, display_order, is_active")
     .order("display_order", { ascending: true })
     .order("name", { ascending: true });
 
@@ -268,7 +267,7 @@ export async function getCategoriesForSelect(): Promise<
     return [];
   }
 
-  return data ?? [];
+  return (data as { id: string; name: string; slug: string; parent_id: string | null; is_active: boolean }[]) ?? [];
 }
 
 /**

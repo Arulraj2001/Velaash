@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -148,15 +149,17 @@ export function CategorySortableRow({
       <div className="flex items-center gap-4 shrink-0 text-xs">
         {/* Active Products Count */}
         <div className="text-right w-24">
-          <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+          <Link
+            href={`/admin/products?category=${category.id}`}
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold transition-colors ${
               category.product_count > 0
-                ? "bg-slate-100 text-slate-700"
-                : "bg-slate-50 text-slate-400"
+                ? "bg-slate-100 text-slate-700 hover:bg-indigo-50 hover:text-indigo-700"
+                : "bg-slate-50 text-slate-400 hover:bg-slate-100"
             }`}
+            title={`View products in ${category.name}`}
           >
             {category.product_count} product{category.product_count === 1 ? "" : "s"}
-          </span>
+          </Link>
         </div>
 
         {/* Display Order */}

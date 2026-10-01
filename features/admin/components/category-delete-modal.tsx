@@ -33,12 +33,12 @@ export function CategoryDeleteModal({
 
   if (!isOpen || !category) return null;
 
-  const activeProductsCount = category.product_count || 0;
+  const productsCount = category.product_count || 0;
   const subCategoriesCount = category.subcategories?.length || 0;
 
-  const hasActiveProducts = activeProductsCount > 0;
+  const hasProducts = productsCount > 0;
   const hasSubCategories = subCategoriesCount > 0;
-  const isDeletionBlocked = hasActiveProducts || hasSubCategories;
+  const isDeletionBlocked = hasProducts || hasSubCategories;
 
   const handleDelete = () => {
     setErrorMsg(null);
@@ -118,14 +118,14 @@ export function CategoryDeleteModal({
                   <span>Cannot Delete Category</span>
                 </div>
                 <ul className="list-disc list-inside space-y-1 text-[11px] text-amber-800 ml-1">
-                  {hasActiveProducts && (
+                  {hasProducts && (
                     <li>
                       This category has{" "}
                       <strong>
-                        {activeProductsCount} active product
-                        {activeProductsCount === 1 ? "" : "s"}
+                        {productsCount} assigned product
+                        {productsCount === 1 ? "" : "s"}
                       </strong>
-                      . Reassign or deactivate them first.
+                      . Reassign or delete them first.
                     </li>
                   )}
                   {hasSubCategories && (
@@ -159,7 +159,7 @@ export function CategoryDeleteModal({
                 <strong className="text-slate-900">{category.name}</strong>?
               </p>
               <p className="text-[11px] text-slate-500">
-                This category has 0 active products and 0 sub-categories. This action
+                This category has 0 assigned products and 0 sub-categories. This action
                 cannot be undone.
               </p>
             </div>

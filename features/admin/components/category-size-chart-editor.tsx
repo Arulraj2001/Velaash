@@ -68,6 +68,32 @@ export function CategorySizeChartEditor({
     });
   };
 
+  const handleUnitChange = (newUnit: "inches" | "cm") => {
+    if (!value) return;
+    const oldUnitSuffix = newUnit === "cm" ? "(in)" : "(cm)";
+    const newUnitSuffix = newUnit === "cm" ? "(cm)" : "(in)";
+
+    const updatedHeaders = value.headers.map((h) =>
+      h.includes(oldUnitSuffix) ? h.replace(oldUnitSuffix, newUnitSuffix) : h
+    );
+
+    const updatedRows = value.rows.map((row) => {
+      const newRow: Record<string, string> = {};
+      for (const [key, val] of Object.entries(row)) {
+        const newKey = key.includes(oldUnitSuffix) ? key.replace(oldUnitSuffix, newUnitSuffix) : key;
+        newRow[newKey] = val;
+      }
+      return newRow;
+    });
+
+    onChange({
+      ...value,
+      measurement_unit: newUnit,
+      headers: updatedHeaders,
+      rows: updatedRows,
+    });
+  };
+
   const handleCellChange = (rowIndex: number, colHeader: string, text: string) => {
     if (!value) return;
     const newRows = [...value.rows];
@@ -207,10 +233,7 @@ export function CategorySizeChartEditor({
               <select
                 value={value.measurement_unit}
                 onChange={(e) =>
-                  updateField(
-                    "measurement_unit",
-                    e.target.value as "inches" | "cm"
-                  )
+                  handleUnitChange(e.target.value as "inches" | "cm")
                 }
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
               >
@@ -235,7 +258,7 @@ export function CategorySizeChartEditor({
                           onBlur={(e) => handleHeaderChange(h, e.target.value)}
                           className="w-full bg-transparent font-semibold text-[11px] text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:outline-none rounded px-1"
                         />
-                        {value.headers.length > 1 && (
+                        {value.headers.length > 1 && !h.toLowerCase().startsWith("size") && (
                           <button
                             type="button"
                             onClick={() => handleDeleteColumn(h)}

@@ -553,6 +553,108 @@ async function runCategoryTestSuite() {
       betaExcluded,
       "Deactivating category immediately excludes it from live navigation query (is_active = false)"
     );
+
+    // ==========================================================================
+    // TEST GROUP 7: SIZE CHART PARENT INHERITANCE & INACTIVE PRODUCT SAFEGUARDS
+    // ==========================================================================
+    console.log("\n--- 7. Sub-Category Size Chart Inheritance & Inactive Safeguard ---");
+
+    const parentCatSlug = `test-parent-${Date.now()}`;
+    const subCatSlug = `test-child-${Date.now()}`;
+
+    // 1. Create parent category
+    const { data: parentCatRec } = await adminClient
+      .from("categories")
+      .insert({
+        name: "Test Parent Apparel",
+        slug: parentCatSlug,
+        display_order: 99,
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    testIdsToClean.push(parentCatRec!.id);
+
+    // 2. Attach size chart to parent category
+    const parentChartName = "Parent Bespoke Sizing Matrix";
+    await adminClient
+      .from("size_charts")
+      .insert({
+        name: parentChartName,
+        category_id: parentCatRec!.id,
+        measurement_unit: "inches",
+        chart_data: {
+          headers: ["Size", "Bust (in)", "Length (in)"],
+          rows: [
+            { Size: "S", "Bust (in)": "34", "Length (in)": "44" },
+            { Size: "M", "Bust (in)": "36", "Length (in)": "45" },
+          ],
+        },
+      });
+
+    // 3. Create subcategory under parent (with NO direct size chart)
+    const { data: childCatRec } = await adminClient
+      .from("categories")
+      .insert({
+        name: "Test Child Subcategory",
+        slug: subCatSlug,
+        parent_id: parentCatRec!.id,
+        display_order: 1,
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    testIdsToClean.push(childCatRec!.id);
+
+    // 4. Test getSizeChart on product in subcategory (no product-level chart)
+    const { getSizeChart } = await import(
+      "../features/products/queries/get-size-chart"
+    );
+
+    const dummyProdId = crypto.randomUUID();
+    const inheritedChart = await getSizeChart(dummyProdId, childCatRec!.id);
+
+    assert(
+      inheritedChart.name === parentChartName,
+      `Product in sub-category inherited parent's custom size chart: "${inheritedChart.name}"`
+    );
+    assert(
+      inheritedChart.headers.includes("Bust (in)") && inheritedChart.rows.length === 2,
+      "Inherited size chart contains correct headers and measurement rows"
+    );
+
+    // 5. Test inactive product deletion safeguard
+    const { data: inactiveProduct } = await adminClient
+      .from("products")
+      .insert({
+        name: "Draft Unreleased Garment",
+        slug: `test-draft-garment-${Date.now()}`,
+        category_id: childCatRec!.id,
+        base_price: 1999,
+        is_active: false, // Inactive product!
+        stock_status: "in_stock",
+      })
+      .select("id")
+      .single();
+
+    // Verify deletion is blocked by checking ALL products count
+    const { count: assignedProductCount } = await adminClient
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("category_id", childCatRec!.id);
+
+    assert(
+      (assignedProductCount ?? 0) === 1,
+      "Detected 1 inactive product assigned to category"
+    );
+
+    // Clean up inactive product
+    if (inactiveProduct) {
+      await adminClient.from("products").delete().eq("id", inactiveProduct.id);
+      console.log("  [PASS] Cleaned up draft test garment");
+    }
   } finally {
     // Teardown any test-created records
     if (testIdsToClean.length > 0) {

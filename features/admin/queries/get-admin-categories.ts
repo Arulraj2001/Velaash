@@ -35,11 +35,12 @@ export async function getAdminCategoriesTree(): Promise<AdminCategoriesQueryResu
 
   const allCategories = rawCategories ?? [];
 
-  // 2. Fetch active product counts grouped by category_id
+  // 2. Fetch product counts grouped by category_id (both active and inactive)
   const { data: productsData, error: prodErr } = await adminClient
     .from("products")
     .select("category_id")
-    .eq("is_active", true);
+    .not("category_id", "is", null)
+    .limit(50000);
 
   if (prodErr) {
     console.warn("Could not fetch product counts for categories:", prodErr.message);

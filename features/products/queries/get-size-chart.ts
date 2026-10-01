@@ -71,8 +71,10 @@ export async function getSizeChart(
       };
     }
 
-    // 2. Check for category-level default
+    // 2. Check for category-level default (with parent taxonomy inheritance)
     if (categoryId) {
+      let resolvedChart = null;
+
       const { data: catChart, error: cErr } = await supabase
         .from("size_charts")
         .select("id, name, chart_data, measurement_unit")
@@ -84,15 +86,42 @@ export async function getSizeChart(
       }
 
       if (catChart && catChart.chart_data) {
-        const data = catChart.chart_data as unknown as {
+        resolvedChart = catChart;
+      } else {
+        // Sub-category fallback: Check if parent category has a default size chart
+        const { data: catRecord } = await supabase
+          .from("categories")
+          .select("parent_id")
+          .eq("id", categoryId)
+          .maybeSingle();
+
+        if (catRecord?.parent_id) {
+          const { data: parentChart, error: parentErr } = await supabase
+            .from("size_charts")
+            .select("id, name, chart_data, measurement_unit")
+            .eq("category_id", catRecord.parent_id)
+            .maybeSingle();
+
+          if (parentErr && !isPlaceholderEnvironment() && !parentErr.message?.includes("fetch failed")) {
+            console.error("Database query failed in getSizeChart (parent category):", parentErr);
+          }
+
+          if (parentChart && parentChart.chart_data) {
+            resolvedChart = parentChart;
+          }
+        }
+      }
+
+      if (resolvedChart && resolvedChart.chart_data) {
+        const data = resolvedChart.chart_data as unknown as {
           headers?: string[];
           rows?: Record<string, string>[];
           tips?: string[];
         };
         return {
-          id: catChart.id,
-          name: catChart.name,
-          measurement_unit: (catChart.measurement_unit as "inches" | "cm") || "inches",
+          id: resolvedChart.id,
+          name: resolvedChart.name,
+          measurement_unit: (resolvedChart.measurement_unit as "inches" | "cm") || "inches",
           headers: data.headers || DEFAULT_CLOTHING_SIZE_CHART.headers,
           rows: data.rows || DEFAULT_CLOTHING_SIZE_CHART.rows,
           tips: data.tips || DEFAULT_CLOTHING_SIZE_CHART.tips,

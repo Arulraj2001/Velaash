@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   useReactTable,
   getCoreRowModel,
@@ -42,6 +43,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
+  FolderTree,
+  X,
 } from "lucide-react";
 
 
@@ -49,6 +52,7 @@ interface ProductsTableProps {
   products: AdminProductListItem[];
   categories: { id: string; name: string; slug: string }[];
   role: AdminRole;
+  initialCategoryFilter?: string;
 }
 
 const columnHelper = createColumnHelper<AdminProductListItem>();
@@ -57,13 +61,15 @@ export function ProductsTable({
   products: initialProducts,
   categories,
   role,
+  initialCategoryFilter = "all",
 }: ProductsTableProps) {
+  const router = useRouter();
   const isOwner = role === "owner";
   const [data, setData] = useState<AdminProductListItem[]>(initialProducts);
   const [sorting, setSorting] = useState<SortingState>([{ id: "updated_at", desc: true }]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [globalFilter, setGlobalFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState(initialCategoryFilter || "all");
   const [statusFilter, setStatusFilter] = useState("all");
 
   const [isPending, startTransition] = useTransition();
@@ -618,6 +624,29 @@ export function ProductsTable({
           )}
         </div>
       </div>
+
+      {/* Active Category Filter Tag */}
+      {categoryFilter !== "all" && (
+        <div className="flex items-center gap-2 -mt-1 text-xs">
+          <span className="text-slate-500 font-medium">Active Category Filter:</span>
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 border border-indigo-200 px-2.5 py-1 text-xs font-semibold text-indigo-700 shadow-2xs">
+            <FolderTree className="h-3 w-3" />
+            <span>{categories.find((c) => c.id === categoryFilter)?.name || "Filtered Category"}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setCategoryFilter("all");
+                router.push("/admin/products");
+              }}
+              className="hover:text-indigo-950 p-0.5 rounded transition-colors"
+              title="Remove category filter"
+              aria-label="Remove category filter"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        </div>
+      )}
 
       {/* Bulk Operations Toolbar (Owner Only when rows selected) */}
       {isOwner && selectedCount > 0 && (
