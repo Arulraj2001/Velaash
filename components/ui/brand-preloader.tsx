@@ -13,7 +13,7 @@ interface BrandPreloaderProps {
 const emptySubscribe = () => () => {};
 
 function getShouldShowPreloader(forcePreview: boolean): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined") return true;
   try {
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -37,6 +37,8 @@ function getShouldShowPreloader(forcePreview: boolean): boolean {
  *
  * Provides a high-end cinematic splash intro for initial visits to Velaash.
  * Features:
+ * - Server-rendered initial HTML + synchronous inline script to eliminate 100% of homepage flash.
+ * - Precision circular medallion clipping (clipPath: circle) so the logo never shows square corners.
  * - Warm silk alabaster ivory palette with soft golden vignette.
  * - Breathing pulse and golden aura on the royal Velaash emblem.
  * - Tracked Cormorant Garamond luxury typography with shimmering accent line.
@@ -45,10 +47,12 @@ function getShouldShowPreloader(forcePreview: boolean): boolean {
  * - Zero layout shift (fixed z-[99999] overlay).
  */
 export function BrandPreloader({ logoUrl, forcePreview = false }: BrandPreloaderProps) {
+  // Returns true on server SSR so the preloader is in the initial HTML document,
+  // completely preventing the homepage from flashing before the loader.
   const shouldInitialShow = React.useSyncExternalStore(
     emptySubscribe,
     () => getShouldShowPreloader(forcePreview),
-    () => false
+    () => true
   );
 
   const [isFadingOut, setIsFadingOut] = React.useState(false);
@@ -114,6 +118,8 @@ export function BrandPreloader({ logoUrl, forcePreview = false }: BrandPreloader
 
   return (
     <aside
+      id="brand-preloader-root"
+      suppressHydrationWarning
       aria-label="Velaash luxury intro"
       role="status"
       aria-live="polite"
@@ -128,27 +134,53 @@ export function BrandPreloader({ logoUrl, forcePreview = false }: BrandPreloader
           "radial-gradient(ellipse at 50% 45%, #FFFFFF 0%, #FAF6EE 55%, #F4ECE0 100%)",
       }}
     >
+      {/* Synchronous inline script to immediately hide preloader for returning session visitors before first paint */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              try {
+                var hasSeen = sessionStorage.getItem("velaash_preloader_seen");
+                var isPreview = new URLSearchParams(window.location.search).get("preview_intro") === "true";
+                if (hasSeen && !isPreview) {
+                  var el = document.getElementById("brand-preloader-root");
+                  if (el) el.style.display = "none";
+                }
+              } catch (e) {}
+            })();
+          `,
+        }}
+      />
+
       {/* Subtle Luxury Silk Backdrop Vignette */}
       <div className="absolute inset-0 bg-gradient-to-b from-brand-cream/30 via-transparent to-brand-border/20 pointer-events-none" />
 
       {/* Center Cinematic Showcase */}
       <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-sm mx-auto">
-        {/* Glowing Royal Emblem */}
+        {/* Glowing Royal Emblem Frame */}
         <div className="relative mb-5 flex items-center justify-center animate-in fade-in zoom-in-95 duration-700">
           {/* Subtle golden pulse aura behind emblem */}
           <div
-            className="absolute -inset-4 rounded-full bg-brand-gold/15 blur-xl animate-pulse"
+            className="absolute -inset-4 rounded-full bg-brand-gold/20 blur-xl animate-pulse"
             style={{ animationDuration: "2s" }}
           />
 
-          {/* Emblem Icon */}
-          <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-full p-2 bg-gradient-to-b from-white/90 to-brand-cream/80 border border-brand-gold/40 shadow-gold-md backdrop-blur-xs transition-transform duration-1000 ease-out hover:scale-105">
+          {/* Perfect Circular Medallion Frame */}
+          <div
+            className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-full overflow-hidden border-2 border-brand-gold/80 ring-4 ring-brand-gold/25 shadow-gold-lg bg-[#FAF1DF] transition-transform duration-1000 ease-out hover:scale-105"
+            style={{
+              borderRadius: "9999px",
+              clipPath: "circle(50% at 50% 50%)",
+              WebkitClipPath: "circle(50% at 50% 50%)",
+            }}
+          >
             <Image
-              src={logoUrl || "/favicon.svg"}
+              src={logoUrl || "/logo.png"}
               alt="Velaash Emblem"
               fill
               priority
-              className="object-contain p-2 drop-shadow-[0_2px_8px_rgba(212,136,0,0.35)]"
+              className="object-cover rounded-full"
+              sizes="(max-width: 640px) 96px, 112px"
             />
           </div>
         </div>

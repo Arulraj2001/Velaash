@@ -125,7 +125,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         getSiteSettings(),
         createClient(),
       ]);
-      logoUrl = storeProfile.logo_url || null;
+      logoUrl = storeProfile.logo_url || "/logo.png";
 
       const {
         data: { user },
