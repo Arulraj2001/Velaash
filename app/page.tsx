@@ -181,7 +181,7 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
 
-      <div className="flex flex-col min-h-screen bg-brand-cream/40 text-brand-dark">
+      <div className="flex flex-col min-h-screen bg-luxury-dots text-brand-dark">
         {/* Render Sections in their Admin-Configured Display Order */}
         {sections.map((section) => {
           switch (section.section_type) {
@@ -240,21 +240,21 @@ export default async function HomePage() {
                 (content.subtitle as string) || "Thoughtfully tailored pieces across modern everyday silhouettes.";
 
               return (
-                <section key={section.id} className="py-16 sm:py-24 border-b border-brand-border/60 bg-white">
+                <section key={section.id} className="py-10 sm:py-14 border-b border-brand-border/60 bg-white">
                     <Container size="xl">
                       {/* Section Header */}
-                      <div className="max-w-2xl mx-auto text-center space-y-2 mb-10 sm:mb-14">
+                      <div className="max-w-2xl mx-auto text-center space-y-2 mb-8 sm:mb-10">
                         <span className="text-brand-accent-dark text-xs font-semibold tracking-widest uppercase">
                           Curated Collections
                         </span>
-                        <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-brand-dark tracking-tight">
+                        <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-semibold text-brand-dark tracking-tight">
                           {title}
                         </h2>
                         <p className="text-brand-muted text-xs sm:text-sm font-sans">{subtitle}</p>
                       </div>
 
-                      {/* Category Grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+                      {/* Category Grid: Single line across desktop (6 columns) */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
                         {categories.map((category) => {
                           const categoryImage =
                             category.image_url ||
@@ -265,23 +265,23 @@ export default async function HomePage() {
                             <Link
                               key={category.id}
                               href={`/collections/${category.slug}`}
-                              className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-xs hover:shadow-luxury transition-all duration-300 border border-brand-border/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
+                              className="group relative w-full aspect-[4/5] rounded-2xl overflow-hidden shadow-xs hover:shadow-luxury transition-all duration-300 border border-brand-border/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
                             >
                               <Image
                                 src={categoryImage}
                                 alt={category.name}
                                 fill
                                 className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                               />
-                              <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/85 via-brand-dark/25 to-transparent transition-opacity duration-300 group-hover:from-brand-dark/95" />
-                              <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 flex flex-col justify-end text-left">
-                                <h3 className="font-heading text-lg sm:text-2xl font-semibold text-white tracking-tight">
+                              <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/90 via-brand-dark/25 to-transparent transition-opacity duration-300 group-hover:from-brand-dark/95" />
+                              <div className="absolute inset-x-0 bottom-0 p-3 sm:p-3.5 flex flex-col justify-end text-left">
+                                <h3 className="font-heading text-sm sm:text-base font-semibold text-white tracking-tight line-clamp-1">
                                   {category.name}
                                 </h3>
-                                <div className="mt-1 flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-brand-gold group-hover:text-brand-gold/90 transition-colors">
+                                <div className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-brand-gold group-hover:text-brand-gold/90 transition-colors">
                                   <span>Explore</span>
-                                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                                  <ArrowRight className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-1" />
                                 </div>
                               </div>
                             </Link>
@@ -386,7 +386,7 @@ export default async function HomePage() {
                     ];
 
               return (
-                <section key={section.id} className="py-12 sm:py-16 bg-white border-b border-brand-border/60">
+                <section key={section.id} className="py-12 sm:py-16 bg-luxury-dots border-b border-brand-border/60 relative">
                   <Container size="xl">
                     <div
                       className={`grid grid-cols-2 ${
@@ -429,7 +429,7 @@ export default async function HomePage() {
                 "Subscribe to receive updates on new arrivals, seasonal collections, and wardrobe inspiration directly to your inbox.";
 
               return (
-                <section key={section.id} className="py-16 sm:py-24 bg-brand-cream/60">
+                <section key={section.id} className="py-16 sm:py-24 bg-luxury-dots-cream relative">
                   <Container size="md">
                     <div className="rounded-3xl bg-brand-dark border border-brand-accent/25 text-brand-cream p-8 sm:p-14 text-center shadow-2xl relative overflow-hidden">
                       <div className="absolute top-0 right-1/4 -translate-y-1/2 w-64 h-64 bg-brand-gold/10 rounded-full blur-3xl pointer-events-none" />

@@ -134,6 +134,9 @@ export interface ProductCategoryMetadata {
   slug: string;
   description?: string | null;
   image_url?: string | null;
+  banner_image_url?: string | null;
+  banner_badge?: string | null;
+  banner_subtitle?: string | null;
   seo_title?: string | null;
   seo_description?: string | null;
   parent_id?: string | null;

@@ -27,31 +27,31 @@ export function BrandStory({
   ctaLink = "/shop",
 }: BrandStoryProps) {
   return (
-    <section className="py-16 sm:py-24 bg-brand-cream/30 border-b border-brand-border/60 overflow-hidden">
+    <section className="py-12 sm:py-16 bg-luxury-dots border-b border-brand-border/60 overflow-hidden relative">
       <Container size="xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
-          {/* Left: Editorial Image with Floating Badge */}
-          <div className="lg:col-span-6 relative">
-            <div className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-luxury border border-brand-border/80">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
+          {/* Left: Editorial Image with Floating Badge (Reduced height on desktop) */}
+          <div className="lg:col-span-5 relative">
+            <div className="relative w-full aspect-[4/3] sm:aspect-[4/3] lg:aspect-[6/5] max-h-[420px] lg:max-h-[460px] rounded-2xl overflow-hidden shadow-luxury border border-brand-border/80">
               <Image
                 src={imageUrl}
                 alt={headline}
                 fill
                 className="object-cover object-center"
-                sizes="(max-width: 1024px) 100vw, 50vw"
+                sizes="(max-width: 1024px) 100vw, 42vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
             </div>
 
             {/* Floating Luxury Detail Badge */}
             {detailBadgeTitle ? (
-              <div className="absolute -bottom-6 -right-4 sm:right-6 bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-xl border border-brand-border/70 max-w-[260px] hidden sm:block">
-                <div className="flex items-center gap-2 text-brand-gold text-xs font-semibold uppercase tracking-wider mb-1">
+              <div className="absolute -bottom-4 right-2 sm:right-4 bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-xl shadow-lg border border-brand-border/70 max-w-[230px] hidden sm:block">
+                <div className="flex items-center gap-1.5 text-brand-gold text-xs font-semibold uppercase tracking-wider mb-1">
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>{detailBadgeTitle}</span>
                 </div>
                 {detailBadgeText && (
-                  <p className="text-xs text-brand-dark/90 font-sans leading-relaxed">
+                  <p className="text-[11px] text-brand-dark/90 font-sans leading-relaxed">
                     {detailBadgeText}
                   </p>
                 )}
@@ -60,7 +60,7 @@ export function BrandStory({
           </div>
 
           {/* Right: Narrative Story & Pillars */}
-          <div className="lg:col-span-6 space-y-6">
+          <div className="lg:col-span-7 space-y-5">
             <div className="space-y-2">
               {tagline && (
                 <span className="text-brand-accent-dark text-xs font-semibold tracking-widest uppercase">

@@ -21,6 +21,9 @@ export interface AdminCategoryItem {
   slug: string;
   description: string | null;
   image_url: string | null;
+  banner_image_url?: string | null;
+  banner_badge?: string | null;
+  banner_subtitle?: string | null;
   display_order: number;
   is_active: boolean;
   parent_id: string | null;
@@ -65,6 +68,9 @@ export const AdminCategoryFormSchema = z.object({
   parent_id: z.string().uuid().optional().nullable(),
   description: z.string().trim().max(500, "Description cannot exceed 500 characters").optional().nullable(),
   image_url: z.string().url("Must be a valid URL").optional().nullable().or(z.literal("")),
+  banner_image_url: z.string().url("Must be a valid URL").optional().nullable().or(z.literal("")),
+  banner_badge: z.string().trim().max(100, "Banner badge cannot exceed 100 characters").optional().nullable(),
+  banner_subtitle: z.string().trim().max(500, "Banner subtitle cannot exceed 500 characters").optional().nullable(),
   display_order: z.number().int().min(0, "Display order must be a non-negative number").default(0),
   is_active: z.boolean().default(true),
   seo_title: z.string().trim().max(70, "SEO title should not exceed 70 characters").optional().nullable(),

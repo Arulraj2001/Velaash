@@ -77,6 +77,25 @@ body {
   background: #cc6f00;
 }
 
+/* Luxury Dotted & Textured Background Utilities */
+.bg-luxury-dots {
+  background-color: #fffdf7;
+  background-image: radial-gradient(rgba(184, 150, 90, 0.18) 1.25px, transparent 1.25px);
+  background-size: 22px 22px;
+}
+
+.bg-luxury-dots-cream {
+  background-color: #fbf5e8;
+  background-image: radial-gradient(rgba(184, 150, 90, 0.20) 1.25px, transparent 1.25px);
+  background-size: 22px 22px;
+}
+
+.bg-luxury-dots-dark {
+  background-color: #2b1700;
+  background-image: radial-gradient(rgba(242, 169, 0, 0.16) 1.25px, transparent 1.25px);
+  background-size: 24px 24px;
+}
+
 /* Luxury preloader golden shimmer keyframe */
 @keyframes preloaderShimmer {
   0% {

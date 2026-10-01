@@ -6,6 +6,7 @@ import Image from "next/image";
 import { X, ChevronDown, MessageCircle, User, ArrowRight } from "lucide-react";
 import type { NavigationCategory } from "@/features/navigation";
 import { BRAND, CUSTOMER_SERVICE_LINKS } from "@/lib/constants";
+import { BrandWordmark } from "@/components/ui";
 import { useAuth } from "@/features/auth/components/auth-provider";
 
 interface MobileNavDrawerProps {
@@ -87,17 +88,20 @@ export function MobileNavDrawer({
             className="flex items-center gap-2.5 font-heading text-brand-dark text-2xl font-semibold tracking-tight"
           >
             {logoUrl && (
-              <div className="relative h-9 w-9 rounded-full overflow-hidden shrink-0 border border-brand-gold/30 bg-white/70 shadow-xs">
+              <div className="relative h-10 w-10 rounded-full overflow-hidden shrink-0 border border-brand-gold/30 bg-white/70 shadow-xs">
                 <Image
                   src={logoUrl}
                   alt={storeName || BRAND.name}
                   fill
                   className="object-cover"
-                  sizes="36px"
+                  sizes="40px"
                 />
               </div>
             )}
-            <span>{storeName || BRAND.name}</span>
+            <BrandWordmark
+              storeName={storeName || BRAND.name}
+              isScrolled={true}
+            />
           </Link>
           <button
             type="button"

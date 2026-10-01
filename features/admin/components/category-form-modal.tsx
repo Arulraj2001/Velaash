@@ -10,6 +10,9 @@ import {
   CheckCircle2,
   FolderTree,
   ImageIcon,
+  Sparkles,
+  Trash2,
+  Wand2,
 } from "lucide-react";
 import type {
   AdminCategoryItem,
@@ -22,6 +25,7 @@ import {
   uploadCategoryImageAction,
 } from "../actions/category-actions";
 import { CategorySizeChartEditor } from "./category-size-chart-editor";
+import { getCategoryBannerConfig } from "@/features/products/constants/category-banners";
 
 interface CategoryFormModalProps {
   isOpen: boolean;
@@ -74,6 +78,18 @@ export function CategoryFormModal({
     initialData?.size_chart || null
   );
 
+  // Storefront Page Header Banner states
+  const [bannerImageUrl, setBannerImageUrl] = useState(
+    initialData?.banner_image_url || ""
+  );
+  const [bannerBadge, setBannerBadge] = useState(
+    initialData?.banner_badge || ""
+  );
+  const [bannerSubtitle, setBannerSubtitle] = useState(
+    initialData?.banner_subtitle || ""
+  );
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+
   const [isPending, startTransition] = useTransition();
   const [isUploading, setIsUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -109,6 +125,35 @@ export function CategoryFormModal({
     }
   };
 
+  const handleBannerFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingBanner(true);
+    setErrorMsg(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await uploadCategoryImageAction(formData);
+    setIsUploadingBanner(false);
+
+    if (res.success && res.url) {
+      setBannerImageUrl(res.url);
+    } else {
+      setErrorMsg(res.error || "Failed to upload banner image.");
+    }
+  };
+
+  const handleAutofillPreset = () => {
+    const preset = getCategoryBannerConfig(slug || name);
+    if (preset) {
+      setBannerImageUrl(preset.imageUrl);
+      setBannerBadge(preset.badge);
+      setBannerSubtitle(preset.description);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -129,6 +174,9 @@ export function CategoryFormModal({
       parent_id: parentId ? parentId : null,
       description: description.trim() || null,
       image_url: imageUrl.trim() || null,
+      banner_image_url: bannerImageUrl.trim() || null,
+      banner_badge: bannerBadge.trim() || null,
+      banner_subtitle: bannerSubtitle.trim() || null,
       display_order: Number(displayOrder) || 0,
       is_active: isActive,
       seo_title: seoTitle.trim() || null,
@@ -312,10 +360,10 @@ export function CategoryFormModal({
             />
           </div>
 
-          {/* Section 4: Image Upload */}
+          {/* Section 4: Grid Thumbnail Image */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Category Image Thumbnail / Banner
+              Category Grid Thumbnail Image
             </label>
             <div className="flex items-center gap-4">
               <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center">
@@ -363,6 +411,128 @@ export function CategoryFormModal({
                 <p className="text-[11px] text-slate-500">
                   Recommended: 800×800 JPG, PNG or WebP (max 5MB).
                 </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 5: Storefront Page Header Banner Settings */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                  Storefront Page Header Banner
+                </span>
+                <span className="text-[11px] text-slate-500 block">
+                  Hero letterbox banner, gold pill badge, and editorial subtitle shown on this category page.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleAutofillPreset}
+                title="Autofill banner image and description from curated Velaash collection presets"
+                className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800 hover:bg-amber-100 transition-colors shrink-0"
+              >
+                <Wand2 className="h-3 w-3 text-amber-600" />
+                <span>Autofill Presets</span>
+              </button>
+            </div>
+
+            {/* Banner Image Preview / Upload */}
+            <div>
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                Banner Background Image (Wide 16:9 or 21:9 Letterbox)
+              </label>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="relative h-20 w-36 sm:w-44 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-900 flex items-center justify-center">
+                  {bannerImageUrl ? (
+                    <>
+                      <Image
+                        src={bannerImageUrl}
+                        alt="Category banner preview"
+                        fill
+                        sizes="180px"
+                        className="object-cover object-center"
+                      />
+                      <div className="absolute inset-0 bg-black/40" />
+                      <span className="absolute bottom-1 left-2 text-[9px] text-white/90 font-mono">
+                        Banner Preview
+                      </span>
+                    </>
+                  ) : (
+                    <div className="text-center p-2 text-slate-400">
+                      <ImageIcon className="h-5 w-5 mx-auto mb-0.5 opacity-60" />
+                      <span className="text-[10px]">No banner set</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 space-y-1.5 w-full">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                      {isUploadingBanner ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
+                      ) : (
+                        <UploadCloud className="h-3.5 w-3.5 text-slate-500" />
+                      )}
+                      <span>{isUploadingBanner ? "Uploading..." : "Upload Banner"}</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleBannerFileChange}
+                        disabled={isUploadingBanner}
+                        className="sr-only"
+                      />
+                    </label>
+
+                    {bannerImageUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setBannerImageUrl("")}
+                        className="inline-flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 font-medium px-2 py-1"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        <span>Remove</span>
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="url"
+                    value={bannerImageUrl}
+                    onChange={(e) => setBannerImageUrl(e.target.value)}
+                    placeholder="Or paste direct image URL (https://...)"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-800 focus:border-indigo-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Banner Badge & Subtitle Inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="sm:col-span-1">
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                  Collection Pill Badge
+                </label>
+                <input
+                  type="text"
+                  value={bannerBadge}
+                  onChange={(e) => setBannerBadge(e.target.value)}
+                  placeholder="e.g. Timeless Indian Weaves"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                  Editorial Subtitle / Narrative
+                </label>
+                <input
+                  type="text"
+                  value={bannerSubtitle}
+                  onChange={(e) => setBannerSubtitle(e.target.value)}
+                  placeholder="e.g. Handcrafted Chanderi and festive anarkalis tailored for daily poise..."
+                  className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
+                />
               </div>
             </div>
           </div>

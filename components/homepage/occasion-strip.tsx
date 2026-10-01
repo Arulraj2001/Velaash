@@ -62,10 +62,10 @@ export function OccasionStrip({
   const displayItems = items && items.length > 0 ? items : DEFAULT_OCCASIONS;
 
   return (
-    <section className="py-12 sm:py-16 bg-brand-cream/40 border-b border-brand-border/60">
+    <section className="py-10 sm:py-14 bg-luxury-dots border-b border-brand-border/60 relative">
       <Container size="xl">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-8 sm:mb-10">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 sm:mb-8">
           <div>
             <div className="inline-flex items-center gap-1.5 text-brand-gold text-xs font-semibold tracking-widest uppercase mb-1">
               <Sparkles className="w-3.5 h-3.5" />
@@ -80,13 +80,13 @@ export function OccasionStrip({
           </p>
         </div>
 
-        {/* Occasion Cards */}
+        {/* Occasion Cards: Exact same height as category cards (~240px), full-width */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {displayItems.map((item) => (
             <Link
               key={item.id}
               href={item.href}
-              className="group relative aspect-[4/5] rounded-2xl overflow-hidden shadow-xs hover:shadow-luxury transition-all duration-300 border border-brand-border/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
+              className="group relative w-full h-[220px] sm:h-[240px] lg:h-[262px] rounded-2xl overflow-hidden shadow-xs hover:shadow-luxury transition-all duration-300 border border-brand-border/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
             >
               <Image
                 src={item.image}
@@ -97,16 +97,16 @@ export function OccasionStrip({
               />
               <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/90 via-brand-dark/30 to-transparent transition-opacity duration-300 group-hover:from-brand-dark/95" />
               
-              <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5 flex flex-col justify-end text-left">
-                <span className="text-[11px] font-sans font-medium text-brand-gold/90 uppercase tracking-wider">
+              <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4.5 flex flex-col justify-end text-left">
+                <span className="text-[10px] sm:text-[11px] font-sans font-medium text-brand-gold/90 uppercase tracking-wider">
                   {item.subtitle}
                 </span>
-                <h3 className="font-heading text-lg sm:text-xl font-semibold text-white tracking-tight mt-0.5">
+                <h3 className="font-heading text-sm sm:text-base font-semibold text-white tracking-tight mt-0.5">
                   {item.name}
                 </h3>
-                <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-white group-hover:text-brand-gold transition-colors">
+                <div className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-white group-hover:text-brand-gold transition-colors">
                   <span>Explore Edit</span>
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                  <ArrowRight className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-1" />
                 </div>
               </div>
             </Link>

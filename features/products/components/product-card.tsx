@@ -143,8 +143,8 @@ export function ProductCard({
         href={`/products/${product.slug}`}
         className="focus-visible:ring-brand-gold block overflow-hidden rounded-xl focus-visible:ring-2 focus-visible:outline-none"
       >
-        {/* Image Container with 3:4 Aspect Ratio */}
-        <div className="bg-brand-light/20 relative aspect-[3/4] w-full overflow-hidden">
+        {/* Image Container with 4:5 Aspect Ratio and Height Cap */}
+        <div className="bg-brand-light/20 relative aspect-[4/5] max-h-[310px] sm:max-h-[340px] w-full overflow-hidden">
           {/* Primary Product Image */}
           {activeImageUrl ? (
             <Image
@@ -217,7 +217,7 @@ export function ProductCard({
             onClick={handleWishlistToggle}
             aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             disabled={isTogglingWishlist}
-            className="text-brand-dark focus-visible:ring-brand-gold absolute top-2.5 right-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 shadow-sm backdrop-blur-xs transition-transform duration-200 hover:scale-110 hover:bg-white focus-visible:ring-2 focus-visible:outline-none active:scale-95 disabled:opacity-70"
+            className="text-brand-dark focus-visible:ring-brand-gold absolute top-2.5 right-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 shadow-sm backdrop-blur-xs transition-transform duration-200 hover:scale-110 hover:bg-white focus-visible:ring-2 focus-visible:ring-2 focus-visible:outline-none active:scale-95 disabled:opacity-70"
           >
             <Heart
               className={`h-4 w-4 transition-colors ${
@@ -237,7 +237,7 @@ export function ProductCard({
         </div>
 
         {/* Product Details Section Below Image */}
-        <div className="space-y-1.5 p-3 sm:p-4">
+        <div className="space-y-1 p-2.5 sm:p-3">
           {/* Category Tag & Rating Row */}
           <div className="text-brand-muted flex items-center justify-between text-[11px]">
             <span className="text-brand-accent-dark truncate text-[11px] font-semibold tracking-wider uppercase">
@@ -256,7 +256,7 @@ export function ProductCard({
 
           {/* Product Name */}
           <h3
-            className="font-heading text-brand-dark group-hover:text-brand-accent line-clamp-1 text-base leading-snug font-medium transition-colors sm:text-lg"
+            className="font-heading text-brand-dark group-hover:text-brand-accent line-clamp-1 text-sm font-medium leading-snug transition-colors sm:text-base"
             title={product.name}
           >
             {product.name}
@@ -279,7 +279,7 @@ export function ProductCard({
 
       {/* Color Swatches (Rendered outside the Link to allow interactive swatch clicking) */}
       {product.colors.length > 0 && (
-        <div className="px-3 pt-0 pb-3 sm:px-4 sm:pb-3">
+        <div className="px-2.5 pt-0 pb-2.5 sm:px-3 sm:pb-3">
           <div className="flex items-center gap-1.5">
             {product.colors.slice(0, 4).map((swatch) => {
               const isSelected = selectedColor === swatch.color;

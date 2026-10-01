@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   getProducts,
   getCategoryBySlug,
+  getCategoryBannerConfig,
   ProductCard,
   ProductFilters,
   ProductFiltersDrawer,
@@ -111,17 +112,24 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   breadcrumbItems.push({ label: category.name });
 
+  // Resolve dynamic category banner from Admin DB, falling back to curated preset
+  const bannerConfig = getCategoryBannerConfig(category.slug);
+  const bannerImage =
+    category.banner_image_url || category.image_url || bannerConfig.imageUrl;
+  const bannerBadge =
+    category.banner_badge ||
+    (category.parent_name ? `${category.parent_name} Collection` : bannerConfig.badge);
+  const bannerDescription =
+    category.banner_subtitle || category.description || bannerConfig.description;
+
   return (
     <div className="space-y-6 font-sans sm:space-y-8">
-      {/* 1. Full-Bleed Page Header Banner (Minimal by default; letterbox hero if category has image) */}
+      {/* 1. Full-Bleed Page Header Banner (Rich curated letterbox hero for every category) */}
       <PageHeaderBanner
-        badge={category.parent_name ? `${category.parent_name} Collection` : "Curated Collection"}
+        badge={bannerBadge}
         title={category.name}
-        description={
-          category.description ||
-          `Discover contemporary ${category.name.toLowerCase()} thoughtfully designed with refined fabrics, effortless cuts, and everyday grace.`
-        }
-        imageUrl={category.image_url}
+        description={bannerDescription}
+        imageUrl={bannerImage}
         breadcrumbs={breadcrumbItems}
         extraMeta={
           <span className="inline-block text-xs font-medium text-brand-gold">

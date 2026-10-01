@@ -62,8 +62,8 @@ export function PageHeaderBanner({
     <section
       className={`relative overflow-hidden border-b border-brand-border/70 ${
         hasImage
-          ? "min-h-[140px] sm:min-h-[180px] flex items-center py-6 sm:py-8 bg-zinc-900"
-          : `bg-gradient-to-b from-brand-cream-dark/30 via-brand-cream to-brand-cream/50 ${paddingClass}`
+          ? "min-h-[160px] sm:min-h-[200px] flex items-center py-6 sm:py-8 bg-zinc-900"
+          : `bg-luxury-dots ${paddingClass}`
       } ${className}`}
     >
       {/* 1. If Background Image Provided from Admin: Render Letterbox Hero with Dark Overlay */}

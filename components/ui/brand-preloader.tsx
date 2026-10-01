@@ -149,7 +149,7 @@ export function BrandPreloader({
 
           {/* Perfect Circular Medallion Frame */}
           <div
-            className="relative h-36 w-36 sm:h-44 sm:w-44 rounded-full overflow-hidden border-2 border-brand-gold/85 ring-4 ring-brand-gold/30 shadow-[0_0_35px_rgba(242,169,0,0.35)] bg-[#FAF1DF] transition-transform duration-700 ease-out hover:scale-105"
+            className="relative h-44 w-44 sm:h-52 sm:w-52 rounded-full overflow-hidden border-2 border-brand-gold/85 ring-4 ring-brand-gold/30 shadow-[0_0_35px_rgba(242,169,0,0.35)] bg-[#FAF1DF] transition-transform duration-700 ease-out hover:scale-105"
             style={{
               borderRadius: "9999px",
               clipPath: "circle(50% at 50% 50%)",
@@ -161,8 +161,8 @@ export function BrandPreloader({
               alt="Velaash Royal Emblem"
               fill
               priority
-              className="object-cover object-top scale-110 rounded-full"
-              sizes="(max-width: 640px) 144px, 176px"
+              className="object-cover object-top scale-100 rounded-full"
+              sizes="(max-width: 640px) 176px, 208px"
             />
           </div>
         </div>

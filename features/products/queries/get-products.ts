@@ -127,7 +127,7 @@ export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMe
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("categories")
-    .select("id, name, slug, description, image_url, seo_title, seo_description, parent_id")
+    .select("id, name, slug, description, image_url, banner_image_url, banner_badge, banner_subtitle, seo_title, seo_description, parent_id")
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle();
@@ -156,12 +156,22 @@ export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMe
     }
   }
 
+  // Type assertion or property extraction for new banner columns
+  const rawCat = data as typeof data & {
+    banner_image_url?: string | null;
+    banner_badge?: string | null;
+    banner_subtitle?: string | null;
+  };
+
   return {
     id: data.id,
     name: data.name,
     slug: data.slug,
     description: data.description,
     image_url: data.image_url ?? null,
+    banner_image_url: rawCat.banner_image_url ?? null,
+    banner_badge: rawCat.banner_badge ?? null,
+    banner_subtitle: rawCat.banner_subtitle ?? null,
     seo_title: data.seo_title,
     seo_description: data.seo_description,
     parent_id: data.parent_id,

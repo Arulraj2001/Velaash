@@ -88,7 +88,7 @@ export function HeroCarousel({
 
   return (
     <section
-      className="relative w-full min-h-[75vh] sm:min-h-[85vh] flex items-center justify-center overflow-hidden bg-brand-dark select-none"
+      className="relative w-full min-h-[85vh] sm:min-h-[88vh] flex items-center justify-center overflow-hidden bg-brand-dark select-none"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
@@ -119,10 +119,10 @@ export function HeroCarousel({
       ))}
 
       {/* Hero Slide Content */}
-      <Container size="lg" className="relative z-10 py-16 text-center">
+      <Container size="lg" className="relative z-10 py-16 pb-20 sm:py-24 sm:pb-24 text-center">
         <div
           key={currentIndex}
-          className="max-w-3xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-500"
+          className="max-w-3xl mx-auto space-y-5 sm:space-y-6 animate-in fade-in zoom-in-95 duration-500"
         >
           {/* Tag / Badge */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-gold/40 bg-brand-dark/60 text-brand-gold text-xs font-semibold tracking-widest uppercase backdrop-blur-md shadow-sm">
@@ -131,36 +131,36 @@ export function HeroCarousel({
           </div>
 
           {/* Headline */}
-          <h1 className="font-heading text-4xl sm:text-6xl md:text-7xl font-semibold text-white tracking-tight leading-[1.08] drop-shadow-md">
+          <h1 className="font-heading text-3xl sm:text-6xl md:text-7xl font-semibold text-white tracking-tight leading-[1.12] sm:leading-[1.08] drop-shadow-md">
             {currentSlide.headline}
           </h1>
 
           {/* Subtitle */}
           {currentSlide.subtitle && (
-            <p className="max-w-xl mx-auto text-brand-cream/90 font-sans text-sm sm:text-base md:text-lg leading-relaxed drop-shadow-xs">
+            <p className="max-w-xl mx-auto text-brand-cream/90 font-sans text-xs sm:text-base md:text-lg leading-relaxed drop-shadow-xs">
               {currentSlide.subtitle}
             </p>
           )}
 
-          {/* CTA Buttons */}
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <Link href={currentSlide.cta_link || "/shop"} className="w-full sm:w-auto">
+          {/* CTA Buttons: Left and Right Medium Buttons in a Single Line on Mobile */}
+          <div className="pt-2 sm:pt-4 flex flex-row items-center justify-center gap-2.5 sm:gap-4 w-full max-w-sm sm:max-w-none mx-auto">
+            <Link href={currentSlide.cta_link || "/shop"} className="flex-1 sm:flex-initial">
               <Button
                 variant="primary"
-                size="lg"
-                className="w-full sm:w-auto shadow-luxury hover:scale-[1.02] transition-transform"
+                size="md"
+                className="w-full sm:w-auto shadow-luxury hover:scale-[1.02] transition-transform text-xs sm:text-sm h-11 px-3.5 sm:px-6 whitespace-nowrap"
               >
                 <span>{currentSlide.cta_text || "Explore Collection"}</span>
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRight className="w-3.5 h-3.5 ml-1.5 shrink-0" />
               </Button>
             </Link>
 
             {currentSlide.secondary_cta_text && currentSlide.secondary_cta_link ? (
-              <Link href={currentSlide.secondary_cta_link} className="w-full sm:w-auto">
+              <Link href={currentSlide.secondary_cta_link} className="flex-1 sm:flex-initial">
                 <Button
                   variant="outline"
-                  size="lg"
-                  className="w-full sm:w-auto border-white/50 text-white hover:bg-white/15 hover:text-white backdrop-blur-xs"
+                  size="md"
+                  className="w-full sm:w-auto border-white/50 text-white hover:bg-white/15 hover:text-white backdrop-blur-xs text-xs sm:text-sm h-11 px-3.5 sm:px-6 whitespace-nowrap"
                 >
                   {currentSlide.secondary_cta_text}
                 </Button>

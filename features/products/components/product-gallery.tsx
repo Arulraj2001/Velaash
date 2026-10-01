@@ -105,7 +105,7 @@ export function ProductGallery({
     <div className="flex flex-col gap-4 font-sans">
       {/* Main Image Stage */}
       <div
-        className="group border-brand-border/70 bg-brand-light/30 relative aspect-[3/4] w-full md:max-h-[500px] lg:max-h-none cursor-crosshair overflow-hidden rounded-2xl border shadow-xs select-none"
+        className="group border-brand-border/70 bg-brand-light/30 relative aspect-[4/5] w-full max-h-[380px] sm:max-h-[460px] lg:max-h-[520px] mx-auto cursor-crosshair overflow-hidden rounded-2xl border shadow-xs select-none"
         onMouseEnter={() => setIsHoveringZoom(true)}
         onMouseLeave={() => setIsHoveringZoom(false)}
         onMouseMove={handleMouseMove}
@@ -216,16 +216,16 @@ export function ProductGallery({
 
       {/* Desktop Thumbnail Strip */}
       {galleryImages.length > 1 && (
-        <div className="hidden grid-cols-4 gap-3 md:grid">
+        <div className="hidden flex-wrap items-center gap-2.5 md:flex">
           {galleryImages.map((img, idx) => (
             <button
               key={img.id || idx}
               type="button"
               onClick={() => setActiveIndex(idx)}
-              className={`bg-brand-light/40 relative aspect-[3/4] overflow-hidden rounded-xl border transition-all ${
+              className={`bg-brand-light/40 relative h-18 w-14 sm:h-20 sm:w-16 shrink-0 overflow-hidden rounded-xl border transition-all ${
                 idx === activeIndex
-                  ? "border-brand-gold ring-brand-gold/60 scale-102 shadow-xs ring-2 ring-offset-2"
-                  : "border-brand-border/80 hover:border-brand-dark/40 opacity-80 hover:opacity-100"
+                  ? "border-brand-gold ring-brand-gold/60 scale-105 shadow-xs ring-2 ring-offset-1"
+                  : "border-brand-border/80 hover:border-brand-dark/40 opacity-75 hover:opacity-100"
               }`}
               aria-label={`Select product image ${idx + 1}`}
             >
@@ -233,8 +233,8 @@ export function ProductGallery({
                 src={img.image_url}
                 alt={img.alt_text || `${productName} thumbnail ${idx + 1}`}
                 fill
-                sizes="160px"
-                className="object-cover"
+                sizes="80px"
+                className="object-cover object-top"
               />
             </button>
           ))}

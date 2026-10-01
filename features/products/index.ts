@@ -19,3 +19,4 @@ export * from "./components/size-guide-modal";
 export * from "./components/pincode-checker";
 export * from "./components/product-accordion";
 export * from "./components/mobile-sticky-bar";
+export * from "./constants/category-banners";

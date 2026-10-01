@@ -151,6 +151,9 @@ export type Database = {
           slug: string;
           description: string | null;
           image_url: string | null;
+          banner_image_url: string | null;
+          banner_badge: string | null;
+          banner_subtitle: string | null;
           display_order: number;
           is_active: boolean;
           parent_id: string | null;
@@ -165,6 +168,9 @@ export type Database = {
           slug: string;
           description?: string | null;
           image_url?: string | null;
+          banner_image_url?: string | null;
+          banner_badge?: string | null;
+          banner_subtitle?: string | null;
           display_order?: number;
           is_active?: boolean;
           parent_id?: string | null;
@@ -179,6 +185,9 @@ export type Database = {
           slug?: string;
           description?: string | null;
           image_url?: string | null;
+          banner_image_url?: string | null;
+          banner_badge?: string | null;
+          banner_subtitle?: string | null;
           display_order?: number;
           is_active?: boolean;
           parent_id?: string | null;

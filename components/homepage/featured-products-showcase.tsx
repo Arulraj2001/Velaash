@@ -59,15 +59,15 @@ export function FeaturedProductsShowcase({
   }, [products, activeTab]);
 
   return (
-    <section className="py-16 sm:py-24 bg-white border-b border-brand-border/60">
+    <section className="py-10 sm:py-14 bg-white border-b border-brand-border/60">
       <Container size="xl">
         {/* Header with Title and Tabs */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 sm:mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8">
           <div className="space-y-1">
             <span className="text-brand-accent-dark text-xs font-semibold tracking-widest uppercase">
               Handpicked Styles
             </span>
-            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-brand-dark tracking-tight">
+            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-semibold text-brand-dark tracking-tight">
               {title}
             </h2>
             {subtitle ? (
@@ -85,7 +85,7 @@ export function FeaturedProductsShowcase({
         </div>
 
         {/* Tab Switcher Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 no-scrollbar scroll-smooth">
+        <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 no-scrollbar scroll-smooth">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -93,7 +93,7 @@ export function FeaturedProductsShowcase({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wide whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide whitespace-nowrap transition-all duration-200 cursor-pointer ${
                   isActive
                     ? "bg-brand-dark text-white shadow-xs"
                     : "bg-brand-cream/60 text-brand-dark hover:bg-brand-cream border border-brand-border/40"
@@ -107,7 +107,7 @@ export function FeaturedProductsShowcase({
 
         {/* Products Grid */}
         {displayedProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 animate-in fade-in duration-300">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-5 lg:gap-6 animate-in fade-in duration-300">
             {displayedProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

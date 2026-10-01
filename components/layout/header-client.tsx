@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Search, ShoppingBag, Heart, Menu } from "lucide-react";
 import { Container } from "@/components/ui/container";
+import { BrandWordmark } from "@/components/ui";
 import { BRAND } from "@/lib/constants";
 import type { NavigationCategory } from "@/features/navigation";
 import type { AnnouncementSetting } from "@/features/settings";
@@ -95,7 +96,7 @@ export function HeaderClient({
                 {logoUrl && (
                   <div
                     className={`relative rounded-full overflow-hidden shrink-0 border border-brand-gold/30 bg-white/70 shadow-xs transition-all duration-300 ${
-                      isScrolled ? "h-9 w-9 sm:h-10 sm:w-10" : "h-10 w-10 sm:h-11 sm:w-11"
+                      isScrolled ? "h-10 w-10 sm:h-11 sm:w-11" : "h-11 w-11 sm:h-12 sm:w-12"
                     }`}
                   >
                     <Image
@@ -103,18 +104,15 @@ export function HeaderClient({
                       alt={storeName || BRAND.name}
                       fill
                       className="object-cover"
-                      sizes="(max-width: 640px) 40px, 44px"
+                      sizes="(max-width: 640px) 44px, 48px"
                       priority
                     />
                   </div>
                 )}
-                <span
-                  className={`font-heading text-brand-dark group-hover:text-brand-accent font-semibold tracking-tight transition-all duration-300 ${
-                    isScrolled ? "text-2xl sm:text-2xl" : "text-2xl sm:text-3xl"
-                  }`}
-                >
-                  {storeName || BRAND.name}
-                </span>
+                <BrandWordmark
+                  storeName={storeName || BRAND.name}
+                  isScrolled={isScrolled}
+                />
               </Link>
             </div>
 
