@@ -68,7 +68,7 @@ export function CartSuggestions({ cartProductIds }: CartSuggestionsProps) {
         </div>
 
         {isPending && suggestions.length === 0 ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {[1, 2, 3, 4].map((n) => (
               <div
                 key={n}
@@ -77,7 +77,7 @@ export function CartSuggestions({ cartProductIds }: CartSuggestionsProps) {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {suggestions.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

@@ -105,7 +105,7 @@ export function ProductGallery({
     <div className="flex flex-col gap-4 font-sans">
       {/* Main Image Stage */}
       <div
-        className="group border-brand-border/70 bg-brand-light/30 relative aspect-[3/4] w-full cursor-crosshair overflow-hidden rounded-2xl border shadow-xs select-none"
+        className="group border-brand-border/70 bg-brand-light/30 relative aspect-[3/4] w-full md:max-h-[500px] lg:max-h-none cursor-crosshair overflow-hidden rounded-2xl border shadow-xs select-none"
         onMouseEnter={() => setIsHoveringZoom(true)}
         onMouseLeave={() => setIsHoveringZoom(false)}
         onMouseMove={handleMouseMove}
@@ -121,7 +121,7 @@ export function ProductGallery({
             fill
             priority
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
-            className="object-cover transition-opacity duration-300"
+            className="object-cover object-top transition-opacity duration-300"
           />
         )}
 
@@ -216,7 +216,7 @@ export function ProductGallery({
 
       {/* Desktop Thumbnail Strip */}
       {galleryImages.length > 1 && (
-        <div className="hidden grid-cols-5 gap-3 md:grid">
+        <div className="hidden grid-cols-4 gap-3 md:grid">
           {galleryImages.map((img, idx) => (
             <button
               key={img.id || idx}
@@ -233,7 +233,7 @@ export function ProductGallery({
                 src={img.image_url}
                 alt={img.alt_text || `${productName} thumbnail ${idx + 1}`}
                 fill
-                sizes="120px"
+                sizes="160px"
                 className="object-cover"
               />
             </button>
