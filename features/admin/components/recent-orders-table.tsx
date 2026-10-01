@@ -123,7 +123,7 @@ export function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
           return (
             <div className="text-right">
               <Link
-                href={`/admin/orders/${order.id}`}
+                href={`/admin/orders/${order.orderNumber}`}
                 className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:underline"
               >
                 <span>View</span>

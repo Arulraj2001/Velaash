@@ -103,9 +103,15 @@ export function SalesTrendChart({ data }: SalesTrendChartProps) {
               tickLine={false}
               axisLine={false}
               tick={{ fontSize: 11, fill: "#64748b" }}
-              tickFormatter={(val) =>
-                metric === "revenue" ? `₹${(val / 1000).toFixed(0)}k` : val
-              }
+              tickFormatter={(val: number) => {
+                if (metric !== "revenue") return String(val);
+                if (val === 0) return "₹0";
+                if (val >= 1000) {
+                  const thousands = val / 1000;
+                  return `₹${Number.isInteger(thousands) ? thousands : thousands.toFixed(1)}k`;
+                }
+                return `₹${val}`;
+              }}
             />
             <Tooltip
               content={({ active, payload }) => {

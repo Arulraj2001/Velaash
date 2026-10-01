@@ -86,7 +86,10 @@ export function DashboardMetricCards({
         </Link>
 
         {/* Pending Orders */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
+        <Link
+          href="/admin/orders?status=pending"
+          className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs hover:border-slate-300 transition-colors block group"
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500">Pending Orders</span>
             <div className="rounded-lg bg-amber-50 p-2 text-amber-600">
@@ -97,12 +100,17 @@ export function DashboardMetricCards({
             <span className="text-2xl font-bold text-slate-900">
               {operational.pendingOrdersCount}
             </span>
-            <p className="mt-1 text-[11px] text-slate-500">Awaiting payment verification</p>
+            <p className="mt-1 text-[11px] text-slate-500 group-hover:text-amber-700">
+              Awaiting payment verification →
+            </p>
           </div>
-        </div>
+        </Link>
 
         {/* Low Stock Alerts */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
+        <a
+          href="#low-stock-section"
+          className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs hover:border-slate-300 transition-colors block group"
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500">Low Stock Variants</span>
             <div className="rounded-lg bg-rose-50 p-2 text-rose-600">
@@ -113,9 +121,11 @@ export function DashboardMetricCards({
             <span className="text-2xl font-bold text-slate-900">
               {operational.lowStockCount}
             </span>
-            <p className="mt-1 text-[11px] text-slate-500">SKUs with 5 or fewer units</p>
+            <p className="mt-1 text-[11px] text-slate-500 group-hover:text-rose-700">
+              SKUs with 5 or fewer units →
+            </p>
           </div>
-        </div>
+        </a>
       </div>
     );
   }
@@ -199,10 +209,7 @@ export function DashboardMetricCards({
         </div>
 
         {/* Card 2: Total Orders */}
-        <Link
-          href={operational.ordersNeedingActionCount > 0 ? "/admin/orders?filter=needs_action" : "/admin/orders"}
-          className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs hover:border-slate-300 transition-colors block group"
-        >
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500">Total Orders</span>
             <div className="rounded-lg bg-indigo-50 p-2 text-indigo-600">
@@ -210,20 +217,32 @@ export function DashboardMetricCards({
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-2xl font-bold text-slate-900">
-              {operational.totalOrdersCount}
-            </span>
-            <p className="mt-1 text-[11px] text-slate-500 group-hover:text-blue-600">
-              {operational.ordersNeedingActionCount > 0 ? (
-                <span className="text-blue-600 font-medium">
-                  {operational.ordersNeedingActionCount} need action →
-                </span>
-              ) : (
-                "Lifetime orders placed →"
-              )}
-            </p>
+            <div className="flex items-baseline justify-between">
+              <span className="text-2xl font-bold text-slate-900">
+                {operational.totalOrdersCount}
+              </span>
+              <Link
+                href="/admin/orders"
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900 hover:underline"
+              >
+                View all &rarr;
+              </Link>
+            </div>
+            {operational.ordersNeedingActionCount > 0 ? (
+              <p className="mt-1.5 text-[11px]">
+                <Link
+                  href="/admin/orders?filter=needs_action"
+                  className="font-medium text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1"
+                >
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-600" />
+                  {operational.ordersNeedingActionCount} need action &rarr;
+                </Link>
+              </p>
+            ) : (
+              <p className="mt-1.5 text-[11px] text-slate-500">Lifetime orders placed</p>
+            )}
           </div>
-        </Link>
+        </div>
 
         {/* Card 3: Average Order Value */}
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
@@ -250,15 +269,27 @@ export function DashboardMetricCards({
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900">
-              {operational.pendingOrdersCount}
-            </span>
-            <span className="text-xs text-slate-500">pending</span>
+            <Link
+              href="/admin/orders?status=pending"
+              className="group flex items-baseline gap-1 hover:underline"
+              title="View pending orders"
+            >
+              <span className="text-2xl font-bold text-slate-900 group-hover:text-amber-600">
+                {operational.pendingOrdersCount}
+              </span>
+              <span className="text-xs text-slate-500 group-hover:text-amber-700">pending</span>
+            </Link>
             <span className="text-slate-300">•</span>
-            <span className="text-lg font-semibold text-rose-600">
-              {operational.lowStockCount}
-            </span>
-            <span className="text-[11px] text-slate-500">low stock</span>
+            <a
+              href="#low-stock-section"
+              className="group flex items-baseline gap-1 hover:underline"
+              title="Jump to low stock alerts"
+            >
+              <span className="text-lg font-semibold text-rose-600 group-hover:text-rose-700">
+                {operational.lowStockCount}
+              </span>
+              <span className="text-[11px] text-slate-500 group-hover:text-rose-700">low stock</span>
+            </a>
           </div>
           <p className="mt-1 text-[11px] text-slate-500">Pending &amp; stock alert items</p>
         </div>

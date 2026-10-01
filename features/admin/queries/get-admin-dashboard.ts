@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { AdminUserSession } from "@/features/auth/types";
 import type {
   AdminDashboardData,
@@ -17,12 +18,19 @@ import type {
 export async function getAdminDashboardData(
   admin: AdminUserSession
 ): Promise<AdminDashboardData> {
-  const supabase = await createClient();
+  let supabase: ReturnType<typeof createAdminClient>;
+  try {
+    supabase = createAdminClient();
+  } catch {
+    const serverClient = await createClient();
+    supabase = serverClient as unknown as ReturnType<typeof createAdminClient>;
+  }
 
   // 1. Operational Counts
   const [
     { count: pendingCount, error: pendingErr },
-    { count: actionNeededCount, error: actionErr },
+    { count: confirmedCount, error: confirmedErr },
+    { count: pendingPaidCount, error: pendingPaidErr },
     { count: totalOrdersCount, error: totalErr },
     { count: lowStockCount, error: lowStockErr },
   ] = await Promise.all([
@@ -36,6 +44,11 @@ export async function getAdminDashboardData(
       .eq("status", "confirmed"),
     supabase
       .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending")
+      .eq("payment_status", "paid"),
+    supabase
+      .from("orders")
       .select("id", { count: "exact", head: true }),
     supabase
       .from("product_variants")
@@ -45,13 +58,17 @@ export async function getAdminDashboardData(
   ]);
 
   if (pendingErr) console.warn("Dashboard pending orders query notice:", pendingErr.message);
-  if (actionErr) console.warn("Dashboard action needed query notice:", actionErr.message);
+  if (confirmedErr) console.warn("Dashboard confirmed orders query notice:", confirmedErr.message);
+  if (pendingPaidErr) console.warn("Dashboard pending paid orders query notice:", pendingPaidErr.message);
   if (totalErr) console.warn("Dashboard total orders query notice:", totalErr.message);
   if (lowStockErr) console.warn("Dashboard low stock query notice:", lowStockErr.message);
 
+  // An order qualifies as needing action if it is confirmed OR pending and already paid
+  const ordersNeedingActionCount = (confirmedCount ?? 0) + (pendingPaidCount ?? 0);
+
   const operationalMetrics: OperationalMetrics = {
     pendingOrdersCount: pendingCount ?? 0,
-    ordersNeedingActionCount: actionNeededCount ?? 0,
+    ordersNeedingActionCount,
     lowStockCount: lowStockCount ?? 0,
     totalOrdersCount: totalOrdersCount ?? 0,
   };
@@ -77,12 +94,12 @@ export async function getAdminDashboardData(
   }
 
   const recentOrders: RecentOrderRow[] = (rawOrders ?? []).map((order) => {
-    // Attempt parsing customer name & contact from shipping_address snapshot
-    const addr = order.shipping_address as { full_name?: string; phone?: string; email?: string } | null;
+    // Attempt parsing customer name & contact from shipping_address snapshot (supports both fullName and full_name)
+    const addr = order.shipping_address as { fullName?: string; full_name?: string; phone?: string; email?: string } | null;
     return {
       id: order.id,
       orderNumber: order.order_number,
-      customerName: addr?.full_name || "Customer",
+      customerName: addr?.fullName || addr?.full_name || "Customer",
       customerPhone: addr?.phone || null,
       customerEmail: addr?.email || null,
       status: order.status,
@@ -136,11 +153,12 @@ export async function getAdminDashboardData(
   let financialMetrics: OwnerFinancialMetrics | null = null;
 
   if (admin.role === "owner") {
-    // Query paid orders
+    // Query paid orders, excluding cancelled orders
     const { data: paidOrders, error: paidErr } = await supabase
       .from("orders")
       .select("total_amount, payment_status, status, created_at")
-      .in("payment_status", ["paid"]);
+      .in("payment_status", ["paid"])
+      .neq("status", "cancelled");
 
     if (paidErr) {
       console.warn("Dashboard revenue metrics query notice:", paidErr.message);

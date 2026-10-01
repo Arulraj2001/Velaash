@@ -12,7 +12,7 @@ interface LowStockListProps {
 export function LowStockList({ items }: LowStockListProps) {
   if (items.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-6 text-center">
+      <div id="low-stock-section" className="rounded-xl border border-slate-200 bg-white p-6 text-center">
         <PackageCheck className="mx-auto h-7 w-7 text-emerald-500" />
         <h4 className="mt-2 text-xs font-semibold text-slate-800">Inventory Healthy</h4>
         <p className="mt-0.5 text-[11px] text-slate-500">
@@ -23,7 +23,7 @@ export function LowStockList({ items }: LowStockListProps) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-2xs">
+    <div id="low-stock-section" className="rounded-xl border border-slate-200 bg-white shadow-2xs">
       <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3.5">
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-amber-500" />
