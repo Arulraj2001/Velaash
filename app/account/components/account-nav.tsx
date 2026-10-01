@@ -48,7 +48,6 @@ const NAV_ITEMS: NavItem[] = [
     name: "Profile Settings",
     href: "/account/settings",
     icon: Settings,
-    badge: "Phase 4C",
   },
 ];
 

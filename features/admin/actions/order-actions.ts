@@ -402,7 +402,7 @@ export async function markOrderAsRefundedAction(
  * Cancels an order from the admin panel on the customer's behalf.
  * - Allowed for both OWNER and STAFF roles ('manage_orders' permission).
  * - Restores stock quantities and enforces the EXACT same cancellation logic
- *   as the customer-facing cancellation flow from Phase 4A (executeOrderCancellation).
+ *   as the customer-facing cancellation flow (executeOrderCancellation).
  * - Requires a cancellation reason note.
  * - Cannot cancel once order is shipped or delivered.
  */
@@ -438,7 +438,7 @@ export async function cancelAdminOrderAction(
       }
     }
 
-    // Reuses the identical stock restoration and status update logic from Phase 4A
+    // Reuses the identical stock restoration and status update logic
     const result = await executeOrderCancellation(adminSupabase, {
       orderNumber,
       userId: admin.id,
@@ -467,7 +467,7 @@ export async function cancelAdminOrderAction(
 /**
  * Resends the order confirmation email to the customer.
  * - Allowed for both OWNER and STAFF roles.
- * - Reuses existing email templates and sending logic from Phase 3D.
+ * - Reuses existing email templates and sending logic.
  */
 export async function resendOrderConfirmationEmailAction(
   orderNumber: string
@@ -523,7 +523,7 @@ export async function resendOrderConfirmationEmailAction(
       year: "numeric",
     });
 
-    // 3. Dispatch email using Phase 3D transactional template
+    // 3. Dispatch email using transactional template
     const emailResult = await sendTransactionalEmail({
       to: recipientEmail,
       subject: `Order Confirmation: ${order.order_number} - Velaash`,

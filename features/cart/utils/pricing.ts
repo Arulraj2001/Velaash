@@ -14,7 +14,7 @@ import type {
  * Cart Page, checkout previews, and server actions.
  *
  * CRITICAL: The final authoritative calculation at checkout (order placement,
- * Razorpay order generation, and payment verification in Phase 3B/3C) MUST
+ * Razorpay order generation, and payment verification) MUST
  * ALWAYS happen server-side against fresh Postgres records. Client-side numbers
  * must NEVER be trusted for financial transactions.
  * ============================================================================

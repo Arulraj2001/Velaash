@@ -36,7 +36,6 @@ export function ShippingMethodStep({
                 <span className="text-sm font-semibold text-brand-dark">Standard Delivery</span>
                 <Truck className="h-4 w-4 text-brand-accent" />
               </div>
-              {/* TODO: Replace "5-7 business days" placeholder with real Shiprocket dynamic courier SLA in Phase 3C/3D */}
               <p className="mt-0.5 text-xs text-brand-muted">
                 Estimated delivery in 5–7 business days with door-to-door tracking
               </p>

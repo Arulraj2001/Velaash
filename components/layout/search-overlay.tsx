@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Search, X, ArrowRight, Sparkles } from "lucide-react";
 import { Container } from "@/components/ui/container";
 
@@ -19,6 +20,7 @@ const POPULAR_SEARCHES = [
 ];
 
 export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
+  const router = useRouter();
   const [query, setQuery] = React.useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -59,8 +61,8 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
-    // In Phase 2, this will navigate to /search?q=...
-    console.log("Search query submitted:", query);
+    router.push(`/products?search=${encodeURIComponent(query.trim())}`);
+    handleClose();
   };
 
   return (
@@ -122,7 +124,10 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                 <button
                   key={term}
                   type="button"
-                  onClick={() => setQuery(term)}
+                  onClick={() => {
+                    router.push(`/products?search=${encodeURIComponent(term)}`);
+                    handleClose();
+                  }}
                   className="border-brand-border/80 bg-brand-card hover:bg-brand-light/30 hover:border-brand-gold text-brand-dark inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs transition-colors"
                 >
                   <span>{term}</span>

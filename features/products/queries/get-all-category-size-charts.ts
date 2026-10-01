@@ -14,7 +14,7 @@ export interface CategorySizeChartItem {
 }
 
 // Fallback charts in case Supabase is unavailable or in mock environment
-// Matches the real Velaash store categories (Phase 1D/5C)
+// Matches the real Velaash store categories
 export const FALLBACK_CATEGORY_SIZE_CHARTS: CategorySizeChartItem[] = [
   {
     id: "fb-cat-1",
