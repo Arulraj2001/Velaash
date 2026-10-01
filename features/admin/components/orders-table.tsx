@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useReactTable,
   getCoreRowModel,
@@ -35,6 +36,8 @@ import {
   AlertCircle,
   Clock,
   Layers,
+  Tag,
+  X,
 } from "lucide-react";
 
 interface OrdersTableProps {
@@ -53,6 +56,7 @@ export function OrdersTable({
   initialFilter = "all",
   initialCouponCode,
 }: OrdersTableProps) {
+  const router = useRouter();
   const [data, setData] = useState<AdminOrderListItem[]>(initialOrders);
   const [sorting, setSorting] = useState<SortingState>([
     { id: "createdAt", desc: true },
@@ -595,7 +599,7 @@ export function OrdersTable({
               className="rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none"
             />
           </div>
-          {(dateFrom || dateTo || searchQuery || statusFilter !== "all" || paymentMethodFilter !== "all" || paymentStatusFilter !== "all") && (
+          {(dateFrom || dateTo || searchQuery || statusFilter !== "all" || paymentMethodFilter !== "all" || paymentStatusFilter !== "all" || couponCodeFilter) && (
             <button
               type="button"
               onClick={() => {
@@ -605,6 +609,10 @@ export function OrdersTable({
                 setStatusFilter("all");
                 setPaymentMethodFilter("all");
                 setPaymentStatusFilter("all");
+                if (couponCodeFilter) {
+                  setCouponCodeFilter(null);
+                  router.push("/admin/orders");
+                }
               }}
               className="text-xs text-rose-600 hover:underline ml-auto"
             >
@@ -612,6 +620,29 @@ export function OrdersTable({
             </button>
           )}
         </div>
+
+        {/* Active Coupon Filter Tag */}
+        {couponCodeFilter && (
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-100 text-xs">
+            <span className="text-slate-500 font-medium">Active Coupon Filter:</span>
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 border border-indigo-200 px-2.5 py-1 text-xs font-semibold text-indigo-700 shadow-2xs">
+              <Tag className="h-3 w-3" />
+              <span>Coupon: {couponCodeFilter}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setCouponCodeFilter(null);
+                  router.push("/admin/orders");
+                }}
+                className="hover:text-indigo-950 p-0.5 rounded transition-colors"
+                title="Remove coupon filter"
+                aria-label="Remove coupon filter"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Bulk Action Bar (Visible when rows selected) */}

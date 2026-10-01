@@ -548,6 +548,145 @@ async function main() {
     }
   }
 
+  // -------------------------------------------------------------------------
+  // SUITE 5: RECENT FIX VERIFICATIONS (USAGE LIMIT 0, STOREFRONT ERROR RESPONSES)
+  // -------------------------------------------------------------------------
+  console.log("\n--- SUITE 5: Extended Audit Fixes & Storefront Validation ---");
+
+  // 1. Zod usageLimit: 0 rejection
+  const zeroUsageParse = CouponFormSchema.safeParse({
+    code: "TESTZERO",
+    discountType: "flat",
+    discountValue: 100,
+    usageLimit: 0,
+    validFrom: new Date().toISOString(),
+    validUntil: new Date(Date.now() + 86400000).toISOString(),
+    isActive: true,
+  });
+  assert(
+    zeroUsageParse.success === false,
+    "CouponFormSchema rejects usageLimit: 0 (must be >= 1 or empty for unlimited)"
+  );
+
+  // 2. Zod usageLimit: null / positive acceptance
+  const validUsageParse = CouponFormSchema.safeParse({
+    code: "TESTVALID",
+    discountType: "flat",
+    discountValue: 100,
+    usageLimit: 1,
+    validFrom: new Date().toISOString(),
+    validUntil: new Date(Date.now() + 86400000).toISOString(),
+    isActive: true,
+  });
+  assert(
+    validUsageParse.success === true && validUsageParse.data.usageLimit === 1,
+    "CouponFormSchema accepts usageLimit: 1"
+  );
+
+  const nullUsageParse = CouponFormSchema.safeParse({
+    code: "TESTNULL",
+    discountType: "flat",
+    discountValue: 100,
+    usageLimit: null,
+    validFrom: new Date().toISOString(),
+    validUntil: new Date(Date.now() + 86400000).toISOString(),
+    isActive: true,
+  });
+  assert(
+    nullUsageParse.success === true && nullUsageParse.data.usageLimit === null,
+    "CouponFormSchema accepts usageLimit: null (unlimited)"
+  );
+
+  // 3. Storefront validateCouponAction tests for inactive, expired, limit reached
+  const { validateCouponAction } = await import(
+    "../features/cart/actions/validate-coupon-action"
+  );
+
+  const testInactiveCode = `TEST_INACT_${Date.now()}`;
+  const testExpiredCode = `TEST_EXP_${Date.now()}`;
+  const testLimitCode = `TEST_LIM_${Date.now()}`;
+  const createdTestIds: string[] = [];
+
+  try {
+    // Insert inactive coupon
+    const { data: inactCoupon } = await adminClient
+      .from("coupons")
+      .insert({
+        code: testInactiveCode,
+        discount_type: "flat",
+        discount_value: 100,
+        min_order_value: 500,
+        valid_from: new Date(Date.now() - 3600000).toISOString(),
+        valid_until: new Date(Date.now() + 86400000).toISOString(),
+        is_active: false,
+      })
+      .select("id")
+      .single();
+    if (inactCoupon) createdTestIds.push(inactCoupon.id);
+
+    // Insert expired coupon
+    const { data: expCoupon } = await adminClient
+      .from("coupons")
+      .insert({
+        code: testExpiredCode,
+        discount_type: "flat",
+        discount_value: 100,
+        min_order_value: 500,
+        valid_from: new Date(Date.now() - 86400000 * 5).toISOString(),
+        valid_until: new Date(Date.now() - 86400000).toISOString(),
+        is_active: true,
+      })
+      .select("id")
+      .single();
+    if (expCoupon) createdTestIds.push(expCoupon.id);
+
+    // Insert maxed-out coupon
+    const { data: limCoupon } = await adminClient
+      .from("coupons")
+      .insert({
+        code: testLimitCode,
+        discount_type: "flat",
+        discount_value: 100,
+        min_order_value: 500,
+        usage_limit: 5,
+        usage_count: 5,
+        valid_from: new Date(Date.now() - 3600000).toISOString(),
+        valid_until: new Date(Date.now() + 86400000).toISOString(),
+        is_active: true,
+      })
+      .select("id")
+      .single();
+    if (limCoupon) createdTestIds.push(limCoupon.id);
+
+    // Validate inactive coupon: should report "has been deactivated"
+    const inactResult = await validateCouponAction(testInactiveCode, 1000);
+    const inactError = !inactResult.success ? inactResult.error : "";
+    assert(
+      inactResult.success === false && inactError.includes("deactivated"),
+      `validateCouponAction returns descriptive 'deactivated' error: "${inactError}"`
+    );
+
+    // Validate expired coupon: should report "expired on"
+    const expResult = await validateCouponAction(testExpiredCode, 1000);
+    const expError = !expResult.success ? expResult.error : "";
+    assert(
+      expResult.success === false && expError.includes("expired on"),
+      `validateCouponAction returns descriptive 'expired on' error: "${expError}"`
+    );
+
+    // Validate limit-reached coupon: should report "maximum usage limit"
+    const limResult = await validateCouponAction(testLimitCode, 1000);
+    const limError = !limResult.success ? limResult.error : "";
+    assert(
+      limResult.success === false && limError.includes("maximum usage limit"),
+      `validateCouponAction returns descriptive 'maximum usage limit' error: "${limError}"`
+    );
+  } finally {
+    for (const id of createdTestIds) {
+      await adminClient.from("coupons").delete().eq("id", id);
+    }
+  }
+
   console.log("\n=======================================================");
   console.log("🎉 ALL PHASE 5C ADMIN COUPON TESTS PASSED SUCCESSFULLY!");
   console.log("=======================================================\n");

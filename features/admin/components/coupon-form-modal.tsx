@@ -151,12 +151,13 @@ export function CouponFormModal({
     e.preventDefault();
     setError(null);
 
+    const isFlat = discountType === "flat";
     const payload: CouponFormData = {
       code: code.trim(),
       discountType,
       discountValue: Number(discountValue),
       minOrderValue: Number(minOrderValue) || 0,
-      maxDiscountAmount: maxDiscountAmount ? Number(maxDiscountAmount) : null,
+      maxDiscountAmount: isFlat ? null : (maxDiscountAmount ? Number(maxDiscountAmount) : null),
       usageLimit: usageLimit && Number(usageLimit) > 0 ? Number(usageLimit) : null,
       validFrom: new Date(validFrom).toISOString(),
       validUntil: new Date(validUntil).toISOString(),
@@ -331,24 +332,27 @@ export function CouponFormModal({
 
             <div>
               <label className="block text-xs font-semibold text-slate-800 mb-1">
-                Max Discount Amount (₹)
+                Max Discount Amount (₹) {discountType === "flat" && <span className="text-[11px] font-normal text-slate-400">(N/A for flat)</span>}
               </label>
               <div className="relative">
                 <input
                   type="number"
                   min="0"
                   step="50"
-                  value={maxDiscountAmount}
+                  disabled={discountType === "flat"}
+                  value={discountType === "flat" ? "" : maxDiscountAmount}
                   onChange={(e) => setMaxDiscountAmount(e.target.value)}
-                  placeholder="e.g. 500 (blank = uncapped)"
-                  className="w-full rounded-lg border border-slate-200 py-1.5 px-3 text-xs text-slate-900 font-mono focus:border-indigo-500 focus:outline-none"
+                  placeholder={discountType === "flat" ? "Not applicable for flat discount" : "e.g. 500 (blank = uncapped)"}
+                  className="w-full rounded-lg border border-slate-200 py-1.5 px-3 text-xs text-slate-900 font-mono focus:border-indigo-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
                 />
                 <span className="absolute right-3 top-2 text-xs font-semibold text-slate-400">
                   ₹
                 </span>
               </div>
               <p className="mt-1 text-[11px] text-slate-500">
-                Upper ceiling for percentage cuts (e.g. 20% off up to ₹500).
+                {discountType === "flat"
+                  ? "Flat discounts deduct a fixed amount directly from cart subtotal."
+                  : "Upper ceiling for percentage cuts (e.g. 20% off up to ₹500)."}
               </p>
             </div>
           </div>
@@ -384,11 +388,11 @@ export function CouponFormModal({
               </label>
               <input
                 type="number"
-                min="0"
+                min="1"
                 step="1"
                 value={usageLimit}
                 onChange={(e) => setUsageLimit(e.target.value)}
-                placeholder="Blank or 0 = Unlimited"
+                placeholder="Leave blank for unlimited"
                 className="w-full rounded-lg border border-slate-200 py-1.5 px-3 text-xs text-slate-900 font-mono focus:border-indigo-500 focus:outline-none"
               />
               <p className="mt-1 text-[11px] text-slate-500">

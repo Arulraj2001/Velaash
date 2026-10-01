@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { CouponValidationResponse } from "../types";
 import { calculateCouponDiscount } from "../utils/pricing";
 
@@ -114,7 +115,12 @@ export async function validateCouponAction(
   } | null = null;
 
   try {
-    const supabase = await createClient();
+    let supabase;
+    try {
+      supabase = createAdminClient();
+    } catch {
+      supabase = await createClient();
+    }
 
     const { data: coupon, error } = await supabase
       .from("coupons")

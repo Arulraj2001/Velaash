@@ -115,7 +115,7 @@ export const CouponFormSchema = z
     usageLimit: z.coerce
       .number()
       .int("Usage limit must be an integer.")
-      .min(0, "Usage limit cannot be negative.")
+      .min(1, "Usage limit must be at least 1, or leave empty for unlimited.")
       .nullable()
       .optional(),
     validFrom: z.string().min(1, "Valid from date is required."),
