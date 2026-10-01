@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useActionState } from "react";
+import React, { useState, useRef, useTransition, useActionState } from "react";
 import type { AdminUserSession } from "@/features/auth/types";
 import type { AdminUserListItem } from "../types";
 import type { AdminRole } from "@/types/database.types";
@@ -18,6 +18,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  X,
+  AlertTriangle,
 } from "lucide-react";
 
 interface StaffManagementViewProps {
@@ -30,19 +32,29 @@ export function StaffManagementView({
   staffMembers,
 }: StaffManagementViewProps) {
   const [isPending, startTransition] = useTransition();
+  const [activeMemberId, setActiveMemberId] = useState<string | null>(null);
+  const [memberToRevoke, setMemberToRevoke] = useState<{
+    id: string;
+    email: string;
+    name: string;
+  } | null>(null);
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
 
+  const formRef = useRef<HTMLFormElement>(null);
+
   // Form action for adding staff
   const [, formAction, isFormPending] = useActionState(
-
     async (prev: unknown, formData: FormData) => {
       setFeedback(null);
       const res = await addStaffMemberAction(prev, formData);
-      if (res.success && res.message) {
-        setFeedback({ type: "success", message: res.message });
+      if (res.success) {
+        formRef.current?.reset();
+        if (res.message) {
+          setFeedback({ type: "success", message: res.message });
+        }
       } else if (!res.success && res.error) {
         setFeedback({ type: "error", message: res.error });
       }
@@ -53,27 +65,37 @@ export function StaffManagementView({
 
   const handleRoleChange = (userId: string, newRole: AdminRole) => {
     setFeedback(null);
+    setActiveMemberId(userId);
     startTransition(async () => {
-      const res = await updateStaffRoleAction(userId, newRole);
-      if (res.success && res.message) {
-        setFeedback({ type: "success", message: res.message });
-      } else if (!res.success && res.error) {
-        setFeedback({ type: "error", message: res.error });
+      try {
+        const res = await updateStaffRoleAction(userId, newRole);
+        if (res.success && res.message) {
+          setFeedback({ type: "success", message: res.message });
+        } else if (!res.success && res.error) {
+          setFeedback({ type: "error", message: res.error });
+        }
+      } finally {
+        setActiveMemberId(null);
       }
     });
   };
 
-  const handleRemove = (userId: string, email: string) => {
-    if (!window.confirm(`Revoke administrative access for ${email}?`)) {
-      return;
-    }
+  const confirmRevoke = () => {
+    if (!memberToRevoke) return;
+    const { id } = memberToRevoke;
     setFeedback(null);
+    setActiveMemberId(id);
     startTransition(async () => {
-      const res = await removeStaffMemberAction(userId);
-      if (res.success && res.message) {
-        setFeedback({ type: "success", message: res.message });
-      } else if (!res.success && res.error) {
-        setFeedback({ type: "error", message: res.error });
+      try {
+        const res = await removeStaffMemberAction(id);
+        if (res.success && res.message) {
+          setFeedback({ type: "success", message: res.message });
+        } else if (!res.success && res.error) {
+          setFeedback({ type: "error", message: res.error });
+        }
+      } finally {
+        setActiveMemberId(null);
+        setMemberToRevoke(null);
       }
     });
   };
@@ -83,18 +105,28 @@ export function StaffManagementView({
       {/* Alert Banner */}
       {feedback && (
         <div
-          className={`flex items-start gap-2.5 rounded-lg border p-3.5 text-xs font-medium ${
+          className={`flex items-start justify-between gap-2.5 rounded-lg border p-3.5 text-xs font-medium transition-all ${
             feedback.type === "success"
               ? "border-emerald-200 bg-emerald-50 text-emerald-800"
               : "border-rose-200 bg-rose-50 text-rose-800"
           }`}
         >
-          {feedback.type === "success" ? (
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
-          ) : (
-            <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
-          )}
-          <span>{feedback.message}</span>
+          <div className="flex items-start gap-2">
+            {feedback.type === "success" ? (
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
+            ) : (
+              <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
+            )}
+            <span>{feedback.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFeedback(null)}
+            className="rounded p-0.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100/50 transition-colors"
+            aria-label="Dismiss alert"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
 
@@ -133,6 +165,7 @@ export function StaffManagementView({
                 {staffMembers.map((member) => {
                   const isCurrent = member.id === currentAdmin.id;
                   const isOwner = member.role === "owner";
+                  const isRowUpdating = activeMemberId === member.id && isPending;
 
                   return (
                     <tr key={member.id} className="hover:bg-slate-50/60 transition-colors">
@@ -142,7 +175,7 @@ export function StaffManagementView({
                             <div className="font-semibold text-slate-900 flex items-center gap-1.5">
                               <span>{member.fullName}</span>
                               {isCurrent && (
-                                <span className="rounded bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 text-[9px] font-semibold text-indigo-700">
+                                <span className="rounded bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 text-[9px] font-semibold text-indigo-700">
                                   You
                                 </span>
                               )}
@@ -181,6 +214,10 @@ export function StaffManagementView({
                           <span className="text-[11px] text-slate-400 italic">Protected</span>
                         ) : (
                           <div className="flex items-center justify-end gap-2">
+                            {isRowUpdating && (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
+                            )}
+
                             {/* Role Toggle Selector */}
                             <select
                               disabled={isPending}
@@ -188,7 +225,7 @@ export function StaffManagementView({
                               onChange={(e) =>
                                 handleRoleChange(member.id, e.target.value as AdminRole)
                               }
-                              className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 shadow-2xs hover:border-slate-300 focus:outline-indigo-500"
+                              className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 shadow-2xs hover:border-slate-300 focus:outline-indigo-500 disabled:opacity-50"
                             >
                               <option value="staff">Staff</option>
                               <option value="owner">Owner</option>
@@ -198,9 +235,15 @@ export function StaffManagementView({
                             <button
                               type="button"
                               disabled={isPending}
-                              onClick={() => handleRemove(member.id, member.email)}
+                              onClick={() =>
+                                setMemberToRevoke({
+                                  id: member.id,
+                                  email: member.email,
+                                  name: member.fullName,
+                                })
+                              }
                               title="Revoke access"
-                              className="rounded p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                              className="rounded p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors disabled:opacity-50"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -224,12 +267,12 @@ export function StaffManagementView({
             </div>
 
             <p className="text-xs text-slate-500 leading-relaxed">
-              Staff members create their credentials in Supabase first. Enter their registered
-              email address below to grant them operational dashboard access with role{" "}
-              <strong className="text-slate-700">staff</strong>.
+              Grant administrative dashboard access with role{" "}
+              <strong className="text-slate-700">staff</strong>. If they already signed up in Supabase,
+              leave the password blank. If they are a new team hire, provide an initial password to create their account directly.
             </p>
 
-            <form action={formAction} className="space-y-3">
+            <form ref={formRef} action={formAction} className="space-y-3">
               <div>
                 <label
                   htmlFor="email"
@@ -263,6 +306,26 @@ export function StaffManagementView({
                 />
               </div>
 
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-xs font-semibold text-slate-700 mb-1"
+                >
+                  Initial Password <span className="text-slate-400 font-normal">(Optional — if new)</span>
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  minLength={6}
+                  placeholder="Min. 6 chars (for brand new accounts)"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
+                />
+                <p className="mt-1 text-[10px] text-slate-400">
+                  Leave blank if the user already registered in Supabase.
+                </p>
+              </div>
+
               <button
                 type="submit"
                 disabled={isFormPending || isPending}
@@ -284,6 +347,56 @@ export function StaffManagementView({
           </div>
         </div>
       </div>
+
+      {/* Styled Revoke Access Confirmation Modal */}
+      {memberToRevoke && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl animate-in fade-in-0 zoom-in-95">
+            <div className="flex items-center gap-3 text-rose-600 mb-3">
+              <div className="rounded-full bg-rose-50 p-2 border border-rose-200">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-900">Revoke Administrative Access</h3>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed mb-4">
+              Are you sure you want to revoke administrative privileges for{" "}
+              <strong className="text-slate-900 font-semibold">{memberToRevoke.name}</strong>{" "}
+              (<span className="font-mono text-slate-700">{memberToRevoke.email}</span>)?
+              They will immediately lose access to the admin portal.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={() => setMemberToRevoke(null)}
+                className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={confirmRevoke}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-rose-700 transition-colors disabled:opacity-50"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Revoking...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Revoke Access</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
