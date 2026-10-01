@@ -60,7 +60,7 @@ export async function updateOrderStatusAction(
     // 1. Fetch current order
     const { data: order, error: fetchErr } = await adminSupabase
       .from("orders")
-      .select("id, order_number, status, notes")
+      .select("id, order_number, status, notes, payment_method, payment_status")
       .eq("order_number", orderNumber)
       .maybeSingle();
 
@@ -109,6 +109,16 @@ export async function updateOrderStatusAction(
       updatePayload.courier_name = courierName?.trim() ?? null;
     }
 
+    // Auto-reconcile payment_status for COD orders upon successful delivery
+    if (
+      targetStatus === "delivered" &&
+      order.payment_method === "cod" &&
+      order.payment_status === "pending"
+    ) {
+      updatePayload.payment_status = "paid";
+      auditNote = `${auditNote} (COD payment auto-reconciled to 'paid')`.trim();
+    }
+
     const { error: updateErr } = await adminSupabase
       .from("orders")
       .update(updatePayload)
@@ -124,11 +134,15 @@ export async function updateOrderStatusAction(
 
 
     // 5. Insert audit log record
+    const isValidAdminUuid =
+      Boolean(admin.id) &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(admin.id);
+
     await adminSupabase.from("order_status_history").insert({
       order_id: order.id,
       status: targetStatus,
       note: auditNote,
-      created_by: admin.id,
+      created_by: isValidAdminUuid ? admin.id : null,
     });
 
     // 6. Revalidate routes
@@ -215,17 +229,31 @@ export async function bulkUpdateOrderStatusAction(
         continue;
       }
 
+      const isValidAdminUuid =
+        Boolean(admin.id) &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(admin.id);
+
       await adminSupabase.from("order_status_history").insert({
         order_id: order.id,
         status: targetStatus,
         note: `Bulk status update to '${targetStatus}' by ${admin.fullName || "Admin"}`,
-        created_by: admin.id,
+        created_by: isValidAdminUuid ? admin.id : null,
       });
 
       updatedCount++;
     }
 
-    revalidatePath("/admin/orders");
+    try {
+      revalidatePath("/admin/orders");
+      revalidatePath("/admin");
+      revalidatePath("/account/orders");
+      for (const num of orderNumbers) {
+        revalidatePath(`/admin/orders/${num}`);
+        revalidatePath(`/account/orders/${num}`);
+      }
+    } catch {
+      // Safe no-op outside Next.js request context (e.g. CLI test suites)
+    }
 
     return {
       success: true,
@@ -394,6 +422,22 @@ export async function cancelAdminOrderAction(
 
     const adminSupabase = createAdminClient();
 
+    // Check if order has an active Shiprocket order ID
+    const { data: existingOrder } = await adminSupabase
+      .from("orders")
+      .select("id, shiprocket_order_id")
+      .eq("order_number", orderNumber)
+      .maybeSingle();
+
+    if (existingOrder?.shiprocket_order_id) {
+      try {
+        const { cancelShiprocketOrder } = await import("@/lib/shiprocket");
+        await cancelShiprocketOrder(existingOrder.shiprocket_order_id);
+      } catch (srErr) {
+        console.warn("[Shiprocket] Non-blocking cancellation error:", srErr);
+      }
+    }
+
     // Reuses the identical stock restoration and status update logic from Phase 4A
     const result = await executeOrderCancellation(adminSupabase, {
       orderNumber,
@@ -404,6 +448,7 @@ export async function cancelAdminOrderAction(
 
     if (result.success) {
       revalidatePath("/admin/orders");
+      revalidatePath("/admin");
       revalidatePath(`/admin/orders/${orderNumber}`);
       revalidatePath(`/account/orders/${orderNumber}`);
       revalidatePath("/account/orders");
@@ -503,11 +548,15 @@ export async function resendOrderConfirmationEmailAction(
     });
 
     // 4. Record audit note
+    const isValidAdminUuid =
+      Boolean(admin.id) &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(admin.id);
+
     await adminSupabase.from("order_status_history").insert({
       order_id: order.id,
       status: order.status,
       note: `Confirmation email resent to ${recipientEmail} by ${admin.fullName || "Admin"} (Result: ${emailResult.success ? "Sent" : "Failed"})`,
-      created_by: admin.id,
+      created_by: isValidAdminUuid ? admin.id : null,
     });
 
     return {

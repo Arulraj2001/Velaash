@@ -115,11 +115,17 @@ export function AdminOrderDetailView({
           type: "success",
           message: `Order status moved to '${ORDER_STATUS_LABELS[nextStatus]}'.`,
         });
+        const nextPaymentStatus =
+          nextStatus === "delivered" && order.paymentMethod === "cod"
+            ? "paid"
+            : order.paymentStatus;
+
         setOrder((prev) => ({
           ...prev,
           status: nextStatus,
+          paymentStatus: nextPaymentStatus,
           canCancel: ["pending", "confirmed", "packed"].includes(nextStatus),
-          canRefund: ["cancelled", "returned"].includes(nextStatus) && prev.paymentStatus !== "refunded",
+          canRefund: ["cancelled", "delivered"].includes(nextStatus) && nextPaymentStatus !== "refunded",
         }));
       } else {
         setNotification({
@@ -453,11 +459,25 @@ export function AdminOrderDetailView({
               </span>
             </div>
 
-            {order.status === "shipped" && order.trackingNumber && (
-              <span className="text-xs font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                AWB: {order.trackingNumber} ({order.courierName})
-              </span>
-            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              {order.shiprocketOrderId && (
+                <a
+                  href="https://app.shiprocket.in/orders"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-mono text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded border border-indigo-200 transition-colors"
+                  title="Open Shiprocket Merchant Console"
+                >
+                  <Package className="h-3 w-3" />
+                  Shiprocket #{order.shiprocketOrderId}
+                </a>
+              )}
+              {order.trackingNumber && (
+                <span className="text-[11px] font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                  AWB: {order.trackingNumber} {order.courierName ? `(${order.courierName})` : ""}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pt-1">

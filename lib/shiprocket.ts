@@ -457,3 +457,52 @@ export async function trackShipment(
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Cancel Shiprocket Order
+// ---------------------------------------------------------------------------
+
+/**
+ * Cancels an order in Shiprocket by its Shiprocket Order ID.
+ * Called when an admin cancels an order that was previously pushed for shipment.
+ */
+export async function cancelShiprocketOrder(
+  shiprocketOrderId: string | number
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  if (!isConfigured() || String(shiprocketOrderId).startsWith("sr_mock_")) {
+    return {
+      success: true,
+      message: "Shiprocket order cancelled successfully (Simulated).",
+    };
+  }
+
+  try {
+    const res = await shiprocketFetch("/orders/cancel", {
+      method: "POST",
+      body: JSON.stringify({
+        ids: [Number(shiprocketOrderId) || shiprocketOrderId],
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn(`[Shiprocket] Cancel failed (${res.status}): ${errText}`);
+      return {
+        success: false,
+        error: `Shiprocket API error (${res.status}): ${errText}`,
+      };
+    }
+
+    const data = (await res.json()) as { message?: string };
+    return {
+      success: true,
+      message: data.message || "Order cancelled in Shiprocket.",
+    };
+  } catch (err) {
+    console.error("[Shiprocket] cancelShiprocketOrder exception:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Shiprocket cancellation failed.",
+    };
+  }
+}

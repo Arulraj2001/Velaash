@@ -285,18 +285,18 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
           <View style={styles.metaCol}>
             <Text style={styles.metaTitle}>Billed &amp; Shipped To</Text>
             <Text style={styles.metaTextBold}>
-              {order.shippingAddress.fullName || "Customer"}
+              {order.shippingAddress?.fullName || "Customer"}
             </Text>
-            <Text style={styles.metaText}>{order.shippingAddress.addressLine1}</Text>
-            {order.shippingAddress.addressLine2 && (
+            <Text style={styles.metaText}>{order.shippingAddress?.addressLine1 || ""}</Text>
+            {order.shippingAddress?.addressLine2 && (
               <Text style={styles.metaText}>{order.shippingAddress.addressLine2}</Text>
             )}
             <Text style={styles.metaText}>
-              {order.shippingAddress.city}, {order.shippingAddress.state} -{" "}
-              {order.shippingAddress.pincode}
+              {[order.shippingAddress?.city, order.shippingAddress?.state].filter(Boolean).join(", ")}
+              {order.shippingAddress?.pincode ? ` - ${order.shippingAddress.pincode}` : ""}
             </Text>
             <Text style={styles.metaText}>
-              Phone: {order.shippingAddress.phone} | Email: {order.shippingAddress.email}
+              Phone: {order.shippingAddress?.phone || "—"} | Email: {order.shippingAddress?.email || "—"}
             </Text>
           </View>
         </View>
@@ -312,25 +312,31 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
             <Text style={[styles.tableHeaderCell, styles.colAmount]}>Amount (INR)</Text>
           </View>
 
-          {order.items.map((item, idx) => (
-            <View key={item.id || idx} style={styles.tableRow}>
-              <Text style={[styles.tableCell, styles.colNo]}>{idx + 1}</Text>
-              <Text style={[styles.tableCell, styles.colItem]}>
-                {item.productName}
-                {item.sku ? ` (${item.sku})` : ""}
-              </Text>
-              <Text style={[styles.tableCell, styles.colVariant]}>
-                {item.size || "Standard"} {item.color ? `• ${item.color}` : ""}
-              </Text>
-              <Text style={[styles.tableCell, styles.colQty]}>{item.quantity}</Text>
-              <Text style={[styles.tableCell, styles.colRate]}>
-                ₹{item.unitPrice.toFixed(2)}
-              </Text>
-              <Text style={[styles.tableCell, styles.colAmount]}>
-                ₹{(item.unitPrice * item.quantity).toFixed(2)}
-              </Text>
-            </View>
-          ))}
+          {order.items.map((item, idx) => {
+            const uPrice = Number(item.unitPrice || 0);
+            const qty = Number(item.quantity || 1);
+            const lineAmt = Number(item.subtotal || uPrice * qty);
+
+            return (
+              <View key={item.id || idx} style={styles.tableRow}>
+                <Text style={[styles.tableCell, styles.colNo]}>{idx + 1}</Text>
+                <Text style={[styles.tableCell, styles.colItem]}>
+                  {item.productName}
+                  {item.sku ? ` (${item.sku})` : ""}
+                </Text>
+                <Text style={[styles.tableCell, styles.colVariant]}>
+                  {item.size || "Standard"} {item.color ? `• ${item.color}` : ""}
+                </Text>
+                <Text style={[styles.tableCell, styles.colQty]}>{qty}</Text>
+                <Text style={[styles.tableCell, styles.colRate]}>
+                  ₹{uPrice.toFixed(2)}
+                </Text>
+                <Text style={[styles.tableCell, styles.colAmount]}>
+                  ₹{lineAmt.toFixed(2)}
+                </Text>
+              </View>
+            );
+          })}
         </View>
 
         {/* Pricing Summary */}
@@ -338,16 +344,16 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
           <View style={styles.summaryBlock}>
             <View style={styles.summaryLine}>
               <Text style={styles.summaryLabel}>Subtotal:</Text>
-              <Text style={styles.summaryVal}>₹{order.subtotal.toFixed(2)}</Text>
+              <Text style={styles.summaryVal}>₹{Number(order.subtotal || 0).toFixed(2)}</Text>
             </View>
 
-            {Boolean(order.discountAmount && order.discountAmount > 0) && (
+            {Boolean(Number(order.discountAmount || 0) > 0) && (
               <View style={styles.summaryLine}>
                 <Text style={styles.summaryLabel}>
                   Discount {order.couponCode ? `(${order.couponCode})` : ""}:
                 </Text>
                 <Text style={styles.summaryVal}>
-                  -₹{(order.discountAmount ?? 0).toFixed(2)}
+                  -₹{Number(order.discountAmount || 0).toFixed(2)}
                 </Text>
               </View>
             )}
@@ -355,15 +361,15 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
             <View style={styles.summaryLine}>
               <Text style={styles.summaryLabel}>Shipping Charges:</Text>
               <Text style={styles.summaryVal}>
-                {(order.shippingCharge ?? (order as any).shippingFee ?? 0) === 0
+                {Number(order.shippingCharge ?? (order as any).shippingFee ?? 0) === 0
                   ? "FREE"
-                  : `₹${(order.shippingCharge ?? (order as any).shippingFee ?? 0).toFixed(2)}`}
+                  : `₹${Number(order.shippingCharge ?? (order as any).shippingFee ?? 0).toFixed(2)}`}
               </Text>
             </View>
 
             <View style={styles.summaryLineBold}>
               <Text style={styles.totalLabel}>Total Payable:</Text>
-              <Text style={styles.totalVal}>₹{(order.totalAmount ?? 0).toFixed(2)}</Text>
+              <Text style={styles.totalVal}>₹{Number(order.totalAmount || 0).toFixed(2)}</Text>
             </View>
           </View>
         </View>

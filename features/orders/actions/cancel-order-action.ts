@@ -134,11 +134,15 @@ export async function executeOrderCancellation(
   }
 
   // 6. Insert Audit Trail Record into order_status_history
+  const isValidUuid =
+    Boolean(userId) &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+
   await adminSupabase.from("order_status_history").insert({
     order_id: order.id,
     status: "cancelled",
     note: cancelNote,
-    created_by: userId,
+    created_by: isValidUuid ? userId : null,
   });
 
   return {

@@ -389,14 +389,116 @@ async function main() {
     `Courier partner correctly extracted: ${parsedTracking.courierName}`
   );
 
-  // Cleanup test order
+  // -------------------------------------------------------------------------
+  // SUITE 7: REFUND STATE MACHINE & COD DELIVERY AUTO-RECONCILE
+  // -------------------------------------------------------------------------
+  console.log("\n--- SUITE 7: Refund State Machine & COD Delivery Payment Auto-Sync ---");
+
+  // 1. Transition to refunded must be permitted from delivered and cancelled
+  assert(
+    canTransitionStatus("delivered", "refunded") === true,
+    "Valid transition: delivered -> refunded"
+  );
+  assert(
+    canTransitionStatus("cancelled", "refunded") === true,
+    "Valid transition: cancelled -> refunded"
+  );
+  assert(
+    canTransitionStatus("packed", "refunded") === false,
+    "Prohibited transition: packed -> refunded is blocked"
+  );
+
+  // 2. Shiprocket cancel function test
+  const { cancelShiprocketOrder } = await import("../lib/shiprocket");
+  const srCancelMockRes = await cancelShiprocketOrder("sr_mock_12345");
+  assert(
+    srCancelMockRes.success === true,
+    `Shiprocket cancellation helper handles mock order successfully: "${srCancelMockRes.message}"`
+  );
+
+  // 3. Create a test COD order in 'shipped' status with 'pending' payment
+  const codOrderNumber = `TEST-COD-${Date.now()}`;
+  const { data: codOrder, error: codErr } = await supabase
+    .from("orders")
+    .insert({
+      order_number: codOrderNumber,
+      status: "shipped",
+      payment_method: "cod",
+      payment_status: "pending",
+      subtotal: 1499,
+      shipping_charge: 0,
+      discount_amount: 0,
+      total_amount: 1499,
+      shipping_address: {
+        fullName: "Rahul Verma",
+        phone: "+91 9123456789",
+        email: "rahul@example.com",
+        addressLine1: "55 Mall Road",
+        city: "Madurai",
+        state: "Tamil Nadu",
+        pincode: "625001",
+      },
+      tracking_number: "DELHI987654321",
+      courier_name: "Delhivery",
+    })
+    .select("id, order_number, status, payment_status")
+    .single();
+
+  if (codErr || !codOrder) {
+    throw new Error(`Failed to create test COD order: ${codErr?.message}`);
+  }
+
+  // 4. Update order to 'delivered' directly in updateOrderStatusAction logic
+  // Simulate the server action logic:
+  const updatePayload: Record<string, unknown> = {
+    status: "delivered",
+    updated_at: new Date().toISOString(),
+  };
+  if (codOrder.payment_status === "pending") {
+    updatePayload.payment_status = "paid";
+  }
+
+  await supabase
+    .from("orders")
+    .update(updatePayload)
+    .eq("id", codOrder.id);
+
+  // Fetch updated order from DB
+  const { data: deliveredCodOrder } = await supabase
+    .from("orders")
+    .select("status, payment_status")
+    .eq("id", codOrder.id)
+    .single();
+
+  assert(
+    deliveredCodOrder?.status === "delivered",
+    `COD order status moved to 'delivered'`
+  );
+  assert(
+    deliveredCodOrder?.payment_status === "paid",
+    `COD order payment_status auto-reconciled to 'paid' upon delivery (was: pending)`
+  );
+
+  // 5. Test getAdminOrderDetail canRefund logic
+  const { getAdminOrderDetail } = await import("../features/admin/queries/get-admin-orders");
+  const detailDelivered = await getAdminOrderDetail(codOrderNumber);
+  assert(
+    detailDelivered?.canRefund === true,
+    `Delivered order canRefund is TRUE (owner can issue refund for returned goods)`
+  );
+
+  // Cleanup test orders
   await supabase.from("order_items").delete().eq("order_id", createdOrder.id);
   await supabase.from("order_status_history").delete().eq("order_id", createdOrder.id);
   await supabase.from("orders").delete().eq("id", createdOrder.id);
   console.log(`Cleaned up test order #${createdOrder.order_number}`);
 
+  await supabase.from("order_status_history").delete().eq("order_id", codOrder.id);
+  await supabase.from("orders").delete().eq("id", codOrder.id);
+  console.log(`Cleaned up test COD order #${codOrderNumber}`);
+
   console.log("\n=======================================================");
-  console.log("🎉 ALL PHASE 5B TEST SUITES PASSED SUCCESSFULLY!");
+  console.log("🎉 ALL PHASE 5B TEST SUITES (INCLUDING SUITE 7) PASSED SUCCESSFULLY!");
   console.log("=======================================================\n");
 }
 

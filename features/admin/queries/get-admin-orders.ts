@@ -329,7 +329,7 @@ export async function getAdminOrderDetail(
 
   const canCancel = ["pending", "confirmed", "packed"].includes(currentStatus);
   const canRefund =
-    ["cancelled", "returned"].includes(currentStatus) &&
+    ["cancelled", "delivered"].includes(currentStatus) &&
     currentPaymentStatus !== "refunded";
 
   return {

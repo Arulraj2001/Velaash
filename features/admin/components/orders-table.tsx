@@ -156,13 +156,13 @@ export function OrdersTable({
     });
   }, [filteredData, sortByNeedsAction]);
 
-  // Bulk action handlers
+  // Bulk action handlers - derived safely from displayData (which matches table row indices)
   const selectedOrderNumbers = useMemo(() => {
     return Object.keys(rowSelection)
       .filter((idx) => rowSelection[idx])
-      .map((idx) => filteredData[Number(idx)]?.orderNumber)
+      .map((idx) => displayData[Number(idx)]?.orderNumber)
       .filter(Boolean);
-  }, [rowSelection, filteredData]);
+  }, [rowSelection, displayData]);
 
   const handleBulkStatusUpdate = (targetStatus: OrderStatus) => {
     if (selectedOrderNumbers.length === 0) return;
@@ -545,7 +545,7 @@ export function OrdersTable({
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
               <option value="refunded">Refunded</option>
-              <option value="returned">Returned</option>
+              <option value="payment_failed">Payment Failed</option>
             </select>
           </div>
 
