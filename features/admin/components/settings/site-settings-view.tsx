@@ -1251,6 +1251,7 @@ function SeoDefaultsForm({
   const [form, setForm] = useState({
     meta_title: initial.meta_title || "",
     meta_description: initial.meta_description || "",
+    keywords: initial.keywords || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -1299,7 +1300,7 @@ function SeoDefaultsForm({
           required
           value={form.meta_title}
           onChange={(e) => setForm({ ...form, meta_title: e.target.value })}
-          placeholder="Velaash | Modern Everyday Luxury & Contemporary Clothing"
+          placeholder="Velaash — Everyday essentials for every home"
           className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
         />
         <p className="text-[11px] text-slate-500 mt-1">Recommended length: 50–60 characters.</p>
@@ -1314,10 +1315,26 @@ function SeoDefaultsForm({
           required
           value={form.meta_description}
           onChange={(e) => setForm({ ...form, meta_description: e.target.value })}
-          placeholder="Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe."
+          placeholder="Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash."
           className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
         <p className="text-[11px] text-slate-500 mt-1">Recommended length: 150–160 characters.</p>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-slate-700 mb-1">
+          Site-Wide Meta Keywords (English &amp; Tamil)
+        </label>
+        <input
+          type="text"
+          value={form.keywords}
+          onChange={(e) => setForm({ ...form, keywords: e.target.value })}
+          placeholder="Velaash, Everyday essentials, Clothing, Pooja essentials, Brass, ஆடை, கடை"
+          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+        />
+        <p className="text-[11px] text-slate-500 mt-1">
+          Comma-separated keywords. You can include Tamil search terms (e.g. ஆடை, கடை) alongside English keywords.
+        </p>
       </div>
 
       {/* Google Search Snippet Simulation */}
@@ -1331,7 +1348,7 @@ function SeoDefaultsForm({
             {form.meta_title || "Velaash"}
           </span>
           <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-            {form.meta_description || "Contemporary clothing designed with refined fabrics..."}
+            {form.meta_description || "Shop clothing for men and women, plus traditional pooja and brass essentials..."}
           </p>
         </div>
       </div>

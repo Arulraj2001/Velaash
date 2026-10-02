@@ -68,6 +68,7 @@ export interface TaxPolicySetting {
 export interface SeoDefaultsSetting {
   meta_title: string;
   meta_description: string;
+  keywords?: string;
 }
 
 /**

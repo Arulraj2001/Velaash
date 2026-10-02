@@ -34,42 +34,81 @@ export async function getAdminProductsList(
     }
   }
 
+  const selectWithNew = `
+    id,
+    name,
+    slug,
+    category_id,
+    base_price,
+    compare_at_price,
+    has_variants,
+    stock_quantity,
+    specifications,
+    is_active,
+    is_featured,
+    stock_status,
+    created_at,
+    updated_at,
+    categories (
+      id,
+      name
+    ),
+    product_variants (
+      id,
+      size,
+      color,
+      sku,
+      stock_quantity,
+      price_override,
+      is_active
+    ),
+    product_images (
+      id,
+      image_url,
+      alt_text,
+      is_primary,
+      display_order
+    )
+  `;
+
+  const selectFallback = `
+    id,
+    name,
+    slug,
+    category_id,
+    base_price,
+    compare_at_price,
+    is_active,
+    is_featured,
+    stock_status,
+    created_at,
+    updated_at,
+    categories (
+      id,
+      name
+    ),
+    product_variants (
+      id,
+      size,
+      color,
+      sku,
+      stock_quantity,
+      price_override,
+      is_active
+    ),
+    product_images (
+      id,
+      image_url,
+      alt_text,
+      is_primary,
+      display_order
+    )
+  `;
+
   // 2. Query products with categories, variants, and images
   let query = supabase
     .from("products")
-    .select(`
-      id,
-      name,
-      slug,
-      category_id,
-      base_price,
-      compare_at_price,
-      is_active,
-      is_featured,
-      stock_status,
-      created_at,
-      updated_at,
-      categories (
-        id,
-        name
-      ),
-      product_variants (
-        id,
-        size,
-        color,
-        sku,
-        stock_quantity,
-        price_override,
-        is_active
-      ),
-      product_images (
-        id,
-        image_url,
-        alt_text,
-        is_primary,
-        display_order
-      )
-    `)
+    .select(selectWithNew)
     .order("updated_at", { ascending: false });
 
   if (filter.categoryId && filter.categoryId !== "all") {
@@ -82,11 +121,34 @@ export async function getAdminProductsList(
     query = query.eq("is_active", false);
   }
 
-  const { data: products, error } = await query;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let products: any[] | null = null;
+  const { data: primaryData, error: primaryError } = await query;
 
-  if (error) {
-    console.error("Failed to query admin products list:", error);
-    return [];
+  if (!primaryError) {
+    products = primaryData;
+  } else {
+    // Fallback if column migration is pending on remote DB
+    let fallbackQuery = supabase
+      .from("products")
+      .select(selectFallback)
+      .order("updated_at", { ascending: false });
+
+    if (filter.categoryId && filter.categoryId !== "all") {
+      fallbackQuery = fallbackQuery.eq("category_id", filter.categoryId);
+    }
+    if (filter.status === "active") {
+      fallbackQuery = fallbackQuery.eq("is_active", true);
+    } else if (filter.status === "inactive") {
+      fallbackQuery = fallbackQuery.eq("is_active", false);
+    }
+
+    const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+    if (fallbackError) {
+      console.error("Failed to query admin products list:", fallbackError);
+      return [];
+    }
+    products = fallbackData;
   }
 
   // 3. Map into AdminProductListItem
@@ -99,10 +161,14 @@ export async function getAdminProductsList(
     const images = (p.product_images ?? []) as any[];
 
     const primaryImg = images.find((i) => i.is_primary) || images[0];
-    const totalStock = variants.reduce(
-      (sum, v) => sum + Number(v.stock_quantity || 0),
-      0
-    );
+    const row = p as Record<string, unknown>;
+    const hasVariants = row.has_variants !== undefined
+      ? Boolean(row.has_variants)
+      : variants.length > 0;
+
+    const totalStock = hasVariants
+      ? variants.reduce((sum, v) => sum + Number(v.stock_quantity || 0), 0)
+      : Number(row.stock_quantity ?? (variants.length > 0 ? variants.reduce((sum, v) => sum + Number(v.stock_quantity || 0), 0) : 0));
     const skus = variants.map((v) => v.sku).filter(Boolean);
 
     return {
@@ -114,6 +180,11 @@ export async function getAdminProductsList(
       base_price: Number(p.base_price || 0),
       compare_at_price: p.compare_at_price ? Number(p.compare_at_price) : null,
       total_stock: totalStock,
+      has_variants: hasVariants,
+      stock_quantity: (row.stock_quantity as number | undefined) ?? totalStock,
+      specifications: Array.isArray(row.specifications)
+        ? (row.specifications as { label: string; value: string }[])
+        : [],
       is_active: p.is_active,
       is_featured: p.is_featured,
       stock_status: p.stock_status,
@@ -235,6 +306,11 @@ export async function getAdminProductById(
     category_id: p.category_id,
     base_price: Number(p.base_price || 0),
     compare_at_price: p.compare_at_price ? Number(p.compare_at_price) : null,
+    has_variants: p.has_variants !== undefined ? Boolean(p.has_variants) : rawVariants.length > 0,
+    stock_quantity: p.stock_quantity ?? rawVariants.reduce((sum, v) => sum + Number(v.stock_quantity || 0), 0),
+    specifications: Array.isArray(p.specifications)
+      ? (p.specifications as unknown as { label: string; value: string }[])
+      : [],
     fabric: p.fabric,
     care_instructions: p.care_instructions,
     craftsmanship: p.craftsmanship ?? null,

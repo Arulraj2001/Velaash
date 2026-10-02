@@ -62,7 +62,9 @@ export function ProductCard({
 
   // Variants info for Quick Add
   const activeVariants = product.variants.filter((v) => v.is_active);
+  const isSimpleProduct = product.has_variants === false || product.variants.length === 0;
   const hasSingleVariant = activeVariants.length === 1;
+  const canQuickAdd = isSimpleProduct || hasSingleVariant;
 
   // Handle Wishlist Click (Optimistic update with automatic server rollback on failure)
   const handleWishlistToggle = async (e: React.MouseEvent) => {
@@ -93,30 +95,31 @@ export function ProductCard({
     }
   };
 
-  // Handle Quick Add to Cart (Single Variant Products)
+  // Handle Quick Add to Cart (Simple products or Single Variant Products)
   const handleQuickAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (isInactive || isOutOfStock || !hasSingleVariant) return;
+    if (isInactive || isOutOfStock || !canQuickAdd) return;
 
-    const singleVariant = activeVariants[0];
+    const singleVariant = !isSimpleProduct ? activeVariants[0] : null;
     const imgUrl = activeImageUrl || primaryImage?.image_url || "/placeholder.jpg";
-    const variantPrice = singleVariant.price_override ?? product.base_price;
+    const variantPrice = singleVariant?.price_override ?? product.base_price;
+    const maxStock = singleVariant ? singleVariant.stock_quantity : (product.stock_quantity ?? product.total_stock ?? 999);
 
     useCartStore.getState().addItem(
       {
         productId: product.id,
-        variantId: singleVariant.id,
+        variantId: singleVariant?.id || null,
         title: product.name,
         slug: product.slug,
-        size: singleVariant.size,
-        color: singleVariant.color,
-        colorHex: singleVariant.color_hex || undefined,
+        size: singleVariant?.size || null,
+        color: singleVariant?.color || null,
+        colorHex: singleVariant?.color_hex || undefined,
         price: variantPrice,
         compareAtPrice: product.compare_at_price,
         image: imgUrl,
-        maxStock: singleVariant.stock_quantity,
+        maxStock,
       },
       1
     );
@@ -328,7 +331,7 @@ export function ProductCard({
             >
               Out of Stock
             </button>
-          ) : hasSingleVariant ? (
+          ) : canQuickAdd ? (
             <button
               type="button"
               onClick={handleQuickAddToCart}

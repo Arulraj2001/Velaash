@@ -58,6 +58,18 @@ interface SectionEditModalProps {
   allProducts: ProductListItem[];
 }
 
+function isValidImageUrl(url?: string | null): boolean {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (trimmed.startsWith("/") || trimmed.startsWith("data:")) return true;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function SectionEditModal({
   section,
   isOpen,
@@ -140,11 +152,11 @@ function SectionEditModalInner({
   const DEFAULT_HERO_SLIDES: SlideItemState[] = [
     {
       id: "slide-1",
-      tag: "Spring / Summer 2026",
-      headline: getString("headline") || "Modern Everyday Luxury",
+      tag: "New Season Arrivals",
+      headline: getString("headline") || "Everyday essentials for every home",
       subtitle:
         getString("subtitle") ||
-        "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+        "Clothing for men and women, plus traditional pooja and brass essentials.",
       cta_text: getString("cta_text") || "Explore Collection",
       cta_link: getString("cta_link") || "/shop",
       secondary_cta_text: getString("secondary_cta_text") || "Kurtas & Sets",
@@ -417,7 +429,7 @@ function SectionEditModalInner({
     const current = getTestimonialItems();
     const newItem: TestimonialItemState = {
       id: `testi-${Date.now()}`,
-      name: "New Patron",
+      name: "New Customer",
       location: "Mumbai",
       rating: 5,
       review:
@@ -501,10 +513,10 @@ function SectionEditModalInner({
           finalContent.cta_link = normalizeLink(finalContent.cta_link);
         }
       } else if (section.section_type === "testimonials") {
-        if (!finalContent.headline) finalContent.headline = "Cherished by Our Patrons";
+        if (!finalContent.headline) finalContent.headline = "Loved by Our Customers";
         if (!finalContent.subtitle) {
           finalContent.subtitle =
-            "Real experiences from women who celebrate everyday grace in our tailored silhouettes.";
+            "Real experiences from customers who celebrate quality and everyday grace.";
         }
         if (!finalContent.items) finalContent.items = getTestimonialItems();
       } else if (section.section_type === "value_strip") {
@@ -719,7 +731,7 @@ function SectionEditModalInner({
                             required
                             value={slide.headline || ""}
                             onChange={(e) => handleUpdateSlide(idx, "headline", e.target.value)}
-                            placeholder="e.g. Modern Everyday Luxury"
+                            placeholder="e.g. Everyday essentials for every home"
                             className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
                           />
                         </div>
@@ -800,14 +812,19 @@ function SectionEditModalInner({
                           Background Image <span className="text-rose-500">*</span>
                         </label>
                         <div className="space-y-2">
-                          {slide.bg_image ? (
+                          {isValidImageUrl(slide.bg_image) ? (
                             <div className="relative aspect-[16/7] w-full rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
                               <Image
-                                src={slide.bg_image}
+                                src={slide.bg_image.trim()}
                                 alt={`Slide ${idx + 1} preview`}
                                 fill
+                                unoptimized
                                 className="object-cover"
                               />
+                            </div>
+                          ) : slide.bg_image ? (
+                            <div className="p-2.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg">
+                              Invalid image URL format. Please paste a valid URL (e.g. https://res.cloudinary.com/... or https://images.unsplash.com/...)
                             </div>
                           ) : null}
 
@@ -988,14 +1005,19 @@ function SectionEditModalInner({
                           Card Image <span className="text-rose-500">*</span>
                         </label>
                         <div className="space-y-2">
-                          {item.image ? (
+                          {isValidImageUrl(item.image) ? (
                             <div className="relative aspect-[4/5] max-w-[140px] rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-xs">
                               <Image
-                                src={item.image}
+                                src={item.image.trim()}
                                 alt={item.name || "Occasion"}
                                 fill
+                                unoptimized
                                 className="object-cover"
                               />
+                            </div>
+                          ) : item.image ? (
+                            <div className="p-2.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg">
+                              Invalid image URL format.
                             </div>
                           ) : null}
 
@@ -1353,14 +1375,19 @@ function SectionEditModalInner({
                   Editorial Craftsmanship Image <span className="text-rose-500">*</span>
                 </label>
                 <div className="space-y-3">
-                  {getString("image_url") ? (
+                  {isValidImageUrl(getString("image_url")) ? (
                     <div className="relative aspect-[4/5] max-w-[200px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-xs">
                       <Image
-                        src={getString("image_url")}
+                        src={getString("image_url").trim()}
                         alt="Editorial preview"
                         fill
+                        unoptimized
                         className="object-cover"
                       />
+                    </div>
+                  ) : getString("image_url") ? (
+                    <div className="p-2.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg">
+                      Invalid image URL format.
                     </div>
                   ) : null}
 
@@ -1469,7 +1496,7 @@ function SectionEditModalInner({
             </div>
           )}
 
-          {/* 5. PATRON TESTIMONIALS */}
+          {/* 5. CUSTOMER REVIEWS */}
           {section.section_type === "testimonials" && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1479,9 +1506,9 @@ function SectionEditModalInner({
                   </label>
                   <input
                     type="text"
-                    value={getString("headline", "Cherished by Our Patrons")}
+                    value={getString("headline", "Loved by Our Customers")}
                     onChange={(e) => handleFieldChange("headline", e.target.value)}
-                    placeholder="e.g. Cherished by Our Patrons"
+                    placeholder="e.g. Loved by Our Customers"
                     className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
@@ -1493,7 +1520,7 @@ function SectionEditModalInner({
                     type="text"
                     value={getString(
                       "subtitle",
-                      "Real experiences from women who celebrate everyday grace in our tailored silhouettes."
+                      "Real experiences from customers who celebrate quality and everyday grace."
                     )}
                     onChange={(e) => handleFieldChange("subtitle", e.target.value)}
                     placeholder="e.g. Real experiences..."
@@ -1507,7 +1534,7 @@ function SectionEditModalInner({
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700">
-                      Patron Reviews ({getTestimonialItems().length})
+                      Customer Reviews ({getTestimonialItems().length})
                     </label>
                     <p className="text-[11px] text-slate-500">
                       Display authentic reviews with verified buyer badges on your homepage.
@@ -1526,7 +1553,7 @@ function SectionEditModalInner({
                 {getTestimonialItems().length === 0 ? (
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
                     <p className="text-xs text-slate-500">
-                      No customer reviews yet. Click &quot;Add Review&quot; to showcase feedback from your patrons.
+                      No customer reviews yet. Click &quot;Add Review&quot; to showcase feedback from your customers.
                     </p>
                   </div>
                 ) : (

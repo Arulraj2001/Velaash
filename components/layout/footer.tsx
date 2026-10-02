@@ -49,10 +49,12 @@ export async function Footer() {
             <div className="space-y-4 md:col-span-4">
               <div className="space-y-1">
                 <span className="font-heading text-brand-gold text-3xl font-semibold tracking-wide">
-                  {storeProfile.name}
+                  {storeProfile.name || BRAND.name}
                 </span>
                 <p className="text-brand-cream/60 text-[11px] tracking-widest uppercase">
-                  {storeProfile.tagline}
+                  {storeProfile.tagline && storeProfile.tagline !== "Contemporary Elegance, Timeless Style"
+                    ? storeProfile.tagline
+                    : BRAND.tagline}
                 </p>
               </div>
 

@@ -15,10 +15,9 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { Button } from "@/components/ui/button";
 import { BRAND } from "@/lib/constants";
 import { getNavigationCategories } from "@/features/navigation";
-import { getProducts, ProductCard, type ProductListItem } from "@/features/products";
+import { getProducts, type ProductListItem } from "@/features/products";
 import { getSiteSettings, getStoreContact } from "@/features/settings";
 import { env } from "@/lib/env";
 
@@ -38,23 +37,32 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const brandName = storeProfile.name || BRAND.name;
   const title =
-    seoDefaults.meta_title || `${brandName} | Modern Everyday Luxury & Contemporary Clothing`;
+    seoDefaults.meta_title || `${brandName} — Everyday essentials for every home`;
   const description =
     seoDefaults.meta_description ||
-    "Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe.";
+    "Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash.";
+
+  const defaultKeywords = [
+    brandName,
+    storeProfile.legal_name || BRAND.legalName,
+    "Everyday essentials",
+    "Clothing for men and women",
+    "Pooja essentials",
+    "Brass essentials",
+    "Contemporary Clothing",
+    "Kurtas & Sets",
+    "ஆடை",
+    "கடை",
+  ];
+  const configuredKeywords = seoDefaults.keywords
+    ? seoDefaults.keywords.split(",").map((k) => k.trim()).filter(Boolean)
+    : [];
+  const keywords = Array.from(new Set([...defaultKeywords, ...configuredKeywords]));
 
   return {
     title,
     description,
-    keywords: [
-      brandName,
-      storeProfile.legal_name || BRAND.legalName,
-      "Contemporary Clothing",
-      "Kurtas & Sets",
-      "Dresses",
-      "Co-ord Sets",
-      "Indian Everyday Wear",
-    ],
+    keywords,
     openGraph: {
       title,
       description,
@@ -67,7 +75,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80",
           width: 1200,
           height: 630,
-          alt: `${brandName} - Contemporary Clothing`,
+          alt: `${brandName} — Everyday essentials for every home`,
         },
       ],
     },
@@ -148,6 +156,9 @@ export default async function HomePage() {
     name: siteSettings.storeProfile.name || BRAND.name,
     legalName: siteSettings.storeProfile.legal_name || BRAND.legalName,
     url: BASE_URL,
+    description:
+      siteSettings.seoDefaults.meta_description ||
+      "Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash.",
     email: siteSettings.storeProfile.email,
     telephone: whatsappNumber,
     ...(siteSettings.storeProfile.logo_url
@@ -188,18 +199,46 @@ export default async function HomePage() {
           switch (section.section_type) {
             case "hero_banner": {
               const content = (section.content as Record<string, unknown>) || {};
-              const slides = Array.isArray(content.slides) ? (content.slides as HeroSlide[]) : [];
+              const rawSlides = Array.isArray(content.slides) ? (content.slides as HeroSlide[]) : [];
+
+              const slides = rawSlides.map((slide) => ({
+                ...slide,
+                headline:
+                  !slide.headline || slide.headline === "Modern Everyday Luxury"
+                    ? "Everyday essentials for every home"
+                    : slide.headline,
+                subtitle:
+                  !slide.subtitle ||
+                  slide.subtitle.includes("contemporary wardrobe essentials") ||
+                  slide.subtitle.includes("Effortless silhouettes") ||
+                  slide.headline === "Modern Everyday Luxury" ||
+                  slide.headline === "Everyday essentials for every home"
+                    ? "Clothing for men and women, plus traditional pooja and brass essentials."
+                    : slide.subtitle,
+              }));
+
+              const rawHeadline = (content.headline as string) || "";
+              const headline =
+                !rawHeadline || rawHeadline === "Modern Everyday Luxury"
+                  ? "Everyday essentials for every home"
+                  : rawHeadline;
+
+              const rawSubtitle =
+                (content.subtitle as string) || (content.subheading as string) || "";
+              const subtitle =
+                !rawSubtitle ||
+                rawSubtitle.includes("contemporary wardrobe essentials") ||
+                rawSubtitle.includes("Effortless silhouettes") ||
+                headline === "Everyday essentials for every home"
+                  ? "Clothing for men and women, plus traditional pooja and brass essentials."
+                  : rawSubtitle;
 
               return (
                 <HeroCarousel
                   key={section.id}
                   slides={slides}
-                  fallbackHeadline={(content.headline as string) || "Modern Everyday Luxury"}
-                  fallbackSubtitle={
-                    (content.subtitle as string) ||
-                    (content.subheading as string) ||
-                    "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance."
-                  }
+                  fallbackHeadline={headline}
+                  fallbackSubtitle={subtitle}
                   fallbackCtaText={
                     (content.cta_text as string) || (content.cta_label as string) || "Explore Collection"
                   }

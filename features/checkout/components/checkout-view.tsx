@@ -297,7 +297,7 @@ export function CheckoutView({
   // 2. Analytics: Track begin_checkout event once on checkout view mount (consent-gated)
   useEffect(() => {
     if (!isHydrated || items.length === 0 || typeof window === "undefined") return;
-    const sessionKey = `tracked_checkout_${items.map((i) => i.variantId).join("_")}`;
+    const sessionKey = `tracked_checkout_${items.map((i) => i.variantId || i.productId).join("_")}`;
     if (sessionStorage.getItem(sessionKey)) return;
     sessionStorage.setItem(sessionKey, "1");
 
@@ -306,13 +306,13 @@ export function CheckoutView({
       itemCount: items.reduce((acc, i) => acc + i.quantity, 0),
       coupon: appliedCoupon?.code,
       items: items.map((item) => ({
-        variantId: item.variantId,
+        variantId: item.variantId || undefined,
         productId: item.productId,
         title: item.title,
         price: item.price,
         quantity: item.quantity,
-        size: item.size,
-        color: item.color,
+        size: item.size || undefined,
+        color: item.color || undefined,
       })),
     });
   }, [isHydrated, items, totalAmount, appliedCoupon]);

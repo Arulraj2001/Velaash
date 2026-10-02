@@ -216,6 +216,49 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
       },
     ],
   },
+  {
+    id: "cat-men",
+    name: "Men",
+    slug: "men",
+    description: "Contemporary handcrafted clothing for men, tailored in premium natural fabrics",
+    image_url:
+      "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=600&q=80",
+    display_order: 7,
+    subcategories: [
+      {
+        id: "sub-men-shirts",
+        name: "Shirts",
+        slug: "men-shirts",
+        description: "Casual, formal, and resort shirts in pure linen and crisp handloom cotton",
+        image_url: null,
+        display_order: 1,
+      },
+      {
+        id: "sub-men-kurtas",
+        name: "Kurtas",
+        slug: "men-kurtas",
+        description: "Short and classic length kurtas with subtle embroidery and mandarin collars",
+        image_url: null,
+        display_order: 2,
+      },
+      {
+        id: "sub-men-t-shirts",
+        name: "T-Shirts",
+        slug: "men-t-shirts",
+        description: "Everyday crew necks and polo t-shirts in combed cotton",
+        image_url: null,
+        display_order: 3,
+      },
+      {
+        id: "sub-men-bottoms",
+        name: "Bottoms",
+        slug: "men-bottoms",
+        description: "Relaxed drawstring trousers, tailored chinos, and easy linen pants",
+        image_url: null,
+        display_order: 4,
+      },
+    ],
+  },
 ];
 
 /**

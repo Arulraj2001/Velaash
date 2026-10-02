@@ -7,7 +7,7 @@ import { validateCouponAction } from "./validate-coupon-action";
 interface InputCartItem {
   id: string;
   productId: string;
-  variantId: string;
+  variantId?: string | null;
   quantity: number;
   price: number;
 }
@@ -28,27 +28,46 @@ export async function revalidateCartAction({
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let variantsData: any[] | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let productsData: any[] | null = null;
     try {
       const supabase = await createClient();
-      const variantIds = items.map((i) => i.variantId);
-      const { data, error } = await supabase
-        .from("product_variants")
-        .select(`
-          id,
-          product_id,
-          stock_quantity,
-          price_override,
-          is_active,
-          products (
-            id,
-            base_price,
-            is_active
-          )
-        `)
-        .in("id", variantIds);
+      const variantIds = items
+        .map((i) => i.variantId)
+        .filter((id): id is string => Boolean(id && id !== "simple" && id !== "undefined"));
+      const productIds = Array.from(new Set(items.map((i) => i.productId)));
 
-      if (!error && data) {
-        variantsData = data;
+      if (variantIds.length > 0) {
+        const { data, error } = await supabase
+          .from("product_variants")
+          .select(`
+            id,
+            product_id,
+            stock_quantity,
+            price_override,
+            is_active,
+            products (
+              id,
+              base_price,
+              is_active
+            )
+          `)
+          .in("id", variantIds);
+
+        if (!error && data) {
+          variantsData = data;
+        }
+      }
+
+      if (productIds.length > 0) {
+        const { data: pData } = await supabase
+          .from("products")
+          .select(`id, base_price, is_active, stock_status`)
+          .in("id", productIds);
+
+        if (pData) {
+          productsData = pData;
+        }
       }
     } catch (err: unknown) {
       if (
@@ -97,7 +116,7 @@ export async function revalidateCartAction({
         revalidatedItems.push({
           id: item.id,
           productId: item.productId,
-          variantId: item.variantId,
+          variantId: item.variantId || null,
           currentPrice,
           priceChanged,
           availableStock,
@@ -107,19 +126,54 @@ export async function revalidateCartAction({
           message,
         });
       } else {
-        // Product variant was not found in the live database catalog
-        revalidatedItems.push({
-          id: item.id,
-          productId: item.productId,
-          variantId: item.variantId,
-          currentPrice: item.price,
-          priceChanged: false,
-          availableStock: 0,
-          isAvailable: false,
-          quantityAdjusted: true,
-          adjustedQuantity: 0,
-          message: "This product is no longer available in the store catalog.",
-        });
+        // Simple product or variant not found: check productsData directly
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const liveProduct: any = productsData
+          ? productsData.find((p) => p.id === item.productId)
+          : null;
+
+        if (liveProduct && (!item.variantId || item.variantId === "simple" || item.variantId === item.productId)) {
+          const isAvailable = Boolean(liveProduct.is_active) && liveProduct.stock_status !== "out_of_stock";
+          const currentPrice = Number(liveProduct.base_price ?? item.price);
+          const priceChanged = Math.abs(currentPrice - item.price) > 0.01;
+          const availableStock = 10;
+          const quantityExceeds = item.quantity > availableStock;
+          const adjustedQuantity = isAvailable ? Math.max(1, Math.min(item.quantity, availableStock)) : 0;
+
+          let message: string | undefined;
+          if (!isAvailable) {
+            message = "This item is currently out of stock or no longer available.";
+          } else if (priceChanged) {
+            message = "Price updated to current catalog price.";
+          }
+
+          revalidatedItems.push({
+            id: item.id,
+            productId: item.productId,
+            variantId: item.variantId || null,
+            currentPrice,
+            priceChanged,
+            availableStock,
+            isAvailable,
+            quantityAdjusted: quantityExceeds,
+            adjustedQuantity,
+            message,
+          });
+        } else {
+          // Product variant was not found in the live database catalog
+          revalidatedItems.push({
+            id: item.id,
+            productId: item.productId,
+            variantId: item.variantId || null,
+            currentPrice: item.price,
+            priceChanged: false,
+            availableStock: 0,
+            isAvailable: false,
+            quantityAdjusted: true,
+            adjustedQuantity: 0,
+            message: "This product is no longer available in the store catalog.",
+          });
+        }
       }
     }
 
@@ -166,7 +220,7 @@ export async function revalidateCartAction({
       items: items.map((i) => ({
         id: i.id,
         productId: i.productId,
-        variantId: i.variantId,
+        variantId: i.variantId || null,
         currentPrice: i.price,
         priceChanged: false,
         availableStock: 10,

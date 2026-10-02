@@ -211,7 +211,7 @@ async function generateAllAssets() {
   const manifest = {
     name: "Velaash",
     short_name: "Velaash",
-    description: "Contemporary clothing designed with refined fabrics and effortless silhouettes.",
+    description: "Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash.",
     icons: [
       {
         src: "/android-chrome-192x192.png",

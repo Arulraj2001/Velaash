@@ -69,7 +69,7 @@ const AVAILABLE_SECTIONS: {
   },
   {
     type: "testimonials",
-    title: "Patron Testimonials",
+    title: "Customer Reviews",
     badge: "Social Proof",
     description: "Verified customer reviews and ratings celebrating everyday grace in your tailored silhouettes.",
     icon: Heart,

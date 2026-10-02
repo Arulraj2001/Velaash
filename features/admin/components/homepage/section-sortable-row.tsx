@@ -54,7 +54,7 @@ const SECTION_TYPE_CONFIG: Record<
     badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
   },
   testimonials: {
-    label: "Patron Testimonials",
+    label: "Customer Reviews",
     description: "Verified customer reviews, ratings, and testimonials showcasing buyer trust",
     icon: Heart,
     badgeColor: "bg-rose-100 text-rose-800 border-rose-200",
@@ -134,6 +134,7 @@ export function SectionSortableRow({
           type="button"
           {...attributes}
           {...listeners}
+          suppressHydrationWarning
           aria-label="Drag to reorder section"
           className="cursor-grab active:cursor-grabbing p-1.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
         >

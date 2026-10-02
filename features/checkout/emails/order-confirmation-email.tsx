@@ -135,9 +135,13 @@ export const OrderConfirmationEmail = ({
                 <Text style={itemTitleStyle}>
                   {item.title} (Qty: {item.quantity})
                 </Text>
-                <Text style={itemMetaStyle}>
-                  Size: {item.size} • Color: {item.color}
-                </Text>
+                {(item.size || item.color) && (
+                  <Text style={itemMetaStyle}>
+                    {[item.size ? `Size: ${item.size}` : null, item.color ? `Color: ${item.color}` : null]
+                      .filter(Boolean)
+                      .join(" • ")}
+                  </Text>
+                )}
                 <Text style={itemPriceStyle}>₹{item.lineSubtotal.toLocaleString("en-IN")}</Text>
               </Section>
             ))}

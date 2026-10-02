@@ -194,8 +194,8 @@ function runHomepageAuditTests() {
   );
 
   const validTestimonialsSection = {
-    headline: "Cherished by Our Patrons",
-    subtitle: "Real experiences from women who celebrate everyday grace.",
+    headline: "Loved by Our Customers",
+    subtitle: "Real experiences from customers who celebrate quality and everyday grace.",
     items: [validTestimonial],
   };
   assert(
@@ -207,7 +207,7 @@ function runHomepageAuditTests() {
   const parsedTestiDefault = TestimonialsContentSchema.safeParse(defaultTestimonials);
   assert(
     "TestimonialsContentSchema applies defaults when empty",
-    parsedTestiDefault.success && parsedTestiDefault.data.headline === "Cherished by Our Patrons"
+    parsedTestiDefault.success && parsedTestiDefault.data.headline === "Loved by Our Customers"
   );
 
   // --- SECTION 7: TRUST & VALUE STRIP TESTS ---

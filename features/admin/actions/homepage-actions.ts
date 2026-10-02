@@ -46,12 +46,12 @@ function revalidateHomepagePaths() {
 const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
   {
     section_type: "hero_banner",
-    title: "Modern Everyday Luxury",
+    title: "Everyday essentials for every home",
     display_order: 1,
     is_active: true,
     content: {
-      headline: "Modern Everyday Luxury",
-      subtitle: "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+      headline: "Everyday essentials for every home",
+      subtitle: "Clothing for men and women, plus traditional pooja and brass essentials.",
       cta_text: "Explore Collection",
       cta_link: "/shop",
       secondary_cta_text: "Kurtas & Sets",
@@ -61,8 +61,8 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
         {
           id: "slide-1",
           tag: "New Season Arrivals",
-          headline: "Modern Everyday Luxury",
-          subtitle: "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+          headline: "Everyday essentials for every home",
+          subtitle: "Clothing for men and women, plus traditional pooja and brass essentials.",
           cta_text: "Explore Collection",
           cta_link: "/shop",
           secondary_cta_text: "Kurtas & Sets",
@@ -179,12 +179,12 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
   },
   {
     section_type: "testimonials",
-    title: "Patron Testimonials",
+    title: "Customer Reviews",
     display_order: 5,
     is_active: true,
     content: {
-      headline: "Cherished by Our Patrons",
-      subtitle: "Real experiences from women who celebrate everyday grace in our tailored silhouettes.",
+      headline: "Loved by Our Customers",
+      subtitle: "Real experiences from customers who celebrate quality and everyday grace.",
       items: [
         {
           id: "1",
@@ -605,8 +605,8 @@ export async function createHomepageSectionAction(
     if (section_type === "hero_banner") {
       defaultTitle = defaultTitle || "Hero Banner";
       defaultContent = {
-        headline: "Modern Everyday Luxury",
-        subtitle: "Effortless silhouettes and contemporary styles designed for everyday refinement.",
+        headline: "Everyday essentials for every home",
+        subtitle: "Clothing for men and women, plus traditional pooja and brass essentials.",
         cta_text: "Explore Collection",
         cta_link: "/shop",
         secondary_cta_text: "",
@@ -616,8 +616,8 @@ export async function createHomepageSectionAction(
           {
             id: "slide-1",
             tag: "New Season Arrivals",
-            headline: "Modern Everyday Luxury",
-            subtitle: "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+            headline: "Everyday essentials for every home",
+            subtitle: "Clothing for men and women, plus traditional pooja and brass essentials.",
             cta_text: "Explore Collection",
             cta_link: "/shop",
             secondary_cta_text: "Kurtas & Sets",
@@ -724,11 +724,11 @@ export async function createHomepageSectionAction(
         ...defaultContent,
       };
     } else if (section_type === "testimonials") {
-      defaultTitle = defaultTitle || "Patron Testimonials";
+      defaultTitle = defaultTitle || "Customer Reviews";
       defaultContent = {
-        headline: "Cherished by Our Patrons",
+        headline: "Loved by Our Customers",
         subtitle:
-          "Real experiences from women who celebrate everyday grace in our tailored silhouettes.",
+          "Real experiences from customers who celebrate quality and everyday grace.",
         items: [
           {
             id: "1",
@@ -899,7 +899,7 @@ export async function uploadHomepageImageAction(
 
     if (uploadErr) {
       console.error("Homepage image upload failed:", uploadErr);
-      return { success: false, error: "Failed to upload image to storage." };
+      return { success: false, error: uploadErr.message || "Failed to upload image to storage." };
     }
 
     const {

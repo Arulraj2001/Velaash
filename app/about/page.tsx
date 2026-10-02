@@ -7,14 +7,25 @@ import { Truck, RotateCcw, ShieldCheck, Headphones, MessageCircle, Mail, ArrowRi
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
-  const title = `About Us | ${settings.storeProfile.name || "Velaash"}`;
+  const brandName = settings.storeProfile.name || "Velaash";
+  const title = `About Us | ${brandName}`;
   const description =
     settings.seoDefaults.meta_description ||
-    "Velaash offers contemporary clothing designed for everyday elegance with refined silhouettes.";
+    "Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash.";
 
   return {
     title,
     description,
+    keywords: [
+      `About ${brandName}`,
+      brandName,
+      "Everyday essentials",
+      "Men and women clothing",
+      "Pooja essentials",
+      "Brass essentials",
+      "ஆடை",
+      "கடை",
+    ],
     openGraph: {
       title,
       description,
@@ -62,10 +73,10 @@ export default async function AboutPage() {
       {/* 1. Universal Page Header Banner (Minimal by default; letterbox hero if image configured) */}
       <PageHeaderBanner
         badge="About Our Label"
-        title={aboutBanner?.headline?.trim() || "Contemporary Clothing for Everyday Elegance"}
+        title={aboutBanner?.headline?.trim() || "Everyday Essentials for Every Home"}
         description={
           aboutBanner?.subtitle?.trim() ||
-          "Velaash crafts contemporary clothing designed for everyday elegance. Thoughtfully tailored silhouettes crafted for modern living with rich fabrics and timeless poise."
+          "Velaash brings together everyday clothing for men and women, along with traditional pooja and home essentials — all in one place."
         }
         imageUrl={aboutBanner?.image_url}
         breadcrumbs={[
@@ -95,14 +106,13 @@ export default async function AboutPage() {
               {/* TODO: Replace with real brand story once provided by the client */}
               <div className="space-y-4 text-sm text-brand-muted leading-relaxed">
                 <p>
-                  Velaash offers contemporary clothing designed for everyday elegance. We focus on
-                  effortless silhouettes and wearable styles that seamlessly fit into your everyday and
-                  occasion wardrobe.
+                  Velaash brings together everyday clothing for men and women, along with traditional
+                  pooja and home essentials — all in one place.
                 </p>
                 <p>
-                  Every collection is developed with an emphasis on breathable comfort, flattering cuts,
-                  and dependable construction. Whether you are dressing for work, family gatherings, or
-                  quiet weekends, our garments are crafted to make you feel poised and at ease.
+                  Every collection is developed with an emphasis on authentic quality, comfort,
+                  and dependable craftsmanship. Whether you are selecting wardrobe pieces or sacred
+                  brassware for your home, our essentials are curated to enrich your daily life.
                 </p>
               </div>
 

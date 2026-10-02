@@ -6,13 +6,22 @@ import { ContactDetails } from "@/features/contact/components/contact-details";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
-  const title = `Contact Us | ${settings.storeProfile.name || "Velaash"}`;
+  const brandName = settings.storeProfile.name || "Velaash";
+  const title = `Contact Us | ${brandName}`;
   const description =
-    "Get in touch with customer care at Velaash. Contact us via WhatsApp, email, or our online inquiry form for sizing guidance and order assistance.";
+    "Get in touch with customer care at Velaash. Contact us via WhatsApp, email, or our online inquiry form for product guidance and order assistance.";
 
   return {
     title,
     description,
+    keywords: [
+      `Contact ${brandName}`,
+      brandName,
+      "Customer Care",
+      "Everyday essentials",
+      "ஆடை",
+      "கடை",
+    ],
     openGraph: {
       title,
       description,
@@ -34,7 +43,7 @@ export default async function ContactPage() {
         title={contactBanner?.headline?.trim() || "Contact Us"}
         description={
           contactBanner?.subtitle?.trim() ||
-          "We are here to assist with garment sizing, delivery timelines, domestic returns, and product inquiries. Reach out to our concierge team directly."
+          "We are here to assist with order questions, delivery timelines, domestic returns, and product inquiries. Reach out to our customer care team directly."
         }
         imageUrl={contactBanner?.image_url}
         breadcrumbs={[

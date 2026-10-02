@@ -64,7 +64,7 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
             Order History
           </h1>
           <p className="text-xs text-brand-muted mt-1">
-            Review and track all your previous and active clothing orders.
+            Review and track all your previous and active orders.
           </p>
         </div>
 

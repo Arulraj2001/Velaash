@@ -237,6 +237,7 @@ export function HomepageBuilderView({
       {/* Sections Sortable List */}
       <div className="space-y-3">
         <DndContext
+          id="admin-homepage-builder-dnd"
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}

@@ -65,7 +65,13 @@ export function OrderReviewSidebar({
                 {item.title}
               </p>
               <p className="text-[11px] text-brand-muted mt-0.5">
-                {item.color} &bull; Size {item.size} &bull; Qty {item.quantity}
+                {[
+                  item.color || null,
+                  item.size ? `Size ${item.size}` : null,
+                  `Qty ${item.quantity}`,
+                ]
+                  .filter(Boolean)
+                  .join(" • ")}
               </p>
               <p className="text-xs font-semibold text-brand-dark mt-1">
                 ₹{(item.price * item.quantity).toLocaleString("en-IN")}

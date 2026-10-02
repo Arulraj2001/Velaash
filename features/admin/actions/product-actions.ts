@@ -63,73 +63,99 @@ export async function createProductAction(data: AdminProductFormData) {
     ? `${valid.slug}-${Date.now().toString(36)}`
     : valid.slug;
 
-  const totalStock = valid.variants.reduce(
-    (sum, v) => sum + Number(v.stock_quantity || 0),
-    0
-  );
+  const hasVariants = valid.has_variants !== false;
+  const totalStock = hasVariants
+    ? valid.variants.reduce((sum, v) => sum + Number(v.stock_quantity || 0), 0)
+    : Number(valid.stock_quantity || 0);
   const stockStatus = totalStock > 0 ? "in_stock" : "out_of_stock";
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const insertData: any = {
+    name: valid.name,
+    slug: finalSlug,
+    description: valid.description || null,
+    category_id: valid.category_id,
+    base_price: valid.base_price,
+    compare_at_price: valid.compare_at_price || null,
+    has_variants: hasVariants,
+    stock_quantity: totalStock,
+    specifications: valid.specifications || [],
+    fabric: valid.fabric || null,
+    care_instructions: valid.care_instructions || null,
+    craftsmanship: valid.craftsmanship || null,
+    is_active: valid.is_active,
+    is_featured: valid.is_featured,
+    is_made_to_order: valid.is_made_to_order ?? false,
+    stock_status: stockStatus,
+    weight_grams: valid.weight_grams ?? null,
+    length_cm: valid.length_cm ?? null,
+    width_cm: valid.width_cm ?? null,
+    height_cm: valid.height_cm ?? null,
+    hsn_code: valid.hsn_code || "6204",
+    gst_rate: valid.gst_rate ?? 5.00,
+    blouse_included: valid.blouse_included ?? null,
+    saree_length_meters: valid.saree_length_meters ?? null,
+    seo_title: valid.seo_title || null,
+    seo_description: valid.seo_description || null,
+    seo_keywords: valid.seo_keywords || [],
+  };
+
   // 1. Insert product
-  const { data: newProduct, error: productErr } = await adminClient
+  let newProduct: { id: string; slug: string } | null = null;
+  const insertRes = await adminClient
     .from("products")
-    .insert({
-      name: valid.name,
-      slug: finalSlug,
-      description: valid.description || null,
-      category_id: valid.category_id,
-      base_price: valid.base_price,
-      compare_at_price: valid.compare_at_price || null,
-      fabric: valid.fabric || null,
-      care_instructions: valid.care_instructions || null,
-      craftsmanship: valid.craftsmanship || null,
-      is_active: valid.is_active,
-      is_featured: valid.is_featured,
-      is_made_to_order: valid.is_made_to_order ?? false,
-      stock_status: stockStatus,
-      weight_grams: valid.weight_grams ?? null,
-      length_cm: valid.length_cm ?? null,
-      width_cm: valid.width_cm ?? null,
-      height_cm: valid.height_cm ?? null,
-      hsn_code: valid.hsn_code || "6204",
-      gst_rate: valid.gst_rate ?? 5.00,
-      blouse_included: valid.blouse_included ?? null,
-      saree_length_meters: valid.saree_length_meters ?? null,
-      seo_title: valid.seo_title || null,
-      seo_description: valid.seo_description || null,
-      seo_keywords: valid.seo_keywords || [],
-    })
+    .insert(insertData)
     .select("id, slug")
     .single();
 
-  if (productErr || !newProduct) {
-    console.error("Failed to create product:", productErr);
-    return { success: false, error: productErr?.message || "Failed to create product." };
+  if (!insertRes.error && insertRes.data) {
+    newProduct = insertRes.data;
+  } else if (insertRes.error?.code === "42703" || insertRes.error?.message?.includes("has_variants")) {
+    const fallbackInsert = { ...insertData };
+    delete fallbackInsert.has_variants;
+    delete fallbackInsert.stock_quantity;
+    delete fallbackInsert.specifications;
+    const fbRes = await adminClient
+      .from("products")
+      .insert(fallbackInsert)
+      .select("id, slug")
+      .single();
+    if (fbRes.error || !fbRes.data) {
+      console.error("Failed to create product fallback:", fbRes.error);
+      return { success: false, error: fbRes.error?.message || "Failed to create product." };
+    }
+    newProduct = fbRes.data;
+  } else {
+    console.error("Failed to create product:", insertRes.error);
+    return { success: false, error: insertRes.error?.message || "Failed to create product." };
   }
 
-  // 2. Insert variants
-  const variantsToInsert = valid.variants.map((v) => ({
-    product_id: newProduct.id,
-    size: v.size,
-    color: v.color,
-    color_hex: v.color_hex || null,
-    sku: v.sku,
-    stock_quantity: v.stock_quantity,
-    price_override: v.price_override || null,
-    is_active: v.is_active,
-  }));
+  // 2. Insert variants (only if product has variants)
+  if (hasVariants && valid.variants.length > 0) {
+    const variantsToInsert = valid.variants.map((v) => ({
+      product_id: newProduct.id,
+      size: v.size,
+      color: v.color,
+      color_hex: v.color_hex || null,
+      sku: v.sku,
+      stock_quantity: v.stock_quantity,
+      price_override: v.price_override || null,
+      is_active: v.is_active,
+    }));
 
-  const { error: variantErr } = await adminClient
-    .from("product_variants")
-    .insert(variantsToInsert);
+    const { error: variantErr } = await adminClient
+      .from("product_variants")
+      .insert(variantsToInsert);
 
-  if (variantErr) {
-    console.error("Failed to insert variants:", variantErr);
-    // Cleanup product on critical variant insertion failure
-    await adminClient.from("products").delete().eq("id", newProduct.id);
-    if (variantErr.code === "23505" || variantErr.message?.includes("sku")) {
-      return { success: false, error: "One or more variant SKUs already exist in the catalog." };
+    if (variantErr) {
+      console.error("Failed to insert variants:", variantErr);
+      // Cleanup product on critical variant insertion failure
+      await adminClient.from("products").delete().eq("id", newProduct.id);
+      if (variantErr.code === "23505" || variantErr.message?.includes("sku")) {
+        return { success: false, error: "One or more variant SKUs already exist in the catalog." };
+      }
+      return { success: false, error: `Failed to create product variants: ${variantErr.message}` };
     }
-    return { success: false, error: `Failed to create product variants: ${variantErr.message}` };
   }
 
   // 3. Insert images
@@ -201,95 +227,158 @@ export async function updateProductAction(
   const valid = validation.data;
   const adminClient = createAdminClient();
 
-  const totalStock = valid.variants.reduce(
-    (sum, v) => sum + Number(v.stock_quantity || 0),
-    0
-  );
+  const hasVariants = valid.has_variants !== false;
+  const totalStock = hasVariants
+    ? valid.variants.reduce((sum, v) => sum + Number(v.stock_quantity || 0), 0)
+    : Number(valid.stock_quantity || 0);
   const stockStatus = totalStock > 0 ? "in_stock" : "out_of_stock";
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const productUpdateData: any = {
+    name: valid.name,
+    slug: valid.slug,
+    description: valid.description || null,
+    category_id: valid.category_id,
+    base_price: valid.base_price,
+    compare_at_price: valid.compare_at_price || null,
+    has_variants: hasVariants,
+    stock_quantity: totalStock,
+    specifications: valid.specifications || [],
+    fabric: valid.fabric || null,
+    care_instructions: valid.care_instructions || null,
+    craftsmanship: valid.craftsmanship || null,
+    is_active: valid.is_active,
+    is_featured: valid.is_featured,
+    is_made_to_order: valid.is_made_to_order ?? false,
+    stock_status: stockStatus,
+    weight_grams: valid.weight_grams ?? null,
+    length_cm: valid.length_cm ?? null,
+    width_cm: valid.width_cm ?? null,
+    height_cm: valid.height_cm ?? null,
+    hsn_code: valid.hsn_code || "6204",
+    gst_rate: valid.gst_rate ?? 5.00,
+    blouse_included: valid.blouse_included ?? null,
+    saree_length_meters: valid.saree_length_meters ?? null,
+    seo_title: valid.seo_title || null,
+    seo_description: valid.seo_description || null,
+    seo_keywords: valid.seo_keywords || [],
+    updated_at: new Date().toISOString(),
+  };
 
   // 1. Update product base record
   const { error: updateErr } = await adminClient
     .from("products")
-    .update({
-      name: valid.name,
-      slug: valid.slug,
-      description: valid.description || null,
-      category_id: valid.category_id,
-      base_price: valid.base_price,
-      compare_at_price: valid.compare_at_price || null,
-      fabric: valid.fabric || null,
-      care_instructions: valid.care_instructions || null,
-      craftsmanship: valid.craftsmanship || null,
-      is_active: valid.is_active,
-      is_featured: valid.is_featured,
-      is_made_to_order: valid.is_made_to_order ?? false,
-      stock_status: stockStatus,
-      weight_grams: valid.weight_grams ?? null,
-      length_cm: valid.length_cm ?? null,
-      width_cm: valid.width_cm ?? null,
-      height_cm: valid.height_cm ?? null,
-      hsn_code: valid.hsn_code || "6204",
-      gst_rate: valid.gst_rate ?? 5.00,
-      blouse_included: valid.blouse_included ?? null,
-      saree_length_meters: valid.saree_length_meters ?? null,
-      seo_title: valid.seo_title || null,
-      seo_description: valid.seo_description || null,
-      seo_keywords: valid.seo_keywords || [],
-      updated_at: new Date().toISOString(),
-    })
+    .update(productUpdateData)
     .eq("id", productId);
 
   if (updateErr) {
-    console.error("Failed to update product:", updateErr);
-    return { success: false, error: updateErr.message || "Failed to update product." };
+    if (updateErr.code === "42703" || updateErr.message?.includes("has_variants")) {
+      const fallbackUpdate = { ...productUpdateData };
+      delete fallbackUpdate.has_variants;
+      delete fallbackUpdate.stock_quantity;
+      delete fallbackUpdate.specifications;
+      const { error: fbErr } = await adminClient
+        .from("products")
+        .update(fallbackUpdate)
+        .eq("id", productId);
+      if (fbErr) {
+        console.error("Failed to update product fallback:", fbErr);
+        return { success: false, error: fbErr.message || "Failed to update product." };
+      }
+    } else {
+      console.error("Failed to update product:", updateErr);
+      return { success: false, error: updateErr.message || "Failed to update product." };
+    }
   }
 
   // 2. Synchronize variants
-  // Get current variant IDs in DB
   const { data: currentVariants } = await adminClient
     .from("product_variants")
     .select("id")
     .eq("product_id", productId);
 
   const currentVariantIds = new Set((currentVariants ?? []).map((v) => v.id));
-  const incomingVariantIds = new Set(
-    valid.variants.map((v) => v.id).filter(Boolean) as string[]
-  );
 
-  // Delete removed variants that aren't referenced in order_items
-  const toDeleteVariantIds = Array.from(currentVariantIds).filter(
-    (id) => !incomingVariantIds.has(id)
-  );
+  if (!hasVariants) {
+    // If product is now a simple product, remove or deactivate any leftover variants
+    if (currentVariantIds.size > 0) {
+      const allIds = Array.from(currentVariantIds);
+      const { data: orderedVariants } = await adminClient
+        .from("order_items")
+        .select("variant_id")
+        .in("variant_id", allIds);
+      const orderedVariantIds = new Set((orderedVariants ?? []).map((o) => o.variant_id));
+      const safeToDelete = allIds.filter((id) => !orderedVariantIds.has(id));
+      const onlyDeactivate = allIds.filter((id) => orderedVariantIds.has(id));
 
-  if (toDeleteVariantIds.length > 0) {
-    // Check if any to-be-deleted variant has order items
-    const { data: orderedVariants } = await adminClient
-      .from("order_items")
-      .select("variant_id")
-      .in("variant_id", toDeleteVariantIds);
-
-    const orderedVariantIds = new Set((orderedVariants ?? []).map((o) => o.variant_id));
-
-    const safeToDelete = toDeleteVariantIds.filter((id) => !orderedVariantIds.has(id));
-    const onlyDeactivate = toDeleteVariantIds.filter((id) => orderedVariantIds.has(id));
-
-    if (safeToDelete.length > 0) {
-      await adminClient.from("product_variants").delete().in("id", safeToDelete);
+      if (safeToDelete.length > 0) {
+        await adminClient.from("product_variants").delete().in("id", safeToDelete);
+      }
+      if (onlyDeactivate.length > 0) {
+        await adminClient.from("product_variants").update({ is_active: false }).in("id", onlyDeactivate);
+      }
     }
-    if (onlyDeactivate.length > 0) {
-      await adminClient
-        .from("product_variants")
-        .update({ is_active: false })
-        .in("id", onlyDeactivate);
-    }
-  }
+  } else {
+    // Normal variant sync
+    const incomingVariantIds = new Set(
+      valid.variants.map((v) => v.id).filter(Boolean) as string[]
+    );
 
-  // Upsert variants with strict uniqueness and error verification
-  for (const v of valid.variants) {
-    if (v.id && currentVariantIds.has(v.id)) {
-      const { error: vUpdErr } = await adminClient
-        .from("product_variants")
-        .update({
+    // Delete removed variants that aren't referenced in order_items
+    const toDeleteVariantIds = Array.from(currentVariantIds).filter(
+      (id) => !incomingVariantIds.has(id)
+    );
+
+    if (toDeleteVariantIds.length > 0) {
+      // Check if any to-be-deleted variant has order items
+      const { data: orderedVariants } = await adminClient
+        .from("order_items")
+        .select("variant_id")
+        .in("variant_id", toDeleteVariantIds);
+
+      const orderedVariantIds = new Set((orderedVariants ?? []).map((o) => o.variant_id));
+
+      const safeToDelete = toDeleteVariantIds.filter((id) => !orderedVariantIds.has(id));
+      const onlyDeactivate = toDeleteVariantIds.filter((id) => orderedVariantIds.has(id));
+
+      if (safeToDelete.length > 0) {
+        await adminClient.from("product_variants").delete().in("id", safeToDelete);
+      }
+      if (onlyDeactivate.length > 0) {
+        await adminClient
+          .from("product_variants")
+          .update({ is_active: false })
+          .in("id", onlyDeactivate);
+      }
+    }
+
+    // Upsert variants with strict uniqueness and error verification
+    for (const v of valid.variants) {
+      if (v.id && currentVariantIds.has(v.id)) {
+        const { error: vUpdErr } = await adminClient
+          .from("product_variants")
+          .update({
+            size: v.size,
+            color: v.color,
+            color_hex: v.color_hex || null,
+            sku: v.sku,
+            stock_quantity: v.stock_quantity,
+            price_override: v.price_override || null,
+            is_active: v.is_active,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", v.id);
+
+        if (vUpdErr) {
+          console.error("Failed to update variant:", vUpdErr);
+          if (vUpdErr.code === "23505" || vUpdErr.message?.includes("sku")) {
+            return { success: false, error: `SKU "${v.sku}" is already in use by another product variant.` };
+          }
+          return { success: false, error: `Failed to update variant "${v.size}/${v.color}": ${vUpdErr.message}` };
+        }
+      } else {
+        const { error: vInsErr } = await adminClient.from("product_variants").insert({
+          product_id: productId,
           size: v.size,
           color: v.color,
           color_hex: v.color_hex || null,
@@ -297,35 +386,15 @@ export async function updateProductAction(
           stock_quantity: v.stock_quantity,
           price_override: v.price_override || null,
           is_active: v.is_active,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", v.id);
+        });
 
-      if (vUpdErr) {
-        console.error("Failed to update variant:", vUpdErr);
-        if (vUpdErr.code === "23505" || vUpdErr.message?.includes("sku")) {
-          return { success: false, error: `SKU "${v.sku}" is already in use by another product variant.` };
+        if (vInsErr) {
+          console.error("Failed to insert variant:", vInsErr);
+          if (vInsErr.code === "23505" || vInsErr.message?.includes("sku")) {
+            return { success: false, error: `SKU "${v.sku}" is already in use by another product variant.` };
+          }
+          return { success: false, error: `Failed to create variant "${v.size}/${v.color}": ${vInsErr.message}` };
         }
-        return { success: false, error: `Failed to update variant "${v.size}/${v.color}": ${vUpdErr.message}` };
-      }
-    } else {
-      const { error: vInsErr } = await adminClient.from("product_variants").insert({
-        product_id: productId,
-        size: v.size,
-        color: v.color,
-        color_hex: v.color_hex || null,
-        sku: v.sku,
-        stock_quantity: v.stock_quantity,
-        price_override: v.price_override || null,
-        is_active: v.is_active,
-      });
-
-      if (vInsErr) {
-        console.error("Failed to insert variant:", vInsErr);
-        if (vInsErr.code === "23505" || vInsErr.message?.includes("sku")) {
-          return { success: false, error: `SKU "${v.sku}" is already in use by another product variant.` };
-        }
-        return { success: false, error: `Failed to create variant "${v.size}/${v.color}": ${vInsErr.message}` };
       }
     }
   }
@@ -636,11 +705,59 @@ export async function deleteProductAction(productId: string) {
 export async function updateProductStockAction(input: ProductStockQuickEditInput) {
   await requireAdmin("update_stock");
 
-  if (!input.productId || !input.updates || input.updates.length === 0) {
-    return { success: false, error: "Invalid stock update parameters." };
+  if (!input.productId) {
+    return { success: false, error: "Product ID is required." };
   }
 
   const adminClient = createAdminClient();
+
+  // 1. Direct stock update for simple products
+  if (input.stockQuantity !== undefined) {
+    if (input.stockQuantity < 0) {
+      return { success: false, error: "Stock quantity cannot be negative." };
+    }
+    const newStock = Math.floor(input.stockQuantity);
+    const stockStatus = newStock > 0 ? "in_stock" : "out_of_stock";
+
+    let prod: { slug: string } | null = null;
+    const updRes = await adminClient
+      .from("products")
+      .update({
+        stock_quantity: newStock,
+        stock_status: stockStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", input.productId)
+      .select("slug")
+      .maybeSingle();
+
+    if (!updRes.error) {
+      prod = updRes.data;
+    } else {
+      const fbRes = await adminClient
+        .from("products")
+        .update({
+          stock_status: stockStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", input.productId)
+        .select("slug")
+        .maybeSingle();
+      prod = fbRes.data;
+    }
+
+    revalidateProductPaths(prod?.slug);
+    return {
+      success: true,
+      totalStock: newStock,
+      message: `Stock quantity successfully updated (Total: ${newStock} units).`,
+    };
+  }
+
+  // 2. Variant-based stock updates
+  if (!input.updates || input.updates.length === 0) {
+    return { success: false, error: "Invalid stock update parameters." };
+  }
 
   // Update each variant stock count
   for (const item of input.updates) {

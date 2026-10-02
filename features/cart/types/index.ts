@@ -3,12 +3,12 @@ import { z } from "zod";
 export const CartItemSchema = z.object({
   id: z.string(),
   productId: z.string(),
-  variantId: z.string(),
+  variantId: z.string().optional().nullable().or(z.literal("")),
   title: z.string(),
   slug: z.string(),
-  size: z.string(),
-  color: z.string(),
-  colorHex: z.string().optional(),
+  size: z.string().optional().nullable().or(z.literal("")),
+  color: z.string().optional().nullable().or(z.literal("")),
+  colorHex: z.string().optional().nullable().or(z.literal("")),
   price: z.number().nonnegative(),
   compareAtPrice: z.number().nonnegative().optional().nullable(),
   image: z.string(),
@@ -71,7 +71,7 @@ export type CouponValidationResponse =
 export interface RevalidatedCartItem {
   id: string;
   productId: string;
-  variantId: string;
+  variantId?: string | null;
   currentPrice: number;
   priceChanged: boolean;
   availableStock: number;

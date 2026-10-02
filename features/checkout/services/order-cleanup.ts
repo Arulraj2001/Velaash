@@ -10,7 +10,8 @@ export interface CleanupResult {
 // In-memory mock store for online pending orders in testing
 export const MOCK_ONLINE_PENDING_ORDERS: Array<{
   orderNumber: string;
-  variantId: string;
+  variantId?: string | null;
+  productId?: string;
   quantity: number;
   createdAt: number;
   paymentMethod: "razorpay" | "cod";

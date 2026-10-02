@@ -30,8 +30,26 @@ import { getSiteSettings, getPromoPopup } from "@/features/settings";
 export async function generateMetadata(): Promise<Metadata> {
   const { storeProfile, seoDefaults } = await getSiteSettings();
   const brandName = storeProfile.name || BRAND.name;
-  const titleDefault = seoDefaults.meta_title || `${brandName} | Modern Everyday Luxury & Contemporary Clothing`;
+  const titleDefault = seoDefaults.meta_title || `${brandName} — Everyday essentials for every home`;
   const descriptionDefault = seoDefaults.meta_description || BRAND.description;
+
+  const defaultKeywords = [
+    brandName,
+    storeProfile.legal_name || BRAND.legalName,
+    "Everyday essentials",
+    "Clothing for men and women",
+    "Pooja essentials",
+    "Brass essentials",
+    "Contemporary Clothing",
+    "Kurtas and Sets",
+    "Co-ord Sets",
+    "ஆடை",
+    "கடை",
+  ];
+  const configuredKeywords = seoDefaults.keywords
+    ? seoDefaults.keywords.split(",").map((k) => k.trim()).filter(Boolean)
+    : [];
+  const siteKeywords = Array.from(new Set([...defaultKeywords, ...configuredKeywords]));
 
   return {
     metadataBase: new URL(env.NEXT_PUBLIC_APP_URL || "https://velaash.in"),
@@ -40,16 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${brandName}`,
     },
     description: descriptionDefault,
-    keywords: [
-      brandName,
-      storeProfile.legal_name || BRAND.legalName,
-      "Contemporary Clothing",
-      "Kurtas and Sets",
-      "Designer Dresses",
-      "Co-ord Sets",
-      "Contemporary Womenswear",
-      "VELAASH TRADER'S",
-    ],
+    keywords: siteKeywords,
     authors: [{ name: storeProfile.legal_name || BRAND.legalName }],
     icons: {
       icon:

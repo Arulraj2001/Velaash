@@ -35,7 +35,7 @@ export function HeaderNav({ categories }: HeaderNavProps) {
   }, []);
 
   return (
-    <nav aria-label="Main Store Navigation" className="hidden items-center gap-6 md:flex lg:gap-8">
+    <nav aria-label="Main Store Navigation" className="hidden items-center gap-3 md:flex lg:gap-5 xl:gap-6">
       {categories.map((cat) => {
         const hasSub = cat.subcategories && cat.subcategories.length > 0;
         const isOpen = activeDropdown === cat.id;
@@ -75,7 +75,7 @@ export function HeaderNav({ categories }: HeaderNavProps) {
             {/* Dropdown Menu */}
             {hasSub && isOpen && (
               <div
-                className="border-brand-border/80 bg-brand-card shadow-luxury animate-in fade-in-0 zoom-in-95 absolute top-full left-1/2 z-50 w-72 -translate-x-1/2 rounded-xl border p-3 font-sans"
+                className="border-brand-border/60 bg-brand-card shadow-lg animate-in fade-in-0 zoom-in-95 absolute top-full left-1/2 z-50 w-72 -translate-x-1/2 rounded-xl border p-3 font-sans"
                 onMouseEnter={() => handleMouseEnter(cat.id)}
                 onMouseLeave={handleMouseLeave}
               >

@@ -54,70 +54,143 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailItem 
   try {
     const supabase = await createClient();
 
-    const { data: p, error } = await supabase
-      .from("products")
-      .select(
-        `
+    const selectFieldsWithNew = `
+      id,
+      name,
+      slug,
+      description,
+      base_price,
+      compare_at_price,
+      fabric,
+      care_instructions,
+      craftsmanship,
+      has_variants,
+      stock_quantity,
+      specifications,
+      is_active,
+      is_featured,
+      is_made_to_order,
+      stock_status,
+      weight_grams,
+      length_cm,
+      width_cm,
+      height_cm,
+      hsn_code,
+      gst_rate,
+      blouse_included,
+      saree_length_meters,
+      seo_title,
+      seo_description,
+      seo_keywords,
+      created_at,
+      updated_at,
+      category_id,
+      categories (
         id,
         name,
         slug,
-        description,
-        base_price,
-        compare_at_price,
-        fabric,
-        care_instructions,
-        craftsmanship,
-        is_active,
-        is_featured,
-        is_made_to_order,
-        stock_status,
-        weight_grams,
-        length_cm,
-        width_cm,
-        height_cm,
-        hsn_code,
-        gst_rate,
-        blouse_included,
-        saree_length_meters,
-        seo_title,
-        seo_description,
-        seo_keywords,
-        created_at,
-        updated_at,
-        category_id,
-        categories (
-          id,
-          name,
-          slug,
-          parent_id
-        ),
-        product_variants (
-          id,
-          size,
-          color,
-          color_hex,
-          stock_quantity,
-          sku,
-          price_override,
-          is_active
-        ),
-        product_images (
-          id,
-          image_url,
-          alt_text,
-          display_order,
-          is_primary,
-          variant_id
-        )
-      `
+        parent_id
+      ),
+      product_variants (
+        id,
+        size,
+        color,
+        color_hex,
+        stock_quantity,
+        sku,
+        price_override,
+        is_active
+      ),
+      product_images (
+        id,
+        image_url,
+        alt_text,
+        display_order,
+        is_primary,
+        variant_id
       )
+    `;
+
+    const selectFieldsFallback = `
+      id,
+      name,
+      slug,
+      description,
+      base_price,
+      compare_at_price,
+      fabric,
+      care_instructions,
+      craftsmanship,
+      is_active,
+      is_featured,
+      is_made_to_order,
+      stock_status,
+      weight_grams,
+      length_cm,
+      width_cm,
+      height_cm,
+      hsn_code,
+      gst_rate,
+      blouse_included,
+      saree_length_meters,
+      seo_title,
+      seo_description,
+      seo_keywords,
+      created_at,
+      updated_at,
+      category_id,
+      categories (
+        id,
+        name,
+        slug,
+        parent_id
+      ),
+      product_variants (
+        id,
+        size,
+        color,
+        color_hex,
+        stock_quantity,
+        sku,
+        price_override,
+        is_active
+      ),
+      product_images (
+        id,
+        image_url,
+        alt_text,
+        display_order,
+        is_primary,
+        variant_id
+      )
+    `;
+
+    // Try query with new schema columns first
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let p: any = null;
+    const { data: primaryData, error: primaryError } = await supabase
+      .from("products")
+      .select(selectFieldsWithNew)
       .eq("slug", normalizedSlug)
       .eq("is_active", true)
       .maybeSingle();
 
-    if (error) {
-      console.error("Database query failed in getProductBySlug:", error);
-      throw new Error(`Database error fetching product: ${error.message} (${error.code || "UNKNOWN"})`);
+    if (!primaryError) {
+      p = primaryData;
+    } else {
+      // Fallback query if remote database has not applied column migration yet
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("products")
+        .select(selectFieldsFallback)
+        .eq("slug", normalizedSlug)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (fallbackError) {
+        console.error("Database query failed in getProductBySlug:", fallbackError);
+        throw new Error(`Database error fetching product: ${fallbackError.message} (${fallbackError.code || "UNKNOWN"})`);
+      }
+      p = fallbackData;
     }
 
     if (!p) {
@@ -154,17 +227,21 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailItem 
       };
     });
 
-    const sizes: string[] = Array.from(new Set(variants.map((v) => v.size)));
-    const totalStock = variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0);
+    const sizes: string[] = Array.from(new Set(variants.map((v) => v.size).filter(Boolean)));
+    const hasVariants = p.has_variants !== false && variants.length > 0;
+    const totalStock = hasVariants
+      ? variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)
+      : (p.stock_quantity ?? 999);
     const categoryData = Array.isArray(p.categories) ? p.categories[0] : p.categories;
 
-    // Concurrently fetch size chart and real product reviews from Supabase
+    // Only fetch size chart if product has size variants
+    const hasSizeVariants = variants.some((v) => Boolean(v.size));
     const [sizeChart, reviewData] = await Promise.all([
-      getSizeChart(p.id, p.category_id),
+      hasSizeVariants ? getSizeChart(p.id, p.category_id) : Promise.resolve(null),
       getProductReviews(p.id),
     ]);
 
-    const meta = PDP_EXTENDED_METADATA[normalizedSlug] || DEFAULT_METADATA;
+    const meta = PDP_EXTENDED_METADATA[normalizedSlug] || (hasVariants ? DEFAULT_METADATA : null);
 
     return {
       id: p.id,
@@ -181,6 +258,9 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailItem 
       is_featured: p.is_featured,
       is_new: Date.now() - new Date(p.created_at).getTime() <= 30 * 24 * 60 * 60 * 1000,
       stock_status: p.stock_status,
+      has_variants: hasVariants,
+      stock_quantity: p.stock_quantity ?? totalStock,
+      specifications: Array.isArray(p.specifications) ? p.specifications : [],
       images,
       variants,
       colors,
@@ -190,9 +270,9 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailItem 
         reviewData.breakdown.totalCount > 0
           ? { average: reviewData.breakdown.average, count: reviewData.breakdown.totalCount }
           : null,
-      fabric: p.fabric || meta.fabric,
-      care_instructions: p.care_instructions || meta.care_instructions,
-      craftsmanship: p.craftsmanship || meta.craftsmanship,
+      fabric: p.fabric || meta?.fabric || null,
+      care_instructions: p.care_instructions || meta?.care_instructions || null,
+      craftsmanship: p.craftsmanship || meta?.craftsmanship || null,
       is_made_to_order: p.is_made_to_order,
       weight_grams: p.weight_grams,
       length_cm: p.length_cm,

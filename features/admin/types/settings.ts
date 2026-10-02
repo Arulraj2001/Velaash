@@ -108,13 +108,13 @@ export const AnnouncementSettingsSchema = z.object({
 
 export type AnnouncementSettingsFormData = z.infer<typeof AnnouncementSettingsSchema>;
 
-// 8. SEO Defaults
 export const SeoDefaultsSchema = z.object({
   meta_title: z.string().trim().min(3, "Meta title must be at least 3 characters"),
   meta_description: z
     .string()
     .trim()
     .min(10, "Meta description must be at least 10 characters"),
+  keywords: z.string().trim().optional(),
 });
 
 export type SeoDefaultsFormData = z.infer<typeof SeoDefaultsSchema>;

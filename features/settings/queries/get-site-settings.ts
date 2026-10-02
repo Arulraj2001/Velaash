@@ -54,9 +54,11 @@ export const DEFAULT_TAX_POLICY: TaxPolicySetting = {
 };
 
 export const DEFAULT_SEO_DEFAULTS: SeoDefaultsSetting = {
-  meta_title: "Velaash | Modern Everyday Luxury & Contemporary Clothing",
+  meta_title: "Velaash — Everyday essentials for every home",
   meta_description:
-    "Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe.",
+    "Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash.",
+  keywords:
+    "Velaash, Everyday essentials, Clothing for men and women, Pooja essentials, Brass essentials, ஆடை, கடை",
 };
 
 export const DEFAULT_SHIPROCKET_SETTING: ShiprocketSetting = {
@@ -161,7 +163,11 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     const storeProfile: StoreProfileSetting = {
       name: rawStoreProfile.name || BRAND.name,
       legal_name: rawStoreProfile.legal_name || BRAND.legalName,
-      tagline: rawStoreProfile.tagline ?? BRAND.tagline,
+      tagline:
+        rawStoreProfile.tagline &&
+        rawStoreProfile.tagline !== "Contemporary Elegance, Timeless Style"
+          ? rawStoreProfile.tagline
+          : BRAND.tagline,
       email: rawStoreProfile.email || BRAND.contactEmail,
       phone: rawStoreProfile.phone || BRAND.supportPhone,
       whatsapp_number: whatsappNumber,
@@ -242,9 +248,20 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
           : DEFAULT_TAX_POLICY.default_gst_rate,
     };
 
+    const rawTitle = rawSeo.meta_title?.trim();
+    const rawDesc = rawSeo.meta_description?.trim();
+    const rawKeywords = typeof rawSeo.keywords === "string" ? rawSeo.keywords.trim() : undefined;
+
     const seoDefaults: SeoDefaultsSetting = {
-      meta_title: rawSeo.meta_title || DEFAULT_SEO_DEFAULTS.meta_title,
-      meta_description: rawSeo.meta_description || DEFAULT_SEO_DEFAULTS.meta_description,
+      meta_title:
+        rawTitle && rawTitle !== "Velaash | Modern Everyday Luxury & Contemporary Clothing"
+          ? rawTitle
+          : DEFAULT_SEO_DEFAULTS.meta_title,
+      meta_description:
+        rawDesc && !rawDesc.includes("effortless silhouettes for your everyday and occasion wardrobe")
+          ? rawDesc
+          : DEFAULT_SEO_DEFAULTS.meta_description,
+      keywords: rawKeywords || DEFAULT_SEO_DEFAULTS.keywords,
     };
 
     const rawShiprocket = (shiprocketRow?.value as Partial<ShiprocketSetting>) || {};

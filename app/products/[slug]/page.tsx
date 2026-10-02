@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   if (!product) {
     return {
       title: "Product Not Found | Velaash",
-      description: "The requested clothing item could not be found.",
+      description: "The requested item could not be found.",
     };
   }
 
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const description =
     product.seo_description ||
     product.description ||
-    `${product.name} - Contemporary everyday luxury clothing by Velaash.`;
+    `${product.name} - Everyday essentials by Velaash.`;
 
   const primaryImage = product.images[0]?.image_url || `${BASE_URL}/og-image.jpg`;
 
@@ -113,6 +113,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       seller: {
         "@type": "Organization",
         name: BRAND.legalName,
+        url: BASE_URL,
+        description: BRAND.description,
       },
     },
     ...(product.rating && product.rating.count > 0

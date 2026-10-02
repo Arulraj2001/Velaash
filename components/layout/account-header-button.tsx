@@ -68,7 +68,7 @@ export function AccountHeaderButton() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="border-brand-border/80 bg-brand-card shadow-luxury animate-in fade-in-0 zoom-in-95 absolute right-0 z-50 mt-2 w-56 rounded-xl border p-2 font-sans">
+        <div className="border-brand-border/60 bg-brand-card shadow-lg animate-in fade-in-0 zoom-in-95 absolute right-0 z-50 mt-2 w-56 rounded-xl border p-2 font-sans">
           <div className="border-brand-border/60 mb-1 border-b px-3 py-2">
             <p className="text-brand-accent text-[11px] font-semibold tracking-wider uppercase">
               Signed in as

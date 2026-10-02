@@ -39,7 +39,6 @@ export function BrandWordmark({
           background: "linear-gradient(180deg, #D68334 0%, #A34B0B 32%, #692904 70%, #341201 100%)",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
-          filter: "drop-shadow(0 1px 1px rgba(242, 169, 0, 0.35)) drop-shadow(0 2px 3px rgba(52, 18, 1, 0.16))",
         }}
       >
         {isVelaash ? (
@@ -82,7 +81,7 @@ export function BrandWordmark({
             <span className="text-[6px] sm:text-[7px] leading-none transform rotate-45 inline-block text-brand-gold/75">
               ◆
             </span>
-            <span className="text-[8px] sm:text-[9px] leading-none transform rotate-45 inline-block text-[#D49A3D] drop-shadow-[0_0_2px_rgba(242,169,0,0.6)]">
+            <span className="text-[8px] sm:text-[9px] leading-none transform rotate-45 inline-block text-[#D49A3D]">
               ◆
             </span>
             <span className="text-[6px] sm:text-[7px] leading-none transform rotate-45 inline-block text-brand-gold/75">
@@ -94,7 +93,7 @@ export function BrandWordmark({
           <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent via-[#D49A3D]/70 to-[#B8860B]" />
 
           {/* Hanging Jewel Droplet Accent */}
-          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[7px] text-[#A34B0B] leading-none pointer-events-none drop-shadow-[0_0_1px_rgba(242,169,0,0.4)]">
+          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 text-[7px] text-[#A34B0B] leading-none pointer-events-none">
             ▾
           </div>
         </div>

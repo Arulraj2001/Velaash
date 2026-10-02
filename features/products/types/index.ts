@@ -101,6 +101,14 @@ export interface ProductListItem {
   sizes: string[];
   total_stock: number;
   rating?: ProductReviewSummary | null;
+  has_variants?: boolean;
+  stock_quantity?: number;
+  specifications?: ProductSpecificationItem[];
+}
+
+export interface ProductSpecificationItem {
+  label: string;
+  value: string;
 }
 
 /**
@@ -225,6 +233,7 @@ export interface ProductDetailItem extends ProductListItem {
   size_chart?: SizeChartData | null;
   reviews_breakdown: ProductReviewBreakdown;
   reviews: ProductReviewItem[];
+  specifications?: ProductSpecificationItem[];
 }
 
 /**
@@ -242,6 +251,9 @@ export interface RawDbProduct {
   is_featured: boolean;
   stock_status: "in_stock" | "low_stock" | "out_of_stock";
   category_id: string | null;
+  has_variants?: boolean;
+  stock_quantity?: number;
+  specifications?: ProductSpecificationItem[];
   categories:
     | { id: string; name: string; slug: string; parent_id: string | null }
     | { id: string; name: string; slug: string; parent_id: string | null }[]

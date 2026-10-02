@@ -6,14 +6,14 @@
 export const BRAND = {
   name: "Velaash",
   legalName: "VELAASH TRADER'S",
-  tagline: "", // Left blank per client direction — do not invent a tagline
+  tagline: "Velaash — Everyday essentials for every home",
   description:
-    "Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe.",
+    "Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash.",
   contactEmail: "",
   supportPhone: "",
   whatsappNumber: "",
   whatsappUrl: "",
-  whatsappMessage: "Hello Velaash! I would like to inquire about your clothing collection.",
+  whatsappMessage: "Hello Velaash! I would like to inquire about your products.",
   currency: "INR",
   currencySymbol: "₹",
   socialLinks: {

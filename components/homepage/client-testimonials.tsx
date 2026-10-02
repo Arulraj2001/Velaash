@@ -49,8 +49,8 @@ export interface ClientTestimonialsProps {
 }
 
 export function ClientTestimonials({
-  headline = "Cherished by Our Patrons",
-  subtitle = "Real experiences from women who celebrate everyday grace in our tailored silhouettes.",
+  headline = "Loved by Our Customers",
+  subtitle = "Real experiences from customers who celebrate quality and everyday grace.",
   items,
 }: ClientTestimonialsProps) {
   const displayItems = items && items.length > 0 ? items : DEFAULT_TESTIMONIALS;
@@ -62,7 +62,7 @@ export function ClientTestimonials({
         <div className="max-w-2xl mx-auto text-center space-y-2 mb-8 sm:mb-10">
           <div className="inline-flex items-center gap-1.5 text-brand-gold text-xs font-semibold tracking-widest uppercase">
             <Heart className="w-3 h-3 fill-brand-gold text-brand-gold" />
-            <span>Velaash Patrons</span>
+            <span>Customer Reviews</span>
           </div>
           <h2 className="font-heading text-2xl sm:text-3xl font-semibold text-brand-dark tracking-tight">
             {headline}

@@ -39,7 +39,7 @@ export interface ViewItemParams {
 
 export interface AddToCartParams {
   productId: string;
-  variantId: string;
+  variantId?: string;
   name: string;
   category?: string;
   price: number;

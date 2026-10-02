@@ -39,11 +39,18 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   const description =
     category.seo_description ||
     category.description ||
-    `Explore ${category.name.toLowerCase()} at Velaash. Refined style and breathable fabrics.`;
+    `Explore ${category.name.toLowerCase()} at Velaash. Everyday essentials curated for your lifestyle.`;
 
   return {
     title,
     description,
+    keywords: [
+      category.name,
+      "Velaash",
+      "Everyday essentials",
+      "ஆடை",
+      "கடை",
+    ],
     alternates: {
       canonical: `${BASE_URL}/category/${slug}`,
     },

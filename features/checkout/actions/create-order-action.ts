@@ -299,7 +299,13 @@ export async function createOrderAction(
     }
 
 
-    const variantIds = input.items.map((i) => i.variantId);
+    const variantIds = input.items
+      .map((i) => i.variantId)
+      .filter((id): id is string => Boolean(id && id !== "simple" && id !== "null"));
+
+    const simpleProductIds = input.items
+      .filter((i) => !i.variantId || i.variantId === "simple" || i.variantId === "null")
+      .map((i) => i.productId);
 
     // Attempt to query live inventory from Postgres
     let liveVariants: Array<{
@@ -316,46 +322,84 @@ export async function createOrderAction(
         base_price: number;
         is_active: boolean;
       } | null;
-    }> | null = null;
+    }> = [];
+
+    let liveProducts: Array<{
+      id: string;
+      name: string;
+      base_price: number;
+      stock_quantity?: number;
+      is_active: boolean;
+    }> = [];
 
     if (adminSupabase) {
-      try {
-        const { data, error } = await adminSupabase
-          .from("product_variants")
-          .select(`
-            id,
-            product_id,
-            stock_quantity,
-            price_override,
-            is_active,
-            size,
-            color,
-            products (
+      if (variantIds.length > 0) {
+        try {
+          const { data, error } = await adminSupabase
+            .from("product_variants")
+            .select(`
               id,
-              name,
-              base_price,
-              is_active
-            )
-          `)
-          .in("id", variantIds);
+              product_id,
+              stock_quantity,
+              price_override,
+              is_active,
+              size,
+              color,
+              products (
+                id,
+                name,
+                base_price,
+                is_active
+              )
+            `)
+            .in("id", variantIds);
 
-        if (error) {
-          console.error("Live variants query PostgREST error:", error);
-        } else if (data && data.length > 0) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          liveVariants = data as any;
+          if (error) {
+            console.error("Live variants query PostgREST error:", error);
+          } else if (data && data.length > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            liveVariants = data as any;
+          }
+        } catch (err) {
+          console.error("Live variants query exception:", err);
         }
-      } catch (err) {
-        console.error("Live variants query exception:", err);
+      }
+
+      if (simpleProductIds.length > 0) {
+        try {
+          const res = await adminSupabase
+            .from("products")
+            .select("id, name, base_price, is_active, stock_quantity")
+            .in("id", simpleProductIds);
+
+          if (!res.error && res.data) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            liveProducts = res.data as any;
+          } else {
+            // Fallback without stock_quantity column if column migration pending
+            const fallbackRes = await adminSupabase
+              .from("products")
+              .select("id, name, base_price, is_active")
+              .in("id", simpleProductIds);
+            if (fallbackRes.data) {
+              liveProducts = fallbackRes.data.map((p) => ({
+                ...p,
+                stock_quantity: 999,
+              }));
+            }
+          }
+        } catch (err) {
+          console.error("Live simple products query exception:", err);
+        }
       }
     }
 
     interface VerifiedLineItem {
       productId: string;
-      variantId: string;
+      variantId: string | null;
       title: string;
-      size: string;
-      color: string;
+      size: string | null;
+      color: string | null;
       unitPrice: number;
       quantity: number;
       lineSubtotal: number;
@@ -365,7 +409,40 @@ export async function createOrderAction(
     const verifiedItems: VerifiedLineItem[] = [];
 
     for (const requestedItem of input.items) {
-      if (liveVariants) {
+      const isSimple = !requestedItem.variantId || requestedItem.variantId === "simple" || requestedItem.variantId === "null";
+
+      if (isSimple) {
+        const prodMatch = liveProducts.find((p) => p.id === requestedItem.productId);
+        if (!prodMatch || !prodMatch.is_active) {
+          return {
+            success: false,
+            error: "An item in your cart is no longer available in the store catalog.",
+            code: "OUT_OF_STOCK",
+          };
+        }
+
+        const availableStock = prodMatch.stock_quantity ?? 999;
+        if (availableStock < requestedItem.quantity) {
+          return {
+            success: false,
+            error: `"${prodMatch.name}" has only ${availableStock} available in stock (you requested ${requestedItem.quantity}).`,
+            code: "OUT_OF_STOCK",
+          };
+        }
+
+        const unitPrice = Number(prodMatch.base_price);
+        verifiedItems.push({
+          productId: prodMatch.id,
+          variantId: null,
+          title: prodMatch.name,
+          size: null,
+          color: null,
+          unitPrice,
+          quantity: requestedItem.quantity,
+          lineSubtotal: unitPrice * requestedItem.quantity,
+          availableStock,
+        });
+      } else {
         const liveMatch = liveVariants.find((v) => v.id === requestedItem.variantId);
         if (!liveMatch || !liveMatch.is_active || !liveMatch.products?.is_active) {
           return {
@@ -399,12 +476,6 @@ export async function createOrderAction(
           lineSubtotal: unitPrice * requestedItem.quantity,
           availableStock: liveMatch.stock_quantity,
         });
-      } else {
-        return {
-          success: false,
-          error: "An item in your cart is no longer available in the store catalog.",
-          code: "OUT_OF_STOCK",
-        };
       }
     }
 
@@ -494,58 +565,165 @@ export async function createOrderAction(
     // The RPC commits the order, order items, coupon usage, and stock reservation atomically.
     let dbWriteSuccess = false;
 
-    if (liveVariants && adminSupabase) {
+    const hasSimpleItems = verifiedItems.some((i) => !i.variantId);
+
+    if (adminSupabase && verifiedItems.length > 0) {
       try {
-        const { data, error } = await adminSupabase.rpc("create_checkout_order_atomic", {
-          p_idempotency_key: input.idempotencyKey,
-          p_customer_id: customerId,
-          p_payment_method: input.paymentMethod,
-          p_subtotal: subtotal,
-          p_shipping_charge: shippingCharge,
-          p_discount_amount: discountAmount,
-          p_total_amount: totalAmount,
-          p_shipping_address: shippingAddressSnapshot,
-          p_coupon_code: validatedCouponCode,
-          p_notes: `${codHandlingFee > 0 ? `[COD handling fee: ₹${codHandlingFee}]` : ""}${guestAccountCreated ? " [guest_account_created: true]" : ""}`.trim(),
-          p_items: verifiedItems.map((item) => ({
-            product_id: item.productId,
-            variant_id: item.variantId,
-            title: item.title,
-            size: item.size,
-            color: item.color,
-            unit_price: item.unitPrice,
-            quantity: item.quantity,
-            line_subtotal: item.lineSubtotal,
-          })),
-        });
+        if (!hasSimpleItems) {
+          // Standard pure variant clothing checkout using atomic RPC
+          const { data, error } = await adminSupabase.rpc("create_checkout_order_atomic", {
+            p_idempotency_key: input.idempotencyKey,
+            p_customer_id: customerId,
+            p_payment_method: input.paymentMethod,
+            p_subtotal: subtotal,
+            p_shipping_charge: shippingCharge,
+            p_discount_amount: discountAmount,
+            p_total_amount: totalAmount,
+            p_shipping_address: shippingAddressSnapshot,
+            p_coupon_code: validatedCouponCode,
+            p_notes: `${codHandlingFee > 0 ? `[COD handling fee: ₹${codHandlingFee}]` : ""}${guestAccountCreated ? " [guest_account_created: true]" : ""}`.trim(),
+            p_items: verifiedItems.map((item) => ({
+              product_id: item.productId,
+              variant_id: item.variantId,
+              title: item.title,
+              size: item.size || "",
+              color: item.color || "",
+              unit_price: item.unitPrice,
+              quantity: item.quantity,
+              line_subtotal: item.lineSubtotal,
+            })),
+          });
 
-        if (error) {
-          const isOutOfStock = error.message.includes("OUT_OF_STOCK");
-          const isCouponInvalid = error.message.includes("COUPON_INVALID");
-          return {
-            success: false,
-            error: isOutOfStock
-              ? "An item in your cart is no longer available in the requested quantity. Please update your cart."
-              : isCouponInvalid
-                ? "Your coupon is no longer valid. Please review the discount and try again."
-                : "Failed to safely reserve your items. Please try again.",
-            code: isOutOfStock ? "OUT_OF_STOCK" : isCouponInvalid ? "COUPON_INVALID" : "VALIDATION_FAILED",
-          };
+          if (error) {
+            const isOutOfStock = error.message.includes("OUT_OF_STOCK");
+            const isCouponInvalid = error.message.includes("COUPON_INVALID");
+            return {
+              success: false,
+              error: isOutOfStock
+                ? "An item in your cart is no longer available in the requested quantity. Please update your cart."
+                : isCouponInvalid
+                  ? "Your coupon is no longer valid. Please review the discount and try again."
+                  : "Failed to safely reserve your items. Please try again.",
+              code: isOutOfStock ? "OUT_OF_STOCK" : isCouponInvalid ? "COUPON_INVALID" : "VALIDATION_FAILED",
+            };
+          }
+
+          const persistedOrder = data?.[0];
+          if (!persistedOrder) {
+            return {
+              success: false,
+              error: "Order could not be persisted. Please try again.",
+              code: "VALIDATION_FAILED",
+            };
+          }
+
+          orderId = persistedOrder.order_id;
+          orderNumber = persistedOrder.order_number;
+          isDuplicateOrder = persistedOrder.is_duplicate;
+          dbWriteSuccess = true;
+        } else {
+          // Checkout with simple products (no-variant) or mixed items:
+          // Check idempotency first
+          const { data: existingIdemp } = await adminSupabase
+            .from("orders")
+            .select("id, order_number, status, payment_method, payment_status, total_amount, razorpay_order_id")
+            .eq("idempotency_key", input.idempotencyKey)
+            .maybeSingle();
+
+          if (existingIdemp) {
+            orderId = existingIdemp.id;
+            orderNumber = existingIdemp.order_number;
+            isDuplicateOrder = true;
+            dbWriteSuccess = true;
+          } else {
+            // Direct insertion of order
+            const { data: insertedOrder, error: orderInsertErr } = await adminSupabase
+              .from("orders")
+              .insert({
+                customer_id: customerId,
+                status: "pending",
+                payment_method: input.paymentMethod,
+                payment_status: "pending",
+                subtotal,
+                shipping_charge: shippingCharge,
+                discount_amount: discountAmount,
+                total_amount: totalAmount,
+                shipping_address: shippingAddressSnapshot,
+                billing_address: shippingAddressSnapshot,
+                coupon_code: validatedCouponCode,
+                idempotency_key: input.idempotencyKey,
+                notes: `${codHandlingFee > 0 ? `[COD handling fee: ₹${codHandlingFee}]` : ""}${guestAccountCreated ? " [guest_account_created: true]" : ""}`.trim() || null,
+              })
+              .select("id, order_number")
+              .single();
+
+            if (orderInsertErr || !insertedOrder) {
+              console.error("Direct order insertion error:", orderInsertErr);
+              return {
+                success: false,
+                error: "Failed to safely record your order. Please try again.",
+                code: "VALIDATION_FAILED",
+              };
+            }
+
+            orderId = insertedOrder.id;
+            orderNumber = insertedOrder.order_number;
+            dbWriteSuccess = true;
+
+            // Insert line items
+            const orderItemsPayload = verifiedItems.map((item) => ({
+              order_id: orderId!,
+              product_id: item.productId,
+              variant_id: item.variantId || null,
+              product_name_snapshot: item.title,
+              variant_details_snapshot: [item.size, item.color].filter(Boolean).join(" / ") || "Standard",
+              unit_price: item.unitPrice,
+              quantity: item.quantity,
+              subtotal: item.lineSubtotal,
+            }));
+
+            const { error: itemsInsertErr } = await adminSupabase
+              .from("order_items")
+              .insert(orderItemsPayload);
+
+            if (itemsInsertErr) {
+              console.error("Direct order_items insertion error:", itemsInsertErr);
+            }
+
+            // Decrement variant and product stocks
+            for (const item of verifiedItems) {
+              if (item.variantId) {
+                const { data: curVar } = await adminSupabase
+                  .from("product_variants")
+                  .select("stock_quantity")
+                  .eq("id", item.variantId)
+                  .single();
+                if (curVar) {
+                  await adminSupabase
+                    .from("product_variants")
+                    .update({ stock_quantity: Math.max(0, curVar.stock_quantity - item.quantity) })
+                    .eq("id", item.variantId);
+                }
+              } else {
+                try {
+                  const { data: curProd } = await adminSupabase
+                    .from("products")
+                    .select("stock_quantity")
+                    .eq("id", item.productId)
+                    .maybeSingle();
+                  if (curProd && curProd.stock_quantity !== undefined) {
+                    await adminSupabase
+                      .from("products")
+                      .update({ stock_quantity: Math.max(0, (curProd.stock_quantity || 0) - item.quantity) })
+                      .eq("id", item.productId);
+                  }
+                } catch {
+                  // stock_quantity column might be pending on remote DB
+                }
+              }
+            }
+          }
         }
-
-        const persistedOrder = data?.[0];
-        if (!persistedOrder) {
-          return {
-            success: false,
-            error: "Order could not be persisted. Please try again.",
-            code: "VALIDATION_FAILED",
-          };
-        }
-
-        orderId = persistedOrder.order_id;
-        orderNumber = persistedOrder.order_number;
-        isDuplicateOrder = persistedOrder.is_duplicate;
-        dbWriteSuccess = true;
 
         if (isDuplicateOrder) {
           const { data: existingOrder, error: existingOrderError } = await adminSupabase
@@ -678,7 +856,8 @@ export async function createOrderAction(
         for (const item of verifiedItems) {
           MOCK_ONLINE_PENDING_ORDERS.push({
             orderNumber: orderNumber!,
-            variantId: item.variantId,
+            variantId: item.variantId || null,
+            productId: item.productId,
             quantity: item.quantity,
             createdAt: Date.now(),
             paymentMethod: "razorpay",
@@ -719,12 +898,12 @@ export async function createOrderAction(
       createdAt: new Date().toISOString(),
       shippingAddress: shippingAddressSnapshot,
       items: verifiedItems.map((item) => ({
-        id: `item-${item.variantId}`,
+        id: `item-${item.variantId || item.productId}`,
         productId: item.productId,
-        variantId: item.variantId,
+        variantId: item.variantId || "",
         title: item.title,
-        size: item.size,
-        color: item.color,
+        size: item.size || "",
+        color: item.color || "",
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         subtotal: item.lineSubtotal,
@@ -755,8 +934,8 @@ export async function createOrderAction(
             paymentStatus: "pending",
             items: verifiedItems.map((it) => ({
               title: it.title,
-              size: it.size,
-              color: it.color,
+              size: it.size || "",
+              color: it.color || "",
               quantity: it.quantity,
               unitPrice: it.unitPrice,
               lineSubtotal: it.lineSubtotal,

@@ -6,13 +6,13 @@ export const DEFAULT_LIVE_HOMEPAGE_SECTIONS: LiveHomepageSection[] = [
   {
     id: "default-hero",
     section_type: "hero_banner",
-    title: "Modern Everyday Luxury",
+    title: "Everyday essentials for every home",
     display_order: 1,
     is_active: true,
     content: {
-      headline: "Modern Everyday Luxury",
+      headline: "Everyday essentials for every home",
       subtitle:
-        "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+        "Clothing for men and women, plus traditional pooja and brass essentials.",
       cta_text: "Explore Collection",
       cta_link: "/shop",
       secondary_cta_text: "Kurtas & Sets",
@@ -22,10 +22,10 @@ export const DEFAULT_LIVE_HOMEPAGE_SECTIONS: LiveHomepageSection[] = [
       slides: [
         {
           id: "slide-1",
-          tag: "Spring / Summer 2026",
-          headline: "Modern Everyday Luxury",
+          tag: "New Season Arrivals",
+          headline: "Everyday essentials for every home",
           subtitle:
-            "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+            "Clothing for men and women, plus traditional pooja and brass essentials.",
           cta_text: "Explore Collection",
           cta_link: "/shop",
           secondary_cta_text: "Kurtas & Sets",
@@ -156,12 +156,12 @@ export const DEFAULT_LIVE_HOMEPAGE_SECTIONS: LiveHomepageSection[] = [
   {
     id: "default-testimonials",
     section_type: "testimonials",
-    title: "Patron Stories",
+    title: "Customer Reviews",
     display_order: 5,
     is_active: true,
     content: {
-      headline: "Cherished by Our Patrons",
-      subtitle: "Real experiences from women who celebrate everyday grace in our tailored silhouettes.",
+      headline: "Loved by Our Customers",
+      subtitle: "Real experiences from customers who celebrate quality and everyday grace.",
       items: [
         {
           id: "1",
@@ -290,15 +290,69 @@ export async function getHomepageSections(): Promise<LiveHomepageSection[]> {
       }
       seenTypes.add(section_type);
 
-      const content =
+      const rawContent =
         row.content && typeof row.content === "object" && !Array.isArray(row.content)
           ? (row.content as Record<string, unknown>)
           : {};
 
+      // Normalize content to broader lifestyle positioning
+      const content = { ...rawContent };
+      if (section_type === "hero_banner") {
+        if (!content.headline || content.headline === "Modern Everyday Luxury") {
+          content.headline = "Everyday essentials for every home";
+        }
+        if (
+          !content.subtitle ||
+          (typeof content.subtitle === "string" &&
+            (content.subtitle.includes("contemporary wardrobe essentials") ||
+              content.subtitle.includes("Effortless silhouettes") ||
+              content.headline === "Everyday essentials for every home"))
+        ) {
+          content.subtitle =
+            "Clothing for men and women, plus traditional pooja and brass essentials.";
+        }
+        if (Array.isArray(content.slides)) {
+          content.slides = (content.slides as Record<string, unknown>[]).map((s) => ({
+            ...s,
+            headline:
+              !s.headline || s.headline === "Modern Everyday Luxury"
+                ? "Everyday essentials for every home"
+                : s.headline,
+            subtitle:
+              !s.subtitle ||
+              (typeof s.subtitle === "string" &&
+                (s.subtitle.includes("contemporary wardrobe essentials") ||
+                  s.subtitle.includes("Effortless silhouettes") ||
+                  s.headline === "Modern Everyday Luxury" ||
+                  s.headline === "Everyday essentials for every home"))
+                ? "Clothing for men and women, plus traditional pooja and brass essentials."
+                : s.subtitle,
+          }));
+        }
+      } else if (section_type === "testimonials") {
+        if (
+          typeof content.subtitle === "string" &&
+          (content.subtitle.includes("women who celebrate everyday grace") ||
+            content.subtitle.includes("patrons who celebrate quality") ||
+            content.subtitle.includes("celebrate everyday grace"))
+        ) {
+          content.subtitle =
+            "Real experiences from customers who celebrate quality and everyday grace.";
+        }
+        if (content.headline === "Cherished by Our Patrons") {
+          content.headline = "Loved by Our Customers";
+        }
+      }
+
       sections.push({
         id: row.id,
         section_type,
-        title: row.title,
+        title:
+          row.title === "Modern Everyday Luxury"
+            ? "Everyday essentials for every home"
+            : row.title === "Patron Testimonials" || row.title === "Patron Stories"
+              ? "Customer Reviews"
+              : row.title,
         display_order: row.display_order,
         is_active: Boolean(row.is_active),
         content,

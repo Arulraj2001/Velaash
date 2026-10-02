@@ -130,8 +130,8 @@ export const TestimonialItemSchema = z.object({
 export type TestimonialItem = z.infer<typeof TestimonialItemSchema>;
 
 export const TestimonialsContentSchema = z.object({
-  headline: z.string().trim().default("Cherished by Our Patrons"),
-  subtitle: z.string().trim().default("Real experiences from women who celebrate everyday grace in our tailored silhouettes."),
+  headline: z.string().trim().default("Loved by Our Customers"),
+  subtitle: z.string().trim().default("Real experiences from customers who celebrate quality and everyday grace."),
   items: z.array(TestimonialItemSchema).default([]),
 });
 

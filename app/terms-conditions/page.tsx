@@ -293,7 +293,7 @@ export default async function TermsConditionsPage() {
               </div>
               <div className="space-y-3 text-xs sm:text-sm text-brand-muted leading-relaxed">
                 <p>
-                  This website and all garments and services offered are provided on an &quot;as is&quot; and &quot;as available&quot; basis. Velaash disclaims all warranties of any kind, whether express or implied, including merchantability, fitness for a particular purpose, or non-infringement.
+                  This website and all products and services offered are provided on an &quot;as is&quot; and &quot;as available&quot; basis. Velaash disclaims all warranties of any kind, whether express or implied, including merchantability, fitness for a particular purpose, or non-infringement.
                 </p>
                 <p>
                   To the maximum extent permitted by applicable Indian law, {legalName} and its affiliates shall not be liable for any indirect, incidental, punitive, or consequential damages resulting from the use or inability to use the platform, server interruptions, or courier transit delays caused by force majeure events (strikes, weather disruptions, natural disasters, or statutory transport restrictions). In all events, our total aggregate liability shall not exceed the net purchase amount paid by you for the specific order giving rise to the claim.

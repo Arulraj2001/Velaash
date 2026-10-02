@@ -65,10 +65,14 @@ export function MobileStickyBar({
             <p className="text-brand-dark truncate text-xs font-semibold">{productName}</p>
             <div className="text-brand-muted flex items-center gap-1.5 text-[11px]">
               <span className="text-brand-dark font-semibold">{formatCurrency(price)}</span>
-              <span>&bull;</span>
-              <span className="truncate">
-                {selectedColor} / {selectedSize}
-              </span>
+              {(selectedColor || selectedSize) && (
+                <>
+                  <span>&bull;</span>
+                  <span className="truncate">
+                    {[selectedColor, selectedSize].filter(Boolean).join(" / ")}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>

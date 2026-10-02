@@ -21,8 +21,8 @@ interface HeroCarouselProps {
 
 export function HeroCarousel({
   slides = [],
-  fallbackHeadline = "Modern Everyday Luxury",
-  fallbackSubtitle = "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+  fallbackHeadline = "Everyday essentials for every home",
+  fallbackSubtitle = "Clothing for men and women, plus traditional pooja and brass essentials.",
   fallbackCtaText = "Explore Collection",
   fallbackCtaLink = "/shop",
   fallbackSecondaryText = "Kurtas & Sets",
@@ -110,6 +110,11 @@ export function HeroCarousel({
             alt={slide.headline}
             fill
             priority={idx === 0}
+            unoptimized={
+              !slide.bg_image.includes("images.unsplash.com") &&
+              !slide.bg_image.includes(".supabase.co") &&
+              !slide.bg_image.includes("res.cloudinary.com")
+            }
             className="object-cover object-center brightness-90 contrast-105"
             sizes="100vw"
           />

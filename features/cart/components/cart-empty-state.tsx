@@ -16,8 +16,8 @@ export function CartEmptyState() {
       </h1>
 
       <p className="mt-3 max-w-md text-sm md:text-base text-brand-muted leading-relaxed">
-        Looks like you haven&apos;t added any pieces to your cart yet. Explore our newest arrivals
-        and handcrafted silhouettes to curate your wardrobe.
+        Looks like you haven&apos;t added any items to your bag yet. Explore our newest arrivals
+        and curated essentials for your home and wardrobe.
       </p>
 
       <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">

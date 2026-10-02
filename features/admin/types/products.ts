@@ -28,6 +28,9 @@ export interface AdminProductListItem {
     price_override?: number | null;
     is_active?: boolean;
   }[];
+  has_variants?: boolean;
+  stock_quantity?: number;
+  specifications?: { label: string; value: string }[];
   updated_at: string;
   created_at: string;
   has_orders: boolean;
@@ -89,6 +92,9 @@ export interface AdminProductDetail {
   seo_title: string | null;
   seo_description: string | null;
   seo_keywords: string[] | null;
+  has_variants?: boolean;
+  stock_quantity?: number;
+  specifications?: { label: string; value: string }[];
   images: AdminProductImageFormItem[];
   variants: AdminProductVariantFormItem[];
   size_chart_id?: string | null;
@@ -96,6 +102,16 @@ export interface AdminProductDetail {
   updated_at: string;
   has_orders?: boolean;
 }
+
+/**
+ * Single specification row (label + value pair)
+ */
+export const SpecificationItemSchema = z.object({
+  label: z.string().trim().min(1, "Label is required"),
+  value: z.string().trim().min(1, "Value is required"),
+});
+
+export type SpecificationItem = z.infer<typeof SpecificationItemSchema>;
 
 /**
  * Zod validation schema for image items
@@ -186,10 +202,19 @@ export const AdminProductFormSchema = z.object({
     .refine((imgs) => imgs.some((img) => img.is_primary), {
       message: "One image must be designated as the primary image",
     }),
-  variants: z
-    .array(ProductVariantFormSchema)
-    .min(1, "At least one variant (size + color) is required"),
+  has_variants: z.boolean().default(true),
+  stock_quantity: z.coerce.number().int().min(0, "Stock cannot be negative").default(0).optional().nullable(),
+  specifications: z.array(SpecificationItemSchema).default([]),
+  variants: z.array(ProductVariantFormSchema).default([]),
   size_chart_id: z.string().uuid().optional().nullable(),
+}).superRefine((data, ctx) => {
+  if (data.has_variants && data.variants.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["variants"],
+      message: "At least one variant (size + color) is required when variants are enabled.",
+    });
+  }
 });
 
 export type AdminProductFormData = z.infer<typeof AdminProductFormSchema>;
@@ -204,7 +229,8 @@ export interface VariantStockUpdate {
 
 export interface ProductStockQuickEditInput {
   productId: string;
-  updates: VariantStockUpdate[];
+  updates?: VariantStockUpdate[];
+  stockQuantity?: number;
 }
 
 /**

@@ -125,12 +125,12 @@ WHERE NOT EXISTS (
 INSERT INTO public.homepage_sections (section_type, title, display_order, is_active, content)
 SELECT
   'testimonials'::public.homepage_section_type,
-  'Patron Testimonials',
+  'Customer Reviews',
   6,
   true,
   jsonb_build_object(
-    'headline', 'Cherished by Our Patrons',
-    'subtitle', 'Real experiences from women who celebrate everyday grace in our tailored silhouettes.',
+    'headline', 'Loved by Our Customers',
+    'subtitle', 'Real experiences from customers who celebrate quality and everyday grace.',
     'items', jsonb_build_array(
       jsonb_build_object(
         'id', '1',

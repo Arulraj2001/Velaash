@@ -36,7 +36,11 @@ function StockQuickEditDialogContent({
   onClose: () => void;
   onSuccess?: () => void;
 }) {
+  const isSimpleProduct = product.has_variants === false || initialVariants.length === 0;
   const [variants, setVariants] = useState<VariantQuickItem[]>(initialVariants);
+  const [directStock, setDirectStock] = useState<number>(
+    product.stock_quantity ?? product.total_stock ?? 0
+  );
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
@@ -54,15 +58,23 @@ function StockQuickEditDialogContent({
   const handleSave = () => {
     setFeedback(null);
     startTransition(async () => {
-      const updates = variants.map((v) => ({
-        variantId: v.id,
-        stockQuantity: v.stock_quantity,
-      }));
+      let res;
+      if (isSimpleProduct) {
+        res = await updateProductStockAction({
+          productId: product.id,
+          stockQuantity: directStock,
+        });
+      } else {
+        const updates = variants.map((v) => ({
+          variantId: v.id,
+          stockQuantity: v.stock_quantity,
+        }));
 
-      const res = await updateProductStockAction({
-        productId: product.id,
-        updates,
-      });
+        res = await updateProductStockAction({
+          productId: product.id,
+          updates,
+        });
+      }
 
       if (res.success) {
         setFeedback({
@@ -82,10 +94,9 @@ function StockQuickEditDialogContent({
     });
   };
 
-  const currentTotal = variants.reduce(
-    (sum, v) => sum + Number(v.stock_quantity || 0),
-    0
-  );
+  const currentTotal = isSimpleProduct
+    ? directStock
+    : variants.reduce((sum, v) => sum + Number(v.stock_quantity || 0), 0);
 
   const headerIcon = product.thumbnail_url ? (
     <div className="relative h-10 w-8 shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-200">
@@ -133,9 +144,13 @@ function StockQuickEditDialogContent({
       maxWidth="lg"
       icon={headerIcon}
       title={product.name}
-      description={`Total Current Stock: ${currentTotal} units across ${variants.length} variant${
-        variants.length === 1 ? "" : "s"
-      }`}
+      description={
+        isSimpleProduct
+          ? `Total Current Stock: ${directStock} units (Simple product, no variants)`
+          : `Total Current Stock: ${currentTotal} units across ${variants.length} variant${
+              variants.length === 1 ? "" : "s"
+            }`
+      }
       footer={footerActions}
     >
       <div className="space-y-4">
@@ -157,41 +172,62 @@ function StockQuickEditDialogContent({
           </div>
         )}
 
-        {/* Variants Stock Table */}
-        <div className="rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase font-bold tracking-wider text-slate-500">
-                <th className="px-3.5 py-2.5">Variant</th>
-                <th className="px-3.5 py-2.5">SKU</th>
-                <th className="px-3.5 py-2.5 text-right">Available Units</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {variants.map((v) => (
-                <tr key={v.id} className="hover:bg-slate-50/70 transition-colors">
-                  <td className="px-3.5 py-2.5 font-semibold text-slate-800">
-                    {v.size} &bull; {v.color}
-                  </td>
-                  <td className="px-3.5 py-2.5 font-mono text-[11px] text-slate-500">
-                    {v.sku}
-                  </td>
-                  <td className="px-3.5 py-2.5 text-right">
-                    <input
-                      type="number"
-                      min="0"
-                      value={v.stock_quantity}
-                      onChange={(e) =>
-                        handleStockChange(v.id, parseInt(e.target.value) || 0)
-                      }
-                      className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-right text-xs font-bold font-mono text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition-all"
-                    />
-                  </td>
+        {isSimpleProduct ? (
+          <div className="rounded-xl border border-slate-200 p-4 bg-slate-50/50 space-y-3">
+            <label className="block text-xs font-semibold text-slate-700">
+              Available Units (Direct Stock)
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min="0"
+                value={directStock}
+                onChange={(e) => setDirectStock(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-32 rounded-lg border border-slate-200 px-3 py-2 text-right text-sm font-bold font-mono text-slate-900 bg-white focus:border-indigo-500 focus:outline-none"
+              />
+              <span className="text-xs text-slate-500">units in inventory</span>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              This product does not have size or color variants. Stock is tracked directly on the product row.
+            </p>
+          </div>
+        ) : (
+          /* Variants Stock Table */
+          <div className="rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase font-bold tracking-wider text-slate-500">
+                  <th className="px-3.5 py-2.5">Variant</th>
+                  <th className="px-3.5 py-2.5">SKU</th>
+                  <th className="px-3.5 py-2.5 text-right">Available Units</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {variants.map((v) => (
+                  <tr key={v.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="px-3.5 py-2.5 font-semibold text-slate-800">
+                      {v.size} &bull; {v.color}
+                    </td>
+                    <td className="px-3.5 py-2.5 font-mono text-[11px] text-slate-500">
+                      {v.sku}
+                    </td>
+                    <td className="px-3.5 py-2.5 text-right">
+                      <input
+                        type="number"
+                        min="0"
+                        value={v.stock_quantity}
+                        onChange={(e) =>
+                          handleStockChange(v.id, parseInt(e.target.value) || 0)
+                        }
+                        className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-right text-xs font-bold font-mono text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition-all"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </AdminModal>
   );

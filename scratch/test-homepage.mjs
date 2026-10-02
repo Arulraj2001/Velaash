@@ -5,7 +5,10 @@ async function verify() {
   console.log("HTTP Status:", res.status);
 
   const checks = [
-    { label: "Hero Headline (Modern Everyday Luxury)", pass: html.includes("Modern Everyday Luxury") },
+    { label: "Hero Headline (Everyday essentials for every home)", pass: html.includes("Everyday essentials for every home") },
+    { label: "ABSENCE of Old Headline (Modern Everyday Luxury)", pass: !html.includes("Modern Everyday Luxury") },
+    { label: "New Meta Description in HTML", pass: html.includes("Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash.") },
+    { label: "Tamil SEO Keywords in HTML", pass: html.includes("ஆடை") && html.includes("கடை") },
     { label: "Hero CTA to /shop", pass: html.includes('href="/shop"') && html.includes("Explore Collection") },
     { label: "Category Tiles Section", pass: html.includes("Explore by Category") },
     { label: "Featured Arrivals Section", pass: html.includes("Featured Arrivals") },
