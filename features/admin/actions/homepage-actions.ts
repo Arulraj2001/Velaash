@@ -57,6 +57,10 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
       secondary_cta_text: "Kurtas & Sets",
       secondary_cta_link: "/collections/kurtas-sets",
       bg_image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+      bg_image_mobile: "",
+      position_x: 50,
+      position_y: 50,
+      text_align: "center",
       slides: [
         {
           id: "slide-1",
@@ -68,6 +72,10 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
           secondary_cta_text: "Kurtas & Sets",
           secondary_cta_link: "/collections/kurtas-sets",
           bg_image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+          bg_image_mobile: "",
+          position_x: 50,
+          position_y: 50,
+          text_align: "center",
         },
         {
           id: "slide-2",
@@ -79,6 +87,10 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
           secondary_cta_text: "Dresses",
           secondary_cta_link: "/collections/dresses",
           bg_image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=2000&q=85",
+          bg_image_mobile: "",
+          position_x: 50,
+          position_y: 50,
+          text_align: "center",
         },
         {
           id: "slide-3",
@@ -90,6 +102,10 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
           secondary_cta_text: "View All",
           secondary_cta_link: "/shop",
           bg_image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=85",
+          bg_image_mobile: "",
+          position_x: 50,
+          position_y: 50,
+          text_align: "center",
         },
       ],
     },

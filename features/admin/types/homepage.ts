@@ -45,6 +45,10 @@ export const HeroSlideSchema = z.object({
   secondary_cta_text: z.string().trim().optional().default(""),
   secondary_cta_link: z.string().trim().optional().default(""),
   bg_image: z.string().trim().min(1, "Background image URL is required"),
+  bg_image_mobile: z.string().trim().optional().default(""),
+  position_x: z.coerce.number().min(0).max(100).default(50),
+  position_y: z.coerce.number().min(0).max(100).default(50),
+  text_align: z.enum(["left", "center", "right"]).default("center"),
 });
 
 export type HeroSlide = z.infer<typeof HeroSlideSchema>;
@@ -57,6 +61,10 @@ export const HeroBannerContentSchema = z.object({
   secondary_cta_text: z.string().trim().optional().default(""),
   secondary_cta_link: z.string().trim().optional().default(""),
   bg_image: z.string().trim().min(1, "Background image URL is required"),
+  bg_image_mobile: z.string().trim().optional().default(""),
+  position_x: z.coerce.number().min(0).max(100).default(50),
+  position_y: z.coerce.number().min(0).max(100).default(50),
+  text_align: z.enum(["left", "center", "right"]).default("center"),
   slides: z.array(HeroSlideSchema).optional().default([]),
 });
 

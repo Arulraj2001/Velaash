@@ -250,6 +250,18 @@ export default async function HomePage() {
                     (content.image_url as string) ||
                     "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85"
                   }
+                  fallbackBgImageMobile={
+                    (content.bg_image_mobile as string) || ""
+                  }
+                  fallbackPositionX={
+                    typeof content.position_x === "number" ? content.position_x : 50
+                  }
+                  fallbackPositionY={
+                    typeof content.position_y === "number" ? content.position_y : 50
+                  }
+                  fallbackTextAlign={
+                    (content.text_align as "left" | "center" | "right") || "center"
+                  }
                 />
               );
             }

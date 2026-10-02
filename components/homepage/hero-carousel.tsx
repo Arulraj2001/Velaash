@@ -17,6 +17,10 @@ interface HeroCarouselProps {
   fallbackSecondaryText?: string;
   fallbackSecondaryLink?: string;
   fallbackBgImage?: string;
+  fallbackBgImageMobile?: string;
+  fallbackPositionX?: number;
+  fallbackPositionY?: number;
+  fallbackTextAlign?: "left" | "center" | "right";
 }
 
 export function HeroCarousel({
@@ -28,6 +32,10 @@ export function HeroCarousel({
   fallbackSecondaryText = "Kurtas & Sets",
   fallbackSecondaryLink = "/collections/kurtas-sets",
   fallbackBgImage = "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+  fallbackBgImageMobile = "",
+  fallbackPositionX = 50,
+  fallbackPositionY = 50,
+  fallbackTextAlign = "center",
 }: HeroCarouselProps) {
   // Normalize slides: use slides from database, or fallback to single slide if none provided
   const activeSlides: HeroSlide[] =
@@ -44,6 +52,10 @@ export function HeroCarousel({
             secondary_cta_text: fallbackSecondaryText,
             secondary_cta_link: fallbackSecondaryLink,
             bg_image: fallbackBgImage,
+            bg_image_mobile: fallbackBgImageMobile,
+            position_x: fallbackPositionX,
+            position_y: fallbackPositionY,
+            text_align: fallbackTextAlign,
           },
         ];
 
@@ -84,7 +96,10 @@ export function HeroCarousel({
     touchStartX.current = null;
   };
 
-  const currentSlide = activeSlides[currentIndex] || activeSlides[0];
+  const isSlideUnoptimized = (url: string) =>
+    !url.includes("images.unsplash.com") &&
+    !url.includes(".supabase.co") &&
+    !url.includes("res.cloudinary.com");
 
   return (
     <section
@@ -97,83 +112,161 @@ export function HeroCarousel({
       aria-label="Featured Collections Carousel"
     >
       {/* Background Images with smooth cross-fade */}
-      {activeSlides.map((slide, idx) => (
-        <div
-          key={slide.id || idx}
-          className={`absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out ${
-            idx === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105 pointer-events-none"
-          }`}
-          style={{ transitionProperty: "opacity, transform" }}
-        >
-          <Image
-            src={slide.bg_image}
-            alt={slide.headline}
-            fill
-            priority={idx === 0}
-            unoptimized={
-              !slide.bg_image.includes("images.unsplash.com") &&
-              !slide.bg_image.includes(".supabase.co") &&
-              !slide.bg_image.includes("res.cloudinary.com")
-            }
-            className="object-cover object-center brightness-90 contrast-105"
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/95 via-brand-dark/45 to-black/30" />
-          <div className="absolute inset-0 bg-brand-dark/20 backdrop-blur-[0.5px]" />
-        </div>
-      ))}
+      {activeSlides.map((slide, idx) => {
+        const hasMobileImage = Boolean(slide.bg_image_mobile && slide.bg_image_mobile.trim());
+
+        return (
+          <div
+            key={slide.id || idx}
+            className={`absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out ${
+              idx === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105 pointer-events-none"
+            }`}
+            style={{ transitionProperty: "opacity, transform" }}
+          >
+            {hasMobileImage ? (
+              <>
+                {/* Mobile View Image (< 640px) */}
+                <div className="relative w-full h-full sm:hidden">
+                  <Image
+                    src={slide.bg_image_mobile!.trim()}
+                    alt={slide.headline}
+                    fill
+                    priority={idx === 0}
+                    unoptimized={isSlideUnoptimized(slide.bg_image_mobile!)}
+                    className="object-cover object-center brightness-90 contrast-105"
+                    sizes="100vw"
+                  />
+                </div>
+                {/* Desktop View Image (>= 640px) */}
+                <div className="relative w-full h-full hidden sm:block">
+                  <Image
+                    src={slide.bg_image.trim()}
+                    alt={slide.headline}
+                    fill
+                    priority={idx === 0}
+                    unoptimized={isSlideUnoptimized(slide.bg_image)}
+                    className="object-cover object-center brightness-90 contrast-105"
+                    sizes="100vw"
+                  />
+                </div>
+              </>
+            ) : (
+              <Image
+                src={slide.bg_image.trim()}
+                alt={slide.headline}
+                fill
+                priority={idx === 0}
+                unoptimized={isSlideUnoptimized(slide.bg_image)}
+                className="object-cover object-center brightness-90 contrast-105"
+                sizes="100vw"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/95 via-brand-dark/45 to-black/30" />
+            <div className="absolute inset-0 bg-brand-dark/20 backdrop-blur-[0.5px]" />
+          </div>
+        );
+      })}
 
       {/* Hero Slide Content */}
-      <Container size="lg" className="relative z-10 py-16 pb-20 sm:py-24 sm:pb-24 text-center">
-        <div
-          key={currentIndex}
-          className="max-w-3xl mx-auto space-y-5 sm:space-y-6 animate-in fade-in zoom-in-95 duration-500"
-        >
-          {/* Tag / Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-gold/40 bg-brand-dark/60 text-brand-gold text-xs font-semibold tracking-widest uppercase backdrop-blur-md shadow-sm">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{currentSlide.tag || "New Season Arrivals"}</span>
-          </div>
+      <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
+        <Container size="lg" className="h-full relative py-14 pb-20 sm:py-20 sm:pb-24">
+          {activeSlides.map((slide, idx) => {
+            if (idx !== currentIndex) return null;
 
-          {/* Headline */}
-          <h1 className="font-heading text-3xl sm:text-6xl md:text-7xl font-semibold text-white tracking-tight leading-[1.12] sm:leading-[1.08] drop-shadow-md">
-            {currentSlide.headline}
-          </h1>
+            const posX = typeof slide.position_x === "number" ? slide.position_x : 50;
+            const posY = typeof slide.position_y === "number" ? slide.position_y : 50;
+            const textAlign = slide.text_align || (posX <= 35 ? "left" : posX >= 65 ? "right" : "center");
 
-          {/* Subtitle */}
-          {currentSlide.subtitle && (
-            <p className="max-w-xl mx-auto text-brand-cream/90 font-sans text-xs sm:text-base md:text-lg leading-relaxed drop-shadow-xs">
-              {currentSlide.subtitle}
-            </p>
-          )}
-
-          {/* CTA Buttons: Left and Right Medium Buttons in a Single Line on Mobile */}
-          <div className="pt-2 sm:pt-4 flex flex-row items-center justify-center gap-2.5 sm:gap-4 w-full max-w-sm sm:max-w-none mx-auto">
-            <Link href={currentSlide.cta_link || "/shop"} className="flex-1 sm:flex-initial">
-              <Button
-                variant="primary"
-                size="md"
-                className="w-full sm:w-auto shadow-luxury hover:scale-[1.02] transition-transform text-xs sm:text-sm h-11 px-3.5 sm:px-6 whitespace-nowrap"
+            return (
+              <div
+                key={slide.id || idx}
+                className={`pointer-events-auto absolute max-w-2xl w-[90%] sm:w-auto space-y-4 sm:space-y-6 animate-in fade-in zoom-in-95 duration-500 transition-all ${
+                  textAlign === "left"
+                    ? "text-left items-start"
+                    : textAlign === "right"
+                    ? "text-right items-end"
+                    : "text-center items-center"
+                }`}
+                style={{
+                  left: `${posX}%`,
+                  top: `${posY}%`,
+                  transform: `translate(-${posX}%, -${posY}%)`,
+                }}
               >
-                <span>{currentSlide.cta_text || "Explore Collection"}</span>
-                <ArrowRight className="w-3.5 h-3.5 ml-1.5 shrink-0" />
-              </Button>
-            </Link>
-
-            {currentSlide.secondary_cta_text && currentSlide.secondary_cta_link ? (
-              <Link href={currentSlide.secondary_cta_link} className="flex-1 sm:flex-initial">
-                <Button
-                  variant="outline"
-                  size="md"
-                  className="w-full sm:w-auto border-white/50 text-white hover:bg-white/15 hover:text-white backdrop-blur-xs text-xs sm:text-sm h-11 px-3.5 sm:px-6 whitespace-nowrap"
+                {/* Tag / Badge */}
+                <div
+                  className={`flex w-full ${
+                    textAlign === "left"
+                      ? "justify-start"
+                      : textAlign === "right"
+                      ? "justify-end"
+                      : "justify-center"
+                  }`}
                 >
-                  {currentSlide.secondary_cta_text}
-                </Button>
-              </Link>
-            ) : null}
-          </div>
-        </div>
-      </Container>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-gold/40 bg-brand-dark/60 text-brand-gold text-xs font-semibold tracking-widest uppercase backdrop-blur-md shadow-sm">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>{slide.tag || "New Season Arrivals"}</span>
+                  </div>
+                </div>
+
+                {/* Headline */}
+                <h1 className="font-heading text-3xl sm:text-6xl md:text-7xl font-semibold text-white tracking-tight leading-[1.12] sm:leading-[1.08] drop-shadow-md">
+                  {slide.headline}
+                </h1>
+
+                {/* Subtitle */}
+                {slide.subtitle && (
+                  <p
+                    className={`max-w-xl text-brand-cream/90 font-sans text-xs sm:text-base md:text-lg leading-relaxed drop-shadow-xs ${
+                      textAlign === "left"
+                        ? "mr-auto"
+                        : textAlign === "right"
+                        ? "ml-auto"
+                        : "mx-auto"
+                    }`}
+                  >
+                    {slide.subtitle}
+                  </p>
+                )}
+
+                {/* CTA Buttons */}
+                <div
+                  className={`pt-2 sm:pt-4 flex flex-row items-center gap-2.5 sm:gap-4 w-full max-w-sm sm:max-w-none ${
+                    textAlign === "left"
+                      ? "justify-start mr-auto"
+                      : textAlign === "right"
+                      ? "justify-end ml-auto"
+                      : "justify-center mx-auto"
+                  }`}
+                >
+                  <Link href={slide.cta_link || "/shop"} className="flex-1 sm:flex-initial">
+                    <Button
+                      variant="primary"
+                      size="md"
+                      className="w-full sm:w-auto shadow-luxury hover:scale-[1.02] transition-transform text-xs sm:text-sm h-11 px-3.5 sm:px-6 whitespace-nowrap"
+                    >
+                      <span>{slide.cta_text || "Explore Collection"}</span>
+                      <ArrowRight className="w-3.5 h-3.5 ml-1.5 shrink-0" />
+                    </Button>
+                  </Link>
+
+                  {slide.secondary_cta_text && slide.secondary_cta_link ? (
+                    <Link href={slide.secondary_cta_link} className="flex-1 sm:flex-initial">
+                      <Button
+                        variant="outline"
+                        size="md"
+                        className="w-full sm:w-auto border-white/50 text-white hover:bg-white/15 hover:text-white backdrop-blur-xs text-xs sm:text-sm h-11 px-3.5 sm:px-6 whitespace-nowrap"
+                      >
+                        {slide.secondary_cta_text}
+                      </Button>
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </Container>
+      </div>
 
       {/* Slide Navigation Arrows (Desktop) */}
       {totalSlides > 1 && (

@@ -17,12 +17,12 @@ VALUES (
   'a7777777-7777-4777-a777-777777777777',
   'Men',
   'men',
-  'Contemporary handcrafted clothing for men, tailored in premium natural fabrics.',
+  'Contemporary clothing for men, tailored in premium natural fabrics.',
   7,
   true,
   null,
   'Men''s Clothing Collection | Velaash',
-  'Shop handcrafted shirts, kurtas, t-shirts, and bottoms for men at Velaash. Crafted in pure cotton, linen, and artisanal weaves.'
+  'Shop shirts, kurtas, t-shirts, and bottoms for men at Velaash. Tailored in pure cotton, linen, and quality weaves.'
 )
 ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
@@ -47,12 +47,12 @@ VALUES (
   'b7777777-7777-4777-b777-111111111111',
   'Shirts',
   'men-shirts',
-  'Casual, formal, and resort shirts tailored in pure linen and crisp handloom cotton.',
+  'Casual, formal, and resort shirts tailored in pure linen and crisp cotton.',
   1,
   true,
   'a7777777-7777-4777-a777-777777777777',
   'Men''s Shirts — Linen & Cotton Shirts | Velaash',
-  'Discover handcrafted men''s shirts in pure breathable linen and lightweight cotton.'
+  'Discover men''s shirts in pure breathable linen and lightweight cotton.'
 )
 ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
@@ -76,11 +76,11 @@ VALUES (
   'b7777777-7777-4777-b777-222222222222',
   'Kurtas',
   'men-kurtas',
-  'Short and classic length kurtas with subtle embroidery and mandarin collars.',
+  'Short and classic length kurtas with subtle styling and mandarin collars.',
   2,
   true,
   'a7777777-7777-4777-a777-777777777777',
-  'Men''s Kurtas — Handcrafted Ethnic Wear | Velaash',
+  'Men''s Kurtas — Ethnic Wear | Velaash',
   'Shop elegant men''s kurtas for festive occasions and comfortable everyday wear.'
 )
 ON CONFLICT (slug) DO UPDATE SET
