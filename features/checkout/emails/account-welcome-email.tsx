@@ -25,12 +25,14 @@ export interface AccountWelcomeEmailProps {
   customerName: string;
   email: string;
   loginUrl: string;
+  supportEmail?: string;
 }
 
 export const AccountWelcomeEmail = ({
   customerName,
   email,
   loginUrl,
+  supportEmail,
 }: AccountWelcomeEmailProps) => {
   return (
     <Html>
@@ -88,10 +90,9 @@ export const AccountWelcomeEmail = ({
           {/* Footer */}
           <Section style={footerSectionStyle}>
             <Text style={footerTextStyle}>
-              Need assistance? Email us at{" "}
-              <Link href="mailto:support@velaash.in" style={{ color: "#CC6F00" }}>
-                support@velaash.in
-              </Link>
+              {supportEmail ? (
+                <>Need assistance? Email us at <Link href={`mailto:${supportEmail}`} style={{ color: "#CC6F00" }}>{supportEmail}</Link></>
+              ) : "Need assistance? Contact our customer support team."}
             </Text>
             <Text style={legalTextStyle}>VELAASH TRADER&apos;S</Text>
           </Section>

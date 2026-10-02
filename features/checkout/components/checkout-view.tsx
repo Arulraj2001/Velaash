@@ -26,7 +26,7 @@ import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, ShoppingBag, ArrowLeft, RefreshCw } from "lucide-react";
+import { AlertCircle, ShoppingBag, ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useCartStore } from "@/features/cart/store/cart-store";
 import { calculateCartTotals } from "@/features/cart/utils/pricing";
@@ -78,6 +78,10 @@ export function CheckoutView({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [isPollingPayment, setIsPollingPayment] = useState(false);
+  const [pollingStatusMessage, setPollingStatusMessage] = useState<string | null>(null);
+  const [pollAttempt, setPollAttempt] = useState(0);
+  const [orderJustCompleted, setOrderJustCompleted] = useState(false);
 
   // Pending online payment state for retries without duplicate order creation
   const [pendingPaymentOrder, setPendingPaymentOrder] = useState<{
@@ -85,6 +89,11 @@ export function CheckoutView({
     razorpayOrderId: string;
     razorpayKeyId: string;
     amountPaise: number;
+  } | null>(null);
+  const [pendingPaymentVerification, setPendingPaymentVerification] = useState<{
+    razorpayOrderId: string;
+    razorpayPaymentId: string;
+    razorpaySignature: string;
   } | null>(null);
 
   // Initialize idempotency key once per checkout session
@@ -144,9 +153,135 @@ export function CheckoutView({
     selectedPaymentMethod === "cod" ? siteSettings.paymentSettings.cod_handling_fee : 0;
   const totalAmount = Math.max(0, subtotal - discount) + shippingFee + codFee;
 
+  const checkPendingPayment = async (
+    orderNumber: string,
+    payment: NonNullable<typeof pendingPaymentVerification>
+  ) => {
+    setIsSubmitting(true);
+    setSubmissionError(null);
+
+    try {
+      const verification = await verifyRazorpayPaymentAction({
+        orderNumber,
+        ...payment,
+      });
+
+      if (verification.success) {
+        setIsPollingPayment(false);
+        setPollingStatusMessage(null);
+        setPendingPaymentVerification(null);
+        setOrderJustCompleted(true);
+        clearCart();
+        router.push(
+          `/order-confirmation/${orderNumber}${
+            verification.accessToken ? `?token=${verification.accessToken}` : ""
+          }`
+        );
+        return;
+      }
+
+      if (verification.code === "PAYMENT_PENDING_WEBHOOK") {
+        setIsPollingPayment(true);
+        setPollingStatusMessage(verification.error);
+        setPollAttempt(1);
+        return;
+      }
+
+      // Any other genuine error (e.g. signature verification failed)
+      setIsPollingPayment(false);
+      setPollingStatusMessage(null);
+      setIsSubmitting(false);
+      setSubmissionError(verification.error);
+    } catch (err) {
+      console.error("Payment status check failed:", err);
+      setIsPollingPayment(false);
+      setPollingStatusMessage(null);
+      setIsSubmitting(false);
+      setSubmissionError(
+        `Payment status could not be checked. Do not pay again yet; retry the status check or contact support with order reference "${orderNumber}".`
+      );
+    }
+  };
+
+  // Auto-polling effect for payments awaiting webhook confirmation (polls every 3s up to ~18-20s)
+  useEffect(() => {
+    if (!isPollingPayment || !pendingPaymentOrder || !pendingPaymentVerification) {
+      return;
+    }
+
+    const MAX_POLL_ATTEMPTS = 6;
+
+    const timer = setTimeout(async () => {
+      if (pollAttempt > MAX_POLL_ATTEMPTS) {
+        setIsPollingPayment(false);
+        setPollingStatusMessage(null);
+        setIsSubmitting(false);
+        setSubmissionError(
+          `Your payment was received and is taking slightly longer than usual to confirm. Please do not pay again. Click "Check Payment Status" below or contact support with order reference "${pendingPaymentOrder.orderNumber}".`
+        );
+        return;
+      }
+
+      try {
+        const verification = await verifyRazorpayPaymentAction({
+          orderNumber: pendingPaymentOrder.orderNumber,
+          ...pendingPaymentVerification,
+        });
+
+        if (verification.success) {
+          setIsPollingPayment(false);
+          setPollingStatusMessage(null);
+          setPendingPaymentVerification(null);
+          setOrderJustCompleted(true);
+          clearCart();
+          router.push(
+            `/order-confirmation/${pendingPaymentOrder.orderNumber}${
+              verification.accessToken ? `?token=${verification.accessToken}` : ""
+            }`
+          );
+          return;
+        }
+
+        if (verification.code === "PAYMENT_PENDING_WEBHOOK") {
+          if (pollAttempt >= MAX_POLL_ATTEMPTS) {
+            setIsPollingPayment(false);
+            setPollingStatusMessage(null);
+            setIsSubmitting(false);
+            setSubmissionError(
+              `Your payment was received and is taking slightly longer than usual to confirm. Please do not pay again. Click "Check Payment Status" below or contact support with order reference "${pendingPaymentOrder.orderNumber}".`
+            );
+            return;
+          }
+          setPollAttempt((prev) => prev + 1);
+          return;
+        }
+
+        // Genuine failure
+        setIsPollingPayment(false);
+        setPollingStatusMessage(null);
+        setIsSubmitting(false);
+        setSubmissionError(verification.error);
+      } catch (err) {
+        console.error("Payment polling check failed:", err);
+        setPollAttempt((prev) => prev + 1);
+      }
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [
+    isPollingPayment,
+    pollAttempt,
+    pendingPaymentOrder,
+    pendingPaymentVerification,
+    clearCart,
+    router,
+  ]);
+
   // 1. Access Rule: Redirect to /cart if empty or has unavailable items
   useEffect(() => {
     if (!isHydrated) return;
+
+    if (orderJustCompleted) return;
 
     if (items.length === 0) {
       router.replace("/cart");
@@ -157,13 +292,14 @@ export function CheckoutView({
     if (hasUnavailable) {
       router.replace("/cart");
     }
-  }, [isHydrated, items, router]);
+  }, [isHydrated, items, orderJustCompleted, router]);
 
   // 2. Analytics: Track begin_checkout event once on checkout view mount (consent-gated)
-  const hasTrackedBeginCheckout = React.useRef(false);
   useEffect(() => {
-    if (!isHydrated || items.length === 0 || hasTrackedBeginCheckout.current) return;
-    hasTrackedBeginCheckout.current = true;
+    if (!isHydrated || items.length === 0 || typeof window === "undefined") return;
+    const sessionKey = `tracked_checkout_${items.map((i) => i.variantId).join("_")}`;
+    if (sessionStorage.getItem(sessionKey)) return;
+    sessionStorage.setItem(sessionKey, "1");
 
     trackBeginCheckout({
       total: totalAmount,
@@ -228,37 +364,13 @@ export function CheckoutView({
           razorpay_payment_id: string;
           razorpay_signature: string;
         }) {
-          setIsSubmitting(true);
-          setSubmissionError(null);
-          try {
-            const verification = await verifyRazorpayPaymentAction({
-              orderNumber: orderInfo.orderNumber,
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-            });
-
-            if (verification.success) {
-              clearCart();
-              const redirectUrl = `/order-confirmation/${orderInfo.orderNumber}${
-                verification.accessToken ? `?token=${verification.accessToken}` : ""
-              }`;
-              router.push(redirectUrl);
-            } else {
-
-              setSubmissionError(
-                verification.error ||
-                  `Payment verification failed. If your account was debited, please contact support with reference "${orderInfo.orderNumber}".`
-              );
-              setIsSubmitting(false);
-            }
-          } catch (err) {
-            console.error("Payment verification client error:", err);
-            setSubmissionError(
-              `Payment verification timed out. If your account was debited, please contact support@velaash.in with order reference "${orderInfo.orderNumber}".`
-            );
-            setIsSubmitting(false);
-          }
+          const payment = {
+            razorpayOrderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+          };
+          setPendingPaymentVerification(payment);
+          await checkPendingPayment(orderInfo.orderNumber, payment);
         },
         modal: {
           ondismiss: function () {
@@ -296,6 +408,14 @@ export function CheckoutView({
   const onSubmit = async (data: CheckoutFormData) => {
     setIsSubmitting(true);
     setSubmissionError(null);
+
+    if (pendingPaymentVerification) {
+      setSubmissionError(
+        "A payment is still being confirmed. Check its status before starting another payment."
+      );
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       // If customer is retrying payment on an existing pending online order without modification
@@ -336,6 +456,17 @@ export function CheckoutView({
         return;
       }
 
+      if (result.alreadyCompleted) {
+        setOrderJustCompleted(true);
+        clearCart();
+        router.push(
+          `/order-confirmation/${result.orderNumber}${
+            result.accessToken ? `?token=${result.accessToken}` : ""
+          }`
+        );
+        return;
+      }
+
       // Online Payment Flow (Razorpay)
       if (data.paymentMethod === "razorpay") {
         if (!result.razorpayOrderId || !result.razorpayKeyId || !result.amountPaise) {
@@ -365,6 +496,7 @@ export function CheckoutView({
       }
 
       // Cash on Delivery Flow: Clear cart & navigate to confirmation
+      setOrderJustCompleted(true);
       clearCart();
       const redirectUrl = `/order-confirmation/${result.orderNumber}${
         result.accessToken ? `?token=${result.accessToken}` : ""
@@ -397,7 +529,7 @@ export function CheckoutView({
   }
 
   // If cart is empty during render
-  if (items.length === 0) {
+  if (items.length === 0 && !orderJustCompleted) {
     return (
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-cream">
@@ -438,8 +570,22 @@ export function CheckoutView({
         </Link>
       </div>
 
+      {/* Active Automatic Payment Verification Banner */}
+      {isPollingPayment && (
+        <div className="mb-6 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-xs text-amber-950 shadow-sm">
+          <Loader2 className="h-4 w-4 shrink-0 text-amber-800 animate-spin mt-0.5" />
+          <div className="flex-1">
+            <p className="font-semibold text-amber-900">Confirming payment with bank</p>
+            <p className="mt-1 text-amber-800">
+              {pollingStatusMessage ||
+                "Your payment is being confirmed by your bank. Please do not refresh — this page will automatically update in a few seconds."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Global Submission Error Alert */}
-      {submissionError && (
+      {!isPollingPayment && submissionError && (
         <div className="mb-6 flex items-start gap-2.5 rounded-lg bg-red-50 p-4 text-xs text-red-900 border border-red-200">
           <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
           <div className="flex-1">
@@ -454,28 +600,38 @@ export function CheckoutView({
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
           <div>
             <p className="font-semibold text-amber-900">
-              Payment was not completed for Order #{pendingPaymentOrder.orderNumber}
+              {pendingPaymentVerification
+                ? `Payment is being confirmed for Order #${pendingPaymentOrder.orderNumber}`
+                : `Payment was not completed for Order #${pendingPaymentOrder.orderNumber}`}
             </p>
             <p className="mt-0.5 text-amber-800">
-              You can retry payment on this order now, or update your checkout details below.
+              {pendingPaymentVerification
+                ? "Check the existing payment before attempting another charge."
+                : "You can retry payment on this order now, or update your checkout details below."}
             </p>
           </div>
           <button
             type="button"
-            onClick={() =>
-              openRazorpayCheckout(
-                pendingPaymentOrder,
-                {
-                  email: getValues("contact.email"),
-                  phone: getValues("contact.phone"),
-                  fullName: getValues("shippingAddress.fullName"),
-                }
-              )
-            }
+            disabled={isSubmitting}
+            onClick={() => {
+              if (pendingPaymentVerification) {
+                void checkPendingPayment(
+                  pendingPaymentOrder.orderNumber,
+                  pendingPaymentVerification
+                );
+                return;
+              }
+
+              openRazorpayCheckout(pendingPaymentOrder, {
+                email: getValues("contact.email"),
+                phone: getValues("contact.phone"),
+                fullName: getValues("shippingAddress.fullName"),
+              });
+            }}
             className="inline-flex items-center gap-1.5 rounded bg-amber-900 px-3 py-1.5 font-medium text-white hover:bg-amber-950 transition-colors"
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            <span>Retry Payment</span>
+            <span>{pendingPaymentVerification ? "Check Payment Status" : "Retry Payment"}</span>
           </button>
         </div>
       )}

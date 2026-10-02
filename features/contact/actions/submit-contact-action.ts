@@ -62,10 +62,7 @@ export async function submitContactFormAction(
 
     // 3. Retrieve store contact email from site settings
     const siteSettings = await getSiteSettings();
-    const storeEmail =
-      siteSettings.storeProfile.email && siteSettings.storeProfile.email.includes("@")
-        ? siteSettings.storeProfile.email
-        : "bestrchandra@gmail.com";
+    const storeEmail = siteSettings.storeProfile.email;
 
     // 4. Dispatch Email via Resend
     const emailResult = await sendTransactionalEmail({

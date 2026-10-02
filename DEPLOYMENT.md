@@ -100,6 +100,17 @@ Configure the following variables:
    - `payment.captured`
    - `payment.failed`
 
+### Pending Online Order Cleanup
+The order-cleanup migration enables `pg_cron` and schedules expired Razorpay reservations every 15 minutes. After applying migrations, verify that the job is active in Supabase:
+
+```sql
+SELECT jobname, schedule, active
+FROM cron.job
+WHERE jobname = 'velaash-expire-pending-online-orders';
+```
+
+If the migration role cannot enable `pg_cron`, enable it under Supabase Database Extensions, then rerun the atomic checkout migration and verify the job again.
+
 ### Resend Domain Verification
 1. Log in to [Resend Dashboard](https://resend.com/domains).
 2. Add custom domain: `velaash.in`.

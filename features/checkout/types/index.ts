@@ -115,6 +115,7 @@ export type CreateOrderResponse =
       totalAmount: number;
       paymentMethod: "razorpay" | "cod";
       isDuplicate?: boolean;
+      alreadyCompleted?: boolean;
       razorpayOrderId?: string;
       razorpayKeyId?: string;
       amountPaise?: number;
@@ -154,6 +155,11 @@ export type VerifyRazorpayPaymentResponse =
   | {
       success: false;
       error: string;
-      code?: "SIGNATURE_VERIFICATION_FAILED" | "ORDER_NOT_FOUND" | "INTERNAL_ERROR";
+      code?:
+        | "SIGNATURE_VERIFICATION_FAILED"
+        | "ORDER_NOT_FOUND"
+        | "INTERNAL_ERROR"
+        | "PAYMENT_NOT_CAPTURED"
+        | "PAYMENT_PENDING_WEBHOOK";
     };
 

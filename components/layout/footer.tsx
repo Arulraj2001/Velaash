@@ -4,6 +4,7 @@ import { BRAND, CUSTOMER_SERVICE_LINKS, LEGAL_LINKS } from "@/lib/constants";
 import { Container } from "@/components/ui/container";
 import { getNavigationCategories } from "@/features/navigation";
 import { getSiteSettings } from "@/features/settings";
+import { getStoreContact } from "@/features/settings";
 import { FooterAccordionItem } from "./footer-accordion-item";
 import { NewsletterForm } from "./newsletter-form";
 import { CookiePreferencesButton } from "@/features/analytics";
@@ -36,6 +37,7 @@ export async function Footer() {
     getNavigationCategories(),
     getSiteSettings(),
   ]);
+  const { email, whatsappNumber, whatsappUrl } = getStoreContact(storeProfile);
 
   return (
     <footer className="border-brand-accent/20 bg-brand-dark text-brand-cream border-t font-sans">
@@ -75,9 +77,9 @@ export async function Footer() {
                         <Instagram className="h-4 w-4" />
                       </a>
                     )}
-                    {socialLinks.whatsapp && (
+                    {whatsappUrl && (
                       <a
-                        href={socialLinks.whatsapp}
+                        href={whatsappUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="bg-brand-dark-muted text-brand-cream hover:text-brand-gold hover:bg-brand-accent/30 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
@@ -145,9 +147,8 @@ export async function Footer() {
                     </li>
                   ))}
                   <li className="text-brand-cream/50 space-y-0.5 pt-2 text-[11px]">
-                    <p>Support: {storeProfile.whatsapp_number || storeProfile.phone}</p>
-                    {/* Flag: Temporary contact email bestrchandra@gmail.com; to be replaced with a professional domain email (e.g. care@velaash.in) once provisioned by client */}
-                    <p>Email: {storeProfile.email}</p>
+                    <p>Support: {whatsappNumber}</p>
+                    <p>Email: {email}</p>
                   </li>
                 </ul>
               </FooterAccordionItem>

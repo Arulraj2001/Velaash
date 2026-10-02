@@ -1,6 +1,6 @@
 import * as React from "react";
 import { getNavigationCategories } from "@/features/navigation";
-import { getSiteSettings } from "@/features/settings";
+import { getSiteSettings, getStoreContact } from "@/features/settings";
 import { HeaderClient } from "./header-client";
 
 export async function Header() {
@@ -8,6 +8,7 @@ export async function Header() {
     getNavigationCategories(),
     getSiteSettings(),
   ]);
+  const { whatsappUrl } = getStoreContact(storeProfile);
 
   return (
     <HeaderClient
@@ -15,7 +16,7 @@ export async function Header() {
       logoUrl={storeProfile.logo_url || "/logo.png"}
       storeName={storeProfile.name}
       whatsappNumber={storeProfile.whatsapp_number}
-      whatsappUrl={storeProfile.whatsapp_url}
+      whatsappUrl={whatsappUrl}
       announcement={announcement}
     />
   );

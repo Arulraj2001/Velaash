@@ -17,7 +17,6 @@ export const StoreProfileSchema = z.object({
   email: z.string().trim().email("Please provide a valid contact email address"),
   phone: z.string().trim().min(8, "Please enter a valid phone number"),
   whatsapp_number: z.string().trim().min(8, "Please enter a valid WhatsApp number"),
-  whatsapp_url: z.string().trim().url("Please enter a valid WhatsApp URL").or(z.literal("")),
   logo_url: z.string().trim().optional().default("/logo.png"),
   favicon_url: z.string().trim().optional().default("/favicon.ico"),
 });
@@ -28,7 +27,6 @@ export type StoreProfileFormData = z.infer<typeof StoreProfileSchema>;
 export const SocialLinksSchema = z.object({
   instagram: z.string().trim().url("Please enter a valid Instagram URL").or(z.literal("")),
   facebook: z.string().trim().url("Please enter a valid Facebook URL").or(z.literal("")),
-  whatsapp: z.string().trim().url("Please enter a valid WhatsApp URL").or(z.literal("")),
   pinterest: z.string().trim().url("Please enter a valid Pinterest URL").or(z.literal("")),
 });
 

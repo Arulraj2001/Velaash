@@ -483,8 +483,8 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
   const isGstActive = Boolean(gstEnabled && gstin);
   const brandDisplayName = storeProfile?.name || BRAND.name;
   const legalEntityName = storeProfile?.legal_name || BRAND.legalName;
-  const supportEmail = storeProfile?.email || BRAND.contactEmail;
-  const supportPhone = storeProfile?.phone || BRAND.supportPhone;
+  const supportEmail = storeProfile?.email || "";
+  const supportPhone = storeProfile?.phone || "";
 
   const formattedDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
     day: "numeric",
@@ -783,7 +783,7 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
         <View style={styles.footer} fixed>
           <Text style={styles.footerText}>
             <Text style={styles.footerBrand}>{brandDisplayName.toUpperCase()}</Text>
-            {"  •  "}www.velaash.in{"  •  "}care@velaash.in{"  •  "}
+            {storeProfile?.email ? `  •  ${storeProfile.email}  •  ` : "  •  "}
             Ph: {supportPhone}
           </Text>
           <Text style={styles.footerText}>

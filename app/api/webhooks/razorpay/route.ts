@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { verifyRazorpayWebhookSignature } from "@/lib/razorpay";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { MOCK_CLOTHING_PRODUCTS } from "@/features/products/queries/mock-products";
 import { sendTransactionalEmail } from "@/lib/email/resend";
 import { PaymentFailedEmail } from "@/features/checkout/emails/payment-failed-email";
+import { sendPaidOrderConfirmationEmail } from "@/features/checkout/services/send-paid-order-confirmation";
 import { env } from "@/lib/env";
+import { getSiteSettings } from "@/features/settings";
 
 
 // In-memory mock store for automated webhook test assertions
@@ -93,61 +94,156 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 4. Handle Specific Razorpay Events
     if (eventName === "payment.captured") {
       let isAlreadyPaid = false;
+      let captureStatus = "unmatched_order";
 
-      if (adminSupabase && razorpayOrderId) {
+      if (adminSupabase && razorpayOrderId && razorpayPaymentId) {
         try {
-          // Look up order by razorpay_order_id or fallback receipt order number
-          const query = adminSupabase
+          const { data: matchedOrder, error: findError } = await adminSupabase
             .from("orders")
-            .select("id, order_number, status, payment_status")
-            .eq("razorpay_order_id", razorpayOrderId);
+            .select("id, order_number, status, payment_status, payment_method, total_amount, razorpay_payment_id")
+            .eq("razorpay_order_id", razorpayOrderId)
+            .maybeSingle();
 
-          const { data: orders } = await query;
-          let matchedOrder = orders && orders.length > 0 ? orders[0] : null;
-
-          if (!matchedOrder && receiptOrderNumber) {
-            const { data: fallbackOrders } = await adminSupabase
-              .from("orders")
-              .select("id, order_number, status, payment_status")
-              .eq("order_number", receiptOrderNumber);
-            matchedOrder = fallbackOrders && fallbackOrders.length > 0 ? fallbackOrders[0] : null;
-          }
+          if (findError) throw findError;
 
           if (matchedOrder) {
-            // Idempotency: Do not double-process or overwrite later states
-            if (matchedOrder.payment_status === "paid") {
-              isAlreadyPaid = true;
-            } else {
-              await adminSupabase
+            const expectedAmountPaise = Math.round(Number(matchedOrder.total_amount) * 100);
+            if (
+              matchedOrder.payment_method !== "razorpay" ||
+              paymentEntity?.currency !== "INR" ||
+              Number(paymentEntity?.amount) !== expectedAmountPaise
+            ) {
+              captureStatus = "amount_or_method_mismatch";
+              Sentry.captureMessage("Razorpay capture did not match stored order amount or method", {
+                level: "error",
+                tags: { service: "razorpay_webhook" },
+                extra: { orderNumber: matchedOrder.order_number, razorpayOrderId },
+              });
+            } else if (matchedOrder.payment_status === "paid") {
+              isAlreadyPaid = matchedOrder.razorpay_payment_id === razorpayPaymentId;
+              captureStatus = isAlreadyPaid ? "duplicate_skipped" : "additional_capture_review";
+              if (!isAlreadyPaid) {
+                Sentry.captureMessage("Additional Razorpay capture requires refund review", {
+                  level: "error",
+                  tags: { service: "razorpay_webhook" },
+                  extra: { orderNumber: matchedOrder.order_number, razorpayOrderId, razorpayPaymentId },
+                });
+              }
+            } else if (
+              matchedOrder.status === "pending" &&
+              matchedOrder.payment_status === "pending"
+            ) {
+              const { data: updatedOrder, error: updateError } = await adminSupabase
                 .from("orders")
                 .update({
                   payment_status: "paid",
                   status: "confirmed",
                   razorpay_payment_id: razorpayPaymentId,
                 })
-                .eq("id", matchedOrder.id);
+                .eq("id", matchedOrder.id)
+                .eq("razorpay_order_id", razorpayOrderId)
+                .eq("payment_status", "pending")
+                .eq("status", "pending")
+                .select("id")
+                .maybeSingle();
 
-              await adminSupabase.from("order_status_history").insert({
-                order_id: matchedOrder.id,
-                status: "confirmed",
-                note: `Payment captured via Razorpay Webhook (Payment ID: ${razorpayPaymentId})`,
-              });
+              if (updateError) throw updateError;
+              if (updatedOrder) {
+                captureStatus = "order_confirmed";
+                await adminSupabase.from("order_status_history").insert({
+                  order_id: matchedOrder.id,
+                  status: "confirmed",
+                  note: `Payment captured via Razorpay Webhook (Payment ID: ${razorpayPaymentId})`,
+                });
+                await sendPaidOrderConfirmationEmail(adminSupabase, matchedOrder.order_number);
+              } else {
+                const { data: currentOrder, error: currentOrderError } = await adminSupabase
+                  .from("orders")
+                  .select("status, payment_status, razorpay_payment_id")
+                  .eq("id", matchedOrder.id)
+                  .maybeSingle();
+
+                if (currentOrderError) throw currentOrderError;
+                if (currentOrder?.payment_status === "paid") {
+                  isAlreadyPaid = currentOrder.razorpay_payment_id === razorpayPaymentId;
+                  captureStatus = isAlreadyPaid ? "duplicate_skipped" : "additional_capture_review";
+                } else if (
+                  currentOrder &&
+                  ["cancelled", "payment_failed"].includes(currentOrder.status) &&
+                  ["pending", "failed"].includes(currentOrder.payment_status)
+                ) {
+                  const lateStatus = currentOrder.status === "payment_failed" ? "cancelled" : currentOrder.status;
+                  const { data: lateOrder, error: lateError } = await adminSupabase
+                    .from("orders")
+                    .update({
+                      payment_status: "paid",
+                      status: lateStatus,
+                      razorpay_payment_id: razorpayPaymentId,
+                    })
+                    .eq("id", matchedOrder.id)
+                    .eq("razorpay_order_id", razorpayOrderId)
+                    .in("status", ["cancelled", "payment_failed"])
+                    .in("payment_status", ["pending", "failed"])
+                    .select("id")
+                    .maybeSingle();
+
+                  if (lateError) throw lateError;
+                  if (lateOrder) {
+                    captureStatus = "late_capture_refund_review";
+                    await adminSupabase.from("order_status_history").insert({
+                      order_id: matchedOrder.id,
+                      status: lateStatus,
+                      note: `Payment captured after order cancellation/expiry. Manual refund review required (Payment ID: ${razorpayPaymentId}).`,
+                    });
+                  } else {
+                    captureStatus = "state_changed_during_capture";
+                  }
+                } else {
+                  captureStatus = "state_changed_during_capture";
+                }
+              }
+            } else {
+              const latePaymentStatus = matchedOrder.status === "payment_failed" ? "cancelled" : matchedOrder.status;
+              const { data: lateUpdatedOrder, error: lateUpdateError } = await adminSupabase
+                .from("orders")
+                .update({
+                  payment_status: "paid",
+                  status: latePaymentStatus,
+                  razorpay_payment_id: razorpayPaymentId,
+                })
+                .eq("id", matchedOrder.id)
+                .eq("razorpay_order_id", razorpayOrderId)
+                .in("status", ["cancelled", "payment_failed"])
+                .in("payment_status", ["pending", "failed"])
+                .select("id")
+                .maybeSingle();
+
+              if (lateUpdateError) throw lateUpdateError;
+              if (lateUpdatedOrder) {
+                captureStatus = "late_capture_refund_review";
+                await adminSupabase.from("order_status_history").insert({
+                  order_id: matchedOrder.id,
+                  status: latePaymentStatus,
+                  note: `Payment captured after order cancellation/expiry. Manual refund review required (Payment ID: ${razorpayPaymentId}).`,
+                });
+                Sentry.captureMessage("Razorpay payment captured for a cancelled order; refund review required", {
+                  level: "error",
+                  tags: { service: "razorpay_webhook" },
+                  extra: { orderNumber: matchedOrder.order_number, razorpayOrderId, razorpayPaymentId },
+                });
+              } else {
+                captureStatus = "state_changed_during_capture";
+              }
             }
+          } else {
+            captureStatus = "unmatched_order";
           }
         } catch (dbErr) {
           console.error("Database error processing payment.captured webhook:", dbErr);
+          throw dbErr;
         }
-      }
-
-      // Check mock store idempotency
-      const existingMock = MOCK_WEBHOOK_EVENT_LOG.find(
-        (e) =>
-          e.event === "payment.captured" &&
-          (e.razorpayOrderId === razorpayOrderId || e.orderNumber === receiptOrderNumber)
-      );
-
-      if (existingMock) {
-        isAlreadyPaid = true;
+      } else if (process.env.NODE_ENV === "production") {
+        return NextResponse.json({ error: "Payment order could not be processed." }, { status: 503 });
       }
 
       MOCK_WEBHOOK_EVENT_LOG.push({
@@ -155,14 +251,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         orderNumber: receiptOrderNumber,
         razorpayOrderId,
         paymentId: razorpayPaymentId,
-        status: isAlreadyPaid ? "duplicate_skipped" : "processed",
+        status: captureStatus,
         timestamp: Date.now(),
       });
 
       return NextResponse.json({
         received: true,
         event: eventName,
-        status: isAlreadyPaid ? "duplicate_skipped" : "order_confirmed",
+        status: isAlreadyPaid ? "duplicate_skipped" : captureStatus,
       });
     }
 
@@ -172,69 +268,28 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       if (adminSupabase && razorpayOrderId) {
         try {
-          const { data: orders } = await adminSupabase
+          const { data: matchedOrder, error: findError } = await adminSupabase
             .from("orders")
             .select("id, order_number, status, payment_status")
-            .eq("razorpay_order_id", razorpayOrderId);
+            .eq("razorpay_order_id", razorpayOrderId)
+            .maybeSingle();
 
-          const matchedOrder = orders && orders.length > 0 ? orders[0] : null;
+          if (findError) throw findError;
 
-          // Only transition to failed if order is not already paid
-          if (matchedOrder && matchedOrder.payment_status !== "paid") {
-            await adminSupabase
-              .from("orders")
-              .update({
-                payment_status: "failed",
-                status: "payment_failed",
-                cancel_reason: errorDescription,
-              })
-              .eq("id", matchedOrder.id);
-
-            // Release soft-reserved stock
-            const { data: orderItems } = await adminSupabase
-              .from("order_items")
-              .select("variant_id, quantity")
-              .eq("order_id", matchedOrder.id);
-
-            if (orderItems) {
-              for (const item of orderItems) {
-                if (item.variant_id) {
-                  // Fetch current stock and restore
-                  const { data: variant } = await adminSupabase
-                    .from("product_variants")
-                    .select("stock_quantity")
-                    .eq("id", item.variant_id)
-                    .single();
-
-                  if (variant) {
-                    await adminSupabase
-                      .from("product_variants")
-                      .update({ stock_quantity: variant.stock_quantity + item.quantity })
-                      .eq("id", item.variant_id);
-                  }
-                }
-              }
-            }
-
-            await adminSupabase.from("order_status_history").insert({
+          if (matchedOrder && matchedOrder.status === "pending" && matchedOrder.payment_status === "pending") {
+            const { error: historyError } = await adminSupabase.from("order_status_history").insert({
               order_id: matchedOrder.id,
-              status: "payment_failed",
-              note: `Payment failed via Webhook: ${errorDescription}. Reserved inventory released.`,
+              status: "pending",
+              note: `Payment attempt failed; order remains open for retry until its reservation expires. ${errorDescription}`,
             });
+            if (historyError) throw historyError;
           }
         } catch (dbErr) {
           console.error("Database error processing payment.failed webhook:", dbErr);
+          throw dbErr;
         }
-      }
-
-      // Mock catalog stock restoration for testing
-      if (receiptOrderNumber || razorpayOrderId) {
-        // Restores 1 unit in mock catalog if test order
-        const mockProduct = MOCK_CLOTHING_PRODUCTS[0];
-        const mockVariant = mockProduct?.variants[0];
-        if (mockVariant) {
-          mockVariant.stock_quantity += 1;
-        }
+      } else if (process.env.NODE_ENV === "production") {
+        return NextResponse.json({ error: "Payment failure could not be processed." }, { status: 503 });
       }
 
       // Dispatch Payment Failed Notification Email to Customer
@@ -251,6 +306,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         : 0;
       const appUrl = (env.NEXT_PUBLIC_APP_URL || "https://velaash.in").replace(/\/$/, "");
       const retryUrl = `${appUrl}/checkout?retry=${receiptOrderNumber || razorpayOrderId}`;
+      const { storeProfile } = await getSiteSettings();
 
       try {
         await sendTransactionalEmail({
@@ -263,6 +319,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             totalAmount: totalAmountRupees,
             failureReason: errorDescription,
             retryPaymentUrl: retryUrl,
+            supportEmail: storeProfile.email,
           }),
         });
       } catch (emailErr) {
@@ -274,7 +331,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         orderNumber: receiptOrderNumber,
         razorpayOrderId,
         paymentId: razorpayPaymentId,
-        status: "payment_failed_stock_released",
+        status: "payment_attempt_failed_retryable",
         timestamp: Date.now(),
       });
 
@@ -282,7 +339,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({
         received: true,
         event: eventName,
-        status: "payment_failed_stock_released",
+        status: "payment_attempt_failed_retryable",
       });
     }
 

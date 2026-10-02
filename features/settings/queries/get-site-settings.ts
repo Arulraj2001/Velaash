@@ -75,12 +75,10 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
     email: BRAND.contactEmail,
     phone: BRAND.supportPhone,
     whatsapp_number: BRAND.whatsappNumber,
-    whatsapp_url: BRAND.whatsappUrl,
   },
   socialLinks: {
     instagram: BRAND.socialLinks.instagram,
     facebook: BRAND.socialLinks.facebook,
-    whatsapp: BRAND.socialLinks.whatsapp,
     pinterest: BRAND.socialLinks.pinterest,
   },
   shippingPolicy: DEFAULT_SHIPPING_POLICY,
@@ -147,17 +145,15 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     const rawTax = (taxSettingsRow?.value as Partial<TaxPolicySetting>) || {};
     const rawSeo = (seoDefaultsRow?.value as Partial<SeoDefaultsSetting>) || {};
 
+    const whatsappNumber =
+      rawStoreProfile.whatsapp_number || rawStoreProfile.phone || BRAND.whatsappNumber;
     const storeProfile: StoreProfileSetting = {
       name: rawStoreProfile.name || BRAND.name,
       legal_name: rawStoreProfile.legal_name || BRAND.legalName,
       tagline: rawStoreProfile.tagline ?? BRAND.tagline,
       email: rawStoreProfile.email || BRAND.contactEmail,
       phone: rawStoreProfile.phone || BRAND.supportPhone,
-      whatsapp_number:
-        rawStoreProfile.whatsapp_number || rawStoreProfile.phone || BRAND.whatsappNumber,
-      whatsapp_url:
-        rawStoreProfile.whatsapp_url ||
-        `https://wa.me/${(rawStoreProfile.whatsapp_number || BRAND.whatsappNumber).replace(/\D/g, "")}`,
+      whatsapp_number: whatsappNumber,
       logo_url:
         rawStoreProfile.logo_url && rawStoreProfile.logo_url !== "/brand/logo.svg"
           ? rawStoreProfile.logo_url
@@ -168,8 +164,6 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     const socialLinks: SocialLinksSetting = {
       instagram: rawSocialLinks.instagram || BRAND.socialLinks.instagram,
       facebook: rawSocialLinks.facebook || BRAND.socialLinks.facebook,
-      whatsapp:
-        rawSocialLinks.whatsapp || rawStoreProfile.whatsapp_url || BRAND.socialLinks.whatsapp,
       pinterest: rawSocialLinks.pinterest || BRAND.socialLinks.pinterest,
     };
 

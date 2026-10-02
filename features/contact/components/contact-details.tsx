@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Mail, MessageCircle, Phone, Clock, MapPin, ShieldCheck } from "lucide-react";
 import type { SiteSettings } from "@/features/settings/types";
+import { getStoreContact } from "@/features/settings/utils/store-contact";
 
 interface ContactDetailsProps {
   settings: SiteSettings;
@@ -9,10 +10,9 @@ interface ContactDetailsProps {
 export function ContactDetails({ settings }: ContactDetailsProps) {
   const { storeProfile } = settings;
 
-  const cleanPhone = (storeProfile.whatsapp_number || storeProfile.phone || "").replace(/[^0-9]/g, "");
-  const whatsappUrl = cleanPhone.length > 0 ? `https://wa.me/${cleanPhone}` : "https://wa.me/918508643832";
-  const displayPhone = storeProfile.whatsapp_number || storeProfile.phone || "+91 8508643832";
-  const displayEmail = storeProfile.email || "bestrchandra@gmail.com";
+  const { email: displayEmail, whatsappNumber: displayPhone, whatsappUrl } =
+    getStoreContact(storeProfile);
+  const cleanPhone = displayPhone.replace(/\D/g, "");
   const legalName = storeProfile.legal_name || "VELAASH TRADER'S";
 
   return (

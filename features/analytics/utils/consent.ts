@@ -5,6 +5,28 @@ import {
 } from "../constants";
 import type { CookieConsentChoice, CookieConsentRecord, AnalyticsToolStatus } from "../types";
 
+export function canLoadAnalyticsScripts(
+  consent: CookieConsentChoice,
+  isMounted: boolean,
+  pathname: string | null
+): boolean {
+  const isAdminRoute = pathname === "/admin" || pathname?.startsWith("/admin/");
+  return isMounted && consent === "all" && !isAdminRoute;
+}
+
+export function getAnalyticsScriptProviders(
+  consent: CookieConsentChoice,
+  isMounted: boolean,
+  pathname: string | null,
+  configuredIds: { ga4?: string; meta_pixel?: string; clarity?: string }
+): Array<"ga4" | "meta_pixel" | "clarity"> {
+  if (!canLoadAnalyticsScripts(consent, isMounted, pathname)) return [];
+
+  return (Object.keys(configuredIds) as Array<keyof typeof configuredIds>).filter(
+    (provider) => Boolean(configuredIds[provider]?.trim())
+  );
+}
+
 /**
  * Retrieve the current cookie consent preference from localStorage.
  * Returns null if the user has not yet interacted with the banner.

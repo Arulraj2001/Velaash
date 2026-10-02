@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { BRAND } from "@/lib/constants";
 import { getNavigationCategories } from "@/features/navigation";
 import { getProducts, ProductCard, type ProductListItem } from "@/features/products";
-import { getSiteSettings } from "@/features/settings";
+import { getSiteSettings, getStoreContact } from "@/features/settings";
 import { env } from "@/lib/env";
 
 const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
@@ -111,6 +111,7 @@ export default async function HomePage() {
     getSiteSettings(),
     getHomepageSections(),
   ]);
+  const { whatsappNumber, whatsappUrl } = getStoreContact(siteSettings.storeProfile);
 
   // Check if featured_products section is present in sections and resolve products
   const featuredSection = sections.find((s) => s.section_type === "featured_products");
@@ -147,8 +148,8 @@ export default async function HomePage() {
     name: siteSettings.storeProfile.name || BRAND.name,
     legalName: siteSettings.storeProfile.legal_name || BRAND.legalName,
     url: BASE_URL,
-    email: siteSettings.storeProfile.email || BRAND.contactEmail,
-    telephone: siteSettings.storeProfile.whatsapp_number || BRAND.supportPhone,
+    email: siteSettings.storeProfile.email,
+    telephone: whatsappNumber,
     ...(siteSettings.storeProfile.logo_url
       ? {
           logo: {
@@ -160,12 +161,12 @@ export default async function HomePage() {
     sameAs: [
       siteSettings.socialLinks.instagram || BRAND.socialLinks.instagram,
       siteSettings.socialLinks.facebook || BRAND.socialLinks.facebook,
-      BRAND.whatsappUrl,
+      whatsappUrl,
     ].filter(Boolean),
     contactPoint: [
       {
         "@type": "ContactPoint",
-        telephone: siteSettings.storeProfile.whatsapp_number || BRAND.supportPhone,
+        telephone: whatsappNumber,
         contactType: "customer service",
         areaServed: "IN",
         availableLanguage: ["English", "Hindi"],
@@ -381,9 +382,17 @@ export default async function HomePage() {
                       {
                         icon: "MessageCircle",
                         title: "WhatsApp Support",
-                        description: "Direct assistance and sizing guidance on +91 8508643832.",
+                        description: "Direct assistance and sizing guidance on WhatsApp.",
                       },
                     ];
+              const contactItems = items.map((item) =>
+                item.icon === "MessageCircle" || item.title?.toLowerCase().includes("whatsapp")
+                  ? {
+                      ...item,
+                      description: `Direct assistance and sizing guidance on ${whatsappNumber}.`,
+                    }
+                  : item
+              );
 
               return (
                 <section key={section.id} className="py-12 sm:py-16 bg-luxury-dots border-b border-brand-border/60 relative">
@@ -393,7 +402,7 @@ export default async function HomePage() {
                         items.length <= 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"
                       } gap-6 sm:gap-8`}
                     >
-                      {items.map((item, idx) => {
+                      {contactItems.map((item, idx) => {
                         const iconKey = item.icon || "Truck";
                         const IconComponent = TRUST_ICON_MAP[iconKey] || Truck;
                         return (

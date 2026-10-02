@@ -18,14 +18,18 @@ import {
  * Helper to revalidate all affected routes across admin and storefront
  */
 function revalidateProductPaths(slug?: string) {
-  revalidatePath("/admin/products");
-  revalidatePath("/admin/dashboard");
-  revalidatePath("/shop");
-  revalidatePath("/category", "layout");
-  revalidatePath("/collections", "layout");
-  revalidatePath("/");
-  if (slug) {
-    revalidatePath(`/products/${slug}`);
+  try {
+    revalidatePath("/admin/products");
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/shop");
+    revalidatePath("/category", "layout");
+    revalidatePath("/collections", "layout");
+    revalidatePath("/");
+    if (slug) {
+      revalidatePath(`/products/${slug}`);
+    }
+  } catch {
+    // Graceful no-op when executed outside a Next.js request context
   }
 }
 
@@ -552,15 +556,13 @@ export async function toggleProductStatusAction(productId: string, isActive: boo
 }
 
 /**
- * Deletes a product or deactivates it if referenced in existing customer orders.
- * Cleans up orphaned images from storage upon hard delete.
- * Permission: delete_products (Owner only).
+ * Core product deletion logic with order_items safeguard.
+ * Used by deleteProductAction and internal maintenance scripts.
  */
-export async function deleteProductAction(productId: string) {
-  await requireAdmin("delete_products");
-
-  const adminClient = createAdminClient();
-
+export async function deleteProductCore(
+  productId: string,
+  adminClient: ReturnType<typeof createAdminClient>
+) {
   // 1. Check if referenced in order_items
   const { count: orderCount, error: countErr } = await adminClient
     .from("order_items")
@@ -614,6 +616,17 @@ export async function deleteProductAction(productId: string) {
     deactivated: false,
     message: "Product and associated assets permanently deleted.",
   };
+}
+
+/**
+ * Deletes a product or deactivates it if referenced in existing customer orders.
+ * Cleans up orphaned images from storage upon hard delete.
+ * Permission: delete_products (Owner only).
+ */
+export async function deleteProductAction(productId: string) {
+  await requireAdmin("delete_products");
+  const adminClient = createAdminClient();
+  return deleteProductCore(productId, adminClient);
 }
 
 /**

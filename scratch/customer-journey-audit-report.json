@@ -1,0 +1,219 @@
+{
+  "timestamp": "2026-10-02T05:50:25.378Z",
+  "summary": {
+    "total": 25,
+    "passed": 25,
+    "bugs": 0,
+    "failures": 0,
+    "observations": 0
+  },
+  "createdTestOrders": [
+    "VEL-2026-00047",
+    "VEL-2026-00048",
+    "VEL-2026-00049",
+    "VEL-2026-00051",
+    "VEL-2026-00052"
+  ],
+  "auditResults": [
+    {
+      "section": "Happy Path: COD",
+      "testName": "Order creation and persistence",
+      "status": "PASS",
+      "action": "Submitted checkout for 1 item with COD payment method",
+      "actual": "Created order VEL-2026-00047 with status \"pending\", payment_status \"pending\", total ₹4349",
+      "expected": "Order created with status 'pending', payment_status 'pending', matching line items"
+    },
+    {
+      "section": "Happy Path: COD",
+      "testName": "Inventory stock deduction",
+      "status": "PASS",
+      "action": "Checked stock quantity for variant d1111111-1111-4111-d111-000000000006",
+      "actual": "Initial stock: 4, New stock: 3 (decremented by 1)",
+      "expected": "Stock decremented by ordered quantity to 3"
+    },
+    {
+      "section": "Happy Path: COD",
+      "testName": "Order confirmation email dispatch",
+      "status": "PASS",
+      "action": "Inspected transactional email dispatch log for COD order",
+      "actual": "Email logged with subject \"Order Confirmed: VEL-2026-00047 - Velaash\"",
+      "expected": "Confirmation email dispatched to audit.cod.1790920209914@example.com"
+    },
+    {
+      "section": "Happy Path: Razorpay",
+      "testName": "Razorpay order creation with real test keys",
+      "status": "PASS",
+      "action": "Created online payment order via createOrderAction",
+      "actual": "Created Velaash order VEL-2026-00048 with real Razorpay Order ID \"order_TivjsgHU9LnEjp\" (425000 paise)",
+      "expected": "Real Razorpay Order ID created via https://api.razorpay.com/v1/orders starting with 'order_'"
+    },
+    {
+      "section": "Happy Path: Razorpay",
+      "testName": "Server-side Razorpay payment lookup guard returns PAYMENT_PENDING_WEBHOOK when unindexed",
+      "status": "PASS",
+      "action": "Called verifyRazorpayPaymentAction with valid HMAC signature before Razorpay index completion",
+      "actual": "Success: false, code: \"PAYMENT_PENDING_WEBHOOK\", error: \"Your payment is being confirmed by your bank. Please do not refresh — this page will automatically update in a few seconds.\"",
+      "expected": "Returns code 'PAYMENT_PENDING_WEBHOOK' with friendly bank confirmation copy"
+    },
+    {
+      "section": "Happy Path: Razorpay",
+      "testName": "Inventory stock reservation for online order",
+      "status": "PASS",
+      "action": "Checked stock quantity after online order creation",
+      "actual": "Stock before online order: 3, New stock: 2",
+      "expected": "Stock decremented by 1 to 2"
+    },
+    {
+      "section": "Happy Path: Razorpay",
+      "testName": "Authoritative webhook payment.captured confirms order & records payment",
+      "status": "PASS",
+      "action": "Processed signed payment.captured webhook notification",
+      "actual": "Webhook status: \"order_confirmed\", DB order status: \"confirmed\", payment_status: \"paid\", payment_id: \"pay_test_1790920212272\"",
+      "expected": "Order status transitioned to 'confirmed', payment_status 'paid', payment ID recorded"
+    },
+    {
+      "section": "Happy Path: Razorpay",
+      "testName": "Webhook payment.captured idempotency on duplicate delivery",
+      "status": "PASS",
+      "action": "Delivered duplicate payment.captured webhook event for already-confirmed order",
+      "actual": "HTTP 200, returned: {\"received\":true,\"event\":\"payment.captured\",\"status\":\"duplicate_skipped\"}",
+      "expected": "HTTP 200, status 'duplicate_skipped' (graceful idempotent handling)"
+    },
+    {
+      "section": "Failure Scenarios: Stock",
+      "testName": "Attempt to order quantity exceeding stock",
+      "status": "PASS",
+      "action": "Attempted to order quantity 12 when available stock is 2",
+      "actual": "Blocked with error: \"\"Chanderi Embroidered Kurta Set\" has only 2 available in stock (you requested 12).\" (Code: OUT_OF_STOCK)",
+      "expected": "Rejected with code 'OUT_OF_STOCK' and exact available stock count in message"
+    },
+    {
+      "section": "Failure Scenarios: Stock",
+      "testName": "Two concurrent orders competing for last unit (No overselling race condition)",
+      "status": "PASS",
+      "action": "Fired 2 parallel checkout requests concurrently against a variant with exactly 1 unit left",
+      "actual": "Order 1 success: true, Order 2 success: false, Rejection: \"An item in your cart is no longer available in the requested quantity. Please update your cart.\" (Code: OUT_OF_STOCK), Final remaining stock: 0",
+      "expected": "Exactly one order succeeds, the other is rejected with 'OUT_OF_STOCK', stock drops to 0 (never negative)"
+    },
+    {
+      "section": "Failure Scenarios: Razorpay",
+      "testName": "Customer closes modal & retries payment (Reuses existing order, no duplicate)",
+      "status": "PASS",
+      "action": "Submitted checkout, simulated modal dismissal, then re-submitted same checkout payload",
+      "actual": "First order: VEL-2026-00051, Retry order: VEL-2026-00051, isDuplicate flag: true",
+      "expected": "Returns the identical order number and Razorpay order ID without creating a new order row"
+    },
+    {
+      "section": "Failure Scenarios: Razorpay",
+      "testName": "payment.failed webhook maintains order in recoverable 'pending' state",
+      "status": "PASS",
+      "action": "Dispatched payment.failed webhook to /api/webhooks/razorpay",
+      "actual": "Order status: \"pending\", payment_status: \"pending\", history logs: 2",
+      "expected": "Order remains 'pending' (recoverable), failure reason logged in order_status_history"
+    },
+    {
+      "section": "Failure Scenarios: Razorpay",
+      "testName": "Payment Failed email dispatched with retry URL",
+      "status": "PASS",
+      "action": "Checked transactional email log for Payment Failed notification",
+      "actual": "Dispatched with subject \"Payment Notice: Order VEL-2026-00051 - Velaash\" to \"audit.retry.1790920216580@example.com\"",
+      "expected": "Payment Failed email dispatched with clear reference and retry link"
+    },
+    {
+      "section": "Failure Scenarios: Coupons",
+      "testName": "Invalid / non-existent coupon code rejection",
+      "status": "PASS",
+      "action": "Validated non-existent coupon code 'NONEXISTENT_PROMO'",
+      "actual": "Rejected with message: \"Coupon \"NONEXISTENT_PROMO\" does not exist. Please check the code and try again.\"",
+      "expected": "Rejected with clear invalid coupon message"
+    },
+    {
+      "section": "Failure Scenarios: Coupons",
+      "testName": "WELCOME400 coupon discount amount verification",
+      "status": "PASS",
+      "action": "Applied WELCOME400 coupon to ₹4,250 order subtotal",
+      "actual": "Discount applied: ₹400 (Coupon record has discountValue: 400, announcement bar advertises: \"₹400 Off\")",
+      "expected": "Discount applied should be ₹400 to match the advertised promotional copy"
+    },
+    {
+      "section": "Failure Scenarios: Validation",
+      "testName": "Invalid pincode format rejection ('000000')",
+      "status": "PASS",
+      "action": "Submitted checkout with invalid Indian pincode '000000'",
+      "actual": "Blocked with error: \"Please enter a valid 6-digit Indian PIN code (e.g. 560001)\" (Code: INVALID_INPUT)",
+      "expected": "Blocked with code 'INVALID_INPUT' (6-digit Indian PIN starting with 1-9 required)"
+    },
+    {
+      "section": "Failure Scenarios: Validation",
+      "testName": "Invalid phone number format rejection ('12345')",
+      "status": "PASS",
+      "action": "Submitted checkout with 5-digit phone number '12345'",
+      "actual": "Blocked with error: \"Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)\" (Code: INVALID_INPUT)",
+      "expected": "Blocked with code 'INVALID_INPUT' (Valid 10-digit Indian mobile required)"
+    },
+    {
+      "section": "Failure Scenarios: COD",
+      "testName": "COD maximum order value (₹20,000 limit) enforcement",
+      "status": "PASS",
+      "action": "Submitted COD order totaling ₹25,500 exceeding COD limit ₹20,000",
+      "actual": "Blocked with error: \"Cash on Delivery is not available for orders above ₹20,000.\" (Code: COD_UNAVAILABLE)",
+      "expected": "Blocked with code 'COD_UNAVAILABLE' and clear message stating maximum limit ₹20,000"
+    },
+    {
+      "section": "Failure Scenarios: COD",
+      "testName": "COD rate limiting blocks rapid repeated submissions (>3 orders/24h)",
+      "status": "PASS",
+      "action": "Attempted 4 rapid COD checks with phone '9999900001'",
+      "actual": "Attempt 1: true, Attempt 2: true, Attempt 3: true, Attempt 4 (Exceeded): allowed=false, error=\"Too many Cash on Delivery orders from this number recently — please try online payment or contact us on WhatsApp\"",
+      "expected": "First 3 attempts allowed; 4th attempt blocked with rate limit error message"
+    },
+    {
+      "section": "Failure Scenarios: Reaper",
+      "testName": "Abandoned online pending order expires after 30 mins and releases stock",
+      "status": "PASS",
+      "action": "Created online pending order, aged timestamp to 45m ago, invoked cancelExpiredPendingOnlineOrders(30)",
+      "actual": "Order status: \"cancelled\", Stock before reservation: 2, during reservation: 1, after reaper: 2",
+      "expected": "Order status transitioned to 'cancelled', soft-reserved stock restored to catalog"
+    },
+    {
+      "section": "Email Integrity",
+      "testName": "OrderConfirmationEmail template renders without broken variables or missing styles",
+      "status": "PASS",
+      "action": "Rendered OrderConfirmationEmail component to full HTML string",
+      "actual": "Rendered 8816 bytes, broken placeholders: None, brand colors present: true",
+      "expected": "Zero undefined/NaN/broken placeholders, valid luxury brand styling"
+    },
+    {
+      "section": "Email Integrity",
+      "testName": "PaymentFailedEmail template renders with working retry link and support contact",
+      "status": "PASS",
+      "action": "Rendered PaymentFailedEmail component to full HTML string",
+      "actual": "Rendered 6437 bytes, contains retry URL: true, broken tags: None",
+      "expected": "Contains valid retry link, accurate order number, and store contact"
+    },
+    {
+      "section": "Order Confirmation View",
+      "testName": "Order confirmation page resolves full details with valid access token (COD)",
+      "status": "PASS",
+      "action": "Retrieved order VEL-2026-00047 with valid access token",
+      "actual": "Found: true, accessLevel: \"FULL\", items: 1, total: ₹4349",
+      "expected": "Returns full order detail with accessLevel 'FULL' matching order creation"
+    },
+    {
+      "section": "Order Confirmation View",
+      "testName": "Order confirmation page resolves full details & paid status (Razorpay)",
+      "status": "PASS",
+      "action": "Retrieved order VEL-2026-00048 with valid access token after webhook capture",
+      "actual": "Found: true, paymentStatus: \"paid\", accessLevel: \"FULL\"",
+      "expected": "Returns full order detail with paymentStatus 'paid' and accessLevel 'FULL'"
+    },
+    {
+      "section": "Order Confirmation View",
+      "testName": "Unauthenticated order lookup masks sensitive customer PII",
+      "status": "PASS",
+      "action": "Retrieved order VEL-2026-00047 without access token or session",
+      "actual": "accessLevel: \"MASKED\", masked phone: \"•••••• 3210\"",
+      "expected": "accessLevel is 'MASKED' and phone/email/street address are masked"
+    }
+  ]
+}

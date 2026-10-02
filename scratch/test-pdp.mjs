@@ -81,7 +81,7 @@ async function runTests() {
     { name: "Main Add to Cart Button", pattern: /Add to Bag/i },
     { name: "Buy Now 1-Click Button", pattern: /Buy Now with 1-Click/i },
     { name: "WhatsApp Enquiry CTA", pattern: /Ask about this product on WhatsApp/i },
-    { name: "WhatsApp Phone Configured", pattern: /8508643832/ },
+    { name: "WhatsApp Link Configured", pattern: /wa\.me\// },
     { name: "Delivery Pincode Checker", pattern: /Check Delivery Serviceability/i },
     { name: "Size Guide Modal Trigger", pattern: /Size Guide/i },
     { name: "Safe Trust Badge: Quality Checked", pattern: /Quality Checked/i },

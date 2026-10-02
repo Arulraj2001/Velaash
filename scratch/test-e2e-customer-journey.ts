@@ -402,12 +402,11 @@ async function runE2ECustomerJourneyTest() {
     );
 
     // -------------------------------------------------------------------------
-    // STEP 7B: CONFIRM LOGGED-IN CUSTOMER CHECKOUT WITHOUT "SAVE THIS ADDRESS" DOES NOT AUTO-SAVE
+    // STEP 7B: CONFIRM GUEST CHECKOUT WITHOUT "SAVE THIS ADDRESS" DOES NOT AUTO-SAVE
     // -------------------------------------------------------------------------
-    console.log("\n--- STEP 7B: Logged-in Customer Checkout Without 'Save Address' Does Not Auto-Save ---");
+    console.log("\n--- STEP 7B: Guest Checkout Without 'Save Address' Does Not Auto-Save ---");
 
-    const secondOrderResult = await createOrderAction(
-      {
+    const secondOrderResult = await createOrderAction({
         contact: {
           email: guestEmail,
           phone: guestPhone,
@@ -427,13 +426,12 @@ async function runE2ECustomerJourneyTest() {
         paymentMethod: "cod",
         items: cartItems,
         idempotencyKey: `idemp-second-${Date.now()}`,
-      },
-      { authenticatedCustomerId: createdUserId }
+      }
     );
 
     assert(
       secondOrderResult.success === true,
-      "Existing logged-in customer places second order successfully",
+      "Guest customer places second order successfully",
       `Order Number: ${secondOrderResult.success ? secondOrderResult.orderNumber : (secondOrderResult as any).error}`
     );
 

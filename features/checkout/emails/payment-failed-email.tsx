@@ -27,6 +27,7 @@ export interface PaymentFailedEmailProps {
   totalAmount: number;
   failureReason?: string;
   retryPaymentUrl: string;
+  supportEmail?: string;
 }
 
 export const PaymentFailedEmail = ({
@@ -35,6 +36,7 @@ export const PaymentFailedEmail = ({
   totalAmount,
   failureReason = "Payment could not be completed by your banking institution.",
   retryPaymentUrl,
+  supportEmail,
 }: PaymentFailedEmailProps) => {
   return (
     <Html>
@@ -86,11 +88,9 @@ export const PaymentFailedEmail = ({
                 automatically within 3 to 5 business days.
               </Text>
               <Text style={{ ...noteTextStyle, marginBottom: 0 }}>
-                If the amount is not reversed or you need assistance, please contact us at{" "}
-                <Link href="mailto:support@velaash.in" style={{ color: "#CC6F00" }}>
-                  support@velaash.in
-                </Link>{" "}
-                with your order reference <strong>{orderNumber}</strong>.
+                If the amount is not reversed or you need assistance, please contact us
+                {supportEmail ? <> at <Link href={`mailto:${supportEmail}`} style={{ color: "#CC6F00" }}>{supportEmail}</Link></> : " through our customer support page"}
+                {" "}with your order reference <strong>{orderNumber}</strong>.
               </Text>
             </Section>
           </Section>
@@ -98,10 +98,9 @@ export const PaymentFailedEmail = ({
           {/* Footer */}
           <Section style={footerSectionStyle}>
             <Text style={footerTextStyle}>
-              Need assistance? Email us at{" "}
-              <Link href="mailto:support@velaash.in" style={{ color: "#CC6F00" }}>
-                support@velaash.in
-              </Link>
+              {supportEmail ? (
+                <>Need assistance? Email us at <Link href={`mailto:${supportEmail}`} style={{ color: "#CC6F00" }}>{supportEmail}</Link></>
+              ) : "Need assistance? Contact our customer support team."}
             </Text>
             <Text style={legalTextStyle}>VELAASH TRADER&apos;S</Text>
           </Section>

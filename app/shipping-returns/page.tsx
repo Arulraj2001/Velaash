@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Container, PageHeaderBanner } from "@/components/ui";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
+import { getStoreContact } from "@/features/settings";
 import {
   Truck,
   RotateCcw,
@@ -37,9 +38,8 @@ export default async function ShippingReturnsPage() {
   const freeThresholdStr = `₹${shippingPolicy.free_shipping_threshold.toLocaleString("en-IN")}`;
   const standardFeeStr = `₹${shippingPolicy.standard_shipping_fee.toLocaleString("en-IN")}`;
   const returnDays = returnsPolicy.return_window_days;
-  const whatsappNum = storeProfile.whatsapp_number || storeProfile.phone || "+91 8508643832";
-  const cleanPhone = whatsappNum.replace(/[^0-9]/g, "");
-  const contactEmail = storeProfile.email || "bestrchandra@gmail.com";
+  const { whatsappNumber: whatsappNum, whatsappUrl, email: contactEmail } =
+    getStoreContact(storeProfile);
   const shippingBanner = settings.pageBanners?.shipping_returns;
 
   return (
@@ -287,7 +287,7 @@ export default async function ShippingReturnsPage() {
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
                 <a
-                  href={`https://wa.me/${cleanPhone}`}
+                  href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-emerald-700 text-white text-xs font-semibold uppercase tracking-wider hover:bg-emerald-800 transition-colors shadow-xs"

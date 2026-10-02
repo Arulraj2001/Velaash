@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Container, PageHeaderBanner } from "@/components/ui";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
+import { getStoreContact } from "@/features/settings";
 import { Truck, RotateCcw, ShieldCheck, Headphones, MessageCircle, Mail, ArrowRight } from "lucide-react";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -27,9 +28,8 @@ export default async function AboutPage() {
   const settings = await getSiteSettings();
   const { storeProfile } = settings;
 
-  const whatsappNum = storeProfile.whatsapp_number || storeProfile.phone || "+91 8508643832";
-  const cleanPhone = whatsappNum.replace(/[^0-9]/g, "");
-  const contactEmail = storeProfile.email || "bestrchandra@gmail.com";
+  const { whatsappNumber: whatsappNum, whatsappUrl, email: contactEmail } =
+    getStoreContact(storeProfile);
   const legalName = storeProfile.legal_name || "VELAASH TRADER'S";
 
   const trustValues = [
@@ -146,7 +146,7 @@ export default async function AboutPage() {
                     Direct WhatsApp Care
                   </span>
                   <a
-                    href={`https://wa.me/${cleanPhone}`}
+                    href={whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-emerald-700 hover:underline font-medium"
@@ -208,7 +208,7 @@ export default async function AboutPage() {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
               <a
-                href={`https://wa.me/${cleanPhone}`}
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold uppercase tracking-wider transition-colors shadow-xs"

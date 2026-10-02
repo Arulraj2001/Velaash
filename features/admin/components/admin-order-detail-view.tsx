@@ -24,6 +24,7 @@ import {
   pushToShiprocketAction,
 } from "../actions/order-actions";
 import { formatCurrency } from "@/lib/utils";
+import { AdminModal } from "./admin-modal";
 import {
   ArrowLeft,
   Package,
@@ -89,7 +90,12 @@ export function AdminOrderDetailView({
   const [shiprocketPushing, setShiprocketPushing] = useState(false);
 
   // Transitions available for current status
-  const allowedNextTransitions = VALID_ORDER_STATUS_TRANSITIONS[order.status] || [];
+  const allowedNextTransitions = (VALID_ORDER_STATUS_TRANSITIONS[order.status] || []).filter(
+    (nextStatus) =>
+      order.paymentMethod !== "razorpay" ||
+      order.paymentStatus === "paid" ||
+      !["confirmed", "packed", "shipped", "out_for_delivery", "delivered"].includes(nextStatus)
+  );
 
   // Handle direct transition
   const handleTransition = (nextStatus: OrderStatus) => {
@@ -200,7 +206,7 @@ export function AdminOrderDetailView({
           status: "cancelled",
           cancelReason: `Cancelled by admin: ${cancelReason.trim()}`,
           canCancel: false,
-          canRefund: prev.paymentStatus !== "refunded",
+          canRefund: prev.paymentStatus === "paid",
         }));
       } else {
         setCancelError(res.error || "Failed to cancel order.");
@@ -801,210 +807,146 @@ export function AdminOrderDetailView({
       </div>
 
       {/* MARK AS SHIPPED MODAL */}
-      {showShipModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2 text-purple-700">
-                <Truck className="h-5 w-5" />
-                <h3 className="text-sm font-semibold">Mark Order as Shipped</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowShipModal(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                &times;
-              </button>
+      <AdminModal
+        isOpen={showShipModal}
+        onClose={() => setShowShipModal(false)}
+        maxWidth="md"
+        icon={<Truck className="h-5 w-5 text-purple-700" />}
+        title="Mark Order as Shipped"
+        description="Enter courier and tracking details for customer order tracking."
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowShipModal(false)}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleConfirmShipment}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50 shadow-sm transition-colors"
+            >
+              {isPending ? "Confirming..." : "Confirm Shipment"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3 text-xs">
+          {shipError && (
+            <div className="rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-200">
+              {shipError}
             </div>
+          )}
 
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Enter courier and tracking details. This information will be displayed to the customer on their account order tracking page.
-            </p>
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">
+              Courier / Delivery Partner <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={courierName}
+              onChange={(e) => setCourierName(e.target.value)}
+              placeholder="e.g. Delhivery, Blue Dart, DTDC, India Post"
+              className="w-full rounded-xl border border-slate-200 py-2 px-3 text-xs text-slate-900 focus:border-purple-500 focus:outline-none transition-all"
+            />
+          </div>
 
-            {shipError && (
-              <div className="rounded-lg bg-rose-50 p-2.5 text-xs text-rose-800 border border-rose-200">
-                {shipError}
-              </div>
-            )}
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">
+              AWB / Tracking Number <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={trackingNumber}
+              onChange={(e) => setTrackingNumber(e.target.value)}
+              placeholder="e.g. DEL123456789"
+              className="w-full rounded-xl border border-slate-200 py-2 px-3 text-xs text-slate-900 font-mono focus:border-purple-500 focus:outline-none transition-all"
+            />
+          </div>
 
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="block font-medium text-slate-700 mb-1">
-                  Courier / Delivery Partner <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={courierName}
-                  onChange={(e) => setCourierName(e.target.value)}
-                  placeholder="e.g. Delhivery, Blue Dart, DTDC, India Post"
-                  className="w-full rounded-lg border border-slate-200 py-1.5 px-3 text-xs text-slate-900 focus:border-purple-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium text-slate-700 mb-1">
-                  AWB / Tracking Number <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={trackingNumber}
-                  onChange={(e) => setTrackingNumber(e.target.value)}
-                  placeholder="e.g. DEL123456789"
-                  className="w-full rounded-lg border border-slate-200 py-1.5 px-3 text-xs text-slate-900 font-mono focus:border-purple-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium text-slate-700 mb-1">
-                  Dispatch Note (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={shipNote}
-                  onChange={(e) => setShipNote(e.target.value)}
-                  placeholder="e.g. Dispatched from primary hub"
-                  className="w-full rounded-lg border border-slate-200 py-1.5 px-3 text-xs text-slate-900 focus:border-purple-500 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setShowShipModal(false)}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={handleConfirmShipment}
-                className="rounded-lg bg-purple-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50 shadow-2xs"
-              >
-                {isPending ? "Confirming..." : "Confirm Shipment"}
-              </button>
-            </div>
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">
+              Dispatch Note (Optional)
+            </label>
+            <input
+              type="text"
+              value={shipNote}
+              onChange={(e) => setShipNote(e.target.value)}
+              placeholder="e.g. Dispatched from primary hub"
+              className="w-full rounded-xl border border-slate-200 py-2 px-3 text-xs text-slate-900 focus:border-purple-500 focus:outline-none transition-all"
+            />
           </div>
         </div>
-      )}
+      </AdminModal>
 
       {/* CANCEL ORDER MODAL */}
-      {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2 text-rose-700">
-                <XCircle className="h-5 w-5" />
-                <h3 className="text-sm font-semibold">Cancel Order</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowCancelModal(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                &times;
-              </button>
+      <AdminModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        maxWidth="md"
+        icon={<XCircle className="h-5 w-5 text-rose-700" />}
+        title="Cancel Order"
+        description="Release reserved inventory items back into available variant stock."
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowCancelModal(false)}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+            >
+              Go Back
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleConfirmCancel}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50 shadow-sm transition-colors"
+            >
+              {isPending ? "Cancelling..." : "Confirm & Restore Stock"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3 text-xs">
+          {cancelError && (
+            <div className="rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-200">
+              {cancelError}
             </div>
+          )}
 
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Cancelling this order will release all reserved inventory items back into available product variant stock.
-            </p>
-
-            {cancelError && (
-              <div className="rounded-lg bg-rose-50 p-2.5 text-xs text-rose-800 border border-rose-200">
-                {cancelError}
-              </div>
-            )}
-
-            <div className="space-y-1 text-xs">
-              <label className="block font-medium text-slate-700">
-                Cancellation Reason Note <span className="text-rose-500">*</span>
-              </label>
-              <textarea
-                rows={3}
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="e.g. Customer requested cancellation due to wrong size selected"
-                className="w-full rounded-lg border border-slate-200 p-2.5 text-xs text-slate-900 focus:border-rose-500 focus:outline-none"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setShowCancelModal(false)}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Go Back
-              </button>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={handleConfirmCancel}
-                className="rounded-lg bg-rose-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50 shadow-2xs"
-              >
-                {isPending ? "Cancelling..." : "Confirm Cancellation & Restore Stock"}
-              </button>
-            </div>
+          <div className="space-y-1">
+            <label className="block font-bold text-slate-700">
+              Cancellation Reason Note <span className="text-rose-500">*</span>
+            </label>
+            <textarea
+              rows={3}
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="e.g. Customer requested cancellation due to wrong size selected"
+              className="w-full rounded-xl border border-slate-200 p-3 text-xs text-slate-900 focus:border-rose-500 focus:outline-none transition-all resize-none"
+            />
           </div>
         </div>
-      )}
+      </AdminModal>
 
       {/* OWNER ONLY: MARK AS REFUNDED MODAL */}
-      {showRefundModal && isOwner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2 text-emerald-700">
-                <RotateCcw className="h-5 w-5" />
-                <h3 className="text-sm font-semibold">Record Manual Refund (Owner Only)</h3>
-              </div>
+      {isOwner && (
+        <AdminModal
+          isOpen={showRefundModal}
+          onClose={() => setShowRefundModal(false)}
+          maxWidth="md"
+          icon={<RotateCcw className="h-5 w-5 text-emerald-700" />}
+          title="Record Manual Refund"
+          description="Owner Only: Updates payment status and internal audit trail."
+          footer={
+            <>
               <button
                 type="button"
                 onClick={() => setShowRefundModal(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                &times;
-              </button>
-            </div>
-
-            {/* Crucial Explanatory Notice */}
-            <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900 border border-amber-200 space-y-1">
-              <div className="flex items-center gap-1.5 font-bold">
-                <ShieldAlert className="h-4 w-4 text-amber-700" />
-                Important Notice regarding Razorpay Refunds
-              </div>
-              <p className="leading-relaxed text-[11px]">
-                This action does <strong>NOT</strong> automatically initiate a financial refund via Razorpay. You must first issue the refund through your official <strong>Razorpay Merchant Dashboard</strong>. This button simply updates payment status to &lsquo;refunded&rsquo; and logs the audit trail on our platform.
-              </p>
-            </div>
-
-            {refundError && (
-              <div className="rounded-lg bg-rose-50 p-2.5 text-xs text-rose-800 border border-rose-200">
-                {refundError}
-              </div>
-            )}
-
-            <div className="space-y-1 text-xs">
-              <label className="block font-medium text-slate-700">
-                Refund Reference / Audit Note (Optional)
-              </label>
-              <input
-                type="text"
-                value={refundReason}
-                onChange={(e) => setRefundReason(e.target.value)}
-                placeholder="e.g. Razorpay Refund ID: rfnd_xyz or manual NEFT confirmation"
-                className="w-full rounded-lg border border-slate-200 py-1.5 px-3 text-xs text-slate-900 focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setShowRefundModal(false)}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
               >
                 Cancel
               </button>
@@ -1012,13 +954,45 @@ export function AdminOrderDetailView({
                 type="button"
                 disabled={isPending}
                 onClick={handleConfirmRefund}
-                className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 shadow-2xs"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 shadow-sm transition-colors"
               >
                 {isPending ? "Recording..." : "Confirm & Record Refund"}
               </button>
+            </>
+          }
+        >
+          <div className="space-y-3 text-xs">
+            {/* Crucial Explanatory Notice */}
+            <div className="rounded-2xl bg-amber-50 p-3.5 text-xs text-amber-900 border border-amber-200 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold">
+                <ShieldAlert className="h-4 w-4 text-amber-700 shrink-0" />
+                <span>Notice regarding Razorpay Refunds</span>
+              </div>
+              <p className="leading-relaxed text-[11px]">
+                This action does <strong>NOT</strong> automatically initiate a financial refund via Razorpay. You must first issue the refund through your official <strong>Razorpay Merchant Dashboard</strong>. This button simply updates payment status to &lsquo;refunded&rsquo; and logs the audit trail on our platform.
+              </p>
+            </div>
+
+            {refundError && (
+              <div className="rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-200">
+                {refundError}
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className="block font-bold text-slate-700">
+                Refund Reference / Audit Note (Optional)
+              </label>
+              <input
+                type="text"
+                value={refundReason}
+                onChange={(e) => setRefundReason(e.target.value)}
+                placeholder="e.g. Razorpay Refund ID: rfnd_xyz or manual NEFT confirmation"
+                className="w-full rounded-xl border border-slate-200 py-2 px-3 text-xs text-slate-900 focus:border-emerald-500 focus:outline-none transition-all"
+              />
             </div>
           </div>
-        </div>
+        </AdminModal>
       )}
     </div>
   );

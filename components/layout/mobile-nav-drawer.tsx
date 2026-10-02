@@ -61,9 +61,11 @@ export function MobileNavDrawer({
     }));
   };
 
-  const targetNumber = (whatsappNumber || BRAND.whatsappNumber).replace(/\D/g, "");
-  const baseWaUrl = whatsappUrl ? whatsappUrl.split("?")[0] : `https://wa.me/${targetNumber}`;
-  const whatsappHref = `${baseWaUrl}?text=${encodeURIComponent(BRAND.whatsappMessage)}`;
+  const targetNumber = (whatsappNumber || "").replace(/\D/g, "");
+  const baseWaUrl = whatsappUrl || (targetNumber ? `https://wa.me/${targetNumber}` : "/contact");
+  const whatsappHref = baseWaUrl === "/contact"
+    ? baseWaUrl
+    : `${baseWaUrl}?text=${encodeURIComponent(BRAND.whatsappMessage)}`;
 
   return (
     <div

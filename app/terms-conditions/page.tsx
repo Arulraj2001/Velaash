@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Container, PageHeaderBanner } from "@/components/ui";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
+import { getStoreContact } from "@/features/settings";
 import {
   AlertCircle,
   Clock,
@@ -41,9 +42,8 @@ export default async function TermsConditionsPage() {
 
   const legalName = storeProfile.legal_name || "VELAASH TRADER'S";
   const storeName = storeProfile.name || "Velaash";
-  const contactEmail = storeProfile.email || "bestrchandra@gmail.com";
-  const contactPhone = storeProfile.whatsapp_number || storeProfile.phone || "+91 8508643832";
-  const cleanPhone = contactPhone.replace(/[^0-9]/g, "");
+  const { email: contactEmail, whatsappNumber: contactPhone, whatsappUrl } =
+    getStoreContact(storeProfile);
 
   const freeShippingThreshold = `₹${shippingPolicy.free_shipping_threshold.toLocaleString("en-IN")}`;
   const returnWindowDays = returnsPolicy.return_window_days;
@@ -356,7 +356,7 @@ export default async function TermsConditionsPage() {
                   <p><strong>Operating Business Entity:</strong> {legalName}</p>
                   <p><strong>Store Name:</strong> {storeName}</p>
                   <p><strong>Customer Service Email:</strong> <a href={`mailto:${contactEmail}`} className="text-brand-accent hover:underline font-medium">{contactEmail}</a></p>
-                  <p><strong>WhatsApp Support:</strong> <a href={`https://wa.me/${cleanPhone}`} target="_blank" rel="noopener noreferrer" className="text-emerald-700 hover:underline font-medium">{contactPhone}</a></p>
+                  <p><strong>WhatsApp Support:</strong> <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-700 hover:underline font-medium">{contactPhone}</a></p>
                   <p><strong>Registered Jurisdiction:</strong> Tamil Nadu, Republic of India</p>
                 </div>
               </div>

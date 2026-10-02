@@ -220,7 +220,7 @@ export const DEFAULT_LIVE_HOMEPAGE_SECTIONS: LiveHomepageSection[] = [
         {
           icon: "MessageCircle",
           title: "WhatsApp Support",
-          description: "Direct assistance and sizing guidance on +91 8508643832.",
+          description: "Direct assistance and sizing guidance on WhatsApp.",
         },
       ],
     },

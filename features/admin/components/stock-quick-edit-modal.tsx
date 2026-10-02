@@ -4,7 +4,8 @@ import React, { useState, useTransition } from "react";
 import Image from "next/image";
 import type { AdminProductListItem } from "../types/products";
 import { updateProductStockAction } from "../actions/product-actions";
-import { X, Package, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Package, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { AdminModal } from "./admin-modal";
 
 interface VariantQuickItem {
   id: string;
@@ -25,11 +26,13 @@ interface StockQuickEditModalProps {
 function StockQuickEditDialogContent({
   product,
   initialVariants,
+  isOpen,
   onClose,
   onSuccess,
 }: {
   product: AdminProductListItem;
   initialVariants: VariantQuickItem[];
+  isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
 }) {
@@ -84,54 +87,62 @@ function StockQuickEditDialogContent({
     0
   );
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-        onClick={onClose}
+  const headerIcon = product.thumbnail_url ? (
+    <div className="relative h-10 w-8 shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-200">
+      <Image
+        src={product.thumbnail_url}
+        alt={product.name}
+        fill
+        sizes="32px"
+        className="object-cover"
       />
+    </div>
+  ) : (
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+      <Package className="h-4 w-4" />
+    </div>
+  );
 
-      {/* Modal Dialog */}
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl z-10 space-y-4">
-        {/* Header */}
-        <div className="flex items-start justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-3">
-            {product.thumbnail_url ? (
-              <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-md bg-slate-100 border border-slate-200">
-                <Image
-                  src={product.thumbnail_url}
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              <div className="flex h-12 w-10 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-400">
-                <Package className="h-5 w-5" />
-              </div>
-            )}
-            <div>
-              <h3 className="font-semibold text-slate-900 text-sm">{product.name}</h3>
-              <p className="text-[11px] text-slate-500 font-mono">
-                Total Stock: <strong className="text-slate-800">{currentTotal} units</strong>
-              </p>
-            </div>
-          </div>
+  const footerActions = (
+    <>
+      <button
+        type="button"
+        onClick={onClose}
+        disabled={isPending}
+        className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors shadow-2xs"
+      >
+        Cancel
+      </button>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={isPending}
+        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-50 shadow-sm transition-colors"
+      >
+        {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+        <span>Save Stock Changes</span>
+      </button>
+    </>
+  );
 
+  return (
+    <AdminModal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="lg"
+      icon={headerIcon}
+      title={product.name}
+      description={`Total Current Stock: ${currentTotal} units across ${variants.length} variant${
+        variants.length === 1 ? "" : "s"
+      }`}
+      footer={footerActions}
+    >
+      <div className="space-y-4">
         {/* Feedback Alert */}
         {feedback && (
           <div
-            className={`flex items-center gap-2 rounded-lg border p-3 text-xs font-medium ${
+            className={`flex items-center gap-2 rounded-xl border p-3 text-xs font-semibold animate-in fade-in ${
               feedback.type === "success"
                 ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                 : "border-rose-200 bg-rose-50 text-rose-800"
@@ -147,25 +158,25 @@ function StockQuickEditDialogContent({
         )}
 
         {/* Variants Stock Table */}
-        <div className="max-h-72 overflow-y-auto rounded-lg border border-slate-100">
+        <div className="rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50 text-[10px] uppercase font-semibold text-slate-500">
-                <th className="px-3 py-2">Variant</th>
-                <th className="px-3 py-2">SKU</th>
-                <th className="px-3 py-2 text-right">Quantity</th>
+              <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase font-bold tracking-wider text-slate-500">
+                <th className="px-3.5 py-2.5">Variant</th>
+                <th className="px-3.5 py-2.5">SKU</th>
+                <th className="px-3.5 py-2.5 text-right">Available Units</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 bg-white">
               {variants.map((v) => (
-                <tr key={v.id} className="hover:bg-slate-50/50">
-                  <td className="px-3 py-2.5 font-medium text-slate-800">
+                <tr key={v.id} className="hover:bg-slate-50/70 transition-colors">
+                  <td className="px-3.5 py-2.5 font-semibold text-slate-800">
                     {v.size} &bull; {v.color}
                   </td>
-                  <td className="px-3 py-2.5 font-mono text-[11px] text-slate-500">
+                  <td className="px-3.5 py-2.5 font-mono text-[11px] text-slate-500">
                     {v.sku}
                   </td>
-                  <td className="px-3 py-2.5 text-right">
+                  <td className="px-3.5 py-2.5 text-right">
                     <input
                       type="number"
                       min="0"
@@ -173,7 +184,7 @@ function StockQuickEditDialogContent({
                       onChange={(e) =>
                         handleStockChange(v.id, parseInt(e.target.value) || 0)
                       }
-                      className="w-20 rounded-md border border-slate-200 px-2 py-1 text-right text-xs font-semibold text-slate-900 focus:border-indigo-500 focus:outline-none"
+                      className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-right text-xs font-bold font-mono text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition-all"
                     />
                   </td>
                 </tr>
@@ -181,30 +192,8 @@ function StockQuickEditDialogContent({
             </tbody>
           </table>
         </div>
-
-        {/* Footer Actions */}
-        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isPending}
-            className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isPending}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50 shadow-2xs"
-          >
-            {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            <span>Save Stock Changes</span>
-          </button>
-        </div>
       </div>
-    </div>
+    </AdminModal>
   );
 }
 
@@ -222,6 +211,7 @@ export function StockQuickEditModal({
       key={product.id}
       product={product}
       initialVariants={variants}
+      isOpen={isOpen}
       onClose={onClose}
       onSuccess={onSuccess}
     />

@@ -31,8 +31,8 @@ interface BrandPreloaderProps {
 export function BrandPreloader({
   logoUrl,
   forcePreview = false,
-  displayDurationMs = 2800,
-  fadeDurationMs = 700,
+  displayDurationMs = 1500,
+  fadeDurationMs = 500,
 }: BrandPreloaderProps) {
   const [isFadingOut, setIsFadingOut] = React.useState(false);
   const [isDismissed, setIsDismissed] = React.useState(false);
@@ -42,6 +42,7 @@ export function BrandPreloader({
     // If the inline script already hid it before paint (e.g. returning session navigation),
     // cleanly unmount immediately with zero delay.
     if (el && el.style.display === "none") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- External DOM sync: aligns React unmount state with the pre-hydration inline script's display decision.
       setIsDismissed(true);
       return;
     }

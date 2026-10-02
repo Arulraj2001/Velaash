@@ -31,12 +31,14 @@ interface ProductDetailViewProps {
   product: ProductDetailItem;
   freeShippingThreshold?: number;
   returnWindowDays?: number;
+  whatsappNumber: string;
 }
 
 export function ProductDetailView({
   product,
   freeShippingThreshold = 999, // Placeholder default — MUST be confirmed with client before launch
   returnWindowDays = 7, // Placeholder default — MUST be confirmed with client before launch
+  whatsappNumber,
 }: ProductDetailViewProps) {
   const router = useRouter();
   const addItemToCart = useCartStore((state) => state.addItem);
@@ -172,7 +174,10 @@ export function ProductDetailView({
       ? window.location.href
       : `${siteUrl}/products/${product.slug}`;
   const whatsappQuery = `Hi Velaash! I am interested in ordering "${product.name}" (${currentUrl}) in ${selectedColor}, size ${selectedSize}. Could you share availability and delivery details?`;
-  const whatsappHref = `https://wa.me/918508643832?text=${encodeURIComponent(whatsappQuery)}`;
+  const whatsappDigits = whatsappNumber.replace(/\D/g, "");
+  const whatsappHref = whatsappDigits
+    ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(whatsappQuery)}`
+    : "/contact";
 
   return (
     <div className="space-y-12">

@@ -55,6 +55,7 @@ export interface OrderConfirmationEmailProps {
   };
   orderViewUrl: string;
   accountCreatedFromGuest?: boolean;
+  supportEmail?: string;
 }
 
 export const OrderConfirmationEmail = ({
@@ -73,6 +74,7 @@ export const OrderConfirmationEmail = ({
   shippingAddress,
   orderViewUrl,
   accountCreatedFromGuest = false,
+  supportEmail,
 }: OrderConfirmationEmailProps) => {
   const isPaid = paymentStatus === "paid";
   const paymentMethodLabel =
@@ -214,10 +216,9 @@ export const OrderConfirmationEmail = ({
           {/* Footer */}
           <Section style={footerSectionStyle}>
             <Text style={footerTextStyle}>
-              Need assistance? Email us at{" "}
-              <Link href="mailto:support@velaash.in" style={{ color: "#CC6F00" }}>
-                support@velaash.in
-              </Link>
+              {supportEmail ? (
+                <>Need assistance? Email us at <Link href={`mailto:${supportEmail}`} style={{ color: "#CC6F00" }}>{supportEmail}</Link></>
+              ) : "Need assistance? Contact our customer support team."}
             </Text>
             <Text style={legalTextStyle}>VELAASH TRADER&apos;S</Text>
           </Section>

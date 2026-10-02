@@ -25,7 +25,11 @@ function getRedisClient(): Redis | null {
   const url = env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_REST_URL;
   const token = env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
-  if (url && token && url.startsWith("http")) {
+  const hasPlaceholderCredentials =
+    /placeholder|your[-_ ]|example/i.test(url || "") ||
+    /placeholder|your[-_ ]/i.test(token || "");
+
+  if (url && token && url.startsWith("http") && !hasPlaceholderCredentials) {
     try {
       upstashRedisClient = new Redis({ url, token });
       return upstashRedisClient;

@@ -15,9 +15,10 @@ import { SizeChartTable } from "./size-chart-table";
 
 interface StandaloneSizeGuideViewProps {
   categories: CategorySizeChartItem[];
+  whatsappNumber: string;
 }
 
-export function StandaloneSizeGuideView({ categories }: StandaloneSizeGuideViewProps) {
+export function StandaloneSizeGuideView({ categories, whatsappNumber }: StandaloneSizeGuideViewProps) {
   const [selectedId, setSelectedId] = React.useState<string>(
     categories[0]?.id || ""
   );
@@ -25,10 +26,10 @@ export function StandaloneSizeGuideView({ categories }: StandaloneSizeGuideViewP
   const activeChart =
     categories.find((c) => c.id === selectedId) || categories[0];
 
-  const whatsappNumber = "918508643832";
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+  const whatsappDigits = whatsappNumber.replace(/\D/g, "");
+  const whatsappUrl = whatsappDigits ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
     `Hello Velaash, I have a question regarding size selection and garment fit for ${activeChart?.categoryName || "your collection"}.`
-  )}`;
+  )}` : "/contact";
 
   return (
     <div className="space-y-12">

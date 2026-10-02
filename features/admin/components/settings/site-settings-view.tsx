@@ -23,6 +23,7 @@ import {
   Image as ImageIcon,
   Trash2,
 } from "lucide-react";
+import { AdminModal } from "../admin-modal";
 import type { SiteSettingsData } from "@/features/settings";
 import {
   updateStoreProfileSettingsAction,
@@ -228,10 +229,9 @@ function StoreProfileForm({
     name: initial.name || "Velaash",
     legal_name: initial.legal_name || "VELAASH TRADER'S",
     tagline: initial.tagline || "Contemporary Elegance, Handcrafted in India",
-    email: initial.email || "bestrchandra@gmail.com",
-    phone: initial.phone || "+91 8508643832",
-    whatsapp_number: initial.whatsapp_number || "+91 8508643832",
-    whatsapp_url: initial.whatsapp_url || "https://wa.me/918508643832",
+    email: initial.email || "",
+    phone: initial.phone || "",
+    whatsapp_number: initial.whatsapp_number || "",
     logo_url: initial.logo_url && initial.logo_url !== "/brand/logo.svg" ? initial.logo_url : "/logo.png",
     favicon_url: initial.favicon_url || "/favicon.ico",
   });
@@ -358,7 +358,7 @@ function StoreProfileForm({
             required
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            placeholder="+91 8508643832"
+            placeholder="Store phone number"
             className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
@@ -369,17 +369,9 @@ function StoreProfileForm({
             required
             value={form.whatsapp_number}
             onChange={(e) => {
-              const val = e.target.value;
-              const digits = val.replace(/\D/g, "");
-              const cleanDigits = digits.length === 10 ? `91${digits}` : digits;
-              const url = cleanDigits ? `https://wa.me/${cleanDigits}` : "";
-              setForm({
-                ...form,
-                whatsapp_number: val,
-                whatsapp_url: url,
-              });
+              setForm({ ...form, whatsapp_number: e.target.value });
             }}
-            placeholder="+91 8508643832"
+            placeholder="WhatsApp number"
             className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
@@ -543,7 +535,6 @@ function SocialLinksForm({
   const [form, setForm] = useState({
     instagram: initial.instagram || "",
     facebook: initial.facebook || "",
-    whatsapp: initial.whatsapp || "",
     pinterest: initial.pinterest || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -603,17 +594,6 @@ function SocialLinksForm({
             value={form.facebook}
             onChange={(e) => setForm({ ...form, facebook: e.target.value })}
             placeholder="https://facebook.com/velaash"
-            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">WhatsApp Chat Link</label>
-          <input
-            type="url"
-            value={form.whatsapp}
-            onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
-            placeholder="https://wa.me/918508643832"
             className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
@@ -1392,122 +1372,97 @@ function LogisticsSettingsForm({
   return (
     <>
       {/* ── HOW-IT-WORKS LIGHTBOX ── */}
-      {showGuide && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setShowGuide(false)}
-        >
-          <div
-            className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
+      <AdminModal
+        isOpen={showGuide}
+        onClose={() => setShowGuide(false)}
+        maxWidth="lg"
+        icon={<PackageCheck className="w-5 h-5 text-slate-700" />}
+        title="Logistics Mode — How It Works"
+        description="Comparison between Manual Self-Ship and Automated Shiprocket API."
+        footer={
+          <button
+            type="button"
+            onClick={() => setShowGuide(false)}
+            className="px-4 py-2 text-xs font-semibold bg-slate-900 text-white rounded-xl hover:bg-black transition-colors shadow-sm"
           >
-            {/* Lightbox Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50">
-              <div className="flex items-center gap-2">
-                <PackageCheck className="w-5 h-5 text-slate-700" />
-                <h2 className="text-sm font-bold text-slate-900">Logistics Mode — How It Works</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowGuide(false)}
-                className="text-slate-400 hover:text-slate-700 transition-colors rounded-lg p-1"
-                aria-label="Close guide"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            Got it, close
+          </button>
+        }
+      >
+        <div className="space-y-4 text-xs">
+          {/* Manual Mode Section */}
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base">✦</span>
+              <h3 className="text-sm font-bold text-emerald-800">Manual / Self-Ship</h3>
+              <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                Recommended for Startups
+              </span>
             </div>
-
-            {/* Lightbox Content */}
-            <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
-
-              {/* Manual Mode Section */}
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">✦</span>
-                  <h3 className="text-sm font-bold text-emerald-800">Manual / Self-Ship</h3>
-                  <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
-                    Recommended for Startups
-                  </span>
-                </div>
-                <ul className="space-y-1.5 text-xs text-emerald-900">
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-500 mt-0.5 shrink-0">①</span>
-                    <span>Customer places order → you receive it in the Admin Orders panel</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-500 mt-0.5 shrink-0">②</span>
-                    <span>Confirm the order → Pack it → Click <strong>&quot;Mark as Shipped&quot;</strong></span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-500 mt-0.5 shrink-0">③</span>
-                    <span>Enter courier name (e.g. DTDC, Delhivery) and tracking number manually</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-500 mt-0.5 shrink-0">④</span>
-                    <span>Customer can track via their account dashboard using the tracking number</span>
-                  </li>
-                </ul>
-                <div className="pt-1 border-t border-emerald-100 text-[11px] text-emerald-700 font-medium">
-                  ✅ No API key needed · Free · Full control
-                </div>
-              </div>
-
-              {/* Shiprocket Mode Section */}
-              <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🚀</span>
-                  <h3 className="text-sm font-bold text-indigo-800">Shiprocket API Mode</h3>
-                  <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">
-                    For Scale (10+ orders/day)
-                  </span>
-                </div>
-                <ul className="space-y-1.5 text-xs text-indigo-900">
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-500 mt-0.5 shrink-0">①</span>
-                    <span>Requires a paid Shiprocket account + API credentials in your environment</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-500 mt-0.5 shrink-0">②</span>
-                    <span>Pack the order → Click <strong>&quot;Push to Shiprocket&quot;</strong> in the order detail view</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-500 mt-0.5 shrink-0">③</span>
-                    <span>Shiprocket automatically assigns the best courier and generates AWB number</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-500 mt-0.5 shrink-0">④</span>
-                    <span>Pickup is scheduled from your warehouse address configured below</span>
-                  </li>
-                </ul>
-                <div className="pt-1 border-t border-indigo-100 text-[11px] text-indigo-700 font-medium">
-                  ⚡ Faster at scale · Auto-courier selection · COD remittance management
-                </div>
-              </div>
-
-              {/* Switching Note */}
-              <div className="rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-900">
-                <strong>💡 Switching modes is instant.</strong> You can toggle anytime from this Settings panel — no data is lost.
-                Active mode is read on every order page so it always reflects your current setting.
-                <br /><br />
-                <strong>Upgrade tip:</strong> Move to Shiprocket when you are consistently shipping more than 10 orders per day and want automated label printing and courier negotiation.
-              </div>
-            </div>
-
-            {/* Lightbox Footer */}
-            <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowGuide(false)}
-                className="px-4 py-2 text-xs font-semibold bg-slate-900 text-white rounded-lg hover:bg-black transition-colors"
-              >
-                Got it, close
-              </button>
+            <ul className="space-y-1.5 text-xs text-emerald-900">
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5 shrink-0">①</span>
+                <span>Customer places order → you receive it in the Admin Orders panel</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5 shrink-0">②</span>
+                <span>Confirm the order → Pack it → Click <strong>&quot;Mark as Shipped&quot;</strong></span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5 shrink-0">③</span>
+                <span>Enter courier name (e.g. DTDC, Delhivery) and tracking number manually</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5 shrink-0">④</span>
+                <span>Customer can track via their account dashboard using the tracking number</span>
+              </li>
+            </ul>
+            <div className="pt-1 border-t border-emerald-100 text-[11px] text-emerald-700 font-medium">
+              ✅ No API key needed · Free · Full control
             </div>
           </div>
+
+          {/* Shiprocket Mode Section */}
+          <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🚀</span>
+              <h3 className="text-sm font-bold text-indigo-800">Shiprocket API Mode</h3>
+              <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">
+                For Scale (10+ orders/day)
+              </span>
+            </div>
+            <ul className="space-y-1.5 text-xs text-indigo-900">
+              <li className="flex items-start gap-2">
+                <span className="text-indigo-500 mt-0.5 shrink-0">①</span>
+                <span>Requires a paid Shiprocket account + API credentials in your environment</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-indigo-500 mt-0.5 shrink-0">②</span>
+                <span>Pack the order → Click <strong>&quot;Push to Shiprocket&quot;</strong> in the order detail view</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-indigo-500 mt-0.5 shrink-0">③</span>
+                <span>Shiprocket automatically assigns the best courier and generates AWB number</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-indigo-500 mt-0.5 shrink-0">④</span>
+                <span>Pickup is scheduled from your warehouse address configured below</span>
+              </li>
+            </ul>
+            <div className="pt-1 border-t border-indigo-100 text-[11px] text-indigo-700 font-medium">
+              ⚡ Faster at scale · Auto-courier selection · COD remittance management
+            </div>
+          </div>
+
+          {/* Switching Note */}
+          <div className="rounded-2xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-900">
+            <strong>💡 Switching modes is instant.</strong> You can toggle anytime from this Settings panel — no data is lost.
+            Active mode is read on every order page so it always reflects your current setting.
+            <br /><br />
+            <strong>Upgrade tip:</strong> Move to Shiprocket when you are consistently shipping more than 10 orders per day and want automated label printing and courier negotiation.
+          </div>
         </div>
-      )}
+      </AdminModal>
 
       {/* ── MAIN FORM ── */}
       <form onSubmit={handleSubmit} className="space-y-6">

@@ -21,6 +21,7 @@ import {
   X,
   AlertTriangle,
 } from "lucide-react";
+import { AdminModal } from "./admin-modal";
 
 interface StaffManagementViewProps {
   currentAdmin: AdminUserSession;
@@ -349,54 +350,51 @@ export function StaffManagementView({
       </div>
 
       {/* Styled Revoke Access Confirmation Modal */}
-      {memberToRevoke && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl animate-in fade-in-0 zoom-in-95">
-            <div className="flex items-center gap-3 text-rose-600 mb-3">
-              <div className="rounded-full bg-rose-50 p-2 border border-rose-200">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-              <h3 className="text-sm font-bold text-slate-900">Revoke Administrative Access</h3>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed mb-4">
-              Are you sure you want to revoke administrative privileges for{" "}
-              <strong className="text-slate-900 font-semibold">{memberToRevoke.name}</strong>{" "}
-              (<span className="font-mono text-slate-700">{memberToRevoke.email}</span>)?
-              They will immediately lose access to the admin portal.
-            </p>
-
-            <div className="flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => setMemberToRevoke(null)}
-                className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={confirmRevoke}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-rose-700 transition-colors disabled:opacity-50"
-              >
-                {isPending ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>Revoking...</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="h-3.5 w-3.5" />
-                    <span>Revoke Access</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AdminModal
+        isOpen={Boolean(memberToRevoke)}
+        onClose={() => setMemberToRevoke(null)}
+        maxWidth="md"
+        icon={<AlertTriangle className="h-5 w-5 text-rose-600" />}
+        title="Revoke Administrative Access"
+        description={memberToRevoke ? `${memberToRevoke.name} (${memberToRevoke.email})` : ""}
+        footer={
+          <>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => setMemberToRevoke(null)}
+              className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 shadow-2xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={confirmRevoke}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700 transition-colors disabled:opacity-50 shadow-sm"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Revoking...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Revoke Access</span>
+                </>
+              )}
+            </button>
+          </>
+        }
+      >
+        <p className="text-xs text-slate-600 leading-relaxed">
+          Are you sure you want to revoke administrative privileges for{" "}
+          <strong className="text-slate-900 font-semibold">{memberToRevoke?.name}</strong>{" "}
+          (<span className="font-mono text-slate-700">{memberToRevoke?.email}</span>)?
+          They will immediately lose access to the admin portal.
+        </p>
+      </AdminModal>
     </div>
   );
 }

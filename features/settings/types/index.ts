@@ -5,7 +5,6 @@ export interface StoreProfileSetting {
   email: string;
   phone: string;
   whatsapp_number: string;
-  whatsapp_url: string;
   logo_url?: string;
   favicon_url?: string;
 }
@@ -13,7 +12,6 @@ export interface StoreProfileSetting {
 export interface SocialLinksSetting {
   instagram: string;
   facebook: string;
-  whatsapp: string;
   pinterest?: string;
 }
 

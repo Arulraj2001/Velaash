@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAdminUser } from "@/features/auth";
 import { hasAdminPermission } from "@/features/admin/permissions";
@@ -24,6 +25,12 @@ export default async function AdminSiteSettingsPage() {
 
   return (
     <div className="py-2">
+      <Link
+        href="/admin/settings/newsletter"
+        className="mb-4 inline-flex h-9 items-center rounded border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50"
+      >
+        Manage newsletter subscribers
+      </Link>
       <SiteSettingsView initialSettings={siteSettings} />
     </div>
   );

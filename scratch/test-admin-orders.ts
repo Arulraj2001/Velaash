@@ -42,7 +42,7 @@ async function main() {
     UpdateOrderStatusSchema,
   } = await import("../features/admin/types/orders");
   const { executeOrderCancellation } = await import(
-    "../features/orders/actions/cancel-order-action"
+    "../features/orders/cancel-order"
   );
   const { generateInvoicePdfBuffer } = await import(
     "../features/admin/services/invoice-pdf"

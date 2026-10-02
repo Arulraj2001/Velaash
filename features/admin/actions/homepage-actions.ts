@@ -239,7 +239,7 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
         {
           icon: "MessageCircle",
           title: "WhatsApp Support",
-          description: "Direct assistance and sizing guidance on +91 8508643832.",
+          description: "Direct assistance and sizing guidance on WhatsApp.",
         },
       ],
     },
@@ -768,7 +768,7 @@ export async function createHomepageSectionAction(
           { icon: "Truck", title: "Pan-India Delivery", description: "Reliable domestic shipping across all serviceable PIN codes." },
           { icon: "RotateCcw", title: "Easy Returns", description: "Hassle-free return and exchange assistance." },
           { icon: "ShieldCheck", title: "Secure Payments", description: "100% encrypted & protected checkout." },
-          { icon: "MessageCircle", title: "WhatsApp Support", description: "Personal assistance on +91 8508643832." },
+          { icon: "MessageCircle", title: "WhatsApp Support", description: "Personal assistance on WhatsApp." },
         ],
         ...defaultContent,
       };
