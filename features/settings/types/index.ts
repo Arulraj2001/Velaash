@@ -107,6 +107,17 @@ export interface PageBannersSetting {
   track_order?: PageBannerItem;
 }
 
+/**
+ * Site-wide promotional offer popup configuration
+ */
+export interface PromoPopupSetting {
+  is_enabled: boolean;
+  featured_coupon_id: string | null;
+  popup_title: string;
+  popup_description: string;
+  delay_seconds?: number;
+}
+
 export interface SiteSettingsData {
   storeProfile: StoreProfileSetting;
   socialLinks: SocialLinksSetting;
@@ -118,7 +129,9 @@ export interface SiteSettingsData {
   seoDefaults: SeoDefaultsSetting;
   shiprocketSettings: ShiprocketSetting;
   pageBanners: PageBannersSetting;
+  promoPopup: PromoPopupSetting;
 }
 
 export type SiteSettings = SiteSettingsData;
+
 

@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CartToast } from "@/features/cart";
 import { WishlistSync, getWishlistProductIds } from "@/features/wishlist";
 import { AnalyticsScripts, CookieConsentBanner } from "@/features/analytics";
-import { BrandPreloader } from "@/components/ui";
+import { BrandPreloader, PromoOfferPopup } from "@/components/ui";
 import { env } from "@/lib/env";
 
 const cormorant = Cormorant_Garamond({
@@ -25,7 +25,7 @@ const plusJakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-import { getSiteSettings } from "@/features/settings";
+import { getSiteSettings, getPromoPopup } from "@/features/settings";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { storeProfile, seoDefaults } = await getSiteSettings();
@@ -118,13 +118,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let initialUser = null;
   let initialWishlistIds: string[] = [];
   let logoUrl: string | null = null;
+  let promoPopupData = null;
   if (!isAdminRoute) {
     try {
-      const [{ storeProfile }, supabase] = await Promise.all([
+      const [{ storeProfile }, supabase, promoPopup] = await Promise.all([
         getSiteSettings(),
         createClient(),
+        getPromoPopup(),
       ]);
       logoUrl = storeProfile.logo_url || "/logo.png";
+      promoPopupData = promoPopup;
 
       const {
         data: { user },
@@ -163,6 +166,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <BrandPreloader logoUrl={logoUrl} />
                   <CartToast />
                   <CookieConsentBanner />
+                  <PromoOfferPopup data={promoPopupData} />
                 </>
               }
             >

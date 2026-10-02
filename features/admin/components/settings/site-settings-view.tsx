@@ -22,9 +22,12 @@ import {
   Info,
   Image as ImageIcon,
   Trash2,
+  Sparkles,
 } from "lucide-react";
 import { AdminModal } from "../admin-modal";
+import { PromoPopupCard } from "@/components/ui/promo-popup-card";
 import type { SiteSettingsData } from "@/features/settings";
+import type { ActiveCouponOption } from "../../queries/get-active-coupons";
 import {
   updateStoreProfileSettingsAction,
   updateSocialLinksSettingsAction,
@@ -36,12 +39,14 @@ import {
   updateSeoSettingsAction,
   updateShiprocketSettingsAction,
   updatePageBannersAction,
+  updatePromoPopupSettingsAction,
   uploadBrandAssetAction,
 } from "../../actions/settings-actions";
 
 type SettingsTab =
   | "store_profile"
   | "page_banners"
+  | "promo_popup"
   | "social_links"
   | "shipping"
   | "logistics"
@@ -53,6 +58,7 @@ type SettingsTab =
 
 const TABS: { id: SettingsTab; label: string; icon: React.ElementType; description: string }[] = [
   { id: "store_profile", label: "Store Profile", icon: Store, description: "Brand name, legal entity, contact info & logos" },
+  { id: "promo_popup", label: "Promo Popup", icon: Sparkles, description: "Site-wide promotional offer popup tied to an active coupon" },
   { id: "page_banners", label: "Page Banners", icon: ImageIcon, description: "Configure & upload header banner images for customer pages" },
   { id: "social_links", label: "Social Links", icon: Share2, description: "Instagram, Facebook, WhatsApp & Pinterest URLs" },
   { id: "shipping", label: "Shipping & Rates", icon: Truck, description: "Free shipping threshold & standard shipping fees" },
@@ -64,7 +70,15 @@ const TABS: { id: SettingsTab; label: string; icon: React.ElementType; descripti
   { id: "seo", label: "SEO Defaults", icon: Globe, description: "Site-wide fallback meta title & meta description" },
 ];
 
-export function SiteSettingsView({ initialSettings }: { initialSettings: SiteSettingsData }) {
+export function SiteSettingsView({
+  initialSettings,
+  activeCoupons = [],
+  featuredProduct = null,
+}: {
+  initialSettings: SiteSettingsData;
+  activeCoupons?: ActiveCouponOption[];
+  featuredProduct?: { imageUrl: string; name?: string } | null;
+}) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<SettingsTab>("store_profile");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -151,6 +165,15 @@ export function SiteSettingsView({ initialSettings }: { initialSettings: SiteSet
             <PageBannersForm
               initial={initialSettings.pageBanners}
               onSaved={() => showToast("Page header banners saved successfully.")}
+            />
+          )}
+
+          {activeTab === "promo_popup" && (
+            <PromoPopupSettingsForm
+              initial={initialSettings.promoPopup}
+              activeCoupons={activeCoupons}
+              featuredProduct={featuredProduct}
+              onSaved={() => showToast("Promo popup settings saved successfully.")}
             />
           )}
 
@@ -1962,4 +1985,226 @@ function PageBannersForm({
     </>
   );
 }
+
+// ============================================================================
+// 11. PROMO POPUP SETTINGS FORM
+// ============================================================================
+function PromoPopupSettingsForm({
+  initial,
+  activeCoupons = [],
+  featuredProduct = null,
+  onSaved,
+}: {
+  initial?: SiteSettingsData["promoPopup"];
+  activeCoupons?: ActiveCouponOption[];
+  featuredProduct?: { imageUrl: string; name?: string } | null;
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    is_enabled: initial?.is_enabled ?? false,
+    featured_coupon_id: initial?.featured_coupon_id || "",
+    popup_title: initial?.popup_title || "Special Offer",
+    popup_description:
+      initial?.popup_description ||
+      "Use this code at checkout to enjoy an exclusive discount on your order.",
+    delay_seconds: initial?.delay_seconds ?? 9,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const selectedCoupon = activeCoupons.find((c) => c.id === form.featured_coupon_id);
+  const isSelectedCouponMissing =
+    Boolean(form.featured_coupon_id) && !selectedCoupon;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await updatePromoPopupSettingsAction({
+        is_enabled: form.is_enabled,
+        featured_coupon_id: form.featured_coupon_id ? form.featured_coupon_id : null,
+        popup_title: form.popup_title,
+        popup_description: form.popup_description,
+        delay_seconds: Number(form.delay_seconds) || 9,
+      });
+
+      if (res.success) {
+        onSaved();
+      } else {
+        setErrorMsg(res.error || "Failed to save promo popup settings.");
+      }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Save failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {errorMsg && (
+        <div className="flex items-center gap-2 p-3 text-xs bg-rose-50 border border-rose-200 text-rose-700 rounded-xl">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {/* Enable/Disable Toggle */}
+      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+        <div>
+          <span className="block text-sm font-semibold text-slate-900">
+            Enable Promotional Popup
+          </span>
+          <span className="block text-xs text-slate-500 mt-0.5">
+            Display a floating luxury offer modal to new visitors site-wide (excluding cart, checkout, account, and admin).
+          </span>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer shrink-0">
+          <input
+            type="checkbox"
+            checked={form.is_enabled}
+            onChange={(e) => setForm({ ...form, is_enabled: e.target.checked })}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+        </label>
+      </div>
+
+      {/* Linked Active Coupon Dropdown */}
+      <div>
+        <label className="block text-xs font-semibold text-slate-700 mb-1">
+          Featured Active Coupon <span className="text-rose-500">*</span>
+        </label>
+        <select
+          value={form.featured_coupon_id}
+          onChange={(e) => setForm({ ...form, featured_coupon_id: e.target.value })}
+          className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-900 font-medium"
+        >
+          <option value="">-- Select an active coupon --</option>
+          {activeCoupons.map((coupon) => {
+            const discountLabel =
+              coupon.discountType === "percentage"
+                ? `${coupon.discountValue}% OFF`
+                : `₹${coupon.discountValue} OFF`;
+            const minOrderLabel =
+              coupon.minOrderValue > 0
+                ? ` (Min ₹${coupon.minOrderValue.toLocaleString("en-IN")})`
+                : "";
+            return (
+              <option key={coupon.id} value={coupon.id}>
+                {coupon.code} — {discountLabel}
+                {minOrderLabel}
+              </option>
+            );
+          })}
+        </select>
+        <p className="text-[11px] text-slate-500 mt-1">
+          Only currently active, non-expired coupons are listed. All discount values, codes, and thresholds are read dynamically from this coupon record.
+        </p>
+        {isSelectedCouponMissing && (
+          <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              The previously selected coupon is no longer active or has expired. Please select a currently active coupon above.
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Headline & Description */}
+      <div className="grid grid-cols-1 gap-4">
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
+            Popup Title <span className="text-rose-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={form.popup_title}
+            onChange={(e) => setForm({ ...form, popup_title: e.target.value })}
+            placeholder="Special Offer"
+            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-900"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">Short headline displayed at the top of the modal.</p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
+            Popup Description <span className="text-rose-500">*</span>
+          </label>
+          <textarea
+            required
+            rows={2}
+            value={form.popup_description}
+            onChange={(e) => setForm({ ...form, popup_description: e.target.value })}
+            placeholder="Use this code at checkout to enjoy an exclusive discount on your order."
+            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-normal text-slate-900 resize-none"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">Supporting line of copy above the promo code pill.</p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
+            Popup Display Delay (Seconds)
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={60}
+            value={form.delay_seconds}
+            onChange={(e) => setForm({ ...form, delay_seconds: Number(e.target.value) })}
+            className="w-32 px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">Seconds after page load before displaying to new visitors (default: 9 seconds).</p>
+        </div>
+      </div>
+
+      {/* Live Preview Section (Uses the identical PromoPopupCard presentation component) */}
+      <div className="space-y-2 pt-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-slate-500">Live Customer Modal Preview</span>
+          {form.is_enabled && selectedCoupon && (
+            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              Active on Site
+            </span>
+          )}
+        </div>
+
+        <div className="relative rounded-2xl border border-slate-200 bg-slate-900/40 p-4 sm:p-6 flex items-center justify-center min-h-[360px] overflow-hidden">
+          <PromoPopupCard
+            isPreview={true}
+            title={form.popup_title}
+            description={form.popup_description}
+            coupon={
+              selectedCoupon
+                ? {
+                    code: selectedCoupon.code,
+                    discountType: selectedCoupon.discountType,
+                    discountValue: selectedCoupon.discountValue,
+                    minOrderValue: selectedCoupon.minOrderValue,
+                    maxDiscountAmount: selectedCoupon.maxDiscountAmount,
+                  }
+                : null
+            }
+            productThumbnail={featuredProduct}
+          />
+        </div>
+      </div>
+
+      <div className="pt-4 border-t border-slate-100 flex justify-end">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-colors disabled:opacity-50"
+        >
+          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          <span>Save Promo Popup Settings</span>
+        </button>
+      </div>
+    </form>
+  );
+}
+
 

@@ -3,7 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAdminUser } from "@/features/auth";
 import { hasAdminPermission } from "@/features/admin/permissions";
-import { getSiteSettings } from "@/features/settings";
+import { getSiteSettings, getFeaturedProductThumbnail } from "@/features/settings";
+import { getActiveCoupons } from "@/features/admin/queries/get-active-coupons";
 import { SiteSettingsView } from "@/features/admin/components/settings/site-settings-view";
 
 export const metadata: Metadata = {
@@ -21,7 +22,11 @@ export default async function AdminSiteSettingsPage() {
     redirect("/admin");
   }
 
-  const siteSettings = await getSiteSettings();
+  const [siteSettings, activeCoupons, featuredProduct] = await Promise.all([
+    getSiteSettings(),
+    getActiveCoupons(),
+    getFeaturedProductThumbnail(),
+  ]);
 
   return (
     <div className="py-2">
@@ -31,7 +36,11 @@ export default async function AdminSiteSettingsPage() {
       >
         Manage newsletter subscribers
       </Link>
-      <SiteSettingsView initialSettings={siteSettings} />
+      <SiteSettingsView
+        initialSettings={siteSettings}
+        activeCoupons={activeCoupons}
+        featuredProduct={featuredProduct}
+      />
     </div>
   );
 }

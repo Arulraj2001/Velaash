@@ -19,6 +19,7 @@ import {
   SeoDefaultsSchema,
   ShiprocketSettingsSchema,
   PageBannersSchema,
+  PromoPopupSettingsSchema,
   type StoreProfileFormData,
   type SocialLinksFormData,
   type ShippingSettingsFormData,
@@ -28,7 +29,7 @@ import {
   type AnnouncementSettingsFormData,
   type SeoDefaultsFormData,
   type ShiprocketSettingsFormData,
-  type PageBannersFormData,
+  type PromoPopupSettingsFormData,
 } from "../types/settings";
 
 export interface SettingsActionResult {
@@ -551,4 +552,43 @@ export async function updatePageBannersAction(
     };
   }
 }
+
+/**
+ * Update 11. Promo Popup Settings
+ * Permission: manage_settings (Owner only).
+ */
+export async function updatePromoPopupSettingsAction(
+  input: PromoPopupSettingsFormData
+): Promise<SettingsActionResult> {
+  try {
+    await requireAdmin("manage_settings");
+
+    const parsed = PromoPopupSettingsSchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues.map((i) => i.message).join(", "),
+      };
+    }
+
+    const result = await upsertSiteSetting(
+      "promo_popup",
+      parsed.data as Record<string, unknown>,
+      "Site-wide promotional offer popup configuration tied to an active coupon"
+    );
+
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    revalidateSettingsPaths();
+    return { success: true, message: "Promo popup settings updated successfully." };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to update promo popup settings.",
+    };
+  }
+}
+
 

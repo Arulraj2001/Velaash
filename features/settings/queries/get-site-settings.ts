@@ -12,7 +12,16 @@ import type {
   SeoDefaultsSetting,
   ShiprocketSetting,
   PageBannersSetting,
+  PromoPopupSetting,
 } from "../types";
+
+export const DEFAULT_PROMO_POPUP_SETTING: PromoPopupSetting = {
+  is_enabled: false,
+  featured_coupon_id: null,
+  popup_title: "Special Offer",
+  popup_description: "Use this code at checkout to enjoy an exclusive discount on your order.",
+  delay_seconds: 9,
+};
 
 export const DEFAULT_SHIPPING_POLICY: ShippingPolicySetting = {
   free_shipping_threshold: 999,
@@ -89,6 +98,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   seoDefaults: DEFAULT_SEO_DEFAULTS,
   shiprocketSettings: DEFAULT_SHIPROCKET_SETTING,
   pageBanners: DEFAULT_PAGE_BANNERS_SETTING,
+  promoPopup: DEFAULT_PROMO_POPUP_SETTING,
 };
 
 /**
@@ -116,6 +126,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
         "seo_defaults",
         "shiprocket_settings",
         "page_banners",
+        "promo_popup",
       ]);
 
     if (error || !data || data.length === 0) {
@@ -259,6 +270,22 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       };
     }
 
+    const promoPopupRow = data.find((row) => row.key === "promo_popup");
+    const rawPromoPopup = (promoPopupRow?.value as Partial<PromoPopupSetting>) || {};
+    const promoPopup: PromoPopupSetting = {
+      is_enabled: Boolean(rawPromoPopup.is_enabled),
+      featured_coupon_id: rawPromoPopup.featured_coupon_id
+        ? String(rawPromoPopup.featured_coupon_id).trim()
+        : null,
+      popup_title: rawPromoPopup.popup_title || DEFAULT_PROMO_POPUP_SETTING.popup_title,
+      popup_description:
+        rawPromoPopup.popup_description || DEFAULT_PROMO_POPUP_SETTING.popup_description,
+      delay_seconds:
+        typeof rawPromoPopup.delay_seconds === "number" && rawPromoPopup.delay_seconds >= 0
+          ? rawPromoPopup.delay_seconds
+          : DEFAULT_PROMO_POPUP_SETTING.delay_seconds,
+    };
+
     return {
       storeProfile,
       socialLinks,
@@ -270,6 +297,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       seoDefaults,
       shiprocketSettings,
       pageBanners,
+      promoPopup,
     };
   } catch (error: unknown) {
     if (

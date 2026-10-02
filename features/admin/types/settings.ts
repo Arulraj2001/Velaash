@@ -158,3 +158,15 @@ export const PageBannersSchema = z.object({
 
 export type PageBannersFormData = z.infer<typeof PageBannersSchema>;
 
+// 11. Promo Offer Popup
+export const PromoPopupSettingsSchema = z.object({
+  is_enabled: z.boolean(),
+  featured_coupon_id: z.string().trim().nullable().optional(),
+  popup_title: z.string().trim().min(1, "Popup title is required"),
+  popup_description: z.string().trim().min(1, "Popup description is required"),
+  delay_seconds: z.coerce.number().min(0).max(60).default(9),
+});
+
+export type PromoPopupSettingsFormData = z.infer<typeof PromoPopupSettingsSchema>;
+
+

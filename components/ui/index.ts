@@ -7,3 +7,7 @@ export * from "./section";
 export * from "./page-header-banner";
 export * from "./brand-preloader";
 export * from "./brand-wordmark";
+export * from "./promo-offer-popup";
+export * from "./promo-popup-card";
+
+
