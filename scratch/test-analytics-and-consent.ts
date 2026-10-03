@@ -24,6 +24,7 @@ import {
   hasAnalyticsConsent,
   openCookiePreferences,
   getConfiguredAnalyticsTools,
+  getAnalyticsScriptProviders,
 } from "../features/analytics/utils/consent";
 import {
   trackPageView,
@@ -212,89 +213,72 @@ async function runTestSuite() {
   // ==========================================================================
   console.log("\n--- SECTION 2: Consent-Gated Script Generation Logic ---");
 
-  /**
-   * Helper that mirrors AnalyticsScripts gating rules:
-   * Returns which tools would generate <Script> tags given a consent level
-   * and environment variable state.
-   */
-  function simulateAnalyticsScriptGeneration(
-    consent: "all" | "essential" | null,
-    envVars: { ga4?: string; pixel?: string; clarity?: string }
-  ) {
-    if (consent !== "all") {
-      return { rendered: false, toolsLoaded: [] };
-    }
+  const configuredProviderIds = {
+    ga4: "configured-ga-key",
+    meta_pixel: "configured-pixel-key",
+    clarity: "configured-clarity-key",
+  };
 
-    const toolsLoaded: string[] = [];
-    if (envVars.ga4 && envVars.ga4.trim().length > 0) toolsLoaded.push("ga4");
-    if (envVars.pixel && envVars.pixel.trim().length > 0) toolsLoaded.push("meta_pixel");
-    if (envVars.clarity && envVars.clarity.trim().length > 0) toolsLoaded.push("clarity");
-
-    return {
-      rendered: toolsLoaded.length > 0,
-      toolsLoaded,
-    };
-  }
-
-  // 1. Rejected consent with ALL env vars present
-  const rejectedResult = simulateAnalyticsScriptGeneration("essential", {
-    ga4: "G-TEST12345",
-    pixel: "1234567890",
-    clarity: "clarity-project-id",
-  });
+  // 1. Rejected consent with every provider configured
+  const rejectedResult = getAnalyticsScriptProviders(
+    "essential",
+    true,
+    "/products/example",
+    configuredProviderIds
+  );
   assert(
-    rejectedResult.rendered === false && rejectedResult.toolsLoaded.length === 0,
+    rejectedResult.length === 0,
     "When consent is REJECTED ('essential'), NO analytics scripts load (zero tags rendered)",
     "Result: 0 scripts loaded"
   );
 
   // 2. Unprompted visitor (null consent) with ALL env vars present
-  const unpromptedResult = simulateAnalyticsScriptGeneration(null, {
-    ga4: "G-TEST12345",
-    pixel: "1234567890",
-    clarity: "clarity-project-id",
-  });
+  const unpromptedResult = getAnalyticsScriptProviders(
+    null,
+    true,
+    "/products/example",
+    configuredProviderIds
+  );
   assert(
-    unpromptedResult.rendered === false && unpromptedResult.toolsLoaded.length === 0,
+    unpromptedResult.length === 0,
     "When consent has NOT been granted (null), NO analytics scripts load unconditionally",
     "Result: 0 scripts loaded"
   );
 
   // 3. Accepted consent with ALL env vars present
-  const acceptedAllConfigured = simulateAnalyticsScriptGeneration("all", {
-    ga4: "G-TEST12345",
-    pixel: "1234567890",
-    clarity: "clarity-project-id",
-  });
+  const acceptedAllConfigured = getAnalyticsScriptProviders(
+    "all",
+    true,
+    "/products/example",
+    configuredProviderIds
+  );
   assert(
-    acceptedAllConfigured.rendered === true && acceptedAllConfigured.toolsLoaded.length === 3,
+    acceptedAllConfigured.length === 3,
     "When consent is ACCEPTED ('all'), all configured analytics tools load",
-    `Loaded: ${acceptedAllConfigured.toolsLoaded.join(", ")}`
+    `Loaded: ${acceptedAllConfigured.join(", ")}`
   );
 
-  // 4. Accepted consent with PARTIAL env vars (GA4 configured, Meta unset, Clarity empty)
-  const partialConfigResult = simulateAnalyticsScriptGeneration("all", {
-    ga4: "G-TEST12345",
-    pixel: "", // empty
-    clarity: undefined, // unset
-  });
+  // 4. Every admin route is excluded regardless of consent and configured IDs
+  const adminRoutes = ["/admin", "/admin/settings", "/admin/orders/100"];
+  const adminProviders = adminRoutes.flatMap((pathname) =>
+    (["all", "essential", null] as const).flatMap((consent) =>
+      getAnalyticsScriptProviders(consent, true, pathname, configuredProviderIds)
+    )
+  );
   assert(
-    partialConfigResult.toolsLoaded.includes("ga4") &&
-      !partialConfigResult.toolsLoaded.includes("meta_pixel") &&
-      !partialConfigResult.toolsLoaded.includes("clarity"),
-    "A tool with NO configured env var does NOT attempt to load, even when consent is 'all'",
-    `Only loaded configured tools: ${partialConfigResult.toolsLoaded.join(", ")}`
+    adminProviders.length === 0,
+    "GA4, Meta Pixel, and Clarity never render on admin routes for any consent state"
   );
 
-  // 5. Accepted consent with ZERO configured env vars
-  const zeroConfigResult = simulateAnalyticsScriptGeneration("all", {
+  // 5. A missing Clarity env var never creates a provider, even with consent
+  const noClarityResult = getAnalyticsScriptProviders("all", true, "/", {
     ga4: "",
-    pixel: "",
-    clarity: "",
+    meta_pixel: "",
+    clarity: undefined,
   });
   assert(
-    zeroConfigResult.rendered === false && zeroConfigResult.toolsLoaded.length === 0,
-    "When NO env vars are configured, AnalyticsScripts gracefully skips rendering completely"
+    noClarityResult.length === 0,
+    "Clarity does not render with no env ID, even when consent is all"
   );
 
   // ==========================================================================

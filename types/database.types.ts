@@ -234,6 +234,9 @@ export type Database = {
           seo_title: string | null;
           seo_description: string | null;
           seo_keywords: string[] | null;
+          has_variants: boolean;
+          stock_quantity: number;
+          specifications: Json;
           created_at: string;
           updated_at: string;
         };
@@ -263,6 +266,9 @@ export type Database = {
           seo_title?: string | null;
           seo_description?: string | null;
           seo_keywords?: string[] | null;
+          has_variants?: boolean;
+          stock_quantity?: number;
+          specifications?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -292,6 +298,9 @@ export type Database = {
           seo_title?: string | null;
           seo_description?: string | null;
           seo_keywords?: string[] | null;
+          has_variants?: boolean;
+          stock_quantity?: number;
+          specifications?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -480,6 +489,7 @@ export type Database = {
           admin_notes: string | null;
           shiprocket_order_id: string | null;
           shiprocket_shipment_id: string | null;
+          idempotency_key: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -507,6 +517,7 @@ export type Database = {
           admin_notes?: string | null;
           shiprocket_order_id?: string | null;
           shiprocket_shipment_id?: string | null;
+          idempotency_key?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -534,6 +545,7 @@ export type Database = {
           admin_notes?: string | null;
           shiprocket_order_id?: string | null;
           shiprocket_shipment_id?: string | null;
+          idempotency_key?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -818,6 +830,31 @@ export type Database = {
         Relationships: [];
       };
 
+      newsletter_subscribers: {
+        Row: {
+          id: string;
+          email: string;
+          subscribed_at: string;
+          is_active: boolean;
+          unsubscribe_token: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          subscribed_at?: string;
+          is_active?: boolean;
+          unsubscribe_token?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          subscribed_at?: string;
+          is_active?: boolean;
+          unsubscribe_token?: string;
+        };
+        Relationships: [];
+      };
+
       homepage_sections: {
         Row: {
           id: string;
@@ -865,6 +902,44 @@ export type Database = {
       generate_order_number: {
         Args: Record<PropertyKey, never>;
         Returns: string;
+      };
+      create_checkout_order_atomic: {
+        Args: {
+          p_idempotency_key: string;
+          p_customer_id: string | null;
+          p_payment_method: PaymentMethod;
+          p_subtotal: number;
+          p_shipping_charge: number;
+          p_discount_amount: number;
+          p_total_amount: number;
+          p_shipping_address: Json;
+          p_coupon_code: string | null;
+          p_notes: string;
+          p_items: Json;
+        };
+        Returns: {
+          order_id: string;
+          order_number: string;
+          is_duplicate: boolean;
+        }[];
+      };
+      cancel_order_atomic: {
+        Args: {
+          p_order_number: string;
+          p_user_id: string;
+          p_user_email: string | null;
+          p_reason: string | null;
+          p_is_admin: boolean;
+        };
+        Returns: {
+          cancelled: boolean;
+          error_message: string | null;
+          order_id: string | null;
+        }[];
+      };
+      cancel_expired_pending_online_orders: {
+        Args: { p_older_than_minutes?: number };
+        Returns: string[];
       };
     };
     Enums: {

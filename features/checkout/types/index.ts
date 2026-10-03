@@ -63,7 +63,7 @@ export interface SavedCustomerAddress {
 
 export const CreateOrderLineItemSchema = z.object({
   productId: z.string().min(1, "Product ID is required"),
-  variantId: z.string().min(1, "Variant ID is required"),
+  variantId: z.string().optional().nullable().or(z.literal("")),
   quantity: z
     .number()
     .int("Quantity must be an integer")
@@ -115,6 +115,7 @@ export type CreateOrderResponse =
       totalAmount: number;
       paymentMethod: "razorpay" | "cod";
       isDuplicate?: boolean;
+      alreadyCompleted?: boolean;
       razorpayOrderId?: string;
       razorpayKeyId?: string;
       amountPaise?: number;
@@ -132,7 +133,8 @@ export type CreateOrderResponse =
         | "COD_RATE_LIMIT_EXCEEDED"
         | "VALIDATION_FAILED"
         | "INVALID_INPUT"
-        | "GATEWAY_ERROR";
+        | "GATEWAY_ERROR"
+        | "AUTH_REQUIRED";
     };
 
 export const VerifyRazorpayPaymentSchema = z.object({
@@ -154,6 +156,11 @@ export type VerifyRazorpayPaymentResponse =
   | {
       success: false;
       error: string;
-      code?: "SIGNATURE_VERIFICATION_FAILED" | "ORDER_NOT_FOUND" | "INTERNAL_ERROR";
+      code?:
+        | "SIGNATURE_VERIFICATION_FAILED"
+        | "ORDER_NOT_FOUND"
+        | "INTERNAL_ERROR"
+        | "PAYMENT_NOT_CAPTURED"
+        | "PAYMENT_PENDING_WEBHOOK";
     };
 

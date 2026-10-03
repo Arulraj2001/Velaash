@@ -31,8 +31,8 @@ interface BrandPreloaderProps {
 export function BrandPreloader({
   logoUrl,
   forcePreview = false,
-  displayDurationMs = 2800,
-  fadeDurationMs = 700,
+  displayDurationMs = 2000,
+  fadeDurationMs = 600,
 }: BrandPreloaderProps) {
   const [isFadingOut, setIsFadingOut] = React.useState(false);
   const [isDismissed, setIsDismissed] = React.useState(false);
@@ -42,6 +42,7 @@ export function BrandPreloader({
     // If the inline script already hid it before paint (e.g. returning session navigation),
     // cleanly unmount immediately with zero delay.
     if (el && el.style.display === "none") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- External DOM sync: aligns React unmount state with the pre-hydration inline script's display decision.
       setIsDismissed(true);
       return;
     }
@@ -57,13 +58,13 @@ export function BrandPreloader({
       // Ignore storage errors in private browsing modes
     }
 
-    // Phase 1 & 2: Active showcase (2.8 seconds)
+    // Phase 1: Active showcase
     const fadeTimer = setTimeout(() => {
       setIsFadingOut(true);
       document.body.style.overflow = originalOverflow;
     }, displayDurationMs);
 
-    // Phase 3: Complete unmount after silky fade-out (2.8s + 0.7s = 3.5s)
+    // Phase 2: Complete unmount after silky fade-out
     const removeTimer = setTimeout(() => {
       setIsDismissed(true);
     }, displayDurationMs + fadeDurationMs);
@@ -102,13 +103,13 @@ export function BrandPreloader({
     <aside
       id="brand-preloader-root"
       suppressHydrationWarning
-      aria-label="Velaash luxury intro"
+      aria-label="Welcome to Velaash"
       role="status"
       aria-live="polite"
       onClick={handleDismiss}
       className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-700 ease-out ${
         isFadingOut
-          ? "opacity-0 scale-[1.02] pointer-events-none"
+          ? "opacity-0 scale-[1.015] pointer-events-none"
           : "opacity-100 scale-100"
       }`}
       style={{
@@ -116,6 +117,61 @@ export function BrandPreloader({
           "radial-gradient(ellipse at 50% 45%, #FFFFFF 0%, #FAF6EE 55%, #F4ECE0 100%)",
       }}
     >
+      <style>{`
+        @keyframes preloaderBloom {
+          0% {
+            opacity: 0;
+            transform: scale(0.93);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        @keyframes preloaderAura {
+          0% {
+            opacity: 0.25;
+            transform: scale(0.96);
+          }
+          50% {
+            opacity: 0.5;
+            transform: scale(1.04);
+          }
+          100% {
+            opacity: 0.25;
+            transform: scale(0.96);
+          }
+        }
+        @keyframes preloaderFadeSlide {
+          0% {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes preloaderExpand {
+          0% {
+            opacity: 0;
+            transform: scaleX(0);
+          }
+          100% {
+            opacity: 1;
+            transform: scaleX(1);
+          }
+        }
+        @keyframes preloaderShimmerWave {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
+
       {/* Synchronous inline script to immediately hide preloader for returning session visitors before first paint */}
       <script
         dangerouslySetInnerHTML={{
@@ -140,16 +196,19 @@ export function BrandPreloader({
       {/* Center Cinematic Showcase */}
       <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-sm mx-auto">
         {/* Glowing Royal Emblem Frame */}
-        <div className="relative mb-5 flex items-center justify-center animate-in fade-in zoom-in-95 duration-500">
+        <div
+          className="relative mb-5 flex items-center justify-center"
+          style={{ animation: "preloaderBloom 0.85s cubic-bezier(0.16, 1, 0.3, 1) both" }}
+        >
           {/* Subtle golden pulse aura behind emblem */}
           <div
-            className="absolute -inset-4 rounded-full bg-brand-gold/25 blur-xl animate-pulse"
-            style={{ animationDuration: "2s" }}
+            className="absolute -inset-5 rounded-full bg-brand-gold/30 blur-2xl pointer-events-none"
+            style={{ animation: "preloaderAura 3.2s ease-in-out infinite" }}
           />
 
           {/* Perfect Circular Medallion Frame */}
           <div
-            className="relative h-44 w-44 sm:h-52 sm:w-52 rounded-full overflow-hidden border-2 border-brand-gold/85 ring-4 ring-brand-gold/30 shadow-[0_0_35px_rgba(242,169,0,0.35)] bg-[#FAF1DF] transition-transform duration-700 ease-out hover:scale-105"
+            className="relative h-44 w-44 sm:h-52 sm:w-52 rounded-full overflow-hidden border-2 border-brand-gold/85 ring-4 ring-brand-gold/30 shadow-[0_0_35px_rgba(242,169,0,0.32)] bg-[#FAF1DF] transition-transform duration-700 ease-out hover:scale-105"
             style={{
               borderRadius: "9999px",
               clipPath: "circle(50% at 50% 50%)",
@@ -167,32 +226,54 @@ export function BrandPreloader({
           </div>
         </div>
 
+        {/* Welcome to Greeting */}
+        <p
+          className="font-heading italic text-sm sm:text-base tracking-[0.25em] text-[#A67C1E] font-normal uppercase mb-1"
+          style={{
+            animation: "preloaderFadeSlide 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both",
+          }}
+        >
+          Welcome to
+        </p>
+
         {/* Brand Name Typography */}
         <h1
-          className="font-heading text-3xl sm:text-4xl tracking-[0.35em] uppercase font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#6B4702] via-[#B8860B] to-[#6B4702] animate-in fade-in slide-in-from-bottom-2 duration-700 fill-mode-forwards"
-          style={{ textShadow: "0 1px 2px rgba(242,169,0,0.12)" }}
+          className="font-heading text-3xl sm:text-4xl tracking-[0.35em] uppercase font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#5C3D00] via-[#C59B27] to-[#5C3D00]"
+          style={{
+            textShadow: "0 1px 3px rgba(242,169,0,0.15)",
+            animation: "preloaderFadeSlide 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both",
+          }}
         >
           VELAASH
         </h1>
 
         {/* Shimmer Hairline Divider */}
-        <div className="relative my-3 h-[1.5px] w-28 sm:w-36 overflow-hidden rounded-full bg-brand-border/60">
+        <div
+          className="relative my-3 h-[1.5px] w-28 sm:w-36 overflow-hidden rounded-full bg-brand-gold/30"
+          style={{ animation: "preloaderExpand 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.44s both" }}
+        >
           <div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-gold to-transparent"
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-[#C59B27] to-transparent"
             style={{
-              animation: "preloaderShimmer 1.4s ease-in-out infinite",
+              animation: "preloaderShimmerWave 1.6s ease-in-out infinite",
             }}
           />
         </div>
 
         {/* Tagline */}
-        <p className="text-[10px] sm:text-[11px] tracking-[0.25em] uppercase font-sans text-brand-muted/80 font-medium animate-in fade-in duration-700 delay-100">
+        <p
+          className="text-[10px] sm:text-[11px] tracking-[0.26em] uppercase font-sans text-brand-muted/75 font-medium"
+          style={{ animation: "preloaderFadeSlide 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.54s both" }}
+        >
           Contemporary Handcrafted Couture
         </p>
 
         {/* Subtle Tap to Skip Indicator */}
-        <span className="mt-8 text-[9px] tracking-widest uppercase text-brand-subtle/50 transition-opacity duration-300">
-          Tap to skip
+        <span
+          className="mt-7 text-[9px] tracking-widest uppercase text-brand-subtle/50 transition-opacity duration-300 hover:text-brand-subtle"
+          style={{ animation: "preloaderFadeSlide 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both" }}
+        >
+          Tap anywhere to enter
         </span>
       </div>
     </aside>

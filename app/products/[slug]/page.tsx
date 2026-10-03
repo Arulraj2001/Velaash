@@ -22,15 +22,15 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   if (!product) {
     return {
       title: "Product Not Found | Velaash",
-      description: "The requested clothing item could not be found.",
+      description: "The requested item could not be found.",
     };
   }
 
   const title = product.seo_title || `${product.name} | Velaash`;
-  const description =
-    product.seo_description ||
-    product.description ||
-    `${product.name} - Contemporary everyday luxury clothing by Velaash.`;
+  const rawDesc = product.seo_description || product.description;
+  const description = rawDesc
+    ? rawDesc.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+    : `${product.name} - Everyday essentials by Velaash.`;
 
   const primaryImage = product.images[0]?.image_url || `${BASE_URL}/og-image.jpg`;
 
@@ -93,7 +93,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description || product.name,
+    description: (product.description
+      ? product.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+      : null) || product.name,
     image: product.images.map((img) => img.image_url),
     sku: product.variants[0]?.sku || product.slug,
     brand: {
@@ -113,6 +115,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       seller: {
         "@type": "Organization",
         name: BRAND.legalName,
+        url: BASE_URL,
+        description: BRAND.description,
       },
     },
     ...(product.rating && product.rating.count > 0
@@ -143,6 +147,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             product={product}
             freeShippingThreshold={siteSettings.shippingPolicy.free_shipping_threshold}
             returnWindowDays={siteSettings.returnsPolicy.return_window_days}
+            whatsappNumber={siteSettings.storeProfile.whatsapp_number}
+            festivePolicy={siteSettings.shippingPolicy}
           />
 
           {/* Related Products ("You May Also Like") Section */}

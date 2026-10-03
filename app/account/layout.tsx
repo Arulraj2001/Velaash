@@ -7,7 +7,7 @@ import { User } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "My Account | Velaash",
-  description: "Manage your Velaash orders, saved addresses, and clothing wishlist.",
+  description: "Manage your Velaash orders, saved addresses, and wishlist.",
   robots: {
     index: false,
     follow: false,

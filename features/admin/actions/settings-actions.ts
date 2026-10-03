@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/features/auth/queries/get-admin-user";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -19,6 +19,8 @@ import {
   SeoDefaultsSchema,
   ShiprocketSettingsSchema,
   PageBannersSchema,
+  PromoPopupSettingsSchema,
+  CheckoutPolicySchema,
   type StoreProfileFormData,
   type SocialLinksFormData,
   type ShippingSettingsFormData,
@@ -28,7 +30,8 @@ import {
   type AnnouncementSettingsFormData,
   type SeoDefaultsFormData,
   type ShiprocketSettingsFormData,
-  type PageBannersFormData,
+  type PromoPopupSettingsFormData,
+  type CheckoutPolicyFormData,
 } from "../types/settings";
 
 export interface SettingsActionResult {
@@ -41,6 +44,7 @@ export interface SettingsActionResult {
  * Revalidates public customer-facing paths and admin settings.
  */
 function revalidateSettingsPaths() {
+  revalidateTag("site-settings", "max"); // bust unstable_cache for getSiteSettings()
   revalidatePath("/admin/settings");
   revalidatePath("/", "layout");
   revalidatePath("/");
@@ -186,8 +190,19 @@ export async function updateShippingSettingsAction(
         free_shipping_threshold: parsed.data.free_shipping_threshold,
         standard_shipping_fee: parsed.data.standard_shipping_fee,
         cod_available: true,
+        festive_shipping_enabled: parsed.data.festive_shipping_enabled,
+        festive_campaign_name: parsed.data.festive_campaign_name,
+        festive_badge_text: parsed.data.festive_badge_text,
+        festive_valid_from: parsed.data.festive_valid_from || null,
+        festive_valid_until: parsed.data.festive_valid_until || null,
+        festive_product_ids: parsed.data.festive_product_ids || [],
+        festive_category_ids: parsed.data.festive_category_ids || [],
+        festive_coupon_code: parsed.data.festive_coupon_code
+          ? parsed.data.festive_coupon_code.trim().toUpperCase()
+          : null,
+        festive_apply_to_all: parsed.data.festive_apply_to_all,
       },
-      "Shipping rates and free shipping threshold"
+      "Shipping rates, free shipping threshold, and festive campaigns"
     );
 
     // Also sync shipping_rules for legacy compatibility
@@ -551,4 +566,77 @@ export async function updatePageBannersAction(
     };
   }
 }
+
+/**
+ * Update 11. Promo Popup Settings
+ * Permission: manage_settings (Owner only).
+ */
+export async function updatePromoPopupSettingsAction(
+  input: PromoPopupSettingsFormData
+): Promise<SettingsActionResult> {
+  try {
+    await requireAdmin("manage_settings");
+
+    const parsed = PromoPopupSettingsSchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues.map((i) => i.message).join(", "),
+      };
+    }
+
+    const result = await upsertSiteSetting(
+      "promo_popup",
+      parsed.data as Record<string, unknown>,
+      "Site-wide promotional offer popup configuration tied to an active coupon"
+    );
+
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    revalidateSettingsPaths();
+    return { success: true, message: "Promo popup settings updated successfully." };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to update promo popup settings.",
+    };
+  }
+}
+
+export async function updateCheckoutPolicySettingsAction(
+  input: CheckoutPolicyFormData
+): Promise<SettingsActionResult> {
+  try {
+    await requireAdmin("manage_settings");
+
+    const parsed = CheckoutPolicySchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues.map((i) => i.message).join(", "),
+      };
+    }
+
+    const result = await upsertSiteSetting(
+      "checkout_policy",
+      parsed.data as Record<string, unknown>,
+      "Customer account requirements and guest checkout policy for order placement"
+    );
+
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    revalidateSettingsPaths();
+    return { success: true, message: "Checkout policy updated successfully." };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to update checkout policy.",
+    };
+  }
+}
+
 

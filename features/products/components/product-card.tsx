@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heart, Star, ShoppingBag, ArrowRight } from "lucide-react";
 import type { ProductListItem } from "../types";
+import { getProductFestiveShippingBadge } from "../types";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { useWishlistStore } from "@/features/wishlist/store/wishlist-store";
 import { useCartStore } from "@/features/cart/store/cart-store";
@@ -49,6 +50,7 @@ export function ProductCard({
   const activeImageUrl = activeColorObj?.image_url || primaryImage?.image_url;
 
   // Badges & stock calculations
+  const festiveBadge = getProductFestiveShippingBadge(product);
   const isNew = Boolean(product.is_new);
   const isSale = product.compare_at_price != null && product.compare_at_price > product.base_price;
   const discountPercent = isSale
@@ -62,7 +64,9 @@ export function ProductCard({
 
   // Variants info for Quick Add
   const activeVariants = product.variants.filter((v) => v.is_active);
+  const isSimpleProduct = product.has_variants === false || product.variants.length === 0;
   const hasSingleVariant = activeVariants.length === 1;
+  const canQuickAdd = isSimpleProduct || hasSingleVariant;
 
   // Handle Wishlist Click (Optimistic update with automatic server rollback on failure)
   const handleWishlistToggle = async (e: React.MouseEvent) => {
@@ -93,30 +97,31 @@ export function ProductCard({
     }
   };
 
-  // Handle Quick Add to Cart (Single Variant Products)
+  // Handle Quick Add to Cart (Simple products or Single Variant Products)
   const handleQuickAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (isInactive || isOutOfStock || !hasSingleVariant) return;
+    if (isInactive || isOutOfStock || !canQuickAdd) return;
 
-    const singleVariant = activeVariants[0];
+    const singleVariant = !isSimpleProduct ? activeVariants[0] : null;
     const imgUrl = activeImageUrl || primaryImage?.image_url || "/placeholder.jpg";
-    const variantPrice = singleVariant.price_override ?? product.base_price;
+    const variantPrice = singleVariant?.price_override ?? product.base_price;
+    const maxStock = singleVariant ? singleVariant.stock_quantity : (product.stock_quantity ?? product.total_stock ?? 999);
 
     useCartStore.getState().addItem(
       {
         productId: product.id,
-        variantId: singleVariant.id,
+        variantId: singleVariant?.id || null,
         title: product.name,
         slug: product.slug,
-        size: singleVariant.size,
-        color: singleVariant.color,
-        colorHex: singleVariant.color_hex || undefined,
+        size: singleVariant?.size || null,
+        color: singleVariant?.color || null,
+        colorHex: singleVariant?.color_hex || undefined,
         price: variantPrice,
         compareAtPrice: product.compare_at_price,
         image: imgUrl,
-        maxStock: singleVariant.stock_quantity,
+        maxStock,
       },
       1
     );
@@ -186,6 +191,12 @@ export function ProductCard({
               </span>
             ) : (
               <>
+                {festiveBadge && (
+                  <span className="rounded-full bg-emerald-900/90 text-amber-200 border border-emerald-600/50 px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold tracking-wide shadow-sm backdrop-blur-xs flex items-center gap-1">
+                    <span>🌾</span>
+                    <span>{festiveBadge}</span>
+                  </span>
+                )}
                 {isNew && (
                   <span className="bg-brand-dark/90 text-brand-gold rounded-full px-2 py-0.5 text-[10px] font-medium tracking-widest uppercase shadow-sm backdrop-blur-xs">
                     New
@@ -328,7 +339,7 @@ export function ProductCard({
             >
               Out of Stock
             </button>
-          ) : hasSingleVariant ? (
+          ) : canQuickAdd ? (
             <button
               type="button"
               onClick={handleQuickAddToCart}

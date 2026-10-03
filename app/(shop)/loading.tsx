@@ -1,24 +1,25 @@
-import * as React from "react";
-import { ProductGridSkeleton } from "@/features/products";
-
 export default function ShopLoading() {
   return (
-    <div className="space-y-8 font-sans">
-      {/* Header skeleton */}
-      <div className="border-brand-border/60 animate-pulse space-y-2 border-b pb-6">
-        <div className="h-4 w-32 rounded-sm bg-neutral-200" />
-        <div className="h-8 w-64 rounded-md bg-neutral-200" />
-        <div className="h-4 w-96 rounded-sm bg-neutral-200/70" />
-      </div>
-
-      {/* Grid skeleton */}
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-4 lg:grid-cols-5">
-        <div className="hidden space-y-4 md:block">
-          <div className="h-40 rounded-xl bg-neutral-200/50" />
-          <div className="h-40 rounded-xl bg-neutral-200/50" />
-        </div>
-        <div className="md:col-span-3 lg:col-span-4">
-          <ProductGridSkeleton count={8} />
+    <div className="min-h-screen bg-brand-cream animate-pulse">
+      <div className="w-full h-48 sm:h-64 bg-brand-light/60" />
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex gap-6">
+          <aside className="hidden lg:block w-56 shrink-0 space-y-4">
+            {[0,1,2,3].map((i) => (
+              <div key={i} className="h-8 w-full rounded bg-brand-light/60" />
+            ))}
+          </aside>
+          <div className="flex-1">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {[0,1,2,3,4,5,6,7,8,9,10,11].map((i) => (
+                <div key={i} className="space-y-3">
+                  <div className="aspect-[3/4] rounded-xl bg-brand-light/60" />
+                  <div className="h-4 w-3/4 bg-brand-light/80 rounded" />
+                  <div className="h-3 w-1/2 bg-brand-light/60 rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

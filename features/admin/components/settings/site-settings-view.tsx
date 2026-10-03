@@ -22,8 +22,13 @@ import {
   Info,
   Image as ImageIcon,
   Trash2,
+  Sparkles,
+  UserCheck,
 } from "lucide-react";
-import type { SiteSettingsData } from "@/features/settings";
+import { AdminModal } from "../admin-modal";
+import { PromoPopupCard } from "@/components/ui/promo-popup-card";
+import type { SiteSettingsData, CheckoutPolicySetting } from "@/features/settings";
+import type { ActiveCouponOption } from "../../queries/get-active-coupons";
 import {
   updateStoreProfileSettingsAction,
   updateSocialLinksSettingsAction,
@@ -35,12 +40,16 @@ import {
   updateSeoSettingsAction,
   updateShiprocketSettingsAction,
   updatePageBannersAction,
+  updatePromoPopupSettingsAction,
+  updateCheckoutPolicySettingsAction,
   uploadBrandAssetAction,
 } from "../../actions/settings-actions";
 
 type SettingsTab =
   | "store_profile"
+  | "checkout"
   | "page_banners"
+  | "promo_popup"
   | "social_links"
   | "shipping"
   | "logistics"
@@ -52,6 +61,8 @@ type SettingsTab =
 
 const TABS: { id: SettingsTab; label: string; icon: React.ElementType; description: string }[] = [
   { id: "store_profile", label: "Store Profile", icon: Store, description: "Brand name, legal entity, contact info & logos" },
+  { id: "checkout", label: "Checkout & Accounts", icon: UserCheck, description: "Customer account requirements & guest checkout policy" },
+  { id: "promo_popup", label: "Promo Popup", icon: Sparkles, description: "Site-wide promotional offer popup tied to an active coupon" },
   { id: "page_banners", label: "Page Banners", icon: ImageIcon, description: "Configure & upload header banner images for customer pages" },
   { id: "social_links", label: "Social Links", icon: Share2, description: "Instagram, Facebook, WhatsApp & Pinterest URLs" },
   { id: "shipping", label: "Shipping & Rates", icon: Truck, description: "Free shipping threshold & standard shipping fees" },
@@ -63,7 +74,15 @@ const TABS: { id: SettingsTab; label: string; icon: React.ElementType; descripti
   { id: "seo", label: "SEO Defaults", icon: Globe, description: "Site-wide fallback meta title & meta description" },
 ];
 
-export function SiteSettingsView({ initialSettings }: { initialSettings: SiteSettingsData }) {
+export function SiteSettingsView({
+  initialSettings,
+  activeCoupons = [],
+  featuredProduct = null,
+}: {
+  initialSettings: SiteSettingsData;
+  activeCoupons?: ActiveCouponOption[];
+  featuredProduct?: { imageUrl: string; name?: string } | null;
+}) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<SettingsTab>("store_profile");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -146,10 +165,26 @@ export function SiteSettingsView({ initialSettings }: { initialSettings: SiteSet
             />
           )}
 
+          {activeTab === "checkout" && (
+            <CheckoutPolicyForm
+              initial={initialSettings.checkoutPolicy}
+              onSaved={() => showToast("Checkout policy saved successfully.")}
+            />
+          )}
+
           {activeTab === "page_banners" && (
             <PageBannersForm
               initial={initialSettings.pageBanners}
               onSaved={() => showToast("Page header banners saved successfully.")}
+            />
+          )}
+
+          {activeTab === "promo_popup" && (
+            <PromoPopupSettingsForm
+              initial={initialSettings.promoPopup}
+              activeCoupons={activeCoupons}
+              featuredProduct={featuredProduct}
+              onSaved={() => showToast("Promo popup settings saved successfully.")}
             />
           )}
 
@@ -228,10 +263,9 @@ function StoreProfileForm({
     name: initial.name || "Velaash",
     legal_name: initial.legal_name || "VELAASH TRADER'S",
     tagline: initial.tagline || "Contemporary Elegance, Handcrafted in India",
-    email: initial.email || "bestrchandra@gmail.com",
-    phone: initial.phone || "+91 8508643832",
-    whatsapp_number: initial.whatsapp_number || "+91 8508643832",
-    whatsapp_url: initial.whatsapp_url || "https://wa.me/918508643832",
+    email: initial.email || "",
+    phone: initial.phone || "",
+    whatsapp_number: initial.whatsapp_number || "",
     logo_url: initial.logo_url && initial.logo_url !== "/brand/logo.svg" ? initial.logo_url : "/logo.png",
     favicon_url: initial.favicon_url || "/favicon.ico",
   });
@@ -358,7 +392,7 @@ function StoreProfileForm({
             required
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            placeholder="+91 8508643832"
+            placeholder="Store phone number"
             className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
@@ -369,17 +403,9 @@ function StoreProfileForm({
             required
             value={form.whatsapp_number}
             onChange={(e) => {
-              const val = e.target.value;
-              const digits = val.replace(/\D/g, "");
-              const cleanDigits = digits.length === 10 ? `91${digits}` : digits;
-              const url = cleanDigits ? `https://wa.me/${cleanDigits}` : "";
-              setForm({
-                ...form,
-                whatsapp_number: val,
-                whatsapp_url: url,
-              });
+              setForm({ ...form, whatsapp_number: e.target.value });
             }}
-            placeholder="+91 8508643832"
+            placeholder="WhatsApp number"
             className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
@@ -543,7 +569,6 @@ function SocialLinksForm({
   const [form, setForm] = useState({
     instagram: initial.instagram || "",
     facebook: initial.facebook || "",
-    whatsapp: initial.whatsapp || "",
     pinterest: initial.pinterest || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -608,17 +633,6 @@ function SocialLinksForm({
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">WhatsApp Chat Link</label>
-          <input
-            type="url"
-            value={form.whatsapp}
-            onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
-            placeholder="https://wa.me/918508643832"
-            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
-        </div>
-
-        <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1">Pinterest URL (Optional)</label>
           <input
             type="url"
@@ -657,6 +671,14 @@ function ShippingSettingsForm({
   const [form, setForm] = useState({
     free_shipping_threshold: initial.free_shipping_threshold ?? 999,
     standard_shipping_fee: initial.standard_shipping_fee ?? 100,
+    festive_shipping_enabled: Boolean(initial.festive_shipping_enabled),
+    festive_campaign_name: initial.festive_campaign_name || "Pongal Festival Special",
+    festive_badge_text: initial.festive_badge_text || "🌾 Pongal Special: Free Delivery",
+    festive_valid_from: initial.festive_valid_from ? initial.festive_valid_from.split("T")[0] : "",
+    festive_valid_until: initial.festive_valid_until ? initial.festive_valid_until.split("T")[0] : "",
+    festive_coupon_code: initial.festive_coupon_code || "PONGALFREE",
+    festive_apply_to_all: Boolean(initial.festive_apply_to_all),
+    festive_product_ids_input: (initial.festive_product_ids || []).join(", "),
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -667,7 +689,32 @@ function ShippingSettingsForm({
     setErrorMsg(null);
 
     try {
-      const res = await updateShippingSettingsAction(form);
+      const payload = {
+        free_shipping_threshold: form.free_shipping_threshold,
+        standard_shipping_fee: form.standard_shipping_fee,
+        festive_shipping_enabled: form.festive_shipping_enabled,
+        festive_campaign_name: form.festive_campaign_name,
+        festive_badge_text: form.festive_badge_text,
+        festive_valid_from: form.festive_valid_from
+          ? new Date(form.festive_valid_from + "T00:00:00").toISOString()
+          : null,
+        festive_valid_until: form.festive_valid_until
+          ? new Date(form.festive_valid_until + "T23:59:59").toISOString()
+          : null,
+        festive_coupon_code: form.festive_coupon_code
+          ? form.festive_coupon_code.trim().toUpperCase()
+          : null,
+        festive_apply_to_all: form.festive_apply_to_all,
+        festive_product_ids: form.festive_product_ids_input
+          ? form.festive_product_ids_input
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [],
+        festive_category_ids: initial.festive_category_ids || [],
+      };
+
+      const res = await updateShippingSettingsAction(payload);
       if (res.success) {
         onSaved();
       } else {
@@ -696,51 +743,201 @@ function ShippingSettingsForm({
         </div>
       )}
 
-      <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 text-amber-900 text-xs leading-relaxed">
-        <strong>Single Source of Truth:</strong> Updating these numbers immediately updates the cart progress bar,
-        product accordion (&quot;Free shipping over ₹X&quot;), and checkout calculations.
+      {/* 1. Base Shipping Policy */}
+      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-4">
+        <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">
+          Standard Domestic Rates
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Free Shipping Threshold (₹ INR)
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-sm text-slate-400 font-semibold">₹</span>
+              <input
+                type="number"
+                min={0}
+                required
+                value={form.free_shipping_threshold}
+                onChange={(e) => setForm({ ...form, free_shipping_threshold: Number(e.target.value) })}
+                className="w-full pl-8 pr-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900 bg-white"
+              />
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Orders equal to or above this subtotal qualify for ₹0 shipping.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Standard Domestic Shipping Fee (₹ INR)
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-sm text-slate-400 font-semibold">₹</span>
+              <input
+                type="number"
+                min={0}
+                required
+                value={form.standard_shipping_fee}
+                onChange={(e) => setForm({ ...form, standard_shipping_fee: Number(e.target.value) })}
+                className="w-full pl-8 pr-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900 bg-white"
+              />
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Applied to orders below the free shipping threshold.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Free Shipping Threshold (₹ INR)
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-2.5 text-sm text-slate-400 font-semibold">₹</span>
-            <input
-              type="number"
-              min={0}
-              required
-              value={form.free_shipping_threshold}
-              onChange={(e) => setForm({ ...form, free_shipping_threshold: Number(e.target.value) })}
-              className="w-full pl-8 pr-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900"
-            />
+      {/* 2. Festive Free Shipping Campaign Section */}
+      <div className="rounded-2xl border border-emerald-200 bg-gradient-to-b from-emerald-50/70 to-white p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-emerald-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-base">🌾</span>
+              <h3 className="text-sm font-heading font-semibold text-emerald-950">
+                Festive Free Shipping Campaign (Pongal / Festivals)
+              </h3>
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Offer Engine
+              </span>
+            </div>
+            <p className="text-xs text-emerald-700 mt-0.5">
+              Offer ₹0 free delivery on specific products or via promo code during festival periods.
+            </p>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            Orders equal to or above this subtotal qualify for ₹0 shipping.
-          </p>
+
+          <label className="relative inline-flex items-center cursor-pointer select-none shrink-0">
+            <input
+              type="checkbox"
+              checked={form.festive_shipping_enabled}
+              onChange={(e) => setForm({ ...form, festive_shipping_enabled: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+            <span className="ml-2 text-xs font-semibold text-slate-700">
+              {form.festive_shipping_enabled ? "Campaign Active" : "Disabled"}
+            </span>
+          </label>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Standard Domestic Shipping Fee (₹ INR)
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-2.5 text-sm text-slate-400 font-semibold">₹</span>
-            <input
-              type="number"
-              min={0}
-              required
-              value={form.standard_shipping_fee}
-              onChange={(e) => setForm({ ...form, standard_shipping_fee: Number(e.target.value) })}
-              className="w-full pl-8 pr-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900"
-            />
+        {form.festive_shipping_enabled && (
+          <div className="space-y-4 pt-1 animate-in fade-in duration-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Campaign Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.festive_campaign_name}
+                  onChange={(e) => setForm({ ...form, festive_campaign_name: e.target.value })}
+                  placeholder="e.g. Pongal Festival Special"
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-900 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Customer Badge / Banner Label
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.festive_badge_text}
+                  onChange={(e) => setForm({ ...form, festive_badge_text: e.target.value })}
+                  placeholder="e.g. 🌾 Pongal Special: Free Delivery"
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-900 bg-white"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Displayed on product cards, product page, cart drawer, and checkout.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Offer Start Date (00:00)
+                </label>
+                <input
+                  type="date"
+                  value={form.festive_valid_from}
+                  onChange={(e) => setForm({ ...form, festive_valid_from: e.target.value })}
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-900 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Offer End Date (Expires 23:59)
+                </label>
+                <input
+                  type="date"
+                  value={form.festive_valid_until}
+                  onChange={(e) => setForm({ ...form, festive_valid_until: e.target.value })}
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-900 bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Festive Free-Shipping Coupon Code (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={form.festive_coupon_code}
+                  onChange={(e) => setForm({ ...form, festive_coupon_code: e.target.value.toUpperCase() })}
+                  placeholder="e.g. PONGALFREE"
+                  className="w-full px-3.5 py-2 text-sm font-mono uppercase tracking-wider border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-slate-900 bg-white"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Shoppers entering this code in cart/checkout receive 100% free delivery.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Target Product Scope
+                </label>
+                <label className="flex items-center gap-2 p-2.5 rounded-lg border border-emerald-200 bg-white cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={form.festive_apply_to_all}
+                    onChange={(e) => setForm({ ...form, festive_apply_to_all: e.target.checked })}
+                    className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                  />
+                  <span className="text-xs font-medium text-slate-800">
+                    Apply free shipping to <strong>ALL products storewide</strong> during this festival
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {!form.festive_apply_to_all && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Specific Participating Product Slugs or IDs (Comma-separated)
+                </label>
+                <textarea
+                  rows={2}
+                  value={form.festive_product_ids_input}
+                  onChange={(e) => setForm({ ...form, festive_product_ids_input: e.target.value })}
+                  placeholder="e.g. brass-diya-pooja-set, chanderi-silk-saree, pure-linen-coord-set"
+                  className="w-full px-3.5 py-2 text-xs font-mono border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 bg-white"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Enter product slugs or UUIDs that qualify for automatic festive free shipping.
+                </p>
+              </div>
+            )}
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            Applied to orders below the free shipping threshold.
-          </p>
-        </div>
+        )}
       </div>
 
       <div className="pt-4 border-t border-slate-100 flex justify-end">
@@ -750,7 +947,7 @@ function ShippingSettingsForm({
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-colors disabled:opacity-50"
         >
           {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          <span>Save Shipping Rates</span>
+          <span>Save Shipping Policy &amp; Campaign</span>
         </button>
       </div>
     </form>
@@ -870,6 +1067,7 @@ function PaymentSettingsForm({
     cod_enabled: initial.cod_enabled ?? true,
     cod_max_order_value: initial.cod_max_order_value ?? 20000,
     cod_handling_fee: initial.cod_handling_fee ?? 99,
+    cod_disabled_display_mode: (initial.cod_disabled_display_mode ?? "hidden") as "hidden" | "blurred",
     razorpay_enabled: initial.razorpay_enabled ?? true,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -988,6 +1186,71 @@ function PaymentSettingsForm({
             </div>
           </div>
         )}
+
+        {/* When COD is Disabled Display Behavior */}
+        <div className="pt-3 border-t border-slate-100">
+          <span className="block text-xs font-semibold text-slate-800 mb-0.5">
+            When COD is Disabled or Unavailable:
+          </span>
+          <p className="text-[11px] text-slate-500 mb-3">
+            Choose how the payment section renders on checkout when Cash on Delivery is turned off.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label
+              className={`relative flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                form.cod_disabled_display_mode === "hidden"
+                  ? "border-amber-500 bg-amber-50/40 ring-1 ring-amber-500"
+                  : "border-slate-200 bg-white hover:bg-slate-50/80"
+              }`}
+            >
+              <input
+                type="radio"
+                name="cod_disabled_display_mode"
+                value="hidden"
+                checked={form.cod_disabled_display_mode === "hidden"}
+                onChange={() => setForm({ ...form, cod_disabled_display_mode: "hidden" })}
+                className="mt-0.5 text-amber-600 focus:ring-amber-500 cursor-pointer"
+              />
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                  Hide Completely
+                  <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">
+                    Recommended
+                  </span>
+                </span>
+                <span className="block text-[11px] text-slate-500 mt-0.5 leading-snug">
+                  Removes the COD option entirely from checkout. Customers only see online payment options.
+                </span>
+              </div>
+            </label>
+
+            <label
+              className={`relative flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                form.cod_disabled_display_mode === "blurred"
+                  ? "border-amber-500 bg-amber-50/40 ring-1 ring-amber-500"
+                  : "border-slate-200 bg-white hover:bg-slate-50/80"
+              }`}
+            >
+              <input
+                type="radio"
+                name="cod_disabled_display_mode"
+                value="blurred"
+                checked={form.cod_disabled_display_mode === "blurred"}
+                onChange={() => setForm({ ...form, cod_disabled_display_mode: "blurred" })}
+                className="mt-0.5 text-amber-600 focus:ring-amber-500 cursor-pointer"
+              />
+              <div>
+                <span className="block text-xs font-bold text-slate-900">
+                  Show Grayed Out (&quot;Blurred&quot;)
+                </span>
+                <span className="block text-[11px] text-slate-500 mt-0.5 leading-snug">
+                  Keeps the COD card visible but disabled with an explanatory badge that COD is currently unavailable.
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
       </div>
 
       <div className="pt-4 border-t border-slate-100 flex justify-end">
@@ -1248,6 +1511,7 @@ function SeoDefaultsForm({
   const [form, setForm] = useState({
     meta_title: initial.meta_title || "",
     meta_description: initial.meta_description || "",
+    keywords: initial.keywords || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -1296,7 +1560,7 @@ function SeoDefaultsForm({
           required
           value={form.meta_title}
           onChange={(e) => setForm({ ...form, meta_title: e.target.value })}
-          placeholder="Velaash | Modern Everyday Luxury & Contemporary Clothing"
+          placeholder="Velaash — Everyday essentials for every home"
           className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
         />
         <p className="text-[11px] text-slate-500 mt-1">Recommended length: 50–60 characters.</p>
@@ -1311,10 +1575,26 @@ function SeoDefaultsForm({
           required
           value={form.meta_description}
           onChange={(e) => setForm({ ...form, meta_description: e.target.value })}
-          placeholder="Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe."
+          placeholder="Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash."
           className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
         <p className="text-[11px] text-slate-500 mt-1">Recommended length: 150–160 characters.</p>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-slate-700 mb-1">
+          Site-Wide Meta Keywords (English &amp; Tamil)
+        </label>
+        <input
+          type="text"
+          value={form.keywords}
+          onChange={(e) => setForm({ ...form, keywords: e.target.value })}
+          placeholder="Velaash, Everyday essentials, Clothing, Pooja essentials, Brass, ஆடை, கடை"
+          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+        />
+        <p className="text-[11px] text-slate-500 mt-1">
+          Comma-separated keywords. You can include Tamil search terms (e.g. ஆடை, கடை) alongside English keywords.
+        </p>
       </div>
 
       {/* Google Search Snippet Simulation */}
@@ -1328,7 +1608,7 @@ function SeoDefaultsForm({
             {form.meta_title || "Velaash"}
           </span>
           <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-            {form.meta_description || "Contemporary clothing designed with refined fabrics..."}
+            {form.meta_description || "Shop clothing for men and women, plus traditional pooja and brass essentials..."}
           </p>
         </div>
       </div>
@@ -1392,122 +1672,97 @@ function LogisticsSettingsForm({
   return (
     <>
       {/* ── HOW-IT-WORKS LIGHTBOX ── */}
-      {showGuide && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setShowGuide(false)}
-        >
-          <div
-            className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
+      <AdminModal
+        isOpen={showGuide}
+        onClose={() => setShowGuide(false)}
+        maxWidth="lg"
+        icon={<PackageCheck className="w-5 h-5 text-slate-700" />}
+        title="Logistics Mode — How It Works"
+        description="Comparison between Manual Self-Ship and Automated Shiprocket API."
+        footer={
+          <button
+            type="button"
+            onClick={() => setShowGuide(false)}
+            className="px-4 py-2 text-xs font-semibold bg-slate-900 text-white rounded-xl hover:bg-black transition-colors shadow-sm"
           >
-            {/* Lightbox Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50">
-              <div className="flex items-center gap-2">
-                <PackageCheck className="w-5 h-5 text-slate-700" />
-                <h2 className="text-sm font-bold text-slate-900">Logistics Mode — How It Works</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowGuide(false)}
-                className="text-slate-400 hover:text-slate-700 transition-colors rounded-lg p-1"
-                aria-label="Close guide"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            Got it, close
+          </button>
+        }
+      >
+        <div className="space-y-4 text-xs">
+          {/* Manual Mode Section */}
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base">✦</span>
+              <h3 className="text-sm font-bold text-emerald-800">Manual / Self-Ship</h3>
+              <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                Recommended for Startups
+              </span>
             </div>
-
-            {/* Lightbox Content */}
-            <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
-
-              {/* Manual Mode Section */}
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">✦</span>
-                  <h3 className="text-sm font-bold text-emerald-800">Manual / Self-Ship</h3>
-                  <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
-                    Recommended for Startups
-                  </span>
-                </div>
-                <ul className="space-y-1.5 text-xs text-emerald-900">
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-500 mt-0.5 shrink-0">①</span>
-                    <span>Customer places order → you receive it in the Admin Orders panel</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-500 mt-0.5 shrink-0">②</span>
-                    <span>Confirm the order → Pack it → Click <strong>&quot;Mark as Shipped&quot;</strong></span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-500 mt-0.5 shrink-0">③</span>
-                    <span>Enter courier name (e.g. DTDC, Delhivery) and tracking number manually</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-emerald-500 mt-0.5 shrink-0">④</span>
-                    <span>Customer can track via their account dashboard using the tracking number</span>
-                  </li>
-                </ul>
-                <div className="pt-1 border-t border-emerald-100 text-[11px] text-emerald-700 font-medium">
-                  ✅ No API key needed · Free · Full control
-                </div>
-              </div>
-
-              {/* Shiprocket Mode Section */}
-              <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🚀</span>
-                  <h3 className="text-sm font-bold text-indigo-800">Shiprocket API Mode</h3>
-                  <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">
-                    For Scale (10+ orders/day)
-                  </span>
-                </div>
-                <ul className="space-y-1.5 text-xs text-indigo-900">
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-500 mt-0.5 shrink-0">①</span>
-                    <span>Requires a paid Shiprocket account + API credentials in your environment</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-500 mt-0.5 shrink-0">②</span>
-                    <span>Pack the order → Click <strong>&quot;Push to Shiprocket&quot;</strong> in the order detail view</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-500 mt-0.5 shrink-0">③</span>
-                    <span>Shiprocket automatically assigns the best courier and generates AWB number</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-indigo-500 mt-0.5 shrink-0">④</span>
-                    <span>Pickup is scheduled from your warehouse address configured below</span>
-                  </li>
-                </ul>
-                <div className="pt-1 border-t border-indigo-100 text-[11px] text-indigo-700 font-medium">
-                  ⚡ Faster at scale · Auto-courier selection · COD remittance management
-                </div>
-              </div>
-
-              {/* Switching Note */}
-              <div className="rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-900">
-                <strong>💡 Switching modes is instant.</strong> You can toggle anytime from this Settings panel — no data is lost.
-                Active mode is read on every order page so it always reflects your current setting.
-                <br /><br />
-                <strong>Upgrade tip:</strong> Move to Shiprocket when you are consistently shipping more than 10 orders per day and want automated label printing and courier negotiation.
-              </div>
-            </div>
-
-            {/* Lightbox Footer */}
-            <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowGuide(false)}
-                className="px-4 py-2 text-xs font-semibold bg-slate-900 text-white rounded-lg hover:bg-black transition-colors"
-              >
-                Got it, close
-              </button>
+            <ul className="space-y-1.5 text-xs text-emerald-900">
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5 shrink-0">①</span>
+                <span>Customer places order → you receive it in the Admin Orders panel</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5 shrink-0">②</span>
+                <span>Confirm the order → Pack it → Click <strong>&quot;Mark as Shipped&quot;</strong></span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5 shrink-0">③</span>
+                <span>Enter courier name (e.g. DTDC, Delhivery) and tracking number manually</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-500 mt-0.5 shrink-0">④</span>
+                <span>Customer can track via their account dashboard using the tracking number</span>
+              </li>
+            </ul>
+            <div className="pt-1 border-t border-emerald-100 text-[11px] text-emerald-700 font-medium">
+              ✅ No API key needed · Free · Full control
             </div>
           </div>
+
+          {/* Shiprocket Mode Section */}
+          <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🚀</span>
+              <h3 className="text-sm font-bold text-indigo-800">Shiprocket API Mode</h3>
+              <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">
+                For Scale (10+ orders/day)
+              </span>
+            </div>
+            <ul className="space-y-1.5 text-xs text-indigo-900">
+              <li className="flex items-start gap-2">
+                <span className="text-indigo-500 mt-0.5 shrink-0">①</span>
+                <span>Requires a paid Shiprocket account + API credentials in your environment</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-indigo-500 mt-0.5 shrink-0">②</span>
+                <span>Pack the order → Click <strong>&quot;Push to Shiprocket&quot;</strong> in the order detail view</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-indigo-500 mt-0.5 shrink-0">③</span>
+                <span>Shiprocket automatically assigns the best courier and generates AWB number</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-indigo-500 mt-0.5 shrink-0">④</span>
+                <span>Pickup is scheduled from your warehouse address configured below</span>
+              </li>
+            </ul>
+            <div className="pt-1 border-t border-indigo-100 text-[11px] text-indigo-700 font-medium">
+              ⚡ Faster at scale · Auto-courier selection · COD remittance management
+            </div>
+          </div>
+
+          {/* Switching Note */}
+          <div className="rounded-2xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-900">
+            <strong>💡 Switching modes is instant.</strong> You can toggle anytime from this Settings panel — no data is lost.
+            Active mode is read on every order page so it always reflects your current setting.
+            <br /><br />
+            <strong>Upgrade tip:</strong> Move to Shiprocket when you are consistently shipping more than 10 orders per day and want automated label printing and courier negotiation.
+          </div>
         </div>
-      )}
+      </AdminModal>
 
       {/* ── MAIN FORM ── */}
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -2007,4 +2262,389 @@ function PageBannersForm({
     </>
   );
 }
+
+// ============================================================================
+// 11. PROMO POPUP SETTINGS FORM
+// ============================================================================
+function PromoPopupSettingsForm({
+  initial,
+  activeCoupons = [],
+  featuredProduct = null,
+  onSaved,
+}: {
+  initial?: SiteSettingsData["promoPopup"];
+  activeCoupons?: ActiveCouponOption[];
+  featuredProduct?: { imageUrl: string; name?: string } | null;
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    is_enabled: initial?.is_enabled ?? false,
+    featured_coupon_id: initial?.featured_coupon_id || "",
+    popup_title: initial?.popup_title || "Special Offer",
+    popup_description:
+      initial?.popup_description ||
+      "Use this code at checkout to enjoy an exclusive discount on your order.",
+    delay_seconds: initial?.delay_seconds ?? 9,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const selectedCoupon = activeCoupons.find((c) => c.id === form.featured_coupon_id);
+  const isSelectedCouponMissing =
+    Boolean(form.featured_coupon_id) && !selectedCoupon;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await updatePromoPopupSettingsAction({
+        is_enabled: form.is_enabled,
+        featured_coupon_id: form.featured_coupon_id ? form.featured_coupon_id : null,
+        popup_title: form.popup_title,
+        popup_description: form.popup_description,
+        delay_seconds: Number(form.delay_seconds) || 9,
+      });
+
+      if (res.success) {
+        onSaved();
+      } else {
+        setErrorMsg(res.error || "Failed to save promo popup settings.");
+      }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Save failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {errorMsg && (
+        <div className="flex items-center gap-2 p-3 text-xs bg-rose-50 border border-rose-200 text-rose-700 rounded-xl">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {/* Enable/Disable Toggle */}
+      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+        <div>
+          <span className="block text-sm font-semibold text-slate-900">
+            Enable Promotional Popup
+          </span>
+          <span className="block text-xs text-slate-500 mt-0.5">
+            Display a floating luxury offer modal to new visitors site-wide (excluding cart, checkout, account, and admin).
+          </span>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer shrink-0">
+          <input
+            type="checkbox"
+            checked={form.is_enabled}
+            onChange={(e) => setForm({ ...form, is_enabled: e.target.checked })}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+        </label>
+      </div>
+
+      {/* Linked Active Coupon Dropdown */}
+      <div>
+        <label className="block text-xs font-semibold text-slate-700 mb-1">
+          Featured Active Coupon <span className="text-rose-500">*</span>
+        </label>
+        <select
+          value={form.featured_coupon_id}
+          onChange={(e) => setForm({ ...form, featured_coupon_id: e.target.value })}
+          className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-900 font-medium"
+        >
+          <option value="">-- Select an active coupon --</option>
+          {activeCoupons.map((coupon) => {
+            const discountLabel =
+              coupon.discountType === "percentage"
+                ? `${coupon.discountValue}% OFF`
+                : `₹${coupon.discountValue} OFF`;
+            const minOrderLabel =
+              coupon.minOrderValue > 0
+                ? ` (Min ₹${coupon.minOrderValue.toLocaleString("en-IN")})`
+                : "";
+            return (
+              <option key={coupon.id} value={coupon.id}>
+                {coupon.code} — {discountLabel}
+                {minOrderLabel}
+              </option>
+            );
+          })}
+        </select>
+        <p className="text-[11px] text-slate-500 mt-1">
+          Only currently active, non-expired coupons are listed. All discount values, codes, and thresholds are read dynamically from this coupon record.
+        </p>
+        {isSelectedCouponMissing && (
+          <div className="mt-2 p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              The previously selected coupon is no longer active or has expired. Please select a currently active coupon above.
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Headline & Description */}
+      <div className="grid grid-cols-1 gap-4">
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
+            Popup Title <span className="text-rose-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={form.popup_title}
+            onChange={(e) => setForm({ ...form, popup_title: e.target.value })}
+            placeholder="Special Offer"
+            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-900"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">Short headline displayed at the top of the modal.</p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
+            Popup Description <span className="text-rose-500">*</span>
+          </label>
+          <textarea
+            required
+            rows={2}
+            value={form.popup_description}
+            onChange={(e) => setForm({ ...form, popup_description: e.target.value })}
+            placeholder="Use this code at checkout to enjoy an exclusive discount on your order."
+            className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-normal text-slate-900 resize-none"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">Supporting line of copy above the promo code pill.</p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
+            Popup Display Delay (Seconds)
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={60}
+            value={form.delay_seconds}
+            onChange={(e) => setForm({ ...form, delay_seconds: Number(e.target.value) })}
+            className="w-32 px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">Seconds after page load before displaying to new visitors (default: 9 seconds).</p>
+        </div>
+      </div>
+
+      {/* Live Preview Section (Uses the identical PromoPopupCard presentation component) */}
+      <div className="space-y-2 pt-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-slate-500">Live Customer Modal Preview</span>
+          {form.is_enabled && selectedCoupon && (
+            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              Active on Site
+            </span>
+          )}
+        </div>
+
+        <div className="relative rounded-2xl border border-slate-200 bg-slate-900/40 p-4 sm:p-6 flex items-center justify-center min-h-[360px] overflow-hidden">
+          <PromoPopupCard
+            isPreview={true}
+            title={form.popup_title}
+            description={form.popup_description}
+            coupon={
+              selectedCoupon
+                ? {
+                    code: selectedCoupon.code,
+                    discountType: selectedCoupon.discountType,
+                    discountValue: selectedCoupon.discountValue,
+                    minOrderValue: selectedCoupon.minOrderValue,
+                    maxDiscountAmount: selectedCoupon.maxDiscountAmount,
+                  }
+                : null
+            }
+            productThumbnail={featuredProduct}
+          />
+        </div>
+      </div>
+
+      <div className="pt-4 border-t border-slate-100 flex justify-end">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-colors disabled:opacity-50"
+        >
+          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          <span>Save Promo Popup Settings</span>
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ============================================================================
+// CHECKOUT & CUSTOMER ACCOUNTS POLICY FORM
+// ============================================================================
+function CheckoutPolicyForm({
+  initial,
+  onSaved,
+}: {
+  initial: CheckoutPolicySetting;
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    require_sign_in_to_order: initial.require_sign_in_to_order ?? false,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await updateCheckoutPolicySettingsAction(form);
+      if (res.success) {
+        onSaved();
+      } else {
+        setErrorMsg(res.error || "Failed to save checkout policy.");
+      }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Save failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="border-b border-slate-100 pb-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-heading font-semibold text-slate-900">
+              Customer Accounts &amp; Checkout Policy
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Control whether visitors can place orders as guests or must sign in first.
+            </p>
+          </div>
+          <div>
+            {form.require_sign_in_to_order ? (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-300 px-3 py-1 rounded-full">
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                Sign-In Required for Orders
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 px-3 py-1 rounded-full">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                Guest Checkout Active (No Sign-In Required)
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {errorMsg && (
+        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {/* Main Switch Card */}
+      <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <span className="block text-sm font-bold text-slate-900">
+              Require Customer Sign-In to Place Order
+            </span>
+            <span className="block text-xs text-slate-500 leading-relaxed max-w-xl">
+              When toggled ON, customers must authenticate via email OTP or Google Sign-In before placing an order.
+              When toggled OFF, guest checkout is enabled and any visitor can complete an order by just entering their email and delivery address.
+            </span>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+            <input
+              type="checkbox"
+              checked={form.require_sign_in_to_order}
+              onChange={(e) => setForm({ ...form, require_sign_in_to_order: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+          </label>
+        </div>
+
+        {/* Dynamic Comparison Guide */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-200/80">
+          <div
+            className={`p-4 rounded-xl border text-xs leading-relaxed space-y-1.5 transition-all ${
+              !form.require_sign_in_to_order
+                ? "bg-white border-emerald-400 shadow-xs ring-1 ring-emerald-400/30"
+                : "bg-slate-100/60 border-slate-200 opacity-60"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-900">Guest Checkout (Current Default)</span>
+              {!form.require_sign_in_to_order && (
+                <span className="text-[10px] uppercase font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                  Active
+                </span>
+              )}
+            </div>
+            <p className="text-slate-600">
+              • Lowest friction for early sales and maximum conversion.
+            </p>
+            <p className="text-slate-600">
+              • Visitors can complete their purchase immediately without waiting for OTP codes.
+            </p>
+            <p className="text-slate-600">
+              • An account can still optionally be created at checkout if the customer chooses.
+            </p>
+          </div>
+
+          <div
+            className={`p-4 rounded-xl border text-xs leading-relaxed space-y-1.5 transition-all ${
+              form.require_sign_in_to_order
+                ? "bg-white border-amber-400 shadow-xs ring-1 ring-amber-400/30"
+                : "bg-slate-100/60 border-slate-200 opacity-60"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-900">Sign-In Required</span>
+              {form.require_sign_in_to_order && (
+                <span className="text-[10px] uppercase font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+                  Active
+                </span>
+              )}
+            </div>
+            <p className="text-slate-600">
+              • Every order is 100% verified and linked to a registered customer account.
+            </p>
+            <p className="text-slate-600">
+              • Prevents typos in email addresses and reduces spam / abandoned COD attempts.
+            </p>
+            <p className="text-slate-600">
+              • Customers can view order progress anytime under their Account dashboard.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="pt-4 border-t border-slate-100 flex justify-end">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-colors disabled:opacity-50"
+        >
+          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          <span>Save Checkout Policy</span>
+        </button>
+      </div>
+    </form>
+  );
+}
+
 

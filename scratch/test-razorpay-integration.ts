@@ -315,19 +315,73 @@ async function runRazorpayIntegrationTests() {
       `Error returned: "${forgedVerification.success ? "" : forgedVerification.error}"`
     );
 
-    // 2. Successful verification with authentic cryptographic signature
-    const authenticVerification = await verifyRazorpayPaymentAction({
+    const unrelatedRazorpayOrderId = "order_unrelated_test_order";
+    const unrelatedOrderSignature = crypto
+      .createHmac("sha256", TEST_KEY_SECRET)
+      .update(`${unrelatedRazorpayOrderId}|${validClientPaymentId}`)
+      .digest("hex");
+    const mismatchedOrderVerification = await verifyRazorpayPaymentAction({
       orderNumber: rzpOrderResult.orderNumber,
-      razorpayOrderId: rzpOrderResult.razorpayOrderId,
+      razorpayOrderId: unrelatedRazorpayOrderId,
       razorpayPaymentId: validClientPaymentId,
-      razorpaySignature: validClientSignature,
+      razorpaySignature: unrelatedOrderSignature,
     });
 
     assert(
-      authenticVerification.success === true,
-      "Authentic signature transitions order payment_status to 'paid' and status to 'confirmed'",
-      `Verified Order: ${authenticVerification.success ? authenticVerification.orderNumber : "FAILED"}`
+      mismatchedOrderVerification.success === false &&
+        mismatchedOrderVerification.code === "SIGNATURE_VERIFICATION_FAILED",
+      "A valid signature for a different gateway order cannot pay this order"
     );
+
+    const originalFetch = globalThis.fetch;
+    let paymentStatus = "authorized";
+    globalThis.fetch = async (input, init) => {
+      if (String(input).includes(`/payments/${validClientPaymentId}`)) {
+        return new Response(
+          JSON.stringify({
+            id: validClientPaymentId,
+            order_id: rzpOrderResult.razorpayOrderId,
+            amount: Math.round(rzpOrderResult.totalAmount * 100),
+            currency: "INR",
+            status: paymentStatus,
+            captured: paymentStatus === "captured",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+      return originalFetch(input, init);
+    };
+
+    try {
+      const authorizedVerification = await verifyRazorpayPaymentAction({
+        orderNumber: rzpOrderResult.orderNumber,
+        razorpayOrderId: rzpOrderResult.razorpayOrderId,
+        razorpayPaymentId: validClientPaymentId,
+        razorpaySignature: validClientSignature,
+      });
+
+      assert(
+        authorizedVerification.success === false &&
+          authorizedVerification.code === "PAYMENT_NOT_CAPTURED",
+        "A valid signature cannot mark an uncaptured payment as paid"
+      );
+
+      paymentStatus = "captured";
+      const authenticVerification = await verifyRazorpayPaymentAction({
+        orderNumber: rzpOrderResult.orderNumber,
+        razorpayOrderId: rzpOrderResult.razorpayOrderId,
+        razorpayPaymentId: validClientPaymentId,
+        razorpaySignature: validClientSignature,
+      });
+
+      assert(
+        authenticVerification.success === true,
+        "Authentic captured payment transitions order to paid and confirmed",
+        `Verified Order: ${authenticVerification.success ? authenticVerification.orderNumber : "FAILED"}`
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -353,16 +407,25 @@ async function runRazorpayIntegrationTests() {
   );
 
   // 2. Webhook payment.captured event
-  const capturedWebhookOrderNumber = `VEL-2026-RZP-${Date.now().toString().slice(-4)}`;
-  const capturedRazorpayOrderId = `order_webhook_captured_${Date.now()}`;
+  const capturedWebhookOrderNumber = rzpOrderResult.success
+    ? rzpOrderResult.orderNumber
+    : `VEL-2026-RZP-${Date.now().toString().slice(-4)}`;
+  const capturedRazorpayOrderId = rzpOrderResult.success
+    ? rzpOrderResult.razorpayOrderId || "order_unavailable"
+    : `order_webhook_captured_${Date.now()}`;
+  const capturedPaymentId = "pay_test_client_callback_999";
+  const capturedAmountPaise = rzpOrderResult.success
+    ? Math.round(rzpOrderResult.totalAmount * 100)
+    : 382500;
   const capturedPayload = JSON.stringify({
     event: "payment.captured",
     payload: {
       payment: {
         entity: {
-          id: `pay_webhook_${Date.now()}`,
+          id: capturedPaymentId,
           order_id: capturedRazorpayOrderId,
-          amount: 382500,
+          amount: capturedAmountPaise,
+          currency: "INR",
           notes: {
             order_number: capturedWebhookOrderNumber,
           },
@@ -388,8 +451,9 @@ async function runRazorpayIntegrationTests() {
   const capturedRes = await webhookHandler(capturedReq);
   const capturedJson = await capturedRes.json();
   assert(
-    capturedRes.status === 200 && capturedJson.status === "order_confirmed",
-    "Webhook payment.captured confirms order asynchronously",
+    capturedRes.status === 200 &&
+      capturedJson.status === (rzpOrderResult.success ? "duplicate_skipped" : "unmatched_order"),
+    "Webhook capture is matched only to its persisted Razorpay order",
     `Status: ${capturedJson.status}`
   );
 
@@ -414,7 +478,41 @@ async function runRazorpayIntegrationTests() {
     `Status: ${duplicateJson.status}`
   );
 
-  // 4. Webhook payment.failed event releasing inventory
+  const unmatchedPayload = JSON.stringify({
+    event: "payment.captured",
+    payload: {
+      payment: {
+        entity: {
+          id: `pay_unmatched_${Date.now()}`,
+          order_id: `order_unmatched_${Date.now()}`,
+          amount: capturedAmountPaise,
+          currency: "INR",
+          notes: { order_number: capturedWebhookOrderNumber },
+        },
+      },
+    },
+  });
+  const unmatchedSig = crypto
+    .createHmac("sha256", TEST_WEBHOOK_SECRET)
+    .update(unmatchedPayload)
+    .digest("hex");
+  const unmatchedRes = await webhookHandler(
+    new NextRequest("http://localhost:3000/api/webhooks/razorpay", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-razorpay-signature": unmatchedSig,
+      },
+      body: unmatchedPayload,
+    })
+  );
+  const unmatchedJson = await unmatchedRes.json();
+  assert(
+    unmatchedRes.status === 200 && unmatchedJson.status === "unmatched_order",
+    "Receipt notes cannot associate a capture with a different stored order"
+  );
+
+  // 4. A failed payment attempt remains retryable and retains its reservation
   const failedStockBefore = testVariant?.stock_quantity ?? 0;
   const failedPayload = JSON.stringify({
     event: "payment.failed",
@@ -449,16 +547,16 @@ async function runRazorpayIntegrationTests() {
   const failedRes = await webhookHandler(failedReq);
   const failedJson = await failedRes.json();
   assert(
-    failedRes.status === 200 && failedJson.status === "payment_failed_stock_released",
-    "Webhook payment.failed marks order as failed and triggers stock release",
+    failedRes.status === 200 && failedJson.status === "payment_attempt_failed_retryable",
+    "Webhook payment.failed leaves the order open for another attempt",
     `Status: ${failedJson.status}`
   );
 
   const failedStockAfter = testVariant?.stock_quantity ?? 0;
   assert(
-    failedStockAfter === failedStockBefore + 1,
-    "Reserved stock was restored upon payment.failed notification",
-    `Stock restored from ${failedStockBefore} to ${failedStockAfter}`
+    failedStockAfter === failedStockBefore,
+    "A failed attempt does not release reserved inventory",
+    `Stock remained at ${failedStockAfter}`
   );
 
   // -------------------------------------------------------------------------

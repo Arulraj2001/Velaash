@@ -16,6 +16,8 @@ import {
   Minus,
 } from "lucide-react";
 import type { ProductDetailItem } from "../types";
+import { getProductFestiveShippingBadge } from "../types";
+import type { ShippingPolicySetting } from "@/features/settings/types";
 import { formatCurrency } from "@/lib/utils";
 import { useCartStore } from "@/features/cart";
 import { ProductGallery } from "./product-gallery";
@@ -31,30 +33,43 @@ interface ProductDetailViewProps {
   product: ProductDetailItem;
   freeShippingThreshold?: number;
   returnWindowDays?: number;
+  whatsappNumber: string;
+  festivePolicy?: ShippingPolicySetting | null;
 }
 
 export function ProductDetailView({
   product,
   freeShippingThreshold = 999, // Placeholder default — MUST be confirmed with client before launch
   returnWindowDays = 7, // Placeholder default — MUST be confirmed with client before launch
+  whatsappNumber,
+  festivePolicy,
 }: ProductDetailViewProps) {
   const router = useRouter();
   const addItemToCart = useCartStore((state) => state.addItem);
 
+  const festiveBadge = getProductFestiveShippingBadge(product, festivePolicy);
+
+  // Product Type Detection
+  const hasVariants = product.has_variants !== false && (product.variants?.length ?? 0) > 0;
+  const hasSizeVariants = Boolean(hasVariants && product.variants?.some((v) => Boolean(v.size)));
+  const hasColorVariants = Boolean(hasVariants && product.variants?.some((v) => Boolean(v.color)));
+
   // 1. Color State
-  const initialColor = product.colors && product.colors.length > 0 ? product.colors[0].color : "";
+  const initialColor = hasColorVariants && product.colors && product.colors.length > 0 ? product.colors[0].color : "";
   const [selectedColor, setSelectedColor] = React.useState<string>(initialColor);
 
   // 2. Sizes available for the selected color
   const colorVariants = React.useMemo(() => {
+    if (!hasVariants) return [];
     if (!selectedColor) return product.variants;
     return product.variants.filter((v) => v.color.toLowerCase() === selectedColor.toLowerCase());
-  }, [product.variants, selectedColor]);
+  }, [hasVariants, product.variants, selectedColor]);
 
   // Initial size: pick the first in-stock size for this color, or the first size
-  const firstInStockSize =
-    colorVariants.find((v) => v.stock_quantity > 0)?.size ||
-    (colorVariants[0]?.size ?? product.sizes[0] ?? "Free Size");
+  const firstInStockSize = hasSizeVariants
+    ? colorVariants.find((v) => v.stock_quantity > 0)?.size ||
+      (colorVariants[0]?.size ?? product.sizes[0] ?? "")
+    : "";
 
   const [selectedSize, setSelectedSize] = React.useState<string>(firstInStockSize);
 
@@ -62,22 +77,27 @@ export function ProductDetailView({
   const [prevColor, setPrevColor] = React.useState(selectedColor);
   if (prevColor !== selectedColor) {
     setPrevColor(selectedColor);
-    const currentVariant = colorVariants.find((v) => v.size === selectedSize);
-    if (!currentVariant || currentVariant.stock_quantity <= 0) {
-      const available = colorVariants.find((v) => v.stock_quantity > 0);
-      if (available) {
-        setSelectedSize(available.size);
+    if (hasSizeVariants) {
+      const currentVariant = colorVariants.find((v) => v.size === selectedSize);
+      if (!currentVariant || currentVariant.stock_quantity <= 0) {
+        const available = colorVariants.find((v) => v.stock_quantity > 0);
+        if (available) {
+          setSelectedSize(available.size);
+        }
       }
     }
   }
 
-  // 3. Find active variant item
+  // 3. Find active variant item (null for simple products)
   const selectedVariant = React.useMemo(() => {
+    if (!hasVariants) return null;
     const match = colorVariants.find((v) => v.size === selectedSize);
-    return match || colorVariants[0] || product.variants[0];
-  }, [colorVariants, selectedSize, product.variants]);
+    return match || colorVariants[0] || product.variants[0] || null;
+  }, [hasVariants, colorVariants, selectedSize, product.variants]);
 
-  const maxStock = selectedVariant ? Math.max(0, selectedVariant.stock_quantity) : 0;
+  const maxStock = hasVariants
+    ? selectedVariant ? Math.max(0, selectedVariant.stock_quantity) : 0
+    : Math.max(0, product.stock_quantity ?? product.total_stock ?? 0);
   const isAvailable = maxStock > 0;
 
   // 4. Quantity state
@@ -118,26 +138,28 @@ export function ProductDetailView({
 
   // 8. Add to cart handler
   const handleAddToCart = () => {
-    if (!selectedVariant || !isAvailable) return;
+    if (!isAvailable) return;
+    if (hasVariants && !selectedVariant) return;
 
     const primaryImg =
-      product.images.find(
-        (img) =>
-          img.variant_id === selectedVariant.id ||
-          (selectedColor && img.color?.toLowerCase() === selectedColor.toLowerCase())
-      )?.image_url ||
+      (selectedColor &&
+        product.images.find(
+          (img) => img.color?.toLowerCase() === selectedColor.toLowerCase()
+        )?.image_url) ||
+      (selectedVariant &&
+        product.images.find((img) => img.variant_id === selectedVariant.id)?.image_url) ||
       product.images[0]?.image_url ||
       "/placeholder.jpg";
 
     addItemToCart(
       {
         productId: product.id,
-        variantId: selectedVariant.id,
+        variantId: selectedVariant?.id || null,
         title: product.name,
         slug: product.slug,
-        size: selectedVariant.size,
-        color: selectedVariant.color,
-        colorHex: selectedVariant.color_hex || undefined,
+        size: selectedVariant?.size || null,
+        color: selectedVariant?.color || null,
+        colorHex: selectedVariant?.color_hex || undefined,
         price,
         compareAtPrice: product.compare_at_price,
         image: primaryImg,
@@ -149,13 +171,13 @@ export function ProductDetailView({
     // E-commerce analytics tracking (consent-gated)
     trackAddToCart({
       productId: product.id,
-      variantId: selectedVariant.id,
+      variantId: selectedVariant?.id || undefined,
       name: product.name,
       category: product.category_id || undefined,
       price,
       quantity,
-      size: selectedVariant.size,
-      color: selectedVariant.color,
+      size: selectedVariant?.size || undefined,
+      color: selectedVariant?.color || undefined,
     });
   };
 
@@ -167,12 +189,14 @@ export function ProductDetailView({
 
   // 10. WhatsApp enquiry link
   const siteUrl = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
-  const currentUrl =
-    typeof window !== "undefined"
-      ? window.location.href
-      : `${siteUrl}/products/${product.slug}`;
-  const whatsappQuery = `Hi Velaash! I am interested in ordering "${product.name}" (${currentUrl}) in ${selectedColor}, size ${selectedSize}. Could you share availability and delivery details?`;
-  const whatsappHref = `https://wa.me/918508643832?text=${encodeURIComponent(whatsappQuery)}`;
+  const productUrl = `${siteUrl}/products/${product.slug}`;
+  const whatsappQuery = hasVariants
+    ? `Hi Velaash! I am interested in ordering "${product.name}" (${productUrl})${selectedColor ? ` in ${selectedColor}` : ""}${selectedSize ? `, size ${selectedSize}` : ""}. Could you share availability and delivery details?`
+    : `Hi Velaash! I am interested in ordering "${product.name}" (${productUrl}). Could you share availability and delivery details?`;
+  const whatsappDigits = whatsappNumber.replace(/\D/g, "");
+  const whatsappHref = whatsappDigits
+    ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(whatsappQuery)}`
+    : "/contact";
 
   return (
     <div className="space-y-12">
@@ -283,31 +307,51 @@ export function ProductDetailView({
             </div>
           </div>
 
-          {/* Short Description */}
-          {product.description && (
-            <div className="text-brand-muted text-xs leading-relaxed sm:text-sm">
-              <p
-                className={
-                  !isDescriptionExpanded && product.description.length > 150 ? "line-clamp-2" : ""
-                }
-              >
-                {product.description}
-              </p>
-              {product.description.length > 150 && (
-                <button
-                  type="button"
-                  onClick={() => setIsDescriptionExpanded((prev) => !prev)}
-                  className="text-brand-dark hover:text-brand-accent mt-1 text-xs font-semibold underline underline-offset-2 transition-colors"
+          {/* Product Description (Rich Text & Plain Text Support) */}
+          {product.description && (() => {
+            const isHtml = /<[a-z][\s\S]*>/i.test(product.description);
+            const cleanText = product.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+            const isLong = cleanText.length > 200;
+
+            return (
+              <div className="text-brand-muted text-xs leading-relaxed sm:text-sm">
+                <div
+                  className={`relative transition-all duration-300 ${
+                    !isDescriptionExpanded && isLong ? "max-h-24 overflow-hidden" : ""
+                  }`}
                 >
-                  {isDescriptionExpanded ? "Read less" : "Read more"}
-                </button>
-              )}
-            </div>
-          )}
+                  {isHtml ? (
+                    <div
+                      className="prose prose-sm font-sans text-brand-muted max-w-none leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 [&_strong]:text-brand-dark [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_li]:mb-1 [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-xs [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_h1]:text-brand-dark [&_h2]:text-brand-dark [&_h3]:text-brand-dark"
+                      dangerouslySetInnerHTML={{ __html: product.description }}
+                    />
+                  ) : (
+                    <p className="whitespace-pre-line leading-relaxed">
+                      {product.description}
+                    </p>
+                  )}
+
+                  {!isDescriptionExpanded && isLong && (
+                    <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+                  )}
+                </div>
+
+                {isLong && (
+                  <button
+                    type="button"
+                    onClick={() => setIsDescriptionExpanded((prev) => !prev)}
+                    className="text-brand-dark hover:text-brand-accent mt-2 inline-flex items-center gap-1 text-xs font-semibold underline underline-offset-2 transition-colors cursor-pointer"
+                  >
+                    {isDescriptionExpanded ? "Read less" : "Read more"}
+                  </button>
+                )}
+              </div>
+            );
+          })()}
 
           <div className="border-brand-border/60 space-y-5 border-t pt-5">
             {/* Color Selector */}
-            {product.colors && product.colors.length > 0 && (
+            {hasColorVariants && product.colors && product.colors.length > 0 && (
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-brand-dark font-semibold">
@@ -342,77 +386,80 @@ export function ProductDetailView({
             )}
 
             {/* Size Selector + Size Guide Link */}
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-brand-dark font-semibold">
-                  Select Size:{" "}
-                  <span className="text-brand-muted font-normal">{selectedSize}</span>
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsSizeGuideOpen(true)}
-                    className="text-brand-accent flex items-center gap-1 font-semibold underline-offset-2 transition-colors hover:underline"
-                  >
-                    <Sparkles className="text-brand-accent h-3 w-3" />
-                    Size Guide
-                  </button>
-                  <span className="text-brand-border text-xs">&bull;</span>
-                  <Link
-                    href="/size-guide"
-                    className="text-brand-muted hover:text-brand-dark text-xs underline underline-offset-2 transition-colors"
-                  >
-                    View full size guide
-                  </Link>
+            {hasSizeVariants && product.sizes && product.sizes.length > 0 && (
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-brand-dark font-semibold">
+                    Select Size:{" "}
+                    <span className="text-brand-muted font-normal">{selectedSize}</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsSizeGuideOpen(true)}
+                      className="text-brand-accent flex items-center gap-1 font-semibold underline-offset-2 transition-colors hover:underline"
+                    >
+                      <Sparkles className="text-brand-accent h-3 w-3" />
+                      Size Guide
+                    </button>
+                    <span className="text-brand-border text-xs">&bull;</span>
+                    <Link
+                      href="/size-guide"
+                      className="text-brand-muted hover:text-brand-dark text-xs underline underline-offset-2 transition-colors"
+                    >
+                      View full size guide
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((size) => {
+                    const variantForSize = colorVariants.find((v) => v.size === size);
+                    const isStocked = variantForSize ? variantForSize.stock_quantity > 0 : false;
+                    const isSelected = size === selectedSize;
+
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setSelectedSize(size)}
+                        className={`relative min-w-[50px] rounded-lg border px-3.5 py-2 text-xs font-semibold transition-all ${
+                          isSelected
+                            ? "border-brand-dark bg-brand-dark text-white shadow-xs"
+                            : isStocked
+                              ? "border-brand-border text-brand-dark hover:border-brand-dark hover:bg-brand-light/20 bg-white"
+                              : "border-brand-border/60 bg-brand-light/30 text-brand-subtle cursor-pointer line-through"
+                        }`}
+                        title={!isStocked ? "Currently out of stock in this color" : undefined}
+                      >
+                        {size}
+                        {!isStocked && <span className="sr-only"> (Out of stock)</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+            )}
 
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => {
-                  const variantForSize = colorVariants.find((v) => v.size === size);
-                  const isStocked = variantForSize ? variantForSize.stock_quantity > 0 : false;
-                  const isSelected = size === selectedSize;
-
-                  return (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => setSelectedSize(size)}
-                      className={`relative min-w-[50px] rounded-lg border px-3.5 py-2 text-xs font-semibold transition-all ${
-                        isSelected
-                          ? "border-brand-dark bg-brand-dark text-white shadow-xs"
-                          : isStocked
-                            ? "border-brand-border text-brand-dark hover:border-brand-dark hover:bg-brand-light/20 bg-white"
-                            : "border-brand-border/60 bg-brand-light/30 text-brand-subtle cursor-pointer line-through"
-                      }`}
-                      title={!isStocked ? "Currently out of stock in this color" : undefined}
-                    >
-                      {size}
-                      {!isStocked && <span className="sr-only"> (Out of stock)</span>}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Stock availability indicator */}
-              <div className="pt-0.5">
-                {isAvailable ? (
-                  maxStock <= 5 ? (
-                    <span className="text-[11px] font-semibold text-amber-700">
-                      Only {maxStock} left in stock for {selectedColor} &bull; Size {selectedSize}!
-                    </span>
-                  ) : (
-                    <span className="text-[11px] font-medium text-emerald-700">
-                      ✓ In Stock and ready to dispatch
-                    </span>
-                  )
-                ) : (
-                  <span className="text-[11px] font-semibold text-rose-700">
-                    Out of stock in {selectedColor} ({selectedSize}). Try another color or check
-                    back soon.
+            {/* Stock availability indicator */}
+            <div className="pt-0.5">
+              {isAvailable ? (
+                maxStock <= 5 ? (
+                  <span className="text-[11px] font-semibold text-amber-700">
+                    Only {maxStock} left in stock{hasVariants && selectedColor && selectedSize ? ` for ${selectedColor} • Size ${selectedSize}` : ""}!
                   </span>
-                )}
-              </div>
+                ) : (
+                  <span className="text-[11px] font-medium text-emerald-700">
+                    ✓ In Stock and ready to dispatch
+                  </span>
+                )
+              ) : (
+                <span className="text-[11px] font-semibold text-rose-700">
+                  {hasVariants && selectedColor && selectedSize
+                    ? `Out of stock in ${selectedColor} (${selectedSize}). Try another color or check back soon.`
+                    : "Currently out of stock. Check back soon."}
+                </span>
+              )}
             </div>
 
             {/* Quantity Stepper */}
@@ -487,7 +534,24 @@ export function ProductDetailView({
               </a>
             </div>
 
-            {/* Delivery Pincode Checker */}
+            {/* Delivery Pincode Checker & Festive Shipping Highlight */}
+            {festiveBadge && (
+              <div className="rounded-xl border border-emerald-500/40 bg-emerald-50/80 p-3 text-xs text-emerald-900 flex items-start gap-2.5 shadow-xs">
+                <span className="text-base leading-none mt-0.5">🌾</span>
+                <div className="space-y-0.5">
+                  <div className="font-semibold text-emerald-950 flex items-center gap-1.5">
+                    <span>{festiveBadge}</span>
+                    <span className="bg-emerald-200/80 text-emerald-800 text-[10px] px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider">
+                      Special Offer
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-emerald-800/90 font-normal">
+                    Standard home delivery is completely free for this item during this festive celebration.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <PincodeChecker freeShippingThreshold={freeShippingThreshold} />
 
             {/* Trust Badges Row */}
@@ -523,13 +587,15 @@ export function ProductDetailView({
         initialReviews={product.reviews}
       />
 
-      {/* 5. Size Guide Modal */}
-      <SizeGuideModal
-        isOpen={isSizeGuideOpen}
-        onClose={() => setIsSizeGuideOpen(false)}
-        sizeChart={product.size_chart}
-        productName={product.name}
-      />
+      {/* 5. Size Guide Modal (Only rendered when product has size variants) */}
+      {hasSizeVariants && (
+        <SizeGuideModal
+          isOpen={isSizeGuideOpen}
+          onClose={() => setIsSizeGuideOpen(false)}
+          sizeChart={product.size_chart}
+          productName={product.name}
+        />
+      )}
 
       {/* 6. Mobile Sticky Add to Cart Bar */}
       <MobileStickyBar

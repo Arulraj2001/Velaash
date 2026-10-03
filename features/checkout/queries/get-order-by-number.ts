@@ -48,6 +48,8 @@ export interface OrderDetail {
   items: OrderItemDetail[];
   accountCreatedFromGuest?: boolean;
   accessLevel: "FULL" | "MASKED";
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
 }
 
 /**

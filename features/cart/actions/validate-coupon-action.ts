@@ -103,7 +103,7 @@ export async function validateCouponAction(
   let targetCoupon: {
     id: string;
     code: string;
-    discount_type: "percentage" | "flat";
+    discount_type: "percentage" | "flat" | "free_shipping";
     discount_value: number;
     min_order_value: number;
     max_discount_amount: number | null;
@@ -132,7 +132,7 @@ export async function validateCouponAction(
       targetCoupon = {
         id: coupon.id,
         code: coupon.code,
-        discount_type: coupon.discount_type as "percentage" | "flat",
+        discount_type: coupon.discount_type as "percentage" | "flat" | "free_shipping",
         discount_value: Number(coupon.discount_value),
         min_order_value: Number(coupon.min_order_value),
         max_discount_amount: coupon.max_discount_amount
@@ -166,6 +166,56 @@ export async function validateCouponAction(
   }
 
   if (!targetCoupon) {
+    try {
+      const { getSiteSettings } = await import("@/features/settings/queries/get-site-settings");
+      const siteSettings = await getSiteSettings();
+      const festiveCode = siteSettings.shippingPolicy?.festive_coupon_code?.toUpperCase();
+
+      if (
+        siteSettings.shippingPolicy?.festive_shipping_enabled &&
+        festiveCode &&
+        festiveCode === normalizedCode
+      ) {
+        const now = new Date();
+        const validFrom = siteSettings.shippingPolicy.festive_valid_from
+          ? new Date(siteSettings.shippingPolicy.festive_valid_from)
+          : null;
+        const validUntil = siteSettings.shippingPolicy.festive_valid_until
+          ? new Date(siteSettings.shippingPolicy.festive_valid_until)
+          : null;
+
+        if (validFrom && now < validFrom) {
+          return {
+            success: false,
+            error: `Festive coupon "${normalizedCode}" is not active yet. It begins on ${validFrom.toLocaleDateString("en-IN")}.`,
+          };
+        }
+
+        if (validUntil && now > validUntil) {
+          return {
+            success: false,
+            error: `Festive coupon "${normalizedCode}" has expired.`,
+          };
+        }
+
+        return {
+          success: true,
+          coupon: {
+            id: "festive-free-shipping",
+            code: normalizedCode,
+            discountType: "free_shipping",
+            discountValue: siteSettings.shippingPolicy.standard_shipping_fee,
+            minOrderValue: 0,
+            maxDiscountAmount: null,
+          },
+          discountAmount: 0,
+          notice: siteSettings.shippingPolicy.festive_badge_text || "Festive Free Shipping applied!",
+        };
+      }
+    } catch {
+      // Fall through to error
+    }
+
     return {
       success: false,
       error: `Coupon "${normalizedCode}" does not exist. Please check the code and try again.`,
@@ -225,7 +275,7 @@ export async function validateCouponAction(
   // All checks passed! Calculate discount
   const discountAmount = calculateCouponDiscount(
     {
-      discountType: targetCoupon.discount_type as "percentage" | "flat",
+      discountType: targetCoupon.discount_type as "percentage" | "flat" | "free_shipping",
       discountValue: Number(targetCoupon.discount_value),
       minOrderValue: Number(targetCoupon.min_order_value),
       maxDiscountAmount: targetCoupon.max_discount_amount
@@ -240,7 +290,7 @@ export async function validateCouponAction(
     coupon: {
       id: targetCoupon.id,
       code: targetCoupon.code,
-      discountType: targetCoupon.discount_type as "percentage" | "flat",
+      discountType: targetCoupon.discount_type as "percentage" | "flat" | "free_shipping",
       discountValue: Number(targetCoupon.discount_value),
       minOrderValue: Number(targetCoupon.min_order_value),
       maxDiscountAmount: targetCoupon.max_discount_amount

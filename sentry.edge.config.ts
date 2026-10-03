@@ -9,7 +9,7 @@ const isConfigured = Boolean(
 );
 
 Sentry.init({
-  dsn: SENTRY_DSN,
+  dsn: isConfigured ? SENTRY_DSN : undefined,
   enabled: isConfigured,
   environment: process.env.NODE_ENV || "development",
   // Performance tracing sample rate

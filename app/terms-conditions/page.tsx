@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Container, PageHeaderBanner } from "@/components/ui";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
+import { getStoreContact } from "@/features/settings";
 import {
   AlertCircle,
   Clock,
@@ -41,9 +42,8 @@ export default async function TermsConditionsPage() {
 
   const legalName = storeProfile.legal_name || "VELAASH TRADER'S";
   const storeName = storeProfile.name || "Velaash";
-  const contactEmail = storeProfile.email || "bestrchandra@gmail.com";
-  const contactPhone = storeProfile.whatsapp_number || storeProfile.phone || "+91 8508643832";
-  const cleanPhone = contactPhone.replace(/[^0-9]/g, "");
+  const { email: contactEmail, whatsappNumber: contactPhone, whatsappUrl } =
+    getStoreContact(storeProfile);
 
   const freeShippingThreshold = `₹${shippingPolicy.free_shipping_threshold.toLocaleString("en-IN")}`;
   const returnWindowDays = returnsPolicy.return_window_days;
@@ -293,7 +293,7 @@ export default async function TermsConditionsPage() {
               </div>
               <div className="space-y-3 text-xs sm:text-sm text-brand-muted leading-relaxed">
                 <p>
-                  This website and all garments and services offered are provided on an &quot;as is&quot; and &quot;as available&quot; basis. Velaash disclaims all warranties of any kind, whether express or implied, including merchantability, fitness for a particular purpose, or non-infringement.
+                  This website and all products and services offered are provided on an &quot;as is&quot; and &quot;as available&quot; basis. Velaash disclaims all warranties of any kind, whether express or implied, including merchantability, fitness for a particular purpose, or non-infringement.
                 </p>
                 <p>
                   To the maximum extent permitted by applicable Indian law, {legalName} and its affiliates shall not be liable for any indirect, incidental, punitive, or consequential damages resulting from the use or inability to use the platform, server interruptions, or courier transit delays caused by force majeure events (strikes, weather disruptions, natural disasters, or statutory transport restrictions). In all events, our total aggregate liability shall not exceed the net purchase amount paid by you for the specific order giving rise to the claim.
@@ -356,7 +356,7 @@ export default async function TermsConditionsPage() {
                   <p><strong>Operating Business Entity:</strong> {legalName}</p>
                   <p><strong>Store Name:</strong> {storeName}</p>
                   <p><strong>Customer Service Email:</strong> <a href={`mailto:${contactEmail}`} className="text-brand-accent hover:underline font-medium">{contactEmail}</a></p>
-                  <p><strong>WhatsApp Support:</strong> <a href={`https://wa.me/${cleanPhone}`} target="_blank" rel="noopener noreferrer" className="text-emerald-700 hover:underline font-medium">{contactPhone}</a></p>
+                  <p><strong>WhatsApp Support:</strong> <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-700 hover:underline font-medium">{contactPhone}</a></p>
                   <p><strong>Registered Jurisdiction:</strong> Tamil Nadu, Republic of India</p>
                 </div>
               </div>

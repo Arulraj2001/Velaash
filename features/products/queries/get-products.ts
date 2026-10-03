@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type {
   ProductListItem,
@@ -17,6 +19,9 @@ const PRODUCT_SELECT = `
   description,
   base_price,
   compare_at_price,
+  has_variants,
+  stock_quantity,
+  specifications,
   created_at,
   is_active,
   is_featured,
@@ -121,9 +126,9 @@ function computeAvailableFilters(allProducts: ProductListItem[]): AvailableFilte
 }
 
 /**
- * Fetch category metadata by slug directly from Postgres
+ * Internal fetch for category metadata.
  */
-export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMetadata | null> {
+async function fetchCategoryBySlug(slug: string): Promise<ProductCategoryMetadata | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("categories")
@@ -179,6 +184,21 @@ export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMe
     parent_slug: parentSlug,
   };
 }
+
+/**
+ * Cached category metadata: revalidates every 5 minutes.
+ * Bust with revalidateTag('navigation-categories') when categories change.
+ */
+const getCachedCategoryBySlug = unstable_cache(
+  fetchCategoryBySlug,
+  ["category-by-slug"],
+  { tags: ["navigation-categories"], revalidate: 300 }
+);
+
+/**
+ * Fetch category metadata by slug — cached within a request and across requests.
+ */
+export const getCategoryBySlug = cache(getCachedCategoryBySlug);
 
 /**
  * Primary server-side query function for the product listing and catalog pages
@@ -417,7 +437,10 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
       });
 
       const sizes: string[] = Array.from(new Set(variants.map((v) => v.size)));
-      const totalStock = variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0);
+      const hasVariants = p.has_variants !== false && variants.length > 0;
+      const totalStock = hasVariants
+        ? variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)
+        : (Number(p.stock_quantity) || 0);
       const categoryData = Array.isArray(p.categories) ? p.categories[0] : p.categories;
 
       return {
@@ -435,6 +458,9 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
         is_featured: p.is_featured,
         is_new: now - new Date(p.created_at).getTime() <= 30 * 24 * 60 * 60 * 1000,
         stock_status: p.stock_status,
+        has_variants: hasVariants,
+        stock_quantity: Number(p.stock_quantity) || totalStock,
+        specifications: Array.isArray(p.specifications) ? p.specifications : [],
         images,
         variants,
         colors,

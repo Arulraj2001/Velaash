@@ -305,7 +305,7 @@ async function main() {
 
   const dispatchedEmail = DISPATCHED_EMAILS_LOG[0];
   const settings = await getSiteSettings();
-  const expectedStoreEmail = settings.storeProfile.email || "bestrchandra@gmail.com";
+  const expectedStoreEmail = settings.storeProfile.email;
 
   assert(
     dispatchedEmail.to === expectedStoreEmail,

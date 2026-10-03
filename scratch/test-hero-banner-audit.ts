@@ -43,14 +43,8 @@ function runHomepageAuditTests() {
   const slideRes = HeroSlideSchema.safeParse(validSlide);
   assert("HeroSlideSchema accepts valid slide", slideRes.success);
 
-  const invalidHeadline = { ...validSlide, headline: "   " };
-  assert("HeroSlideSchema rejects empty headline", !HeroSlideSchema.safeParse(invalidHeadline).success);
-
-  const invalidCta = { ...validSlide, cta_text: "" };
-  assert("HeroSlideSchema rejects empty cta_text", !HeroSlideSchema.safeParse(invalidCta).success);
-
-  const invalidLink = { ...validSlide, cta_link: "" };
-  assert("HeroSlideSchema rejects empty cta_link", !HeroSlideSchema.safeParse(invalidLink).success);
+  const plainSlide = { ...validSlide, headline: "   ", cta_text: "", cta_link: "" };
+  assert("HeroSlideSchema accepts plain slide with empty headline/buttons", HeroSlideSchema.safeParse(plainSlide).success);
 
   const invalidImage = { ...validSlide, bg_image: "  " };
   assert("HeroSlideSchema rejects empty bg_image", !HeroSlideSchema.safeParse(invalidImage).success);
@@ -194,8 +188,8 @@ function runHomepageAuditTests() {
   );
 
   const validTestimonialsSection = {
-    headline: "Cherished by Our Patrons",
-    subtitle: "Real experiences from women who celebrate everyday grace.",
+    headline: "Loved by Our Customers",
+    subtitle: "Real experiences from customers who celebrate quality and everyday grace.",
     items: [validTestimonial],
   };
   assert(
@@ -207,7 +201,7 @@ function runHomepageAuditTests() {
   const parsedTestiDefault = TestimonialsContentSchema.safeParse(defaultTestimonials);
   assert(
     "TestimonialsContentSchema applies defaults when empty",
-    parsedTestiDefault.success && parsedTestiDefault.data.headline === "Cherished by Our Patrons"
+    parsedTestiDefault.success && parsedTestiDefault.data.headline === "Loved by Our Customers"
   );
 
   // --- SECTION 7: TRUST & VALUE STRIP TESTS ---

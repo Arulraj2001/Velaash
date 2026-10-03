@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
@@ -11,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CartToast } from "@/features/cart";
 import { WishlistSync, getWishlistProductIds } from "@/features/wishlist";
 import { AnalyticsScripts, CookieConsentBanner } from "@/features/analytics";
-import { BrandPreloader } from "@/components/ui";
+import { BrandPreloader, PromoOfferPopup } from "@/components/ui";
 import { env } from "@/lib/env";
 
 const cormorant = Cormorant_Garamond({
@@ -26,13 +25,31 @@ const plusJakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-import { getSiteSettings } from "@/features/settings";
+import { getSiteSettings, getPromoPopup } from "@/features/settings";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { storeProfile, seoDefaults } = await getSiteSettings();
   const brandName = storeProfile.name || BRAND.name;
-  const titleDefault = seoDefaults.meta_title || `${brandName} | Modern Everyday Luxury & Contemporary Clothing`;
+  const titleDefault = seoDefaults.meta_title || `${brandName} — Everyday essentials for every home`;
   const descriptionDefault = seoDefaults.meta_description || BRAND.description;
+
+  const defaultKeywords = [
+    brandName,
+    storeProfile.legal_name || BRAND.legalName,
+    "Everyday essentials",
+    "Clothing for men and women",
+    "Pooja essentials",
+    "Brass essentials",
+    "Contemporary Clothing",
+    "Kurtas and Sets",
+    "Co-ord Sets",
+    "ஆடை",
+    "கடை",
+  ];
+  const configuredKeywords = seoDefaults.keywords
+    ? seoDefaults.keywords.split(",").map((k) => k.trim()).filter(Boolean)
+    : [];
+  const siteKeywords = Array.from(new Set([...defaultKeywords, ...configuredKeywords]));
 
   return {
     metadataBase: new URL(env.NEXT_PUBLIC_APP_URL || "https://velaash.in"),
@@ -41,16 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${brandName}`,
     },
     description: descriptionDefault,
-    keywords: [
-      brandName,
-      storeProfile.legal_name || BRAND.legalName,
-      "Contemporary Clothing",
-      "Kurtas and Sets",
-      "Designer Dresses",
-      "Co-ord Sets",
-      "Contemporary Womenswear",
-      "VELAASH TRADER'S",
-    ],
+    keywords: siteKeywords,
     authors: [{ name: storeProfile.legal_name || BRAND.legalName }],
     icons: {
       icon:
@@ -119,13 +127,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let initialUser = null;
   let initialWishlistIds: string[] = [];
   let logoUrl: string | null = null;
+  let promoPopupData = null;
   if (!isAdminRoute) {
     try {
-      const [{ storeProfile }, supabase] = await Promise.all([
+      const [{ storeProfile }, supabase, promoPopup] = await Promise.all([
         getSiteSettings(),
         createClient(),
+        getPromoPopup(),
       ]);
       logoUrl = storeProfile.logo_url || "/logo.png";
+      promoPopupData = promoPopup;
 
       const {
         data: { user },
@@ -164,6 +175,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <BrandPreloader logoUrl={logoUrl} />
                   <CartToast />
                   <CookieConsentBanner />
+                  <PromoOfferPopup data={promoPopupData} />
                 </>
               }
             >
@@ -172,17 +184,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <AnalyticsScripts />
           </AuthProvider>
         )}
-        <Script
-          id="microsoft-clarity"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "${env.NEXT_PUBLIC_CLARITY_PROJECT_ID || "yqemtpkwtz"}");`,
-          }}
-        />
       </body>
     </html>
   );

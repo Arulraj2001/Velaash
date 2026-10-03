@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronRight, Ruler } from "lucide-react";
 import { getAllCategorySizeCharts } from "@/features/products/queries/get-all-category-size-charts";
 import { StandaloneSizeGuideView } from "@/features/products/components/standalone-size-guide-view";
+import { getSiteSettings, getStoreContact } from "@/features/settings";
 
 export const metadata: Metadata = {
   title: "Size & Fit Guide | Velaash",
@@ -14,7 +15,11 @@ export const metadata: Metadata = {
 export const revalidate = 3600; // Cache for 1 hour
 
 export default async function SizeGuidePage() {
-  const categoryCharts = await getAllCategorySizeCharts();
+  const [categoryCharts, settings] = await Promise.all([
+    getAllCategorySizeCharts(),
+    getSiteSettings(),
+  ]);
+  const { whatsappNumber } = getStoreContact(settings.storeProfile);
 
   return (
     <main className="min-h-screen bg-brand-cream/20 py-10 sm:py-16 px-4 sm:px-6 lg:px-8">
@@ -46,7 +51,7 @@ export default async function SizeGuidePage() {
         </header>
 
         {/* Standalone Size Guide View */}
-        <StandaloneSizeGuideView categories={categoryCharts} />
+        <StandaloneSizeGuideView categories={categoryCharts} whatsappNumber={whatsappNumber} />
       </div>
     </main>
   );

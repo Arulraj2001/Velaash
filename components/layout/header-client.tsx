@@ -8,7 +8,7 @@ import { Container } from "@/components/ui/container";
 import { BrandWordmark } from "@/components/ui";
 import { BRAND } from "@/lib/constants";
 import type { NavigationCategory } from "@/features/navigation";
-import type { AnnouncementSetting } from "@/features/settings";
+import type { AnnouncementSetting, ShippingPolicySetting } from "@/features/settings";
 import { AnnouncementBar } from "./announcement-bar";
 import { HeaderNav } from "./header-nav";
 import { SearchOverlay } from "./search-overlay";
@@ -19,6 +19,7 @@ import { useWishlistStore } from "@/features/wishlist/store/wishlist-store";
 
 interface HeaderClientProps {
   categories: NavigationCategory[];
+  shippingPolicy?: ShippingPolicySetting;
   logoUrl?: string;
   storeName?: string;
   whatsappNumber?: string;
@@ -28,6 +29,7 @@ interface HeaderClientProps {
 
 export function HeaderClient({
   categories,
+  shippingPolicy,
   logoUrl,
   storeName,
   whatsappNumber,
@@ -58,7 +60,7 @@ export function HeaderClient({
     <>
       <header
         className={`border-brand-border/80 bg-brand-cream/95 sticky top-0 z-40 w-full border-b backdrop-blur-md transition-all duration-300 ${
-          isScrolled ? "shadow-luxury py-0" : "shadow-none"
+          isScrolled ? "shadow-xs py-0" : "shadow-none"
         }`}
       >
         {/* Top Dismissible Announcement Bar */}
@@ -95,7 +97,7 @@ export function HeaderClient({
               >
                 {logoUrl && (
                   <div
-                    className={`relative rounded-full overflow-hidden shrink-0 border border-brand-gold/30 bg-white/70 shadow-xs transition-all duration-300 ${
+                    className={`relative rounded-full overflow-hidden shrink-0 border border-slate-200/80 bg-white shadow-xs transition-all duration-300 ${
                       isScrolled ? "h-10 w-10 sm:h-11 sm:w-11" : "h-11 w-11 sm:h-12 sm:w-12"
                     }`}
                   >
@@ -117,7 +119,7 @@ export function HeaderClient({
             </div>
 
             {/* Desktop Navigation Links */}
-            <HeaderNav categories={categories} />
+            <HeaderNav categories={categories} shippingPolicy={shippingPolicy} />
 
             {/* Header Right Action Icons */}
             <div className="flex items-center gap-1 sm:gap-2">
@@ -173,6 +175,7 @@ export function HeaderClient({
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         categories={categories}
+        shippingPolicy={shippingPolicy}
         logoUrl={logoUrl}
         storeName={storeName}
         whatsappNumber={whatsappNumber}

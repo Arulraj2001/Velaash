@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { subscribeNewsletterAction } from "@/features/newsletter/actions/subscribe-newsletter-action";
 
 export function NewsletterForm() {
   const [email, setEmail] = React.useState("");
@@ -20,13 +21,26 @@ export function NewsletterForm() {
     setIsSubmitting(true);
     setStatus("idle");
 
-    // Simulated subscription action (will connect to Resend in marketing phase)
-    setTimeout(() => {
+    try {
+      const result = await subscribeNewsletterAction(email);
       setIsSubmitting(false);
-      setStatus("success");
-      setMessage("Thank you for subscribing! You will receive our latest updates and new arrivals.");
-      setEmail("");
-    }, 600);
+      if (result.success) {
+        setStatus("success");
+        setMessage(
+          result.alreadySubscribed
+            ? "This email is already subscribed."
+            : "Thank you for subscribing! You will receive our latest updates and new arrivals."
+        );
+        setEmail("");
+      } else {
+        setStatus("error");
+        setMessage(result.error);
+      }
+    } catch {
+      setIsSubmitting(false);
+      setStatus("error");
+      setMessage("We could not save your subscription right now. Please try again shortly.");
+    }
   };
 
   return (

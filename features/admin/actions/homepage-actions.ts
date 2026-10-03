@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/features/auth/queries/get-admin-user";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -36,6 +36,7 @@ export interface HomepageActionResult {
  * Revalidates public homepage and admin builder.
  */
 function revalidateHomepagePaths() {
+  revalidateTag("homepage-sections", "max"); // bust unstable_cache
   revalidatePath("/admin/homepage");
   revalidatePath("/");
 }
@@ -46,28 +47,36 @@ function revalidateHomepagePaths() {
 const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
   {
     section_type: "hero_banner",
-    title: "Modern Everyday Luxury",
+    title: "Everyday essentials for every home",
     display_order: 1,
     is_active: true,
     content: {
-      headline: "Modern Everyday Luxury",
-      subtitle: "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+      headline: "Everyday essentials for every home",
+      subtitle: "Clothing for men and women, plus traditional pooja and brass essentials.",
       cta_text: "Explore Collection",
       cta_link: "/shop",
       secondary_cta_text: "Kurtas & Sets",
       secondary_cta_link: "/collections/kurtas-sets",
       bg_image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+      bg_image_mobile: "",
+      position_x: 50,
+      position_y: 50,
+      text_align: "center",
       slides: [
         {
           id: "slide-1",
           tag: "New Season Arrivals",
-          headline: "Modern Everyday Luxury",
-          subtitle: "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+          headline: "Everyday essentials for every home",
+          subtitle: "Clothing for men and women, plus traditional pooja and brass essentials.",
           cta_text: "Explore Collection",
           cta_link: "/shop",
           secondary_cta_text: "Kurtas & Sets",
           secondary_cta_link: "/collections/kurtas-sets",
           bg_image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+          bg_image_mobile: "",
+          position_x: 50,
+          position_y: 50,
+          text_align: "center",
         },
         {
           id: "slide-2",
@@ -79,6 +88,10 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
           secondary_cta_text: "Dresses",
           secondary_cta_link: "/collections/dresses",
           bg_image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=2000&q=85",
+          bg_image_mobile: "",
+          position_x: 50,
+          position_y: 50,
+          text_align: "center",
         },
         {
           id: "slide-3",
@@ -90,6 +103,10 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
           secondary_cta_text: "View All",
           secondary_cta_link: "/shop",
           bg_image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=85",
+          bg_image_mobile: "",
+          position_x: 50,
+          position_y: 50,
+          text_align: "center",
         },
       ],
     },
@@ -179,12 +196,12 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
   },
   {
     section_type: "testimonials",
-    title: "Patron Testimonials",
+    title: "Customer Reviews",
     display_order: 5,
     is_active: true,
     content: {
-      headline: "Cherished by Our Patrons",
-      subtitle: "Real experiences from women who celebrate everyday grace in our tailored silhouettes.",
+      headline: "Loved by Our Customers",
+      subtitle: "Real experiences from customers who celebrate quality and everyday grace.",
       items: [
         {
           id: "1",
@@ -239,7 +256,7 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
         {
           icon: "MessageCircle",
           title: "WhatsApp Support",
-          description: "Direct assistance and sizing guidance on +91 8508643832.",
+          description: "Direct assistance and sizing guidance on WhatsApp.",
         },
       ],
     },
@@ -605,8 +622,8 @@ export async function createHomepageSectionAction(
     if (section_type === "hero_banner") {
       defaultTitle = defaultTitle || "Hero Banner";
       defaultContent = {
-        headline: "Modern Everyday Luxury",
-        subtitle: "Effortless silhouettes and contemporary styles designed for everyday refinement.",
+        headline: "Everyday essentials for every home",
+        subtitle: "Clothing for men and women, plus traditional pooja and brass essentials.",
         cta_text: "Explore Collection",
         cta_link: "/shop",
         secondary_cta_text: "",
@@ -616,8 +633,8 @@ export async function createHomepageSectionAction(
           {
             id: "slide-1",
             tag: "New Season Arrivals",
-            headline: "Modern Everyday Luxury",
-            subtitle: "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+            headline: "Everyday essentials for every home",
+            subtitle: "Clothing for men and women, plus traditional pooja and brass essentials.",
             cta_text: "Explore Collection",
             cta_link: "/shop",
             secondary_cta_text: "Kurtas & Sets",
@@ -724,11 +741,11 @@ export async function createHomepageSectionAction(
         ...defaultContent,
       };
     } else if (section_type === "testimonials") {
-      defaultTitle = defaultTitle || "Patron Testimonials";
+      defaultTitle = defaultTitle || "Customer Reviews";
       defaultContent = {
-        headline: "Cherished by Our Patrons",
+        headline: "Loved by Our Customers",
         subtitle:
-          "Real experiences from women who celebrate everyday grace in our tailored silhouettes.",
+          "Real experiences from customers who celebrate quality and everyday grace.",
         items: [
           {
             id: "1",
@@ -768,7 +785,7 @@ export async function createHomepageSectionAction(
           { icon: "Truck", title: "Pan-India Delivery", description: "Reliable domestic shipping across all serviceable PIN codes." },
           { icon: "RotateCcw", title: "Easy Returns", description: "Hassle-free return and exchange assistance." },
           { icon: "ShieldCheck", title: "Secure Payments", description: "100% encrypted & protected checkout." },
-          { icon: "MessageCircle", title: "WhatsApp Support", description: "Personal assistance on +91 8508643832." },
+          { icon: "MessageCircle", title: "WhatsApp Support", description: "Personal assistance on WhatsApp." },
         ],
         ...defaultContent,
       };
@@ -899,7 +916,7 @@ export async function uploadHomepageImageAction(
 
     if (uploadErr) {
       console.error("Homepage image upload failed:", uploadErr);
-      return { success: false, error: "Failed to upload image to storage." };
+      return { success: false, error: uploadErr.message || "Failed to upload image to storage." };
     }
 
     const {

@@ -44,7 +44,8 @@ async function runAccountDashboardTests() {
   const { getCustomerOrderDetail } = await import(
     "../features/orders/queries/get-customer-order-detail"
   );
-  const { executeOrderCancellation, cancelCustomerOrderAction } = await import(
+  const { executeOrderCancellation } = await import("../features/orders/cancel-order");
+  const { cancelCustomerOrderAction } = await import(
     "../features/orders/actions/cancel-order-action"
   );
   type OrderStatus = import("../features/orders/types").OrderStatus;
@@ -425,6 +426,77 @@ async function runAccountDashboardTests() {
         .from("product_variants")
         .update({ stock_quantity: initialStock })
         .eq("id", testVariant.id);
+
+      const paidOrderNumber = "TEST-ACC-CANCEL-PAID-01";
+      const { data: paidOrder } = await supabase
+        .from("orders")
+        .insert({
+          order_number: paidOrderNumber,
+          customer_id: customerA.id,
+          status: "confirmed",
+          payment_method: "razorpay",
+          payment_status: "paid",
+          subtotal: 1500,
+          shipping_charge: 0,
+          discount_amount: 0,
+          total_amount: 1500,
+          shipping_address: {
+            fullName: customerA.name,
+            phone: "9876543210",
+            email: customerA.email,
+            addressLine1: "15 Temple Road",
+            city: "Madurai",
+            state: "Tamil Nadu",
+            pincode: "625001",
+          },
+        })
+        .select("id")
+        .single();
+
+      assert(!!paidOrder, "Created paid confirmed order for cancellation regression test");
+
+      if (paidOrder) {
+        await supabase.from("order_items").insert({
+          order_id: paidOrder.id,
+          product_id: testVariant.product_id,
+          variant_id: testVariant.id,
+          product_name_snapshot: "Velaash Pure Silk Kurta",
+          variant_details_snapshot: { size: "XL", color: "Royal Maroon" },
+          unit_price: 1500,
+          quantity: 1,
+          subtotal: 1500,
+        });
+
+        const paidCancelResult = await executeOrderCancellation(supabase, {
+          orderNumber: paidOrderNumber,
+          userId: customerA.id,
+          userEmail: customerA.email,
+        });
+        const { data: paidOrderAfterCancel } = await supabase
+          .from("orders")
+          .select("status, payment_status")
+          .eq("order_number", paidOrderNumber)
+          .single();
+        const { data: stockAfterPaidCancel } = await supabase
+          .from("product_variants")
+          .select("stock_quantity")
+          .eq("id", testVariant.id)
+          .single();
+
+        assert(
+          paidCancelResult.success === false,
+          "Paid confirmed order cannot be cancelled without refund processing"
+        );
+        assert(
+          paidOrderAfterCancel?.status === "confirmed" &&
+            paidOrderAfterCancel.payment_status === "paid",
+          "Rejected cancellation preserves paid order state"
+        );
+        assert(
+          stockAfterPaidCancel?.stock_quantity === initialStock,
+          "Rejected cancellation does not restore already-reserved stock"
+        );
+      }
     }
   }
 

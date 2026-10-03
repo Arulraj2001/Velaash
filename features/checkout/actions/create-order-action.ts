@@ -22,29 +22,8 @@ import {
 } from "../types";
 
 
-/**
- * In-memory idempotency cache to protect against rapid duplicate submissions
- * across both offline and online environments.
- */
-const IDEMPOTENCY_STORE = new Map<
-  string,
-  {
-    orderNumber: string;
-    orderId: string;
-    totalAmount: number;
-    paymentMethod: "razorpay" | "cod";
-    timestamp: number;
-    razorpayOrderId?: string;
-    razorpayKeyId?: string;
-    amountPaise?: number;
-    currency?: string;
-  }
->();
-
-
 export async function createOrderAction(
-  rawInput: CreateOrderInput,
-  options?: { authenticatedCustomerId?: string }
+  rawInput: CreateOrderInput
 ): Promise<CreateOrderResponse> {
   // 1. Check for empty cart
   if (!rawInput.items || rawInput.items.length === 0) {
@@ -98,46 +77,34 @@ export async function createOrderAction(
     }
   }
 
-  // 3. Idempotency Check: Prevent duplicate order creation & double stock deduction
-  if (input.idempotencyKey) {
-    const cachedOrder = IDEMPOTENCY_STORE.get(input.idempotencyKey);
-    if (cachedOrder) {
-      return {
-        success: true,
-        orderNumber: cachedOrder.orderNumber,
-        orderId: cachedOrder.orderId,
-        totalAmount: cachedOrder.totalAmount,
-        paymentMethod: cachedOrder.paymentMethod,
-        razorpayOrderId: cachedOrder.razorpayOrderId,
-        razorpayKeyId: cachedOrder.razorpayKeyId,
-        amountPaise: cachedOrder.amountPaise,
-        currency: cachedOrder.currency,
-        isDuplicate: true,
-      };
-    }
-  }
-
   try {
     // 3. Fetch current user session (optional - supports guest checkout)
     // Note: customerId is NEVER trusted from client input; extracted strictly from verified cookie session
-    let customerId: string | null = options?.authenticatedCustomerId ?? null;
+    let customerId: string | null = null;
     let guestAccountCreated = false;
-    if (!customerId) {
-      try {
-        const userSupabase = await createClient();
-        const {
-          data: { user },
-        } = await userSupabase.auth.getUser();
-        if (user) {
-          customerId = user.id;
-        }
-      } catch {
-        // Guest user or outside request context
+    try {
+      const userSupabase = await createClient();
+      const {
+        data: { user },
+      } = await userSupabase.auth.getUser();
+      if (user) {
+        customerId = user.id;
       }
+    } catch {
+      // Guest user or outside request context
     }
 
     // 4. Fetch live site settings for shipping & COD rules
     const siteSettings = await getSiteSettings();
+
+    // 4b. Enforce customer sign-in requirement policy if toggled on in Admin Settings
+    if (siteSettings.checkoutPolicy?.require_sign_in_to_order && !customerId) {
+      return {
+        success: false,
+        error: "Please sign in to your Velaash account to place an order.",
+        code: "AUTH_REQUIRED",
+      };
+    }
 
     // 5. Server-Side Stock Verification & Pricing Snapshot
     // CRITICAL: We NEVER trust prices or stock counts passed from the client!
@@ -155,6 +122,101 @@ export async function createOrderAction(
       adminSupabase = createAdminClient();
     } catch {
       // Fallback to mock catalog if database is not reachable
+    }
+
+    if (adminSupabase) {
+      const { data: existingOrder, error: idempotencyLookupError } = await adminSupabase
+        .from("orders")
+        .select("id, order_number, status, payment_method, payment_status, total_amount, razorpay_order_id")
+        .eq("idempotency_key", input.idempotencyKey)
+        .maybeSingle();
+
+      if (idempotencyLookupError) {
+        return {
+          success: false,
+          error: "Could not verify whether this checkout was already submitted. Please retry.",
+          code: "VALIDATION_FAILED",
+        };
+      }
+
+      if (existingOrder) {
+        if (existingOrder.status === "cancelled" && existingOrder.payment_status === "paid") {
+          return {
+            success: false,
+            error: "Payment was received after this order was cancelled. Please contact support for a refund update.",
+            code: "VALIDATION_FAILED",
+          };
+        }
+
+        if (existingOrder.payment_method !== input.paymentMethod) {
+          return {
+            success: false,
+            error: "This checkout request was already used with a different payment method. Please refresh checkout.",
+            code: "VALIDATION_FAILED",
+          };
+        }
+
+        if (["cancelled", "payment_failed", "refunded"].includes(existingOrder.status)) {
+          return {
+            success: false,
+            error: "This order is no longer active. Refresh checkout to place a new order.",
+            code: "VALIDATION_FAILED",
+          };
+        }
+
+        const alreadyCompleted = existingOrder.payment_status === "paid";
+        if (
+          !alreadyCompleted &&
+          (existingOrder.status !== "pending" || existingOrder.payment_status !== "pending")
+        ) {
+          return {
+            success: false,
+            error: "This order is no longer awaiting payment. Refresh checkout to place a new order.",
+            code: "VALIDATION_FAILED",
+          };
+        }
+
+        if (
+          input.paymentMethod === "razorpay" &&
+          !alreadyCompleted &&
+          !existingOrder.razorpay_order_id
+        ) {
+          return {
+            success: false,
+            error: "Payment setup for this order is incomplete. Refresh checkout to try again.",
+            code: "GATEWAY_ERROR",
+          };
+        }
+
+        const accessToken = generateOrderAccessToken(existingOrder.order_number);
+        try {
+          const cookieStore = await cookies();
+          cookieStore.set(`velaash_order_access_${existingOrder.order_number}`, accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 1800,
+            sameSite: "lax",
+            path: "/",
+          });
+        } catch {
+          // Outside request context
+        }
+
+        return {
+          success: true,
+          orderNumber: existingOrder.order_number,
+          orderId: existingOrder.id,
+          totalAmount: Number(existingOrder.total_amount),
+          paymentMethod: existingOrder.payment_method,
+          isDuplicate: true,
+          alreadyCompleted,
+          razorpayOrderId: existingOrder.razorpay_order_id || undefined,
+          razorpayKeyId: env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder_key_id",
+          amountPaise: Math.round(Number(existingOrder.total_amount) * 100),
+          currency: "INR",
+          accessToken,
+        };
+      }
     }
 
     // Guest Account Creation: If guest checked "Create an account?" during checkout,
@@ -232,6 +294,7 @@ export async function createOrderAction(
                 customerName: input.shippingAddress.fullName,
                 email: input.contact.email,
                 loginUrl: `${appUrl}/account/login`,
+                supportEmail: siteSettings.storeProfile.email,
               }),
               text: `Welcome to Velaash, ${input.shippingAddress.fullName}! Your customer account has been created for ${input.contact.email} and your delivery address has been saved to your account. You can log in anytime at ${appUrl}/account/login using your email — we'll send you a fast 6-digit access code, no password needed.`,
             });
@@ -245,7 +308,13 @@ export async function createOrderAction(
     }
 
 
-    const variantIds = input.items.map((i) => i.variantId);
+    const variantIds = input.items
+      .map((i) => i.variantId)
+      .filter((id): id is string => Boolean(id && id !== "simple" && id !== "null"));
+
+    const simpleProductIds = input.items
+      .filter((i) => !i.variantId || i.variantId === "simple" || i.variantId === "null")
+      .map((i) => i.productId);
 
     // Attempt to query live inventory from Postgres
     let liveVariants: Array<{
@@ -262,46 +331,84 @@ export async function createOrderAction(
         base_price: number;
         is_active: boolean;
       } | null;
-    }> | null = null;
+    }> = [];
+
+    let liveProducts: Array<{
+      id: string;
+      name: string;
+      base_price: number;
+      stock_quantity?: number;
+      is_active: boolean;
+    }> = [];
 
     if (adminSupabase) {
-      try {
-        const { data, error } = await adminSupabase
-          .from("product_variants")
-          .select(`
-            id,
-            product_id,
-            stock_quantity,
-            price_override,
-            is_active,
-            size,
-            color,
-            products (
+      if (variantIds.length > 0) {
+        try {
+          const { data, error } = await adminSupabase
+            .from("product_variants")
+            .select(`
               id,
-              name,
-              base_price,
-              is_active
-            )
-          `)
-          .in("id", variantIds);
+              product_id,
+              stock_quantity,
+              price_override,
+              is_active,
+              size,
+              color,
+              products (
+                id,
+                name,
+                base_price,
+                is_active
+              )
+            `)
+            .in("id", variantIds);
 
-        if (error) {
-          console.error("Live variants query PostgREST error:", error);
-        } else if (data && data.length > 0) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          liveVariants = data as any;
+          if (error) {
+            console.error("Live variants query PostgREST error:", error);
+          } else if (data && data.length > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            liveVariants = data as any;
+          }
+        } catch (err) {
+          console.error("Live variants query exception:", err);
         }
-      } catch (err) {
-        console.error("Live variants query exception:", err);
+      }
+
+      if (simpleProductIds.length > 0) {
+        try {
+          const res = await adminSupabase
+            .from("products")
+            .select("id, name, base_price, is_active, stock_quantity")
+            .in("id", simpleProductIds);
+
+          if (!res.error && res.data) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            liveProducts = res.data as any;
+          } else {
+            // Fallback without stock_quantity column if column migration pending
+            const fallbackRes = await adminSupabase
+              .from("products")
+              .select("id, name, base_price, is_active")
+              .in("id", simpleProductIds);
+            if (fallbackRes.data) {
+              liveProducts = fallbackRes.data.map((p) => ({
+                ...p,
+                stock_quantity: 999,
+              }));
+            }
+          }
+        } catch (err) {
+          console.error("Live simple products query exception:", err);
+        }
       }
     }
 
     interface VerifiedLineItem {
       productId: string;
-      variantId: string;
+      variantId: string | null;
       title: string;
-      size: string;
-      color: string;
+      size: string | null;
+      color: string | null;
       unitPrice: number;
       quantity: number;
       lineSubtotal: number;
@@ -311,7 +418,40 @@ export async function createOrderAction(
     const verifiedItems: VerifiedLineItem[] = [];
 
     for (const requestedItem of input.items) {
-      if (liveVariants) {
+      const isSimple = !requestedItem.variantId || requestedItem.variantId === "simple" || requestedItem.variantId === "null";
+
+      if (isSimple) {
+        const prodMatch = liveProducts.find((p) => p.id === requestedItem.productId);
+        if (!prodMatch || !prodMatch.is_active) {
+          return {
+            success: false,
+            error: "An item in your cart is no longer available in the store catalog.",
+            code: "OUT_OF_STOCK",
+          };
+        }
+
+        const availableStock = prodMatch.stock_quantity ?? 999;
+        if (availableStock < requestedItem.quantity) {
+          return {
+            success: false,
+            error: `"${prodMatch.name}" has only ${availableStock} available in stock (you requested ${requestedItem.quantity}).`,
+            code: "OUT_OF_STOCK",
+          };
+        }
+
+        const unitPrice = Number(prodMatch.base_price);
+        verifiedItems.push({
+          productId: prodMatch.id,
+          variantId: null,
+          title: prodMatch.name,
+          size: null,
+          color: null,
+          unitPrice,
+          quantity: requestedItem.quantity,
+          lineSubtotal: unitPrice * requestedItem.quantity,
+          availableStock,
+        });
+      } else {
         const liveMatch = liveVariants.find((v) => v.id === requestedItem.variantId);
         if (!liveMatch || !liveMatch.is_active || !liveMatch.products?.is_active) {
           return {
@@ -345,12 +485,6 @@ export async function createOrderAction(
           lineSubtotal: unitPrice * requestedItem.quantity,
           availableStock: liveMatch.stock_quantity,
         });
-      } else {
-        return {
-          success: false,
-          error: "An item in your cart is no longer available in the store catalog.",
-          code: "OUT_OF_STOCK",
-        };
       }
     }
 
@@ -360,6 +494,10 @@ export async function createOrderAction(
     // 7. Authoritative Coupon Revalidation
     let discountAmount = 0;
     let validatedCouponCode: string | null = null;
+    let validatedCoupon: {
+      code: string;
+      discountType: "percentage" | "flat" | "free_shipping";
+    } | null = null;
 
     if (input.couponCode) {
       const couponRes = await validateCouponAction(input.couponCode, subtotal);
@@ -372,74 +510,57 @@ export async function createOrderAction(
       }
       discountAmount = couponRes.discountAmount;
       validatedCouponCode = couponRes.coupon.code;
+      validatedCoupon = {
+        code: couponRes.coupon.code,
+        discountType: couponRes.coupon.discountType,
+      };
     }
 
-    // 8. Authoritative Shipping Fee Calculation
-    //
-    // Strategy (in priority order):
-    //   a. If subtotal >= free_shipping_threshold → free shipping (always, regardless of courier rate)
-    //   b. Try Shiprocket serviceability for the destination pincode:
-    //      - On success: use the quoted live courier rate
-    //      - On failure/unserviceable: fall back to site-default standard_shipping_fee silently
-    //
-    // IMPORTANT: We never hard-block a sale due to Shiprocket API failure.
-    // The fallback preserves the business rule while keeping UX intact.
+    // 8. Authoritative Shipping Fee Calculation (Conflict-Free Precedence)
+    const now = new Date();
     const freeShippingThreshold = siteSettings.shippingPolicy.free_shipping_threshold;
-    const isFreeShipping = subtotal >= freeShippingThreshold;
+    const isThresholdFree = subtotal >= freeShippingThreshold;
 
-    let shippingCharge: number;
-    let shippingSource: "free" | "shiprocket" | "site_default" = "site_default";
-
-    if (isFreeShipping) {
-      shippingCharge = 0;
-      shippingSource = "free";
-    } else {
-      // Attempt live Shiprocket rate for the customer's pincode
-      try {
-        const { checkServiceability } = await import("@/lib/shiprocket");
-
-        // Fetch pickup postcode from site_settings (shiprocket_settings key)
-        let pickupPostcode = "600001"; // Chennai fallback
-        if (adminSupabase) {
-          try {
-            const { data: srRow } = await adminSupabase
-              .from("site_settings")
-              .select("value")
-              .eq("key", "shiprocket_settings")
-              .maybeSingle();
-            const srSettings = srRow?.value as { pickup_postcode?: string; default_weight_kg?: number } | null;
-            if (srSettings?.pickup_postcode) pickupPostcode = srSettings.pickup_postcode;
-          } catch {
-            // Non-critical — proceed with fallback postcode
-          }
-        }
-
-        // Estimate total cart weight: 500g per item as a reasonable default for apparel
-        const estimatedWeightGrams = verifiedItems.reduce(
-          (acc, item) => acc + item.quantity * 500,
-          0
-        );
-
-        const serviceability = await checkServiceability({
-          pickupPostcode,
-          deliveryPostcode: input.shippingAddress.pincode,
-          weightGrams: Math.max(estimatedWeightGrams, 100),
-          totalAmountINR: subtotal,
-          cod: input.paymentMethod === "cod",
-        });
-
-        if (serviceability?.serviceable && serviceability.rate !== null && serviceability.isLive) {
-          shippingCharge = serviceability.rate;
-          shippingSource = "shiprocket";
-        } else {
-          // API returned mock/fallback or pincode is unserviceable → use site default
-          shippingCharge = siteSettings.shippingPolicy.standard_shipping_fee;
-        }
-      } catch {
-        // Shiprocket API completely unavailable → silent fallback, never block checkout
-        shippingCharge = siteSettings.shippingPolicy.standard_shipping_fee;
-      }
+    let isFestiveActive = false;
+    if (siteSettings.shippingPolicy.festive_shipping_enabled) {
+      const validFrom = siteSettings.shippingPolicy.festive_valid_from
+        ? new Date(siteSettings.shippingPolicy.festive_valid_from)
+        : null;
+      const validUntil = siteSettings.shippingPolicy.festive_valid_until
+        ? new Date(siteSettings.shippingPolicy.festive_valid_until)
+        : null;
+      const isAfterStart = !validFrom || now >= validFrom;
+      const isBeforeEnd = !validUntil || now <= validUntil;
+      isFestiveActive = isAfterStart && isBeforeEnd;
     }
+
+    const hasFestiveProduct =
+      isFestiveActive &&
+      (siteSettings.shippingPolicy.festive_apply_to_all ||
+        verifiedItems.some((item) => {
+          if (siteSettings.shippingPolicy.festive_product_ids?.includes(item.productId)) return true;
+          return false;
+        }));
+
+    const isCouponFree = Boolean(
+      validatedCoupon &&
+        (validatedCoupon.discountType === "free_shipping" ||
+          (siteSettings.shippingPolicy.festive_coupon_code &&
+            validatedCoupon.code.toUpperCase() ===
+              siteSettings.shippingPolicy.festive_coupon_code.toUpperCase()))
+    );
+
+    const isFreeShipping = isThresholdFree || hasFestiveProduct || isCouponFree;
+    const shippingCharge = isFreeShipping
+      ? 0
+      : siteSettings.shippingPolicy.standard_shipping_fee;
+    const shippingSource = isThresholdFree
+      ? "free_threshold"
+      : hasFestiveProduct
+      ? "festive_product_offer"
+      : isCouponFree
+      ? "free_shipping_coupon"
+      : "standard_delivery";
 
     console.info(
       `[Checkout] Shipping charge ₹${shippingCharge} (source: ${shippingSource}, pincode: ${input.shippingAddress.pincode})`
@@ -476,11 +597,13 @@ export async function createOrderAction(
     }
 
     // 10. Authoritative Total Amount
-    const totalAmount = Math.max(0, subtotal - discountAmount) + shippingCharge + codHandlingFee;
+    let totalAmount = Math.max(0, subtotal - discountAmount) + shippingCharge + codHandlingFee;
 
     // 11. Generate Order Number & Record Order
     let orderNumber: string;
     let orderId: string;
+    let isDuplicateOrder = false;
+    let existingRazorpayOrderId: string | undefined;
 
     const shippingAddressSnapshot = {
       fullName: input.shippingAddress.fullName,
@@ -494,120 +617,227 @@ export async function createOrderAction(
       email: input.contact.email,
     };
 
-    // Attempt Supabase database write
+    // The RPC commits the order, order items, coupon usage, and stock reservation atomically.
     let dbWriteSuccess = false;
 
-    if (liveVariants && adminSupabase) {
+    const hasSimpleItems = verifiedItems.some((i) => !i.variantId);
+
+    if (adminSupabase && verifiedItems.length > 0) {
       try {
-        let insertAttempts = 0;
-        let orderData: { id: string; order_number: string } | null = null;
+        if (!hasSimpleItems) {
+          // Standard pure variant clothing checkout using atomic RPC
+          const { data, error } = await adminSupabase.rpc("create_checkout_order_atomic", {
+            p_idempotency_key: input.idempotencyKey,
+            p_customer_id: customerId,
+            p_payment_method: input.paymentMethod,
+            p_subtotal: subtotal,
+            p_shipping_charge: shippingCharge,
+            p_discount_amount: discountAmount,
+            p_total_amount: totalAmount,
+            p_shipping_address: shippingAddressSnapshot,
+            p_coupon_code: validatedCouponCode,
+            p_notes: `${codHandlingFee > 0 ? `[COD handling fee: ₹${codHandlingFee}]` : ""}${guestAccountCreated ? " [guest_account_created: true]" : ""}`.trim(),
+            p_items: verifiedItems.map((item) => ({
+              product_id: item.productId,
+              variant_id: item.variantId,
+              title: item.title,
+              size: item.size || "",
+              color: item.color || "",
+              unit_price: item.unitPrice,
+              quantity: item.quantity,
+              line_subtotal: item.lineSubtotal,
+            })),
+          });
 
-        while (insertAttempts < 5 && !dbWriteSuccess) {
-          insertAttempts++;
-          const { data, error: orderError } = await adminSupabase
+          if (error) {
+            const isOutOfStock = error.message.includes("OUT_OF_STOCK");
+            const isCouponInvalid = error.message.includes("COUPON_INVALID");
+            return {
+              success: false,
+              error: isOutOfStock
+                ? "An item in your cart is no longer available in the requested quantity. Please update your cart."
+                : isCouponInvalid
+                  ? "Your coupon is no longer valid. Please review the discount and try again."
+                  : "Failed to safely reserve your items. Please try again.",
+              code: isOutOfStock ? "OUT_OF_STOCK" : isCouponInvalid ? "COUPON_INVALID" : "VALIDATION_FAILED",
+            };
+          }
+
+          const persistedOrder = data?.[0];
+          if (!persistedOrder) {
+            return {
+              success: false,
+              error: "Order could not be persisted. Please try again.",
+              code: "VALIDATION_FAILED",
+            };
+          }
+
+          orderId = persistedOrder.order_id;
+          orderNumber = persistedOrder.order_number;
+          isDuplicateOrder = persistedOrder.is_duplicate;
+          dbWriteSuccess = true;
+        } else {
+          // Checkout with simple products (no-variant) or mixed items:
+          // Check idempotency first
+          const { data: existingIdemp } = await adminSupabase
             .from("orders")
-            .insert({
-              customer_id: customerId,
-              status: "pending",
-              payment_method: input.paymentMethod,
-              payment_status: "pending",
-              subtotal,
-              shipping_charge: shippingCharge,
-              discount_amount: discountAmount,
-              total_amount: totalAmount,
-              shipping_address: shippingAddressSnapshot,
-              billing_address: shippingAddressSnapshot,
-              coupon_code: validatedCouponCode,
-              notes: `[idempotency_key: ${input.idempotencyKey}]${codHandlingFee > 0 ? ` [COD handling fee: ₹${codHandlingFee}]` : ""}${guestAccountCreated ? " [guest_account_created: true]" : ""}`,
-            })
-            .select("id, order_number")
-            .single();
+            .select("id, order_number, status, payment_method, payment_status, total_amount, razorpay_order_id")
+            .eq("idempotency_key", input.idempotencyKey)
+            .maybeSingle();
 
-          if (orderError) {
-            console.warn(
-              `[OrderInsert:Attempt ${insertAttempts}] Insert failed: ${orderError.message} (code: ${orderError.code})`
-            );
-            if (orderError.code === "23505" && orderError.message?.includes("orders_order_number_key")) {
-              // Sequence was behind seed data, retry with next generated order number
-              continue;
-            }
-            break;
-          } else if (data) {
-            orderData = data;
-            orderId = orderData.id;
-            orderNumber = orderData.order_number;
+          if (existingIdemp) {
+            orderId = existingIdemp.id;
+            orderNumber = existingIdemp.order_number;
+            isDuplicateOrder = true;
             dbWriteSuccess = true;
+          } else {
+            // Direct insertion of order
+            const { data: insertedOrder, error: orderInsertErr } = await adminSupabase
+              .from("orders")
+              .insert({
+                customer_id: customerId,
+                status: "pending",
+                payment_method: input.paymentMethod,
+                payment_status: "pending",
+                subtotal,
+                shipping_charge: shippingCharge,
+                discount_amount: discountAmount,
+                total_amount: totalAmount,
+                shipping_address: shippingAddressSnapshot,
+                billing_address: shippingAddressSnapshot,
+                coupon_code: validatedCouponCode,
+                idempotency_key: input.idempotencyKey,
+                notes: `${codHandlingFee > 0 ? `[COD handling fee: ₹${codHandlingFee}]` : ""}${guestAccountCreated ? " [guest_account_created: true]" : ""}`.trim() || null,
+              })
+              .select("id, order_number")
+              .single();
+
+            if (orderInsertErr || !insertedOrder) {
+              console.error("Direct order insertion error:", orderInsertErr);
+              return {
+                success: false,
+                error: "Failed to safely record your order. Please try again.",
+                code: "VALIDATION_FAILED",
+              };
+            }
+
+            orderId = insertedOrder.id;
+            orderNumber = insertedOrder.order_number;
+            dbWriteSuccess = true;
+
+            // Insert line items
+            const orderItemsPayload = verifiedItems.map((item) => ({
+              order_id: orderId!,
+              product_id: item.productId,
+              variant_id: item.variantId || null,
+              product_name_snapshot: item.title,
+              variant_details_snapshot: [item.size, item.color].filter(Boolean).join(" / ") || "Standard",
+              unit_price: item.unitPrice,
+              quantity: item.quantity,
+              subtotal: item.lineSubtotal,
+            }));
+
+            const { error: itemsInsertErr } = await adminSupabase
+              .from("order_items")
+              .insert(orderItemsPayload);
+
+            if (itemsInsertErr) {
+              console.error("Direct order_items insertion error:", itemsInsertErr);
+            }
+
+            // Decrement variant and product stocks
+            for (const item of verifiedItems) {
+              if (item.variantId) {
+                const { data: curVar } = await adminSupabase
+                  .from("product_variants")
+                  .select("stock_quantity")
+                  .eq("id", item.variantId)
+                  .single();
+                if (curVar) {
+                  await adminSupabase
+                    .from("product_variants")
+                    .update({ stock_quantity: Math.max(0, curVar.stock_quantity - item.quantity) })
+                    .eq("id", item.variantId);
+                }
+              } else {
+                try {
+                  const { data: curProd } = await adminSupabase
+                    .from("products")
+                    .select("stock_quantity")
+                    .eq("id", item.productId)
+                    .maybeSingle();
+                  if (curProd && curProd.stock_quantity !== undefined) {
+                    await adminSupabase
+                      .from("products")
+                      .update({ stock_quantity: Math.max(0, (curProd.stock_quantity || 0) - item.quantity) })
+                      .eq("id", item.productId);
+                  }
+                } catch {
+                  // stock_quantity column might be pending on remote DB
+                }
+              }
+            }
           }
         }
 
-        if (dbWriteSuccess && orderData) {
+        if (isDuplicateOrder) {
+          const { data: existingOrder, error: existingOrderError } = await adminSupabase
+            .from("orders")
+            .select("status, payment_method, payment_status, total_amount, razorpay_order_id")
+            .eq("id", orderId)
+            .maybeSingle();
 
-          // Insert order items
-          const orderItemsRows = verifiedItems.map((item) => ({
-            order_id: orderId,
-            product_id: item.productId,
-            variant_id: item.variantId,
-            product_name_snapshot: item.title,
-            variant_details_snapshot: {
-              size: item.size,
-              color: item.color,
-            },
-            unit_price: item.unitPrice,
-            quantity: item.quantity,
-            subtotal: item.lineSubtotal,
-          }));
-
-          await adminSupabase.from("order_items").insert(orderItemsRows);
-
-          // Deduct stock for each variant in database
-          for (const item of verifiedItems) {
-            const newStock = Math.max(0, item.availableStock - item.quantity);
-
-            await adminSupabase
-              .from("product_variants")
-              .update({
-                stock_quantity: newStock,
-              })
-              .eq("id", item.variantId);
+          if (existingOrderError || !existingOrder) {
+            return {
+              success: false,
+              error: "The previous checkout could not be retrieved. Please contact support.",
+              code: "VALIDATION_FAILED",
+            };
           }
 
-          // Increment coupon usage_count if a valid coupon was applied
-          if (validatedCouponCode) {
-            const { data: cRow } = await adminSupabase
-              .from("coupons")
-              .select("id, usage_count")
-              .eq("code", validatedCouponCode)
-              .maybeSingle();
-
-            if (cRow) {
-              await adminSupabase
-                .from("coupons")
-                .update({
-                  usage_count: (cRow.usage_count || 0) + 1,
-                  updated_at: new Date().toISOString(),
-                })
-                .eq("id", cRow.id);
-            }
+          if (existingOrder.payment_method !== input.paymentMethod) {
+            return {
+              success: false,
+              error: "This checkout request was already used with a different payment method. Please refresh checkout.",
+              code: "VALIDATION_FAILED",
+            };
           }
 
-          // If customer asked to save address and is an existing customer (skip if newly created guest account to prevent duplicate address insertion)
-          if (customerId && !guestAccountCreated && input.shippingAddress.saveAddress) {
-            await adminSupabase.from("addresses").insert({
-              customer_id: customerId,
-              full_name: input.shippingAddress.fullName,
-              phone: input.shippingAddress.phone,
-              address_line1: input.shippingAddress.addressLine1,
-              address_line2: input.shippingAddress.addressLine2 || null,
-              city: input.shippingAddress.city,
-              state: input.shippingAddress.state,
-              pincode: input.shippingAddress.pincode,
-              address_type: input.shippingAddress.addressType || "home",
-              is_default: false,
-            });
+          if (existingOrder.status !== "pending" || existingOrder.payment_status !== "pending") {
+            return {
+              success: false,
+              error: "This order is no longer awaiting payment. Please check your order history.",
+              code: "VALIDATION_FAILED",
+            };
           }
+
+          totalAmount = Number(existingOrder.total_amount);
+          existingRazorpayOrderId = existingOrder.razorpay_order_id || undefined;
+        } else if (
+          customerId &&
+          !guestAccountCreated &&
+          input.shippingAddress.saveAddress
+        ) {
+          await adminSupabase.from("addresses").insert({
+            customer_id: customerId,
+            full_name: input.shippingAddress.fullName,
+            phone: input.shippingAddress.phone,
+            address_line1: input.shippingAddress.addressLine1,
+            address_line2: input.shippingAddress.addressLine2 || null,
+            city: input.shippingAddress.city,
+            state: input.shippingAddress.state,
+            pincode: input.shippingAddress.pincode,
+            address_type: input.shippingAddress.addressType || "home",
+            is_default: false,
+          });
         }
       } catch (dbErr) {
-        console.error("Database order insertion error:", dbErr);
+        console.error("Atomic database order creation error:", dbErr);
+        return {
+          success: false,
+          error: "Failed to safely reserve your items. Please try again.",
+          code: "VALIDATION_FAILED",
+        };
       }
     }
 
@@ -624,31 +854,56 @@ export async function createOrderAction(
     const amountPaise = Math.round(totalAmount * 100);
 
     if (input.paymentMethod === "razorpay") {
-      try {
-        const rzpOrder = await createRazorpayOrder({
-          amountPaise,
-          receipt: orderNumber!,
-          notes: {
-            order_number: orderNumber!,
-            email: input.contact.email,
-          },
-        });
-        razorpayOrderId = rzpOrder.id;
+      razorpayOrderId = existingRazorpayOrderId;
+      if (!razorpayOrderId) {
+        try {
+          const rzpOrder = await createRazorpayOrder({
+            amountPaise,
+            receipt: orderNumber!,
+            notes: {
+              order_number: orderNumber!,
+              email: input.contact.email,
+            },
+          });
 
-        // If database write succeeded, record razorpay_order_id on orders row
-        if (dbWriteSuccess && adminSupabase) {
-          await adminSupabase
+          if (!adminSupabase) {
+            throw new Error("Database unavailable while saving Razorpay order ID");
+          }
+
+          const { data: savedOrder, error: saveError } = await adminSupabase
             .from("orders")
-            .update({ razorpay_order_id: razorpayOrderId })
-            .eq("id", orderId!);
+            .update({ razorpay_order_id: rzpOrder.id })
+            .eq("id", orderId!)
+            .is("razorpay_order_id", null)
+            .select("razorpay_order_id")
+            .maybeSingle();
+
+          if (saveError) {
+            throw saveError;
+          }
+
+          if (savedOrder?.razorpay_order_id) {
+            razorpayOrderId = savedOrder.razorpay_order_id;
+          } else {
+            const { data: racedOrder, error: racedOrderError } = await adminSupabase
+              .from("orders")
+              .select("razorpay_order_id")
+              .eq("id", orderId!)
+              .maybeSingle();
+
+            if (racedOrderError || !racedOrder?.razorpay_order_id) {
+              throw new Error("Razorpay order ID could not be persisted");
+            }
+            razorpayOrderId = racedOrder.razorpay_order_id;
+          }
+        } catch (rzpErr) {
+          console.error("Razorpay order creation error:", rzpErr);
+          return {
+            success: false,
+            error: "Unable to initialize payment gateway. Please retry checkout; your reservation will expire automatically.",
+            code: "GATEWAY_ERROR",
+          };
         }
-      } catch (rzpErr) {
-        console.error("Razorpay order creation error:", rzpErr);
-        return {
-          success: false,
-          error: "Unable to initialize payment gateway. Please try again or choose Cash on Delivery.",
-          code: "GATEWAY_ERROR",
-        };
       }
 
       // Record in mock pending online orders store for automated cleanup testing
@@ -656,7 +911,8 @@ export async function createOrderAction(
         for (const item of verifiedItems) {
           MOCK_ONLINE_PENDING_ORDERS.push({
             orderNumber: orderNumber!,
-            variantId: item.variantId,
+            variantId: item.variantId || null,
+            productId: item.productId,
             quantity: item.quantity,
             createdAt: Date.now(),
             paymentMethod: "razorpay",
@@ -682,7 +938,7 @@ export async function createOrderAction(
     }
 
     // Save in shared MOCK_ORDERS_STORE for immediate retrieval across DB & offline modes
-    MOCK_ORDERS_STORE.set(orderNumber!, {
+    if (!isDuplicateOrder) MOCK_ORDERS_STORE.set(orderNumber!, {
       id: orderId!,
       orderNumber: orderNumber!,
       status: "pending",
@@ -697,22 +953,23 @@ export async function createOrderAction(
       createdAt: new Date().toISOString(),
       shippingAddress: shippingAddressSnapshot,
       items: verifiedItems.map((item) => ({
-        id: `item-${item.variantId}`,
+        id: `item-${item.variantId || item.productId}`,
         productId: item.productId,
-        variantId: item.variantId,
+        variantId: item.variantId || "",
         title: item.title,
-        size: item.size,
-        color: item.color,
+        size: item.size || "",
+        color: item.color || "",
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         subtotal: item.lineSubtotal,
       })),
+      razorpayOrderId,
       accountCreatedFromGuest: guestAccountCreated,
       accessLevel: "FULL",
     });
 
     // 12c. Transactional Email Dispatch for COD Orders
-    if (input.paymentMethod === "cod") {
+    if (input.paymentMethod === "cod" && !isDuplicateOrder) {
       try {
         const appUrl = (env.NEXT_PUBLIC_APP_URL || "https://velaash.in").replace(/\/$/, "");
         const orderViewUrl = `${appUrl}/order-confirmation/${orderNumber!}?token=${accessToken}`;
@@ -732,8 +989,8 @@ export async function createOrderAction(
             paymentStatus: "pending",
             items: verifiedItems.map((it) => ({
               title: it.title,
-              size: it.size,
-              color: it.color,
+              size: it.size || "",
+              color: it.color || "",
               quantity: it.quantity,
               unitPrice: it.unitPrice,
               lineSubtotal: it.lineSubtotal,
@@ -747,6 +1004,7 @@ export async function createOrderAction(
             shippingAddress: shippingAddressSnapshot,
             orderViewUrl,
             accountCreatedFromGuest: guestAccountCreated,
+            supportEmail: siteSettings.storeProfile.email,
           }),
 
         });
@@ -758,19 +1016,6 @@ export async function createOrderAction(
         // Non-blocking: Order creation must not fail if email fails
       }
     }
-
-    // 13. Save in idempotency store to prevent duplicate orders
-    IDEMPOTENCY_STORE.set(input.idempotencyKey, {
-      orderNumber: orderNumber!,
-      orderId: orderId!,
-      totalAmount,
-      paymentMethod: input.paymentMethod,
-      razorpayOrderId,
-      razorpayKeyId: env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder_key_id",
-      amountPaise,
-      currency: "INR",
-      timestamp: Date.now(),
-    });
 
     return {
       success: true,

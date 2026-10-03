@@ -30,7 +30,7 @@ export const DEFAULT_SHIPPING_POLICY: ShippingPolicyData = {
  */
 export function calculateCouponDiscount(
   coupon: {
-    discountType: "percentage" | "flat";
+    discountType: "percentage" | "flat" | "free_shipping";
     discountValue: number;
     minOrderValue: number;
     maxDiscountAmount?: number | null;
@@ -38,6 +38,11 @@ export function calculateCouponDiscount(
   subtotal: number
 ): number {
   if (subtotal < coupon.minOrderValue) {
+    return 0;
+  }
+
+  // Free shipping coupons waive the delivery fee directly, keeping product subtotal intact
+  if (coupon.discountType === "free_shipping") {
     return 0;
   }
 
@@ -94,12 +99,72 @@ export function calculateCartTotals({
     }
   }
 
+  const now = new Date();
   const freeThreshold = shippingPolicy.free_shipping_threshold;
-  const isFreeShipping = subtotal >= freeThreshold;
-  const shippingFee = subtotal === 0 ? 0 : isFreeShipping ? 0 : shippingPolicy.standard_shipping_fee;
-  const amountNeededForFreeShipping = Math.max(0, freeThreshold - subtotal);
+  const isThresholdFree = subtotal >= freeThreshold;
+
+  // Check festive campaign eligibility
+  let isFestiveActive = false;
+  if (shippingPolicy.festive_shipping_enabled) {
+    const validFrom = shippingPolicy.festive_valid_from
+      ? new Date(shippingPolicy.festive_valid_from)
+      : null;
+    const validUntil = shippingPolicy.festive_valid_until
+      ? new Date(shippingPolicy.festive_valid_until)
+      : null;
+    const isAfterStart = !validFrom || now >= validFrom;
+    const isBeforeEnd = !validUntil || now <= validUntil;
+    isFestiveActive = isAfterStart && isBeforeEnd;
+  }
+
+  // Check if any available item in cart qualifies for festive free shipping
+  const hasFestiveProduct =
+    isFestiveActive &&
+    (shippingPolicy.festive_apply_to_all ||
+      availableItems.some((item) => {
+        if (shippingPolicy.festive_product_ids?.includes(item.productId)) return true;
+        if (item.slug && shippingPolicy.festive_product_ids?.includes(item.slug)) return true;
+        return false;
+      }));
+
+  // Check if coupon grants free shipping
+  const isCouponFree = Boolean(
+    activeCoupon &&
+      (activeCoupon.discountType === "free_shipping" ||
+        (shippingPolicy.festive_coupon_code &&
+          activeCoupon.code.toUpperCase() === shippingPolicy.festive_coupon_code.toUpperCase()))
+  );
+
+  const isFreeShipping =
+    subtotal > 0 && (isThresholdFree || hasFestiveProduct || isCouponFree);
+
+  let freeShippingReason: "threshold" | "product_offer" | "coupon" | null = null;
+  let freeShippingBadgeText: string | null = null;
+
+  if (isFreeShipping) {
+    if (hasFestiveProduct) {
+      freeShippingReason = "product_offer";
+      freeShippingBadgeText =
+        shippingPolicy.festive_badge_text || "🌾 Festive Special: Free Delivery";
+    } else if (isCouponFree) {
+      freeShippingReason = "coupon";
+      freeShippingBadgeText = `Code ${activeCoupon?.code}: Free Shipping`;
+    } else if (isThresholdFree) {
+      freeShippingReason = "threshold";
+      freeShippingBadgeText = "Free Shipping";
+    }
+  }
+
+  const shippingFee =
+    subtotal === 0 ? 0 : isFreeShipping ? 0 : shippingPolicy.standard_shipping_fee;
+  const amountNeededForFreeShipping =
+    hasFestiveProduct || isCouponFree ? 0 : Math.max(0, freeThreshold - subtotal);
   const freeShippingProgress =
-    freeThreshold > 0 ? Math.min(100, Math.round((subtotal / freeThreshold) * 100)) : 100;
+    hasFestiveProduct || isCouponFree || isThresholdFree
+      ? 100
+      : freeThreshold > 0
+        ? Math.min(100, Math.round((subtotal / freeThreshold) * 100))
+        : 100;
 
   const total = Math.max(0, subtotal - discount) + shippingFee;
 
@@ -108,6 +173,8 @@ export function calculateCartTotals({
     discount,
     shippingFee,
     isFreeShipping,
+    freeShippingReason,
+    freeShippingBadgeText,
     amountNeededForFreeShipping,
     freeShippingProgress,
     total,

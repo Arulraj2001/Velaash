@@ -72,6 +72,7 @@ export function CategorySortableRow({
             type="button"
             {...attributes}
             {...listeners}
+            suppressHydrationWarning
             className="cursor-grab text-slate-300 hover:text-slate-600 focus:outline-none active:cursor-grabbing p-1"
             title="Drag to reorder display order"
           >

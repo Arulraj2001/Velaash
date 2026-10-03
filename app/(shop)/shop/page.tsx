@@ -17,22 +17,43 @@ import { env } from "@/lib/env";
 
 const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 
-export const metadata: Metadata = {
-  title: "Shop All Collections | Velaash",
-  description:
-    "Explore the complete Velaash catalog. Discover refined everyday kurtas, dresses, versatile co-ord sets, and relaxed loungewear.",
-  alternates: {
-    canonical: `${BASE_URL}/shop`,
-  },
-  openGraph: {
-    title: "Shop All Collections | Velaash",
-    description: "Refined everyday luxury and contemporary clothing by Velaash.",
-    url: `${BASE_URL}/shop`,
-    siteName: BRAND.name,
-    locale: "en_IN",
-    type: "website",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const siteSettings = await getSiteSettings();
+  const brandName = siteSettings.storeProfile.name || BRAND.name;
+  const configuredKeywords = siteSettings.seoDefaults.keywords
+    ? siteSettings.seoDefaults.keywords.split(",").map((k) => k.trim()).filter(Boolean)
+    : [];
+  const defaultKeywords = [
+    "Shop All Collections",
+    brandName,
+    "Everyday essentials",
+    "Clothing for men and women",
+    "Pooja essentials",
+    "Brass essentials",
+    "ஆடை",
+    "கடை",
+  ];
+  const keywords = Array.from(new Set([...defaultKeywords, ...configuredKeywords]));
+
+  return {
+    title: `Shop All Collections | ${brandName}`,
+    description:
+      "Explore the complete Velaash catalog. Discover everyday essentials for men and women, alongside traditional pooja and brass essentials.",
+    keywords,
+    alternates: {
+      canonical: `${BASE_URL}/shop`,
+    },
+    openGraph: {
+      title: `Shop All Collections | ${brandName}`,
+      description:
+        "Everyday essentials for every home — clothing for men and women, plus traditional pooja and brass essentials at Velaash.",
+      url: `${BASE_URL}/shop`,
+      siteName: brandName,
+      locale: "en_IN",
+      type: "website",
+    },
+  };
+}
 
 interface ShopPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -84,7 +105,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         title={shopBanner?.headline?.trim() || "Shop All Collections"}
         description={
           shopBanner?.subtitle?.trim() ||
-          "Contemporary silhouettes, breathable handpicked fabrics, and effortless style crafted for your modern everyday and festive occasion wardrobe."
+          "Everyday clothing for men and women, alongside traditional pooja and brass essentials curated for your home."
         }
         imageUrl={shopBanner?.image_url}
         breadcrumbs={breadcrumbItems}

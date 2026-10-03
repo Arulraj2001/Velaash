@@ -11,6 +11,7 @@ import {
   Search,
 } from "lucide-react";
 import type { SiteSettings } from "@/features/settings/types";
+import { getStoreContact } from "@/features/settings/utils/store-contact";
 
 interface FaqAccordionProps {
   settings: SiteSettings;
@@ -35,8 +36,7 @@ export function FaqAccordion({ settings }: FaqAccordionProps) {
   const freeThresholdStr = `₹${shippingPolicy.free_shipping_threshold.toLocaleString("en-IN")}`;
   const standardFeeStr = `₹${shippingPolicy.standard_shipping_fee.toLocaleString("en-IN")}`;
   const returnDays = returnsPolicy.return_window_days;
-  const whatsappNum = storeProfile.whatsapp_number || storeProfile.phone || "+91 8508643832";
-  const contactEmail = storeProfile.email || "bestrchandra@gmail.com";
+  const { whatsappNumber: whatsappNum, email: contactEmail } = getStoreContact(storeProfile);
 
   const codAnswer = paymentSettings.cod_enabled
     ? `Yes, Cash on Delivery is available across serviceable PIN codes in India for orders up to ₹${paymentSettings.cod_max_order_value.toLocaleString(

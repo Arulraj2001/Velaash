@@ -82,8 +82,8 @@ async function runCheckoutTests() {
       "Found noindex meta configuration"
     );
 
-    const checkoutTitle = checkoutHtml.includes("Checkout") || checkoutHtml.includes("Velaash");
-    assert(checkoutTitle, "SEO: /checkout renders page title with brand context");
+    const checkoutTitle = checkoutHtml.toLowerCase().includes("checkout") || checkoutHtml.toLowerCase().includes("velaash");
+    assert(checkoutTitle, "SEO: /checkout renders page title with brand context", checkoutHtml.match(/<title[^>]*>(.*?)<\/title>/i)?.[0] || "No title found");
 
     // 2. Order confirmation page
     const orderConfRes = await fetch("http://localhost:3000/order-confirmation/VEL-2026-00001");

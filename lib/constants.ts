@@ -6,21 +6,19 @@
 export const BRAND = {
   name: "Velaash",
   legalName: "VELAASH TRADER'S",
-  tagline: "", // Left blank per client direction — do not invent a tagline
+  tagline: "Velaash — Everyday essentials for every home",
   description:
-    "Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe.",
-  // Flag: Temporary contact email until a professional domain email (e.g. care@velaash.in) is provisioned by the client
-  contactEmail: "bestrchandra@gmail.com",
-  supportPhone: "+91 8508643832",
-  whatsappNumber: "+91 8508643832",
-  whatsappUrl: "https://wa.me/918508643832",
-  whatsappMessage: "Hello Velaash! I would like to inquire about your clothing collection.",
+    "Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash.",
+  contactEmail: "",
+  supportPhone: "",
+  whatsappNumber: "",
+  whatsappUrl: "",
+  whatsappMessage: "Hello Velaash! I would like to inquire about your products.",
   currency: "INR",
   currencySymbol: "₹",
   socialLinks: {
     // Note: Official handles not yet provided by client - marked placeholders, editable via site_settings in admin panel
     instagram: "https://instagram.com/velaash", // Placeholder - awaiting client handle
-    whatsapp: "https://wa.me/918508643832",
     facebook: "https://facebook.com/velaash", // Placeholder - awaiting client handle
     pinterest: "https://pinterest.com/velaash", // Placeholder
   },

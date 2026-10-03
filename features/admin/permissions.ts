@@ -78,7 +78,8 @@ export interface AdminNavItem {
     | "TicketPercent"
     | "Sliders"
     | "Settings"
-    | "Users";
+    | "Users"
+    | "BookOpen";
   requiredPermission: AdminPermissionKey;
   ownerOnly?: boolean;
   badgeText?: string;
@@ -136,6 +137,12 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
     iconName: "Users",
     requiredPermission: "manage_staff",
     ownerOnly: true,
+  },
+  {
+    title: "Guide & Manual",
+    href: "/admin/guide",
+    iconName: "BookOpen",
+    requiredPermission: "view_dashboard",
   },
 ] as const;
 

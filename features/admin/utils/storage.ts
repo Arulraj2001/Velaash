@@ -4,8 +4,11 @@ export const PRODUCT_IMAGES_BUCKET = "product-images";
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 export const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",
+  "image/jpg",
   "image/png",
   "image/webp",
+  "image/avif",
+  "image/gif",
   "image/svg+xml",
   "image/x-icon",
   "image/vnd.microsoft.icon",
@@ -34,6 +37,13 @@ export async function ensureProductImagesBucket() {
     if (createErr) {
       console.error("Failed to create product-images bucket:", createErr);
     }
+  } else {
+    // Ensure bucket is public and allows current mime types
+    await adminClient.storage.updateBucket(PRODUCT_IMAGES_BUCKET, {
+      public: true,
+      fileSizeLimit: MAX_IMAGE_SIZE_BYTES,
+      allowedMimeTypes: ALLOWED_IMAGE_TYPES,
+    });
   }
 }
 

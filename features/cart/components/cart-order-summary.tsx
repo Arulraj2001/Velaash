@@ -13,6 +13,7 @@ import {
   AlertCircle,
   CheckCircle2,
 } from "lucide-react";
+import { useAuth } from "@/features/auth/components/auth-provider";
 import type { AppliedCoupon, ShippingPolicyData } from "../types";
 import { calculateCartTotals } from "../utils/pricing";
 import type { CartItem } from "../types";
@@ -25,6 +26,7 @@ interface CartOrderSummaryProps {
   shippingPolicy: ShippingPolicyData;
   returnWindowDays: number;
   hasUnavailableItems: boolean;
+  requireSignInToOrder?: boolean;
 }
 
 export function CartOrderSummary({
@@ -35,7 +37,9 @@ export function CartOrderSummary({
   shippingPolicy,
   returnWindowDays,
   hasUnavailableItems,
+  requireSignInToOrder = false,
 }: CartOrderSummaryProps) {
+  const { isAuthenticated } = useAuth();
   const [couponCodeInput, setCouponCodeInput] = useState("");
   const [isSubmittingCoupon, setIsSubmittingCoupon] = useState(false);
   const [couponFeedback, setCouponFeedback] = useState<{
@@ -55,6 +59,7 @@ export function CartOrderSummary({
     discount,
     shippingFee,
     isFreeShipping,
+    freeShippingBadgeText,
     amountNeededForFreeShipping,
     freeShippingProgress,
     total,
@@ -155,7 +160,14 @@ export function CartOrderSummary({
         <div className="flex justify-between text-brand-muted">
           <span>Standard Shipping</span>
           {isFreeShipping ? (
-            <span className="font-semibold text-emerald-700 tracking-wide">FREE</span>
+            <div className="text-right">
+              <span className="font-semibold text-emerald-700 tracking-wide">FREE</span>
+              {freeShippingBadgeText && (
+                <p className="text-[10px] text-emerald-600 font-medium">
+                  {freeShippingBadgeText}
+                </p>
+              )}
+            </div>
           ) : (
             <span className="font-medium text-brand-dark">
               ₹{shippingFee.toLocaleString("en-IN")}
@@ -243,13 +255,28 @@ export function CartOrderSummary({
             <ArrowRight className="h-4 w-4" />
           </button>
         ) : (
-          <Link
-            href="/checkout"
-            className="w-full flex items-center justify-center gap-2 rounded-none bg-brand-dark py-3.5 text-xs font-semibold uppercase tracking-wider text-brand-cream transition-all duration-300 hover:bg-brand-accent hover:shadow-md"
-          >
-            <span>Proceed to Checkout</span>
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <div>
+            <Link
+              href={
+                requireSignInToOrder && !isAuthenticated
+                  ? "/account/login?returnUrl=/checkout"
+                  : "/checkout"
+              }
+              className="w-full flex items-center justify-center gap-2 rounded-none bg-brand-dark py-3.5 text-xs font-semibold uppercase tracking-wider text-brand-cream transition-all duration-300 hover:bg-brand-accent hover:shadow-md"
+            >
+              <span>
+                {requireSignInToOrder && !isAuthenticated
+                  ? "Sign In to Checkout"
+                  : "Proceed to Checkout"}
+              </span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            {requireSignInToOrder && !isAuthenticated && (
+              <p className="mt-2 text-center text-[11px] text-brand-muted">
+                Sign-in required to place order &bull; Shopping bag is saved
+              </p>
+            )}
+          </div>
         )}
       </div>
 

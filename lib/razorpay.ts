@@ -21,6 +21,15 @@ export interface RazorpayOrderResult {
   receipt: string;
 }
 
+export interface RazorpayPaymentResult {
+  id: string;
+  order_id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  captured: boolean;
+}
+
 /**
  * Creates an authoritative Razorpay Order via the Razorpay Orders API.
  * The amount is STRICTLY passed in paise (1 INR = 100 paise) derived from
@@ -94,6 +103,34 @@ export async function createRazorpayOrder({
     currency: orderData.currency,
     receipt: orderData.receipt,
   };
+}
+
+export async function fetchRazorpayPayment(
+  paymentId: string
+): Promise<RazorpayPaymentResult> {
+  const keyId = env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+  const keySecret = env.RAZORPAY_KEY_SECRET;
+
+  if (
+    !keyId ||
+    !keySecret ||
+    keyId.toLowerCase().includes("placeholder") ||
+    keySecret.toLowerCase().includes("placeholder")
+  ) {
+    throw new Error("Razorpay API credentials are not configured.");
+  }
+
+  const authHeader = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+  const response = await fetch(
+    `https://api.razorpay.com/v1/payments/${encodeURIComponent(paymentId)}`,
+    { headers: { Authorization: `Basic ${authHeader}` } }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Razorpay payment lookup failed with status ${response.status}.`);
+  }
+
+  return (await response.json()) as RazorpayPaymentResult;
 }
 
 /**

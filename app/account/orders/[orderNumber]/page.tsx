@@ -12,6 +12,7 @@ import {
   CancelOrderButton,
 } from "@/features/orders";
 import { Button, Badge } from "@/components/ui";
+import { getSiteSettings, getStoreContact } from "@/features/settings";
 import {
   ArrowLeft,
   Package,
@@ -64,15 +65,20 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
     minute: "2-digit",
   });
 
+  const { storeProfile } = await getSiteSettings();
+  const { whatsappNumber } = getStoreContact(storeProfile);
+  const contactEmail = storeProfile.email;
   const isCod = order.paymentMethod === "cod";
   const isPaid = order.paymentStatus === "paid";
 
   // Pre-filled WhatsApp message
-  const whatsappNumber = "918508643832";
   const whatsappMessage = encodeURIComponent(
     `Hi Velaash, I need assistance regarding my order #${order.orderNumber}.`
   );
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
+  const whatsappDigits = whatsappNumber.replace(/\D/g, "");
+  const whatsappUrl = whatsappDigits
+    ? `https://wa.me/${whatsappDigits}?text=${whatsappMessage}`
+    : "/contact";
 
   return (
     <div className="space-y-6">
@@ -240,7 +246,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
               </a>
 
               <a
-                href={`mailto:bestrchandra@gmail.com?subject=Inquiry%20regarding%20Order%20${order.orderNumber}`}
+                href={`mailto:${contactEmail}?subject=Inquiry%20regarding%20Order%20${order.orderNumber}`}
                 className="flex-1"
               >
                 <Button

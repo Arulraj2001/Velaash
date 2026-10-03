@@ -4,6 +4,7 @@ import React, { useEffect, Suspense } from "react";
 import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useCookieConsent } from "../hooks/use-cookie-consent";
+import { canLoadAnalyticsScripts, getAnalyticsScriptProviders } from "../utils/consent";
 import { trackPageView } from "../utils/track";
 
 function AnalyticsContent() {
@@ -13,33 +14,42 @@ function AnalyticsContent() {
 
   const ga4Id = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID?.trim();
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
+  const clarityId = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID?.trim();
+  const canLoadAnalytics = canLoadAnalyticsScripts(consent, isMounted, pathname);
+  const enabledProviders = new Set(
+    getAnalyticsScriptProviders(consent, isMounted, pathname, {
+      ga4: ga4Id,
+      meta_pixel: pixelId,
+      clarity: clarityId,
+    })
+  );
 
   // Automatic page_view event on route transitions when consent is active
   useEffect(() => {
-    if (consent === "all") {
+    if (canLoadAnalytics) {
       const fullPath = searchParams?.toString()
         ? `${pathname}?${searchParams.toString()}`
         : pathname;
       trackPageView(fullPath);
     }
-  }, [pathname, searchParams, consent]);
+  }, [pathname, searchParams, canLoadAnalytics]);
 
   // CRITICAL CONSENT GATE:
   // If visitor has not mounted or has NOT granted full consent ("all"),
   // return null. Absolutely no tracking scripts are injected into the DOM.
-  if (!isMounted || consent !== "all") {
+  if (!canLoadAnalytics) {
     return null;
   }
 
   // If no analytics IDs are configured in environment variables, skip cleanly
-  if (!ga4Id && !pixelId) {
+  if (enabledProviders.size === 0) {
     return null;
   }
 
   return (
     <>
       {/* 1. Google Analytics 4 (GA4) */}
-      {ga4Id && (
+      {enabledProviders.has("ga4") && ga4Id && (
         <>
           <Script
             src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}
@@ -60,7 +70,7 @@ function AnalyticsContent() {
       )}
 
       {/* 2. Meta Pixel */}
-      {pixelId && (
+      {enabledProviders.has("meta_pixel") && pixelId && (
         <Script id="meta-pixel-init" strategy="afterInteractive">
           {`
             !function(f,b,e,v,n,t,s)
@@ -74,6 +84,16 @@ function AnalyticsContent() {
             fbq('init', '${pixelId}');
             fbq('track', 'PageView');
           `}
+        </Script>
+      )}
+
+      {enabledProviders.has("clarity") && clarityId && (
+        <Script id="microsoft-clarity" strategy="afterInteractive">
+          {`(function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+          })(window, document, "clarity", "script", "${clarityId}");`}
         </Script>
       )}
     </>

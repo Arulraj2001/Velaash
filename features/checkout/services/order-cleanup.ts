@@ -10,7 +10,8 @@ export interface CleanupResult {
 // In-memory mock store for online pending orders in testing
 export const MOCK_ONLINE_PENDING_ORDERS: Array<{
   orderNumber: string;
-  variantId: string;
+  variantId?: string | null;
+  productId?: string;
   quantity: number;
   createdAt: number;
   paymentMethod: "razorpay" | "cod";
@@ -26,6 +27,7 @@ export async function cancelExpiredPendingOnlineOrders(
   olderThanMinutes = 30
 ): Promise<CleanupResult> {
   const cancelledOrderNumbers: string[] = [];
+  let success = true;
 
   // CALL-SITE JUSTIFICATION FOR ELEVATED SERVICE ROLE (Bypassing RLS):
   // Automated background cleanup jobs have no user session. Elevated client is required
@@ -39,67 +41,19 @@ export async function cancelExpiredPendingOnlineOrders(
 
   if (adminSupabase) {
     try {
-      const expirationThreshold = new Date(
-        Date.now() - olderThanMinutes * 60 * 1000
-      ).toISOString();
+      const { data, error } = await adminSupabase.rpc(
+        "cancel_expired_pending_online_orders",
+        { p_older_than_minutes: olderThanMinutes }
+      );
 
-      // Query online orders stuck in pending state
-      const { data: expiredOrders, error } = await adminSupabase
-        .from("orders")
-        .select("id, order_number, status, payment_status, payment_method, created_at")
-        .eq("payment_method", "razorpay")
-        .eq("payment_status", "pending")
-        .eq("status", "pending")
-        .lt("created_at", expirationThreshold);
-
-      if (!error && expiredOrders && expiredOrders.length > 0) {
-        for (const order of expiredOrders) {
-          // Release stock for each item
-          const { data: items } = await adminSupabase
-            .from("order_items")
-            .select("variant_id, quantity")
-            .eq("order_id", order.id);
-
-          if (items) {
-            for (const item of items) {
-              if (item.variant_id) {
-                const { data: variant } = await adminSupabase
-                  .from("product_variants")
-                  .select("stock_quantity")
-                  .eq("id", item.variant_id)
-                  .single();
-
-                if (variant) {
-                  await adminSupabase
-                    .from("product_variants")
-                    .update({
-                      stock_quantity: variant.stock_quantity + item.quantity,
-                    })
-                    .eq("id", item.variant_id);
-                }
-              }
-            }
-          }
-
-          // Mark order cancelled
-          await adminSupabase
-            .from("orders")
-            .update({
-              status: "cancelled",
-              cancel_reason: `Payment window expired (${olderThanMinutes} minutes without payment confirmation)`,
-            })
-            .eq("id", order.id);
-
-          await adminSupabase.from("order_status_history").insert({
-            order_id: order.id,
-            status: "cancelled",
-            note: `Order automatically cancelled: ${olderThanMinutes}-minute online payment window expired. Reserved stock released.`,
-          });
-
-          cancelledOrderNumbers.push(order.order_number);
-        }
+      if (error) {
+        success = false;
+        console.error("Database error during expired order cleanup:", error);
+      } else if (data) {
+        cancelledOrderNumbers.push(...data);
       }
     } catch (err) {
+      success = false;
       console.error("Database error during expired order cleanup:", err);
     }
   }
@@ -125,7 +79,7 @@ export async function cancelExpiredPendingOnlineOrders(
   }
 
   return {
-    success: true,
+    success,
     cancelledCount: cancelledOrderNumbers.length,
     cancelledOrderNumbers,
   };

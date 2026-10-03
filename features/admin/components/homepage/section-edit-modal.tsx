@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  X,
   Upload,
   Plus,
   Trash2,
@@ -19,10 +18,15 @@ import {
   Package,
   Headphones,
   Heart,
-  Star,
   LucideIcon,
   Search,
   ExternalLink,
+  Monitor,
+  Smartphone,
+  Move,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
 } from "lucide-react";
 import type { AdminHomepageSection, TrustIconKey } from "../../types/homepage";
 import { TRUST_ICON_KEYS } from "../../types/homepage";
@@ -31,6 +35,7 @@ import {
   uploadHomepageImageAction,
 } from "../../actions/homepage-actions";
 import type { ProductListItem } from "@/features/products";
+import { AdminModal } from "../admin-modal";
 
 const ICON_MAP: Record<TrustIconKey, LucideIcon> = {
   Truck,
@@ -55,6 +60,126 @@ interface SectionEditModalProps {
   onClose: () => void;
   onSaved: (msg: string, updatedSection?: AdminHomepageSection) => void;
   allProducts: ProductListItem[];
+}
+
+function isValidImageUrl(url?: string | null): url is string {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (trimmed.startsWith("/") || trimmed.startsWith("data:")) return true;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function HeroPositionPad({
+  posX,
+  posY,
+  bgImage,
+  headline,
+  textAlign,
+  onChange,
+}: {
+  posX: number;
+  posY: number;
+  bgImage?: string;
+  headline?: string;
+  textAlign: "left" | "center" | "right";
+  onChange: (x: number, y: number) => void;
+}) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = React.useState(false);
+
+  const updateCoordinates = (e: React.PointerEvent<HTMLDivElement> | PointerEvent) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const xPct = Math.round(Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100)));
+    const yPct = Math.round(Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100)));
+    onChange(xPct, yPct);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    updateCoordinates(e);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDragging) {
+      updateCoordinates(e);
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    setIsDragging(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      className="relative aspect-[16/7] w-full rounded-xl overflow-hidden border-2 border-dashed border-indigo-300 bg-slate-900 cursor-crosshair select-none touch-none shadow-inner"
+    >
+      {/* Background preview */}
+      {bgImage && isValidImageUrl(bgImage) ? (
+        <Image
+          src={bgImage.trim()}
+          alt="Position preview background"
+          fill
+          unoptimized
+          className="object-cover opacity-60 pointer-events-none"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 opacity-90" />
+      )}
+
+      {/* Grid overlay lines */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className="absolute left-1/3 top-0 bottom-0 border-r border-white/60" />
+        <div className="absolute left-2/3 top-0 bottom-0 border-r border-white/60" />
+        <div className="absolute top-1/3 left-0 right-0 border-b border-white/60" />
+        <div className="absolute top-2/3 left-0 right-0 border-b border-white/60" />
+        <div className="absolute left-1/2 top-0 bottom-0 border-r border-amber-400" />
+        <div className="absolute top-1/2 left-0 right-0 border-b border-amber-400" />
+      </div>
+
+      {/* Draggable Target Badge */}
+      <div
+        className="absolute z-10 -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-75"
+        style={{ left: `${posX}%`, top: `${posY}%` }}
+      >
+        <div
+          className={`p-2 rounded-lg bg-black/85 backdrop-blur-md border border-amber-400 text-white shadow-xl max-w-[170px] ${
+            textAlign === "left"
+              ? "text-left"
+              : textAlign === "right"
+              ? "text-right"
+              : "text-center"
+          }`}
+        >
+          <div className="flex items-center gap-1 text-[9px] font-bold text-amber-400 uppercase tracking-widest leading-none mb-1">
+            <Move className="w-2.5 h-2.5 shrink-0" />
+            <span className="truncate">X:{posX}% · Y:{posY}%</span>
+          </div>
+          <p className="text-[10px] font-semibold text-white truncate leading-tight">
+            {headline || "Hero Headline"}
+          </p>
+        </div>
+      </div>
+
+      {/* Helper Tag */}
+      <div className="absolute bottom-2 left-2 pointer-events-none bg-black/75 px-2 py-0.5 rounded text-[10px] font-mono text-amber-300">
+        Click or drag anywhere · X: {posX}% · Y: {posY}%
+      </div>
+    </div>
+  );
 }
 
 export function SectionEditModal({
@@ -134,16 +259,21 @@ function SectionEditModalInner({
     secondary_cta_text?: string;
     secondary_cta_link?: string;
     bg_image: string;
+    bg_image_mobile?: string;
+    position_x?: number;
+    position_y?: number;
+    text_align?: "left" | "center" | "right";
+    content_width?: "compact" | "balanced" | "wide" | "full";
   }
 
   const DEFAULT_HERO_SLIDES: SlideItemState[] = [
     {
       id: "slide-1",
-      tag: "Spring / Summer 2026",
-      headline: getString("headline") || "Modern Everyday Luxury",
+      tag: "New Season Arrivals",
+      headline: getString("headline") || "Everyday essentials for every home",
       subtitle:
         getString("subtitle") ||
-        "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance.",
+        "Clothing for men and women, plus traditional pooja and brass essentials.",
       cta_text: getString("cta_text") || "Explore Collection",
       cta_link: getString("cta_link") || "/shop",
       secondary_cta_text: getString("secondary_cta_text") || "Kurtas & Sets",
@@ -151,6 +281,11 @@ function SectionEditModalInner({
       bg_image:
         getString("bg_image") ||
         "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+      bg_image_mobile: getString("bg_image_mobile") || "",
+      position_x: typeof content.position_x === "number" ? content.position_x : 50,
+      position_y: typeof content.position_y === "number" ? content.position_y : 50,
+      text_align: (content.text_align as "left" | "center" | "right") || "center",
+      content_width: (content.content_width as "compact" | "balanced" | "wide" | "full") || "balanced",
     },
     {
       id: "slide-2",
@@ -164,6 +299,10 @@ function SectionEditModalInner({
       secondary_cta_link: "/collections/dresses",
       bg_image:
         "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=2000&q=85",
+      bg_image_mobile: "",
+      position_x: 50,
+      position_y: 50,
+      text_align: "center",
     },
     {
       id: "slide-3",
@@ -177,6 +316,10 @@ function SectionEditModalInner({
       secondary_cta_link: "/shop",
       bg_image:
         "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=85",
+      bg_image_mobile: "",
+      position_x: 50,
+      position_y: 50,
+      text_align: "center",
     },
   ];
 
@@ -191,20 +334,29 @@ function SectionEditModalInner({
     const current = getSlides();
     const newSlide: SlideItemState = {
       id: `slide-${current.length + 1}`,
-      tag: "New Arrivals",
-      headline: "New Luxury Silhouette",
-      subtitle: "Effortless silhouettes, refined textures, and contemporary wardrobe essentials.",
-      cta_text: "Explore Collection",
-      cta_link: "/shop",
+      tag: "",
+      headline: "",
+      subtitle: "",
+      cta_text: "",
+      cta_link: "",
       secondary_cta_text: "",
       secondary_cta_link: "",
       bg_image:
         "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+      bg_image_mobile: "",
+      position_x: 50,
+      position_y: 50,
+      text_align: "center",
+      content_width: "balanced",
     };
     handleFieldChange("slides", [...current, newSlide]);
   };
 
-  const handleUpdateSlide = (index: number, field: keyof SlideItemState, val: string) => {
+  const handleUpdateSlide = (
+    index: number,
+    field: keyof SlideItemState,
+    val: string | number
+  ) => {
     const current = [...getSlides()];
     if (current[index]) {
       current[index] = { ...current[index], [field]: val };
@@ -217,6 +369,10 @@ function SectionEditModalInner({
         if (field === "secondary_cta_text") updates.secondary_cta_text = val;
         if (field === "secondary_cta_link") updates.secondary_cta_link = val;
         if (field === "bg_image") updates.bg_image = val;
+        if (field === "bg_image_mobile") updates.bg_image_mobile = val;
+        if (field === "position_x") updates.position_x = val;
+        if (field === "position_y") updates.position_y = val;
+        if (field === "text_align") updates.text_align = val;
       }
       setContent((prev) => ({ ...prev, ...updates }));
     }
@@ -233,13 +389,18 @@ function SectionEditModalInner({
       updates.secondary_cta_text = current[0].secondary_cta_text;
       updates.secondary_cta_link = current[0].secondary_cta_link;
       updates.bg_image = current[0].bg_image;
+      updates.bg_image_mobile = current[0].bg_image_mobile || "";
+      updates.position_x = current[0].position_x ?? 50;
+      updates.position_y = current[0].position_y ?? 50;
+      updates.text_align = current[0].text_align ?? "center";
     }
     setContent((prev) => ({ ...prev, ...updates }));
   };
 
   const handleSlideImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    index: number
+    index: number,
+    targetField: "bg_image" | "bg_image_mobile" = "bg_image"
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -253,7 +414,7 @@ function SectionEditModalInner({
 
       const res = await uploadHomepageImageAction(formData);
       if (res.success && res.url) {
-        handleUpdateSlide(index, "bg_image", res.url);
+        handleUpdateSlide(index, targetField, res.url);
       } else {
         setErrorMessage(res.error || "Failed to upload image.");
       }
@@ -416,7 +577,7 @@ function SectionEditModalInner({
     const current = getTestimonialItems();
     const newItem: TestimonialItemState = {
       id: `testi-${Date.now()}`,
-      name: "New Patron",
+      name: "New Customer",
       location: "Mumbai",
       rating: 5,
       review:
@@ -472,6 +633,7 @@ function SectionEditModalInner({
       if (section.section_type === "hero_banner") {
         const slides = getSlides().map((s) => ({
           ...s,
+          content_width: s.content_width || "balanced",
           cta_link: normalizeLink(s.cta_link),
           secondary_cta_link: normalizeLink(s.secondary_cta_link),
         }));
@@ -484,6 +646,11 @@ function SectionEditModalInner({
           finalContent.secondary_cta_text = slides[0].secondary_cta_text;
           finalContent.secondary_cta_link = slides[0].secondary_cta_link;
           finalContent.bg_image = slides[0].bg_image;
+          finalContent.bg_image_mobile = slides[0].bg_image_mobile || "";
+          finalContent.position_x = slides[0].position_x ?? 50;
+          finalContent.position_y = slides[0].position_y ?? 50;
+          finalContent.text_align = slides[0].text_align ?? "center";
+          finalContent.content_width = slides[0].content_width ?? "balanced";
         }
       } else if (section.section_type === "occasion_strip") {
         finalContent.items = getOccasionItems().map((item) => ({
@@ -500,10 +667,10 @@ function SectionEditModalInner({
           finalContent.cta_link = normalizeLink(finalContent.cta_link);
         }
       } else if (section.section_type === "testimonials") {
-        if (!finalContent.headline) finalContent.headline = "Cherished by Our Patrons";
+        if (!finalContent.headline) finalContent.headline = "Loved by Our Customers";
         if (!finalContent.subtitle) {
           finalContent.subtitle =
-            "Real experiences from women who celebrate everyday grace in our tailored silhouettes.";
+            "Real experiences from customers who celebrate quality and everyday grace.";
         }
         if (!finalContent.items) finalContent.items = getTestimonialItems();
       } else if (section.section_type === "value_strip") {
@@ -545,36 +712,58 @@ function SectionEditModalInner({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-          <div>
-            <h2 className="text-lg font-heading font-semibold text-slate-900">
-              Edit {section.section_type.replace(/_/g, " ").toUpperCase()} Section
-            </h2>
-            <p className="text-xs text-slate-500">
-              Configure content and layout options for this section.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+  const footerActions = (
+    <>
+      <button
+        type="button"
+        onClick={onClose}
+        disabled={isSubmitting}
+        className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        form="section-edit-form"
+        disabled={isSubmitting || isUploading}
+        className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2 text-xs font-semibold text-white hover:bg-black disabled:opacity-50 shadow-sm transition-colors"
+      >
+        {isSubmitting ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Saving...</span>
+          </>
+        ) : isUploading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Uploading Image...</span>
+          </>
+        ) : (
+          <>
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Save Section</span>
+          </>
+        )}
+      </button>
+    </>
+  );
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
-          {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
+  return (
+    <AdminModal
+      isOpen={true}
+      onClose={onClose}
+      maxWidth="3xl"
+      title={`Edit ${section.section_type.replace(/_/g, " ").toUpperCase()} Section`}
+      description="Configure content, imagery, and layout options for this storefront section."
+      footer={footerActions}
+    >
+      <form id="section-edit-form" onSubmit={handleSubmit} className="space-y-6">
+        {errorMessage && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span className="font-semibold">{errorMessage}</span>
+          </div>
+        )}
 
           {/* Section Name & Visibility */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-slate-100">
@@ -677,26 +866,25 @@ function SectionEditModalInner({
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                            Tag / Capsule Badge
+                            Tag / Capsule Badge (Optional)
                           </label>
                           <input
                             type="text"
                             value={slide.tag || ""}
                             onChange={(e) => handleUpdateSlide(idx, "tag", e.target.value)}
-                            placeholder="e.g. Spring / Summer 2026"
+                            placeholder="e.g. Spring / Summer (leave blank for none)"
                             className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
                           />
                         </div>
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                            Headline <span className="text-rose-500">*</span>
+                            Headline (Optional)
                           </label>
-                          <input
-                            type="text"
-                            required
+                          <textarea
+                            rows={2}
                             value={slide.headline || ""}
                             onChange={(e) => handleUpdateSlide(idx, "headline", e.target.value)}
-                            placeholder="e.g. Modern Everyday Luxury"
+                            placeholder="e.g. Everyday essentials for every home (Press Enter to break onto 2 lines, or leave blank for plain banner)"
                             className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
                           />
                         </div>
@@ -704,13 +892,13 @@ function SectionEditModalInner({
 
                       <div>
                         <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                          Subtitle
+                          Subtitle (Optional)
                         </label>
                         <textarea
                           rows={2}
                           value={slide.subtitle || ""}
                           onChange={(e) => handleUpdateSlide(idx, "subtitle", e.target.value)}
-                          placeholder="e.g. Effortless silhouettes, refined textures, and contemporary essentials..."
+                          placeholder="e.g. Effortless silhouettes, refined textures... (leave blank for none)"
                           className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
                         />
                       </div>
@@ -718,27 +906,25 @@ function SectionEditModalInner({
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                            Primary Button Text <span className="text-rose-500">*</span>
+                            Primary Button Text (Optional)
                           </label>
                           <input
                             type="text"
-                            required
                             value={slide.cta_text || ""}
                             onChange={(e) => handleUpdateSlide(idx, "cta_text", e.target.value)}
-                            placeholder="e.g. Explore Collection"
+                            placeholder="e.g. Explore Collection (leave blank for no button)"
                             className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
                           />
                         </div>
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                            Primary Button Link <span className="text-rose-500">*</span>
+                            Primary Button Link (Optional)
                           </label>
                           <input
                             type="text"
-                            required
                             value={slide.cta_link || ""}
                             onChange={(e) => handleUpdateSlide(idx, "cta_link", e.target.value)}
-                            placeholder="e.g. /shop"
+                            placeholder="e.g. /shop (leave blank for no button)"
                             className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-mono"
                           />
                         </div>
@@ -771,25 +957,37 @@ function SectionEditModalInner({
                         </div>
                       </div>
 
-                      {/* Slide Image */}
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                          Background Image <span className="text-rose-500">*</span>
-                        </label>
-                        <div className="space-y-2">
-                          {slide.bg_image ? (
+                      {/* Slide Images: Desktop & Mobile */}
+                      <div className="space-y-4 pt-1">
+                        {/* 1. Desktop Background Image */}
+                        <div className="p-3.5 bg-slate-50/70 border border-slate-200 rounded-xl space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <label className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-800">
+                              <Monitor className="w-3.5 h-3.5 text-slate-600" />
+                              <span>Desktop Background Image</span>
+                              <span className="text-rose-500">*</span>
+                            </label>
+                            <span className="text-[10px] text-slate-400 font-mono">16:7 landscape</span>
+                          </div>
+
+                          {isValidImageUrl(slide.bg_image) ? (
                             <div className="relative aspect-[16/7] w-full rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
                               <Image
-                                src={slide.bg_image}
-                                alt={`Slide ${idx + 1} preview`}
+                                src={slide.bg_image.trim()}
+                                alt={`Slide ${idx + 1} desktop preview`}
                                 fill
+                                unoptimized
                                 className="object-cover"
                               />
+                            </div>
+                          ) : slide.bg_image ? (
+                            <div className="p-2.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg">
+                              Invalid image URL format. Please paste a valid URL (e.g. https://res.cloudinary.com/... or https://images.unsplash.com/...)
                             </div>
                           ) : null}
 
                           <div className="flex items-center gap-2">
-                            <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                            <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-2xs">
                               {isUploading ? (
                                 <>
                                   <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" />
@@ -798,13 +996,13 @@ function SectionEditModalInner({
                               ) : (
                                 <>
                                   <Upload className="w-3.5 h-3.5 text-slate-600" />
-                                  <span>Upload Image</span>
+                                  <span>Upload Desktop Image</span>
                                 </>
                               )}
                               <input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp"
-                                onChange={(e) => handleSlideImageUpload(e, idx)}
+                                onChange={(e) => handleSlideImageUpload(e, idx, "bg_image")}
                                 disabled={isUploading}
                                 className="hidden"
                               />
@@ -821,9 +1019,289 @@ function SectionEditModalInner({
                             required
                             value={slide.bg_image || ""}
                             onChange={(e) => handleUpdateSlide(idx, "bg_image", e.target.value)}
-                            placeholder="https://images.unsplash.com/..."
+                            placeholder="https://images.unsplash.com/... or Cloudinary URL"
                             className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-mono"
                           />
+                        </div>
+
+                        {/* 2. Mobile Background Image (Optional) */}
+                        <div className="p-3.5 bg-amber-50/40 border border-amber-200/70 rounded-xl space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <label className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-950">
+                              <Smartphone className="w-3.5 h-3.5 text-amber-700" />
+                              <span>Mobile View Image</span>
+                              <span className="text-[10px] font-normal text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded">
+                                Optional (&lt; 640px)
+                              </span>
+                            </label>
+                            {slide.bg_image_mobile ? (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateSlide(idx, "bg_image_mobile", "")}
+                                className="text-[11px] text-rose-600 hover:text-rose-700 hover:underline font-medium"
+                              >
+                                Remove Mobile Image
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 font-mono">3:4 or 9:16 portrait</span>
+                            )}
+                          </div>
+
+                          {isValidImageUrl(slide.bg_image_mobile) ? (
+                            <div className="relative aspect-[3/4] max-w-[200px] mx-auto rounded-lg overflow-hidden border border-amber-300 bg-slate-100 shadow-sm">
+                              <Image
+                                src={slide.bg_image_mobile.trim()}
+                                alt={`Slide ${idx + 1} mobile preview`}
+                                fill
+                                unoptimized
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : slide.bg_image_mobile ? (
+                            <div className="p-2.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg">
+                              Invalid mobile image URL format.
+                            </div>
+                          ) : (
+                            <div className="p-2.5 text-[11px] text-amber-800/80 bg-white/70 border border-amber-200/50 rounded-lg leading-relaxed">
+                              No mobile-specific image uploaded. Mobile devices will automatically crop and display the desktop background image.
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-2">
+                            <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-amber-300 rounded-lg text-xs font-semibold text-amber-900 bg-white hover:bg-amber-50 transition-colors shadow-2xs">
+                              {isUploading ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" />
+                                  <span>Uploading...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-3.5 h-3.5 text-amber-700" />
+                                  <span>Upload Mobile Image</span>
+                                </>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={(e) => handleSlideImageUpload(e, idx, "bg_image_mobile")}
+                                disabled={isUploading}
+                                className="hidden"
+                              />
+                            </label>
+                            <span className="text-[11px] text-amber-800/70">or enter image URL below</span>
+                          </div>
+
+                          <p className="text-[10px] text-amber-800/70">
+                            Recommended: 1080 × 1440px (3:4 Portrait) or 800 × 1200px, JPG or WebP under 5MB.
+                          </p>
+
+                          <input
+                            type="text"
+                            value={slide.bg_image_mobile || ""}
+                            onChange={(e) => handleUpdateSlide(idx, "bg_image_mobile", e.target.value)}
+                            placeholder="https://... (Optional mobile-tailored portrait image)"
+                            className="w-full px-3 py-1.5 text-xs border border-amber-200 rounded-lg bg-white font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      {/* 3. Text Placement & Alignment (0 - 100 Drag Controller) */}
+                      <div className="p-4 bg-indigo-50/50 border border-indigo-200/80 rounded-xl space-y-4">
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-1.5 text-[11px] font-semibold text-indigo-950">
+                            <Move className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>Text Placement & Alignment</span>
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-100 text-indigo-900 font-semibold">
+                              X: {slide.position_x ?? 50}% · Y: {slide.position_y ?? 50}%
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Interactive Drag Canvas */}
+                        <HeroPositionPad
+                          posX={slide.position_x ?? 50}
+                          posY={slide.position_y ?? 50}
+                          bgImage={slide.bg_image}
+                          headline={slide.headline}
+                          textAlign={slide.text_align ?? "center"}
+                          onChange={(newX, newY) => {
+                            handleUpdateSlide(idx, "position_x", newX);
+                            handleUpdateSlide(idx, "position_y", newY);
+                          }}
+                        />
+
+                        {/* Range Sliders: 0 - 100 */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                          {/* Horizontal Slider (X) */}
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[11px] font-medium text-slate-700">
+                              <span>Horizontal (Left ↔ Right)</span>
+                              <span className="font-mono text-indigo-600 font-semibold">{slide.position_x ?? 50}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={slide.position_x ?? 50}
+                              onChange={(e) => handleUpdateSlide(idx, "position_x", parseInt(e.target.value, 10))}
+                              className="w-full accent-indigo-600 cursor-pointer"
+                            />
+                            <div className="flex justify-between text-[9px] text-slate-400">
+                              <span>0% (Left)</span>
+                              <span>50% (Center)</span>
+                              <span>100% (Right)</span>
+                            </div>
+                          </div>
+
+                          {/* Vertical Slider (Y) */}
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[11px] font-medium text-slate-700">
+                              <span>Vertical (Top ↔ Bottom)</span>
+                              <span className="font-mono text-indigo-600 font-semibold">{slide.position_y ?? 50}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={slide.position_y ?? 50}
+                              onChange={(e) => handleUpdateSlide(idx, "position_y", parseInt(e.target.value, 10))}
+                              className="w-full accent-indigo-600 cursor-pointer"
+                            />
+                            <div className="flex justify-between text-[9px] text-slate-400">
+                              <span>0% (Top)</span>
+                              <span>50% (Middle)</span>
+                              <span>100% (Bottom)</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Quick Presets & Alignment */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-indigo-100">
+                          {/* 9-Point Presets */}
+                          <div>
+                            <span className="block text-[10px] font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">
+                              Quick Snap Positions
+                            </span>
+                            <div className="grid grid-cols-3 gap-1 max-w-[210px]">
+                              {[
+                                { label: "Top Left", x: 15, y: 15 },
+                                { label: "Top Center", x: 50, y: 15 },
+                                { label: "Top Right", x: 85, y: 15 },
+                                { label: "Mid Left", x: 15, y: 50 },
+                                { label: "Center", x: 50, y: 50 },
+                                { label: "Mid Right", x: 85, y: 50 },
+                                { label: "Btm Left", x: 15, y: 85 },
+                                { label: "Btm Center", x: 50, y: 85 },
+                                { label: "Btm Right", x: 85, y: 85 },
+                              ].map((preset) => {
+                                const isSelected =
+                                  (slide.position_x ?? 50) === preset.x &&
+                                  (slide.position_y ?? 50) === preset.y;
+                                return (
+                                  <button
+                                    key={preset.label}
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdateSlide(idx, "position_x", preset.x);
+                                      handleUpdateSlide(idx, "position_y", preset.y);
+                                      if (preset.x <= 25) handleUpdateSlide(idx, "text_align", "left");
+                                      else if (preset.x >= 75) handleUpdateSlide(idx, "text_align", "right");
+                                      else handleUpdateSlide(idx, "text_align", "center");
+                                    }}
+                                    className={`px-1.5 py-1 text-[10px] rounded border transition-colors font-medium truncate ${
+                                      isSelected
+                                        ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                                        : "bg-white text-slate-700 border-slate-200 hover:bg-indigo-50"
+                                    }`}
+                                  >
+                                    {preset.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Text Align */}
+                          <div>
+                            <span className="block text-[10px] font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">
+                              Text Alignment
+                            </span>
+                            <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs">
+                              {(
+                                [
+                                  { value: "left", label: "Left", icon: AlignLeft },
+                                  { value: "center", label: "Center", icon: AlignCenter },
+                                  { value: "right", label: "Right", icon: AlignRight },
+                                ] as const
+                              ).map((opt) => {
+                                const isCurrent = (slide.text_align ?? "center") === opt.value;
+                                const Icon = opt.icon;
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => handleUpdateSlide(idx, "text_align", opt.value)}
+                                    className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                                      isCurrent
+                                        ? "bg-indigo-600 text-white shadow-xs"
+                                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                                    }`}
+                                  >
+                                    <Icon className="w-3.5 h-3.5" />
+                                    <span>{opt.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <p className="text-[10px] text-slate-500 mt-2 leading-relaxed">
+                              Controls how the headline and buttons align within the text box.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Text Width / Line Length */}
+                        <div className="pt-3 border-t border-indigo-100">
+                          <span className="block text-[10px] font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">
+                            Headline Width &amp; Line Length
+                          </span>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {(
+                              [
+                                { value: "compact", label: "Compact", hint: "2–3 lines" },
+                                { value: "balanced", label: "Balanced", hint: "2 lines (recommended)" },
+                                { value: "wide", label: "Wide", hint: "1–2 lines" },
+                                { value: "full", label: "Full Width", hint: "Single line" },
+                              ] as const
+                            ).map((opt) => {
+                              const isCurrent = (slide.content_width ?? "balanced") === opt.value;
+                              return (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => handleUpdateSlide(idx, "content_width", opt.value)}
+                                  className={`px-2.5 py-1.5 rounded-lg border text-left transition-all ${
+                                    isCurrent
+                                      ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                                      : "bg-white text-slate-700 border-slate-200 hover:bg-indigo-50/50"
+                                  }`}
+                                >
+                                  <div className="text-xs font-semibold">{opt.label}</div>
+                                  <div
+                                    className={`text-[10px] ${
+                                      isCurrent ? "text-indigo-100" : "text-slate-400"
+                                    }`}
+                                  >
+                                    {opt.hint}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-2 leading-relaxed">
+                            Adjusts how lengthy the text can stretch before wrapping into 2 lines. <strong>Tip:</strong> You can also press <kbd className="px-1 py-0.5 bg-slate-100 border border-slate-200 rounded text-[9px]">Enter</kbd> directly inside the Headline box to manually split the line where you want.
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -965,14 +1443,19 @@ function SectionEditModalInner({
                           Card Image <span className="text-rose-500">*</span>
                         </label>
                         <div className="space-y-2">
-                          {item.image ? (
+                          {isValidImageUrl(item.image) ? (
                             <div className="relative aspect-[4/5] max-w-[140px] rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-xs">
                               <Image
-                                src={item.image}
+                                src={item.image.trim()}
                                 alt={item.name || "Occasion"}
                                 fill
+                                unoptimized
                                 className="object-cover"
                               />
+                            </div>
+                          ) : item.image ? (
+                            <div className="p-2.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg">
+                              Invalid image URL format.
                             </div>
                           ) : null}
 
@@ -1330,14 +1813,19 @@ function SectionEditModalInner({
                   Editorial Craftsmanship Image <span className="text-rose-500">*</span>
                 </label>
                 <div className="space-y-3">
-                  {getString("image_url") ? (
+                  {isValidImageUrl(getString("image_url")) ? (
                     <div className="relative aspect-[4/5] max-w-[200px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-xs">
                       <Image
-                        src={getString("image_url")}
+                        src={getString("image_url").trim()}
                         alt="Editorial preview"
                         fill
+                        unoptimized
                         className="object-cover"
                       />
+                    </div>
+                  ) : getString("image_url") ? (
+                    <div className="p-2.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg">
+                      Invalid image URL format.
                     </div>
                   ) : null}
 
@@ -1446,7 +1934,7 @@ function SectionEditModalInner({
             </div>
           )}
 
-          {/* 5. PATRON TESTIMONIALS */}
+          {/* 5. CUSTOMER REVIEWS */}
           {section.section_type === "testimonials" && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1456,9 +1944,9 @@ function SectionEditModalInner({
                   </label>
                   <input
                     type="text"
-                    value={getString("headline", "Cherished by Our Patrons")}
+                    value={getString("headline", "Loved by Our Customers")}
                     onChange={(e) => handleFieldChange("headline", e.target.value)}
-                    placeholder="e.g. Cherished by Our Patrons"
+                    placeholder="e.g. Loved by Our Customers"
                     className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
@@ -1470,7 +1958,7 @@ function SectionEditModalInner({
                     type="text"
                     value={getString(
                       "subtitle",
-                      "Real experiences from women who celebrate everyday grace in our tailored silhouettes."
+                      "Real experiences from customers who celebrate quality and everyday grace."
                     )}
                     onChange={(e) => handleFieldChange("subtitle", e.target.value)}
                     placeholder="e.g. Real experiences..."
@@ -1484,7 +1972,7 @@ function SectionEditModalInner({
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700">
-                      Patron Reviews ({getTestimonialItems().length})
+                      Customer Reviews ({getTestimonialItems().length})
                     </label>
                     <p className="text-[11px] text-slate-500">
                       Display authentic reviews with verified buyer badges on your homepage.
@@ -1503,7 +1991,7 @@ function SectionEditModalInner({
                 {getTestimonialItems().length === 0 ? (
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
                     <p className="text-xs text-slate-500">
-                      No customer reviews yet. Click &quot;Add Review&quot; to showcase feedback from your patrons.
+                      No customer reviews yet. Click &quot;Add Review&quot; to showcase feedback from your customers.
                     </p>
                   </div>
                 ) : (
@@ -1800,41 +2288,7 @@ function SectionEditModalInner({
             </div>
           )}
 
-          {/* Footer Actions */}
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || isUploading}
-              className="inline-flex items-center gap-2 px-5 py-2 bg-slate-900 hover:bg-black text-white text-sm font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Saving...</span>
-                </>
-              ) : isUploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Uploading Image...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Save Section</span>
-                </>
-              )}
-            </button>
-          </div>
         </form>
-      </div>
-    </div>
+    </AdminModal>
   );
 }

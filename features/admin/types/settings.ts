@@ -17,7 +17,6 @@ export const StoreProfileSchema = z.object({
   email: z.string().trim().email("Please provide a valid contact email address"),
   phone: z.string().trim().min(8, "Please enter a valid phone number"),
   whatsapp_number: z.string().trim().min(8, "Please enter a valid WhatsApp number"),
-  whatsapp_url: z.string().trim().url("Please enter a valid WhatsApp URL").or(z.literal("")),
   logo_url: z.string().trim().optional().default("/logo.png"),
   favicon_url: z.string().trim().optional().default("/favicon.ico"),
 });
@@ -28,7 +27,6 @@ export type StoreProfileFormData = z.infer<typeof StoreProfileSchema>;
 export const SocialLinksSchema = z.object({
   instagram: z.string().trim().url("Please enter a valid Instagram URL").or(z.literal("")),
   facebook: z.string().trim().url("Please enter a valid Facebook URL").or(z.literal("")),
-  whatsapp: z.string().trim().url("Please enter a valid WhatsApp URL").or(z.literal("")),
   pinterest: z.string().trim().url("Please enter a valid Pinterest URL").or(z.literal("")),
 });
 
@@ -42,6 +40,15 @@ export const ShippingSettingsSchema = z.object({
   standard_shipping_fee: z.coerce
     .number()
     .min(0, "Standard shipping fee cannot be negative"),
+  festive_shipping_enabled: z.boolean().default(false),
+  festive_campaign_name: z.string().trim().max(100).default("Festive Free Delivery"),
+  festive_badge_text: z.string().trim().max(100).default("🌾 Festive Offer: Free Delivery"),
+  festive_valid_from: z.string().nullable().optional(),
+  festive_valid_until: z.string().nullable().optional(),
+  festive_product_ids: z.array(z.string()).default([]),
+  festive_category_ids: z.array(z.string()).default([]),
+  festive_coupon_code: z.string().trim().toUpperCase().nullable().optional(),
+  festive_apply_to_all: z.boolean().default(false),
 });
 
 export type ShippingSettingsFormData = z.infer<typeof ShippingSettingsSchema>;
@@ -70,6 +77,7 @@ export const PaymentSettingsSchema = z.object({
   cod_handling_fee: z.coerce
     .number()
     .min(0, "COD handling fee cannot be negative"),
+  cod_disabled_display_mode: z.enum(["hidden", "blurred"]).default("hidden"),
   razorpay_enabled: z.boolean(),
 });
 
@@ -110,13 +118,13 @@ export const AnnouncementSettingsSchema = z.object({
 
 export type AnnouncementSettingsFormData = z.infer<typeof AnnouncementSettingsSchema>;
 
-// 8. SEO Defaults
 export const SeoDefaultsSchema = z.object({
   meta_title: z.string().trim().min(3, "Meta title must be at least 3 characters"),
   meta_description: z
     .string()
     .trim()
     .min(10, "Meta description must be at least 10 characters"),
+  keywords: z.string().trim().optional(),
 });
 
 export type SeoDefaultsFormData = z.infer<typeof SeoDefaultsSchema>;
@@ -159,4 +167,23 @@ export const PageBannersSchema = z.object({
 });
 
 export type PageBannersFormData = z.infer<typeof PageBannersSchema>;
+
+// 11. Promo Offer Popup
+export const PromoPopupSettingsSchema = z.object({
+  is_enabled: z.boolean(),
+  featured_coupon_id: z.string().trim().nullable().optional(),
+  popup_title: z.string().trim().min(1, "Popup title is required"),
+  popup_description: z.string().trim().min(1, "Popup description is required"),
+  delay_seconds: z.coerce.number().min(0).max(60).default(9),
+});
+
+export type PromoPopupSettingsFormData = z.infer<typeof PromoPopupSettingsSchema>;
+
+// 12. Checkout & Customer Account Policy
+export const CheckoutPolicySchema = z.object({
+  require_sign_in_to_order: z.boolean(),
+});
+
+export type CheckoutPolicyFormData = z.infer<typeof CheckoutPolicySchema>;
+
 

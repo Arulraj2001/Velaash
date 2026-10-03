@@ -64,22 +64,28 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowPro
               </Link>
 
               {/* Variant Specs */}
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-brand-muted">
-                <span className="flex items-center gap-1.5">
-                  <span className="font-medium text-brand-muted">Color:</span> {item.color}
-                  {item.colorHex && (
-                    <span
-                      className="inline-block h-3 w-3 rounded-full border border-black/10"
-                      style={{ backgroundColor: item.colorHex }}
-                      title={item.color}
-                    />
+              {(item.color || item.size) && (
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-brand-muted">
+                  {item.color && (
+                    <span className="flex items-center gap-1.5">
+                      <span className="font-medium text-brand-muted">Color:</span> {item.color}
+                      {item.colorHex && (
+                        <span
+                          className="inline-block h-3 w-3 rounded-full border border-black/10"
+                          style={{ backgroundColor: item.colorHex }}
+                          title={item.color}
+                        />
+                      )}
+                    </span>
                   )}
-                </span>
-                <span className="text-brand-border">&bull;</span>
-                <span>
-                  <span className="font-medium text-brand-muted">Size:</span> {item.size}
-                </span>
-              </div>
+                  {item.color && item.size && <span className="text-brand-border">&bull;</span>}
+                  {item.size && (
+                    <span>
+                      <span className="font-medium text-brand-muted">Size:</span> {item.size}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Remove Button (Desktop & Mobile) */}

@@ -18,6 +18,7 @@ interface OrderReviewSidebarProps {
   totalAmount: number;
   isSubmitting: boolean;
   returnWindowDays: number;
+  freeShippingBadgeText?: string | null;
 }
 
 export function OrderReviewSidebar({
@@ -32,6 +33,7 @@ export function OrderReviewSidebar({
   totalAmount,
   isSubmitting,
   returnWindowDays,
+  freeShippingBadgeText,
 }: OrderReviewSidebarProps) {
   const totalItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -65,7 +67,13 @@ export function OrderReviewSidebar({
                 {item.title}
               </p>
               <p className="text-[11px] text-brand-muted mt-0.5">
-                {item.color} &bull; Size {item.size} &bull; Qty {item.quantity}
+                {[
+                  item.color || null,
+                  item.size ? `Size ${item.size}` : null,
+                  `Qty ${item.quantity}`,
+                ]
+                  .filter(Boolean)
+                  .join(" • ")}
               </p>
               <p className="text-xs font-semibold text-brand-dark mt-1">
                 ₹{(item.price * item.quantity).toLocaleString("en-IN")}
@@ -97,7 +105,14 @@ export function OrderReviewSidebar({
         <div className="flex justify-between text-brand-muted">
           <span>Standard Delivery</span>
           {isFreeShipping ? (
-            <span className="font-semibold text-emerald-700 tracking-wide">FREE</span>
+            <div className="text-right">
+              <span className="font-semibold text-emerald-700 tracking-wide">FREE</span>
+              {freeShippingBadgeText && (
+                <p className="text-[10px] text-emerald-600 font-medium">
+                  {freeShippingBadgeText}
+                </p>
+              )}
+            </div>
           ) : (
             <span className="font-medium text-brand-dark">₹{shippingFee.toLocaleString("en-IN")}</span>
           )}

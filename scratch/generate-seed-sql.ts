@@ -347,11 +347,10 @@ VALUES
       "email": "bestrchandra@gmail.com",
       "phone": "+91 8508643832",
       "whatsapp_number": "+91 8508643832",
-      "whatsapp_url": "https://wa.me/918508643832",
       "logo_url": "/brand/logo.svg",
       "favicon_url": "/favicon.ico"
     }'::jsonb,
-    'Core business and brand identity info (email: temporary bestrchandra@gmail.com until custom domain email is set up)',
+    'Core business and brand identity info managed through the store profile',
     true
   ),
   (
@@ -359,7 +358,6 @@ VALUES
     '{
       "instagram": "https://instagram.com/velaash",
       "facebook": "https://facebook.com/velaash",
-      "whatsapp": "https://wa.me/918508643832",
       "pinterest": "https://pinterest.com/velaash"
     }'::jsonb,
     'Official social media profile links',

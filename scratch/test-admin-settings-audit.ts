@@ -51,10 +51,9 @@ async function runAuditTests() {
     name: "Velaash",
     legal_name: "VELAASH TRADER'S",
     tagline: "Contemporary Elegance",
-    email: "care@velaash.in",
-    phone: "+91 8508643832",
-    whatsapp_number: "+91 8508643832",
-    whatsapp_url: "https://wa.me/918508643832",
+    email: "store-contact@example.com",
+    phone: "+91 9876543210",
+    whatsapp_number: "+91 9876543210",
     logo_url: "/logo.png",
     favicon_url: "/favicon.ico",
   });
@@ -64,7 +63,6 @@ async function runAuditTests() {
   const validSocial = SocialLinksSchema.safeParse({
     instagram: "https://instagram.com/velaash",
     facebook: "https://facebook.com/velaash",
-    whatsapp: "https://wa.me/918508643832",
     pinterest: "https://pinterest.com/velaash",
   });
   assert(validSocial.success, "SocialLinksSchema accepts valid social links with Pinterest");

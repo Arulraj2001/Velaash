@@ -17,6 +17,8 @@ import {
 import { TiptapEditor } from "./tiptap-editor";
 import { ProductImageUploader } from "./product-image-uploader";
 import { ProductVariantsManager } from "./product-variants-manager";
+import { ProductSpecificationsManager } from "./product-specifications-manager";
+import type { SpecificationItem } from "../types/products";
 import {
   ArrowLeft,
   ExternalLink,
@@ -158,6 +160,20 @@ export function ProductForm({
         ]
   );
 
+  const [hasVariants, setHasVariants] = useState<boolean>(
+    initialData?.has_variants !== undefined
+      ? initialData.has_variants
+      : initialData?.variants && initialData.variants.length > 0
+        ? true
+        : true
+  );
+  const [stockQuantity, setStockQuantity] = useState<number | "">(
+    initialData?.stock_quantity ?? 10
+  );
+  const [specifications, setSpecifications] = useState<SpecificationItem[]>(
+    initialData?.specifications || []
+  );
+
   const [sizeChartId, setSizeChartId] = useState<string>(
     initialData?.size_chart_id || ""
   );
@@ -204,8 +220,13 @@ export function ProductForm({
       is_primary: hasPrimary ? img.is_primary : idx === 0,
     }));
 
-    if (variants.length === 0) {
-      setErrorMsg("At least one variant (size + color) is required.");
+    if (hasVariants && variants.length === 0) {
+      setErrorMsg("At least one variant (size + color) is required when variants are enabled.");
+      return;
+    }
+
+    if (!hasVariants && (stockQuantity === "" || Number(stockQuantity) < 0)) {
+      setErrorMsg("Please enter a valid stock quantity for this product.");
       return;
     }
 
@@ -216,8 +237,11 @@ export function ProductForm({
       description,
       base_price: Number(basePrice) || 0,
       compare_at_price: compareAtPrice ? Number(compareAtPrice) : null,
-      fabric,
-      care_instructions: careInstructions,
+      has_variants: hasVariants,
+      stock_quantity: hasVariants ? 0 : Number(stockQuantity) || 0,
+      specifications: specifications.filter((s) => s.label.trim() && s.value.trim()),
+      fabric: fabric || null,
+      care_instructions: careInstructions || null,
       craftsmanship: craftsmanship || null,
       is_active: publishImmediately,
       is_featured: isFeatured,
@@ -242,8 +266,8 @@ export function ProductForm({
         .map((k) => k.trim())
         .filter(Boolean),
       images: normalizedImages,
-      variants,
-      size_chart_id: sizeChartId || null,
+      variants: hasVariants ? variants : [],
+      size_chart_id: hasVariants ? (sizeChartId || null) : null,
     };
 
 
@@ -453,13 +477,13 @@ export function ProductForm({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Care Instructions
+                  Care Instructions <span className="text-slate-400 font-normal">(Optional)</span>
                 </label>
                 <input
                   type="text"
                   value={careInstructions}
                   onChange={(e) => setCareInstructions(e.target.value)}
-                  placeholder="e.g. Dry clean only"
+                  placeholder="e.g. Dry clean only (leave empty if not applicable)"
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
                 />
               </div>
@@ -477,6 +501,14 @@ export function ProductForm({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Card: Flexible Product Specifications (Additive) */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
+            <ProductSpecificationsManager
+              specifications={specifications}
+              onChange={setSpecifications}
+            />
           </div>
 
           {/* Card: Shipping Logistics & Parcel Dimensions (for Shiprocket) */}
@@ -566,14 +598,81 @@ export function ProductForm({
             />
           </div>
 
-          {/* Card 4: Variants & Inventory */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4">
-            <ProductVariantsManager
-              productName={name}
-              productSlug={slug}
-              variants={variants}
-              onChange={setVariants}
-            />
+          {/* Card 4: Product Type & Inventory */}
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs space-y-5">
+            <div>
+              <h3 className="font-semibold text-slate-900 text-sm">Product Inventory &amp; Variants</h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Choose whether this product requires size/color variant selection (e.g. clothing) or is a simple standalone item (e.g. pooja brass items).
+              </p>
+            </div>
+
+            {/* Product Type Choice */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-1 bg-slate-100/80 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setHasVariants(true)}
+                className={`flex items-center gap-3 p-3 rounded-lg text-left transition-all ${
+                  hasVariants
+                    ? "bg-white text-slate-900 shadow-xs border border-slate-200"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${hasVariants ? "border-brand-dark" : "border-slate-400"}`}>
+                  {hasVariants && <div className="w-2 h-2 rounded-full bg-brand-dark" />}
+                </div>
+                <div>
+                  <div className="text-xs font-semibold">Has Variants (Size / Color)</div>
+                  <div className="text-[11px] text-slate-500">Clothing &amp; apparel with size/color options</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHasVariants(false)}
+                className={`flex items-center gap-3 p-3 rounded-lg text-left transition-all ${
+                  !hasVariants
+                    ? "bg-white text-slate-900 shadow-xs border border-slate-200"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${!hasVariants ? "border-brand-dark" : "border-slate-400"}`}>
+                  {!hasVariants && <div className="w-2 h-2 rounded-full bg-brand-dark" />}
+                </div>
+                <div>
+                  <div className="text-xs font-semibold">Simple Product (No Variants)</div>
+                  <div className="text-[11px] text-slate-500">Lamps, brass items, pooja essentials</div>
+                </div>
+              </button>
+            </div>
+
+            {hasVariants ? (
+              <ProductVariantsManager
+                productName={name}
+                productSlug={slug}
+                variants={variants}
+                onChange={setVariants}
+              />
+            ) : (
+              <div className="border border-slate-200 rounded-lg p-4 bg-slate-50/50 space-y-3">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Direct Stock Quantity <span className="text-rose-500">*</span>
+                </label>
+                <div className="max-w-xs">
+                  <input
+                    type="number"
+                    min="0"
+                    value={stockQuantity}
+                    onChange={(e) => setStockQuantity(e.target.value ? parseInt(e.target.value) : "")}
+                    placeholder="e.g. 25"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 font-semibold focus:border-indigo-500 focus:outline-none"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Stock is tracked directly on this product row. Customers can add it directly to cart without selecting a size or color.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -725,24 +824,26 @@ export function ProductForm({
               />
             </label>
 
-            {/* Size Chart Selection */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Linked Size Guide Chart
-              </label>
-              <select
-                value={sizeChartId}
-                onChange={(e) => setSizeChartId(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
-              >
-                <option value="">Default Category Guide</option>
-                {sizeCharts.map((sc) => (
-                  <option key={sc.id} value={sc.id}>
-                    {sc.name} ({sc.measurement_unit})
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Size Chart Selection (Only applicable when product has variants) */}
+            {hasVariants && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Linked Size Guide Chart
+                </label>
+                <select
+                  value={sizeChartId}
+                  onChange={(e) => setSizeChartId(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
+                >
+                  <option value="">Default Category Guide</option>
+                  {sizeCharts.map((sc) => (
+                    <option key={sc.id} value={sc.id}>
+                      {sc.name} ({sc.measurement_unit})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Card 7: Search Engine Optimization (SEO) */}

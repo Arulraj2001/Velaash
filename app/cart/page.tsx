@@ -26,6 +26,7 @@ export default async function CartPage() {
       <CartView
         shippingPolicy={shippingPolicy}
         returnWindowDays={returnWindowDays}
+        requireSignInToOrder={siteSettings.checkoutPolicy?.require_sign_in_to_order ?? false}
       />
     </main>
   );

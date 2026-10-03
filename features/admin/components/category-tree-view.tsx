@@ -326,6 +326,7 @@ export function CategoryTreeView({
           </div>
         ) : (
           <DndContext
+            id="admin-category-tree-dnd"
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}

@@ -4,12 +4,12 @@ import type { CartItem, AppliedCoupon } from "../types";
 
 export interface AddItemInput {
   productId: string;
-  variantId: string;
+  variantId?: string | null;
   title: string;
   slug: string;
-  size: string;
-  color: string;
-  colorHex?: string;
+  size?: string | null;
+  color?: string | null;
+  colorHex?: string | null;
   price: number;
   compareAtPrice?: number | null;
   image: string;
@@ -56,7 +56,8 @@ export const useCartStore = create<CartStoreState>()(
       isToastVisible: false,
 
       addItem: (itemInput, quantity = 1) => {
-        const id = `${itemInput.productId}-${itemInput.variantId}`;
+        const variantKey = itemInput.variantId || "simple";
+        const id = `${itemInput.productId}-${variantKey}`;
         const currentItems = get().items;
         const existingIndex = currentItems.findIndex((i) => i.id === id);
         const maxStock = itemInput.maxStock ?? 10;
@@ -85,12 +86,12 @@ export const useCartStore = create<CartStoreState>()(
           finalItem = {
             id,
             productId: itemInput.productId,
-            variantId: itemInput.variantId,
+            variantId: itemInput.variantId || "",
             title: itemInput.title,
             slug: itemInput.slug,
-            size: itemInput.size,
-            color: itemInput.color,
-            colorHex: itemInput.colorHex,
+            size: itemInput.size || "",
+            color: itemInput.color || "",
+            colorHex: itemInput.colorHex || undefined,
             price: itemInput.price,
             compareAtPrice: itemInput.compareAtPrice,
             image: itemInput.image,

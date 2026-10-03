@@ -5,7 +5,6 @@ export interface StoreProfileSetting {
   email: string;
   phone: string;
   whatsapp_number: string;
-  whatsapp_url: string;
   logo_url?: string;
   favicon_url?: string;
 }
@@ -13,7 +12,6 @@ export interface StoreProfileSetting {
 export interface SocialLinksSetting {
   instagram: string;
   facebook: string;
-  whatsapp: string;
   pinterest?: string;
 }
 
@@ -24,6 +22,15 @@ export interface SocialLinksSetting {
 export interface ShippingPolicySetting {
   free_shipping_threshold: number;
   standard_shipping_fee: number;
+  festive_shipping_enabled?: boolean;
+  festive_campaign_name?: string;
+  festive_badge_text?: string;
+  festive_valid_from?: string | null;
+  festive_valid_until?: string | null;
+  festive_product_ids?: string[];
+  festive_category_ids?: string[];
+  festive_coupon_code?: string | null;
+  festive_apply_to_all?: boolean;
 }
 
 /**
@@ -52,6 +59,7 @@ export interface PaymentPolicySetting {
   cod_enabled: boolean;
   cod_max_order_value: number;
   cod_handling_fee: number;
+  cod_disabled_display_mode: "hidden" | "blurred";
 }
 
 /**
@@ -70,6 +78,7 @@ export interface TaxPolicySetting {
 export interface SeoDefaultsSetting {
   meta_title: string;
   meta_description: string;
+  keywords?: string;
 }
 
 /**
@@ -109,6 +118,25 @@ export interface PageBannersSetting {
   track_order?: PageBannerItem;
 }
 
+/**
+ * Site-wide promotional offer popup configuration
+ */
+export interface PromoPopupSetting {
+  is_enabled: boolean;
+  featured_coupon_id: string | null;
+  popup_title: string;
+  popup_description: string;
+  delay_seconds?: number;
+}
+
+/**
+ * Customer Checkout Policy configuration
+ * Controls whether sign-in is strictly required to place orders or guest checkout is allowed.
+ */
+export interface CheckoutPolicySetting {
+  require_sign_in_to_order: boolean;
+}
+
 export interface SiteSettingsData {
   storeProfile: StoreProfileSetting;
   socialLinks: SocialLinksSetting;
@@ -120,7 +148,10 @@ export interface SiteSettingsData {
   seoDefaults: SeoDefaultsSetting;
   shiprocketSettings: ShiprocketSetting;
   pageBanners: PageBannersSetting;
+  promoPopup: PromoPopupSetting;
+  checkoutPolicy: CheckoutPolicySetting;
 }
 
 export type SiteSettings = SiteSettingsData;
+
 

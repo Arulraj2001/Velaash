@@ -10,6 +10,7 @@ interface PaymentMethodStepProps {
   codEnabled: boolean;
   codMaxOrderValue: number;
   codHandlingFee: number;
+  codDisabledDisplayMode?: "hidden" | "blurred";
   razorpayEnabled?: boolean;
 }
 
@@ -20,10 +21,12 @@ export function PaymentMethodStep({
   codEnabled,
   codMaxOrderValue,
   codHandlingFee,
+  codDisabledDisplayMode = "hidden",
   razorpayEnabled = true,
 }: PaymentMethodStepProps) {
   const isCodValueExceeded = subtotal > codMaxOrderValue;
   const isCodAvailable = codEnabled && !isCodValueExceeded;
+  const shouldRenderCod = codEnabled || codDisabledDisplayMode === "blurred";
 
   return (
     <div className="rounded-xl border border-brand-border/80 bg-white p-5 sm:p-6 shadow-sm">
@@ -92,64 +95,66 @@ export function PaymentMethodStep({
         </div>
 
         {/* 2. Cash on Delivery (COD) */}
-        <div
-          className={`relative rounded-lg border transition-all ${
-            !isCodAvailable
-              ? "border-brand-border/50 bg-gray-50/70 opacity-70 cursor-not-allowed"
-              : selectedPaymentMethod === "cod"
-              ? "border-brand-dark bg-brand-cream/30 ring-1 ring-brand-dark cursor-pointer"
-              : "border-brand-border/70 hover:border-brand-border bg-white cursor-pointer"
-          }`}
-        >
-          <label
-            onClick={() => {
-              if (isCodAvailable) {
-                onChangePaymentMethod("cod");
-              }
-            }}
-            className="flex items-start justify-between p-4"
+        {shouldRenderCod && (
+          <div
+            className={`relative rounded-lg border transition-all ${
+              !isCodAvailable
+                ? "border-brand-border/50 bg-gray-50/70 opacity-70 cursor-not-allowed"
+                : selectedPaymentMethod === "cod"
+                ? "border-brand-dark bg-brand-cream/30 ring-1 ring-brand-dark cursor-pointer"
+                : "border-brand-border/70 hover:border-brand-border bg-white cursor-pointer"
+            }`}
           >
-            <div className="flex items-start gap-3">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="cod"
-                checked={selectedPaymentMethod === "cod"}
-                disabled={!isCodAvailable}
-                onChange={() => {
-                  if (isCodAvailable) onChangePaymentMethod("cod");
-                }}
-                className="mt-1 text-brand-dark focus:ring-brand-accent cursor-pointer disabled:cursor-not-allowed"
-              />
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-brand-dark">Cash on Delivery</span>
-                  {codHandlingFee > 0 && isCodAvailable && (
-                    <span className="text-[11px] text-brand-muted font-medium">
-                      (+₹{codHandlingFee} handling fee)
-                    </span>
+            <label
+              onClick={() => {
+                if (isCodAvailable) {
+                  onChangePaymentMethod("cod");
+                }
+              }}
+              className="flex items-start justify-between p-4"
+            >
+              <div className="flex items-start gap-3">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="cod"
+                  checked={selectedPaymentMethod === "cod"}
+                  disabled={!isCodAvailable}
+                  onChange={() => {
+                    if (isCodAvailable) onChangePaymentMethod("cod");
+                  }}
+                  className="mt-1 text-brand-dark focus:ring-brand-accent cursor-pointer disabled:cursor-not-allowed"
+                />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-brand-dark">Cash on Delivery</span>
+                    {codHandlingFee > 0 && isCodAvailable && (
+                      <span className="text-[11px] text-brand-muted font-medium">
+                        (+₹{codHandlingFee} handling fee)
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-brand-muted">
+                    Pay in cash to the delivery partner upon arrival at your doorstep.
+                  </p>
+
+                  {/* COD Availability Warning */}
+                  {!isCodAvailable && (
+                    <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-800">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                      <span>
+                        {!codEnabled
+                          ? "Cash on Delivery is currently disabled for all orders."
+                          : `COD unavailable for orders above ₹${codMaxOrderValue.toLocaleString("en-IN")}.`}
+                      </span>
+                    </div>
                   )}
                 </div>
-                <p className="mt-0.5 text-xs text-brand-muted">
-                  Pay in cash to the delivery partner upon arrival at your doorstep.
-                </p>
-
-                {/* COD Availability Warning */}
-                {!isCodAvailable && (
-                  <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-800">
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                    <span>
-                      {!codEnabled
-                        ? "Cash on Delivery is currently disabled for all orders."
-                        : `COD unavailable for orders above ₹${codMaxOrderValue.toLocaleString("en-IN")}.`}
-                    </span>
-                  </div>
-                )}
               </div>
-            </div>
-            <Banknote className="h-5 w-5 text-brand-accent shrink-0 hidden sm:block" />
-          </label>
-        </div>
+              <Banknote className="h-5 w-5 text-brand-accent shrink-0 hidden sm:block" />
+            </label>
+          </div>
+        )}
       </div>
 
       <div className="mt-4 pt-3 border-t border-brand-border/40 flex items-center gap-2 text-[11px] text-brand-muted">

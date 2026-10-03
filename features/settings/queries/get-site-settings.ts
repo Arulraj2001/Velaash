@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { BRAND, DEFAULT_ANNOUNCEMENT } from "@/lib/constants";
 import type {
@@ -12,11 +14,34 @@ import type {
   SeoDefaultsSetting,
   ShiprocketSetting,
   PageBannersSetting,
+  PromoPopupSetting,
+  CheckoutPolicySetting,
 } from "../types";
+
+export const DEFAULT_CHECKOUT_POLICY: CheckoutPolicySetting = {
+  require_sign_in_to_order: false,
+};
+
+export const DEFAULT_PROMO_POPUP_SETTING: PromoPopupSetting = {
+  is_enabled: false,
+  featured_coupon_id: null,
+  popup_title: "Special Offer",
+  popup_description: "Use this code at checkout to enjoy an exclusive discount on your order.",
+  delay_seconds: 9,
+};
 
 export const DEFAULT_SHIPPING_POLICY: ShippingPolicySetting = {
   free_shipping_threshold: 999,
   standard_shipping_fee: 100,
+  festive_shipping_enabled: false,
+  festive_campaign_name: "Festive Free Delivery",
+  festive_badge_text: "🌾 Festive Offer: Free Delivery",
+  festive_valid_from: null,
+  festive_valid_until: null,
+  festive_product_ids: [],
+  festive_category_ids: [],
+  festive_coupon_code: "",
+  festive_apply_to_all: false,
 };
 
 export const DEFAULT_RETURNS_POLICY: ReturnsPolicySetting = {
@@ -36,6 +61,7 @@ export const DEFAULT_PAYMENT_POLICY: PaymentPolicySetting = {
   cod_enabled: true,
   cod_max_order_value: 20000,
   cod_handling_fee: 99,
+  cod_disabled_display_mode: "hidden",
 };
 
 export const DEFAULT_TAX_POLICY: TaxPolicySetting = {
@@ -45,9 +71,11 @@ export const DEFAULT_TAX_POLICY: TaxPolicySetting = {
 };
 
 export const DEFAULT_SEO_DEFAULTS: SeoDefaultsSetting = {
-  meta_title: "Velaash | Modern Everyday Luxury & Contemporary Clothing",
+  meta_title: "Velaash — Everyday essentials for every home",
   meta_description:
-    "Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe.",
+    "Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash.",
+  keywords:
+    "Velaash, Everyday essentials, Clothing for men and women, Pooja essentials, Brass essentials, ஆடை, கடை",
 };
 
 export const DEFAULT_SHIPROCKET_SETTING: ShiprocketSetting = {
@@ -75,12 +103,10 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
     email: BRAND.contactEmail,
     phone: BRAND.supportPhone,
     whatsapp_number: BRAND.whatsappNumber,
-    whatsapp_url: BRAND.whatsappUrl,
   },
   socialLinks: {
     instagram: BRAND.socialLinks.instagram,
     facebook: BRAND.socialLinks.facebook,
-    whatsapp: BRAND.socialLinks.whatsapp,
     pinterest: BRAND.socialLinks.pinterest,
   },
   shippingPolicy: DEFAULT_SHIPPING_POLICY,
@@ -91,15 +117,15 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   seoDefaults: DEFAULT_SEO_DEFAULTS,
   shiprocketSettings: DEFAULT_SHIPROCKET_SETTING,
   pageBanners: DEFAULT_PAGE_BANNERS_SETTING,
+  promoPopup: DEFAULT_PROMO_POPUP_SETTING,
+  checkoutPolicy: DEFAULT_CHECKOUT_POLICY,
 };
 
 /**
- * Server query function to fetch store profile, social links, announcement text, policies,
- * tax configuration, and SEO defaults from the site_settings table in Supabase.
- *
- * Single source of truth across the application.
+ * Internal fetch — runs against Supabase directly.
+ * Do not call this outside of the cached wrappers below.
  */
-export async function getSiteSettings(): Promise<SiteSettingsData> {
+async function fetchSiteSettings(): Promise<SiteSettingsData> {
   try {
     const supabase = await createClient();
 
@@ -118,6 +144,8 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
         "seo_defaults",
         "shiprocket_settings",
         "page_banners",
+        "promo_popup",
+        "checkout_policy",
       ]);
 
     if (error || !data || data.length === 0) {
@@ -147,17 +175,19 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     const rawTax = (taxSettingsRow?.value as Partial<TaxPolicySetting>) || {};
     const rawSeo = (seoDefaultsRow?.value as Partial<SeoDefaultsSetting>) || {};
 
+    const whatsappNumber =
+      rawStoreProfile.whatsapp_number || rawStoreProfile.phone || BRAND.whatsappNumber;
     const storeProfile: StoreProfileSetting = {
       name: rawStoreProfile.name || BRAND.name,
       legal_name: rawStoreProfile.legal_name || BRAND.legalName,
-      tagline: rawStoreProfile.tagline ?? BRAND.tagline,
+      tagline:
+        rawStoreProfile.tagline &&
+        rawStoreProfile.tagline !== "Contemporary Elegance, Timeless Style"
+          ? rawStoreProfile.tagline
+          : BRAND.tagline,
       email: rawStoreProfile.email || BRAND.contactEmail,
       phone: rawStoreProfile.phone || BRAND.supportPhone,
-      whatsapp_number:
-        rawStoreProfile.whatsapp_number || rawStoreProfile.phone || BRAND.whatsappNumber,
-      whatsapp_url:
-        rawStoreProfile.whatsapp_url ||
-        `https://wa.me/${(rawStoreProfile.whatsapp_number || BRAND.whatsappNumber).replace(/\D/g, "")}`,
+      whatsapp_number: whatsappNumber,
       logo_url:
         rawStoreProfile.logo_url && rawStoreProfile.logo_url !== "/brand/logo.svg"
           ? rawStoreProfile.logo_url
@@ -168,8 +198,6 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     const socialLinks: SocialLinksSetting = {
       instagram: rawSocialLinks.instagram || BRAND.socialLinks.instagram,
       facebook: rawSocialLinks.facebook || BRAND.socialLinks.facebook,
-      whatsapp:
-        rawSocialLinks.whatsapp || rawStoreProfile.whatsapp_url || BRAND.socialLinks.whatsapp,
       pinterest: rawSocialLinks.pinterest || BRAND.socialLinks.pinterest,
     };
 
@@ -192,6 +220,34 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     const shippingPolicy: ShippingPolicySetting = {
       free_shipping_threshold: freeShippingThresholdVal,
       standard_shipping_fee: standardShippingFeeVal,
+      festive_shipping_enabled: Boolean(shippingRecord.festive_shipping_enabled),
+      festive_campaign_name:
+        typeof shippingRecord.festive_campaign_name === "string"
+          ? shippingRecord.festive_campaign_name
+          : DEFAULT_SHIPPING_POLICY.festive_campaign_name,
+      festive_badge_text:
+        typeof shippingRecord.festive_badge_text === "string"
+          ? shippingRecord.festive_badge_text
+          : DEFAULT_SHIPPING_POLICY.festive_badge_text,
+      festive_valid_from:
+        typeof shippingRecord.festive_valid_from === "string"
+          ? shippingRecord.festive_valid_from
+          : null,
+      festive_valid_until:
+        typeof shippingRecord.festive_valid_until === "string"
+          ? shippingRecord.festive_valid_until
+          : null,
+      festive_product_ids: Array.isArray(shippingRecord.festive_product_ids)
+        ? (shippingRecord.festive_product_ids as string[])
+        : [],
+      festive_category_ids: Array.isArray(shippingRecord.festive_category_ids)
+        ? (shippingRecord.festive_category_ids as string[])
+        : [],
+      festive_coupon_code:
+        typeof shippingRecord.festive_coupon_code === "string"
+          ? shippingRecord.festive_coupon_code.trim().toUpperCase()
+          : null,
+      festive_apply_to_all: Boolean(shippingRecord.festive_apply_to_all),
     };
 
     const returnsRecord = rawReturnsPolicy as Record<string, unknown>;
@@ -226,6 +282,10 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
           : typeof paymentRecord.cod_fee === "number"
             ? paymentRecord.cod_fee
             : DEFAULT_PAYMENT_POLICY.cod_handling_fee,
+      cod_disabled_display_mode:
+        rawPayment.cod_disabled_display_mode === "blurred"
+          ? "blurred"
+          : "hidden",
     };
 
     const taxSettings: TaxPolicySetting = {
@@ -237,9 +297,20 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
           : DEFAULT_TAX_POLICY.default_gst_rate,
     };
 
+    const rawTitle = rawSeo.meta_title?.trim();
+    const rawDesc = rawSeo.meta_description?.trim();
+    const rawKeywords = typeof rawSeo.keywords === "string" ? rawSeo.keywords.trim() : undefined;
+
     const seoDefaults: SeoDefaultsSetting = {
-      meta_title: rawSeo.meta_title || DEFAULT_SEO_DEFAULTS.meta_title,
-      meta_description: rawSeo.meta_description || DEFAULT_SEO_DEFAULTS.meta_description,
+      meta_title:
+        rawTitle && rawTitle !== "Velaash | Modern Everyday Luxury & Contemporary Clothing"
+          ? rawTitle
+          : DEFAULT_SEO_DEFAULTS.meta_title,
+      meta_description:
+        rawDesc && !rawDesc.includes("effortless silhouettes for your everyday and occasion wardrobe")
+          ? rawDesc
+          : DEFAULT_SEO_DEFAULTS.meta_description,
+      keywords: rawKeywords || DEFAULT_SEO_DEFAULTS.keywords,
     };
 
     const rawShiprocket = (shiprocketRow?.value as Partial<ShiprocketSetting>) || {};
@@ -265,6 +336,28 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       };
     }
 
+    const promoPopupRow = data.find((row) => row.key === "promo_popup");
+    const rawPromoPopup = (promoPopupRow?.value as Partial<PromoPopupSetting>) || {};
+    const promoPopup: PromoPopupSetting = {
+      is_enabled: Boolean(rawPromoPopup.is_enabled),
+      featured_coupon_id: rawPromoPopup.featured_coupon_id
+        ? String(rawPromoPopup.featured_coupon_id).trim()
+        : null,
+      popup_title: rawPromoPopup.popup_title || DEFAULT_PROMO_POPUP_SETTING.popup_title,
+      popup_description:
+        rawPromoPopup.popup_description || DEFAULT_PROMO_POPUP_SETTING.popup_description,
+      delay_seconds:
+        typeof rawPromoPopup.delay_seconds === "number" && rawPromoPopup.delay_seconds >= 0
+          ? rawPromoPopup.delay_seconds
+          : DEFAULT_PROMO_POPUP_SETTING.delay_seconds,
+    };
+
+    const checkoutPolicyRow = data.find((row) => row.key === "checkout_policy");
+    const rawCheckoutPolicy = (checkoutPolicyRow?.value as Partial<CheckoutPolicySetting>) || {};
+    const checkoutPolicy: CheckoutPolicySetting = {
+      require_sign_in_to_order: Boolean(rawCheckoutPolicy.require_sign_in_to_order),
+    };
+
     return {
       storeProfile,
       socialLinks,
@@ -276,6 +369,8 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       seoDefaults,
       shiprocketSettings,
       pageBanners,
+      promoPopup,
+      checkoutPolicy,
     };
   } catch (error: unknown) {
     if (
@@ -289,3 +384,19 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     return DEFAULT_SITE_SETTINGS;
   }
 }
+
+/**
+ * Cached version of site settings: revalidates every 60 seconds.
+ * Use revalidateTag('site-settings') from admin actions to bust immediately after saves.
+ */
+const getCachedSiteSettings = unstable_cache(
+  fetchSiteSettings,
+  ["site-settings"],
+  { tags: ["site-settings"], revalidate: 60 }
+);
+
+/**
+ * Request-level deduplicated + cross-request cached site settings.
+ * Safe to call in layout, header, page simultaneously — only one Supabase call per 60s.
+ */
+export const getSiteSettings = cache(getCachedSiteSettings);

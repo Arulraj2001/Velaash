@@ -15,11 +15,12 @@ import {
 import {
   serializeOrderNotes,
 } from "../utils/order-metadata";
-import { executeOrderCancellation } from "@/features/orders/actions/cancel-order-action";
+import { executeOrderCancellation } from "@/features/orders/cancel-order";
 import { sendTransactionalEmail } from "@/lib/email/resend";
 import { OrderConfirmationEmail } from "@/features/checkout/emails/order-confirmation-email";
 import { env } from "@/lib/env";
 import type { Database } from "@/types/database.types";
+import { getSiteSettings } from "@/features/settings";
 
 export interface OrderActionResult {
   success: boolean;
@@ -55,6 +56,13 @@ export async function updateOrderStatusAction(
 
     const { status: targetStatus, trackingNumber, courierName, note } = parsed.data;
 
+    if (targetStatus === "cancelled" || targetStatus === "refunded") {
+      return {
+        success: false,
+        error: "Use the dedicated cancellation or owner-only refund action for this transition.",
+      };
+    }
+
     const adminSupabase = createAdminClient();
 
     // 1. Fetch current order
@@ -78,6 +86,17 @@ export async function updateOrderStatusAction(
       return {
         success: false,
         error: `Cannot transition order from '${currentStatus}' to '${targetStatus}'. Invalid transition sequence.`,
+      };
+    }
+
+    if (
+      order.payment_method === "razorpay" &&
+      order.payment_status !== "paid" &&
+      ["confirmed", "packed", "shipped", "out_for_delivery", "delivered"].includes(targetStatus)
+    ) {
+      return {
+        success: false,
+        error: "Online orders must be paid before fulfillment can proceed.",
       };
     }
 
@@ -119,19 +138,22 @@ export async function updateOrderStatusAction(
       auditNote = `${auditNote} (COD payment auto-reconciled to 'paid')`.trim();
     }
 
-    const { error: updateErr } = await adminSupabase
+    const { data: updatedOrder, error: updateErr } = await adminSupabase
       .from("orders")
       .update(updatePayload)
-      .eq("id", order.id);
+      .eq("id", order.id)
+      .eq("status", currentStatus)
+      .eq("payment_status", order.payment_status)
+      .select("id")
+      .maybeSingle();
 
-    if (updateErr) {
+    if (updateErr || !updatedOrder) {
       console.error("Failed to update order status:", updateErr);
       return {
         success: false,
-        error: "Failed to update order status in database.",
+        error: "Order status changed while this update was in progress. Refresh and try again.",
       };
     }
-
 
     // 5. Insert audit log record
     const isValidAdminUuid =
@@ -193,12 +215,19 @@ export async function bulkUpdateOrderStatusAction(
       };
     }
 
+    if (targetStatus !== "confirmed" && targetStatus !== "packed") {
+      return {
+        success: false,
+        error: "Bulk updates are limited to confirmation and packing. Use the order detail for other transitions.",
+      };
+    }
+
     const adminSupabase = createAdminClient();
 
     // Fetch all requested orders
     const { data: orders, error: fetchErr } = await adminSupabase
       .from("orders")
-      .select("id, order_number, status, notes")
+      .select("id, order_number, status, notes, payment_method, payment_status")
       .in("order_number", orderNumbers);
 
     if (fetchErr || !orders) {
@@ -216,15 +245,28 @@ export async function bulkUpdateOrderStatusAction(
         continue;
       }
 
-      const { error: updateErr } = await adminSupabase
+      if (
+        order.payment_method === "razorpay" &&
+        order.payment_status !== "paid" &&
+        ["confirmed", "packed", "shipped", "out_for_delivery", "delivered"].includes(targetStatus)
+      ) {
+        skippedCount++;
+        continue;
+      }
+
+      const { data: updatedOrder, error: updateErr } = await adminSupabase
         .from("orders")
         .update({
           status: targetStatus,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", order.id);
+        .eq("id", order.id)
+        .eq("status", currentStatus)
+        .eq("payment_status", order.payment_status)
+        .select("id")
+        .maybeSingle();
 
-      if (updateErr) {
+      if (updateErr || !updatedOrder) {
         skippedCount++;
         continue;
       }
@@ -351,6 +393,13 @@ export async function markOrderAsRefundedAction(
       return {
         success: false,
         error: "This order is already marked as refunded.",
+      };
+    }
+
+    if (order.payment_status !== "paid") {
+      return {
+        success: false,
+        error: "An order must have a completed payment before it can be marked as refunded.",
       };
     }
 
@@ -515,6 +564,7 @@ export async function resendOrderConfirmationEmailAction(
     });
 
     const appUrl = (env.NEXT_PUBLIC_APP_URL || "https://velaash.in").replace(/\/$/, "");
+    const { storeProfile } = await getSiteSettings();
     const orderViewUrl = `${appUrl}/account/orders/${order.order_number}`;
 
     const formattedDate = new Date(order.created_at).toLocaleDateString("en-IN", {
@@ -544,6 +594,7 @@ export async function resendOrderConfirmationEmailAction(
         shippingAddress: shipAddr,
         orderViewUrl,
         accountCreatedFromGuest: false,
+        supportEmail: storeProfile.email,
       }),
     });
 

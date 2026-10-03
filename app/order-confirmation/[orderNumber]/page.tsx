@@ -20,6 +20,7 @@ import {
 
 import { getOrderByNumber } from "@/features/checkout/queries/get-order-by-number";
 import { OrderConfirmationTracker } from "@/features/analytics";
+import { getSiteSettings } from "@/features/settings";
 
 export const metadata: Metadata = {
   title: "Order Confirmed | Velaash",
@@ -76,6 +77,8 @@ export default async function OrderConfirmationPage({
   if (!order) {
     notFound();
   }
+
+  const { storeProfile } = await getSiteSettings();
 
   // Format order date
   const orderDateFormatted = new Date(order.createdAt).toLocaleDateString("en-IN", {
@@ -455,10 +458,10 @@ export default async function OrderConfirmationPage({
                 Contact our customer support team with your order reference{" "}
                 <strong className="text-brand-dark">{order.orderNumber}</strong> at{" "}
                 <a
-                  href="mailto:support@velaash.in"
+                  href={`mailto:${storeProfile.email}`}
                   className="font-medium text-brand-accent underline underline-offset-2"
                 >
-                  support@velaash.in
+                  {storeProfile.email}
                 </a>
                 .
               </p>

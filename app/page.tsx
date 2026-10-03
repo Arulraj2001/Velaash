@@ -15,11 +15,10 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { Container } from "@/components/ui/container";
-import { Button } from "@/components/ui/button";
 import { BRAND } from "@/lib/constants";
 import { getNavigationCategories } from "@/features/navigation";
-import { getProducts, ProductCard, type ProductListItem } from "@/features/products";
-import { getSiteSettings } from "@/features/settings";
+import { getProducts, type ProductListItem } from "@/features/products";
+import { getSiteSettings, getStoreContact } from "@/features/settings";
 import { env } from "@/lib/env";
 
 const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
@@ -38,23 +37,32 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const brandName = storeProfile.name || BRAND.name;
   const title =
-    seoDefaults.meta_title || `${brandName} | Modern Everyday Luxury & Contemporary Clothing`;
+    seoDefaults.meta_title || `${brandName} — Everyday essentials for every home`;
   const description =
     seoDefaults.meta_description ||
-    "Contemporary clothing designed with refined fabrics and effortless silhouettes for your everyday and occasion wardrobe.";
+    "Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash.";
+
+  const defaultKeywords = [
+    brandName,
+    storeProfile.legal_name || BRAND.legalName,
+    "Everyday essentials",
+    "Clothing for men and women",
+    "Pooja essentials",
+    "Brass essentials",
+    "Contemporary Clothing",
+    "Kurtas & Sets",
+    "ஆடை",
+    "கடை",
+  ];
+  const configuredKeywords = seoDefaults.keywords
+    ? seoDefaults.keywords.split(",").map((k) => k.trim()).filter(Boolean)
+    : [];
+  const keywords = Array.from(new Set([...defaultKeywords, ...configuredKeywords]));
 
   return {
     title,
     description,
-    keywords: [
-      brandName,
-      storeProfile.legal_name || BRAND.legalName,
-      "Contemporary Clothing",
-      "Kurtas & Sets",
-      "Dresses",
-      "Co-ord Sets",
-      "Indian Everyday Wear",
-    ],
+    keywords,
     openGraph: {
       title,
       description,
@@ -67,7 +75,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80",
           width: 1200,
           height: 630,
-          alt: `${brandName} - Contemporary Clothing`,
+          alt: `${brandName} — Everyday essentials for every home`,
         },
       ],
     },
@@ -111,6 +119,7 @@ export default async function HomePage() {
     getSiteSettings(),
     getHomepageSections(),
   ]);
+  const { whatsappNumber, whatsappUrl } = getStoreContact(siteSettings.storeProfile);
 
   // Check if featured_products section is present in sections and resolve products
   const featuredSection = sections.find((s) => s.section_type === "featured_products");
@@ -147,8 +156,11 @@ export default async function HomePage() {
     name: siteSettings.storeProfile.name || BRAND.name,
     legalName: siteSettings.storeProfile.legal_name || BRAND.legalName,
     url: BASE_URL,
-    email: siteSettings.storeProfile.email || BRAND.contactEmail,
-    telephone: siteSettings.storeProfile.whatsapp_number || BRAND.supportPhone,
+    description:
+      siteSettings.seoDefaults.meta_description ||
+      "Shop clothing for men and women, plus traditional pooja and brass essentials, at Velaash.",
+    email: siteSettings.storeProfile.email,
+    telephone: whatsappNumber,
     ...(siteSettings.storeProfile.logo_url
       ? {
           logo: {
@@ -160,12 +172,12 @@ export default async function HomePage() {
     sameAs: [
       siteSettings.socialLinks.instagram || BRAND.socialLinks.instagram,
       siteSettings.socialLinks.facebook || BRAND.socialLinks.facebook,
-      BRAND.whatsappUrl,
+      whatsappUrl,
     ].filter(Boolean),
     contactPoint: [
       {
         "@type": "ContactPoint",
-        telephone: siteSettings.storeProfile.whatsapp_number || BRAND.supportPhone,
+        telephone: whatsappNumber,
         contactType: "customer service",
         areaServed: "IN",
         availableLanguage: ["English", "Hindi"],
@@ -187,28 +199,74 @@ export default async function HomePage() {
           switch (section.section_type) {
             case "hero_banner": {
               const content = (section.content as Record<string, unknown>) || {};
-              const slides = Array.isArray(content.slides) ? (content.slides as HeroSlide[]) : [];
+              const rawSlides = Array.isArray(content.slides) ? (content.slides as HeroSlide[]) : [];
+
+              const slides = rawSlides.map((slide) => ({
+                ...slide,
+                tag: slide.tag ?? "",
+                headline:
+                  slide.headline === "Modern Everyday Luxury"
+                    ? "Everyday essentials for every home"
+                    : slide.headline ?? "",
+                subtitle:
+                  typeof slide.subtitle === "string" &&
+                  (slide.subtitle.includes("contemporary wardrobe essentials") ||
+                    slide.subtitle.includes("Effortless silhouettes"))
+                    ? "Clothing for men and women, plus traditional pooja and brass essentials."
+                    : slide.subtitle ?? "",
+                cta_text: slide.cta_text ?? "",
+                cta_link: slide.cta_link ?? "",
+                secondary_cta_text: slide.secondary_cta_text ?? "",
+                secondary_cta_link: slide.secondary_cta_link ?? "",
+                content_width: slide.content_width ?? "balanced",
+              }));
+
+              const rawHeadline = (content.headline as string) || "";
+              const headline =
+                rawHeadline === "Modern Everyday Luxury"
+                  ? "Everyday essentials for every home"
+                  : rawHeadline;
+
+              const rawSubtitle =
+                (content.subtitle as string) || (content.subheading as string) || "";
+              const subtitle =
+                rawSubtitle.includes("contemporary wardrobe essentials") ||
+                rawSubtitle.includes("Effortless silhouettes")
+                  ? "Clothing for men and women, plus traditional pooja and brass essentials."
+                  : rawSubtitle;
 
               return (
                 <HeroCarousel
                   key={section.id}
                   slides={slides}
-                  fallbackHeadline={(content.headline as string) || "Modern Everyday Luxury"}
-                  fallbackSubtitle={
-                    (content.subtitle as string) ||
-                    (content.subheading as string) ||
-                    "Effortless silhouettes, refined textures, and contemporary wardrobe essentials designed for everyday elegance."
-                  }
+                  fallbackHeadline={headline}
+                  fallbackSubtitle={subtitle}
                   fallbackCtaText={
-                    (content.cta_text as string) || (content.cta_label as string) || "Explore Collection"
+                    (content.cta_text as string) || (content.cta_label as string) || ""
                   }
-                  fallbackCtaLink={(content.cta_link as string) || "/shop"}
-                  fallbackSecondaryText={(content.secondary_cta_text as string) || "Kurtas & Sets"}
-                  fallbackSecondaryLink={(content.secondary_cta_link as string) || "/collections/kurtas-sets"}
+                  fallbackCtaLink={(content.cta_link as string) || ""}
+                  fallbackSecondaryText={(content.secondary_cta_text as string) || ""}
+                  fallbackSecondaryLink={(content.secondary_cta_link as string) || ""}
                   fallbackBgImage={
                     (content.bg_image as string) ||
                     (content.image_url as string) ||
                     "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85"
+                  }
+                  fallbackBgImageMobile={
+                    (content.bg_image_mobile as string) || ""
+                  }
+                  fallbackPositionX={
+                    typeof content.position_x === "number" ? content.position_x : 50
+                  }
+                  fallbackPositionY={
+                    typeof content.position_y === "number" ? content.position_y : 50
+                  }
+                  fallbackTextAlign={
+                    (content.text_align as "left" | "center" | "right") || "center"
+                  }
+                  fallbackContentWidth={
+                    (content.content_width as "compact" | "balanced" | "wide" | "full") ||
+                    "balanced"
                   }
                 />
               );
@@ -381,9 +439,17 @@ export default async function HomePage() {
                       {
                         icon: "MessageCircle",
                         title: "WhatsApp Support",
-                        description: "Direct assistance and sizing guidance on +91 8508643832.",
+                        description: "Direct assistance and sizing guidance on WhatsApp.",
                       },
                     ];
+              const contactItems = items.map((item) =>
+                item.icon === "MessageCircle" || item.title?.toLowerCase().includes("whatsapp")
+                  ? {
+                      ...item,
+                      description: `Direct assistance and sizing guidance on ${whatsappNumber}.`,
+                    }
+                  : item
+              );
 
               return (
                 <section key={section.id} className="py-12 sm:py-16 bg-luxury-dots border-b border-brand-border/60 relative">
@@ -393,7 +459,7 @@ export default async function HomePage() {
                         items.length <= 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"
                       } gap-6 sm:gap-8`}
                     >
-                      {items.map((item, idx) => {
+                      {contactItems.map((item, idx) => {
                         const iconKey = item.icon || "Truck";
                         const IconComponent = TRUST_ICON_MAP[iconKey] || Truck;
                         return (

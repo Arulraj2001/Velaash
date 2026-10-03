@@ -2,7 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { Package, MessageCircle, Clock } from "lucide-react";
 import { PageHeaderBanner } from "@/components/ui";
-import { getSiteSettings } from "@/features/settings";
+import { getSiteSettings, getStoreContact } from "@/features/settings";
 import { GuestTrackingForm } from "@/features/orders/components/guest-tracking-form";
 
 export const metadata: Metadata = {
@@ -15,10 +15,11 @@ export default async function TrackOrderPage() {
   const settings = await getSiteSettings();
   const trackBanner = settings.pageBanners?.track_order;
 
-  const whatsappNumber = "918508643832";
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+  const { whatsappNumber } = getStoreContact(settings.storeProfile);
+  const whatsappDigits = whatsappNumber.replace(/\D/g, "");
+  const whatsappUrl = whatsappDigits ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
     "Hi Velaash, I have a question regarding order tracking and delivery status."
-  )}`;
+  )}` : "/contact";
 
   return (
     <main className="min-h-screen bg-brand-cream/40 font-sans pb-24">
