@@ -33,6 +33,15 @@ export const DEFAULT_PROMO_POPUP_SETTING: PromoPopupSetting = {
 export const DEFAULT_SHIPPING_POLICY: ShippingPolicySetting = {
   free_shipping_threshold: 999,
   standard_shipping_fee: 100,
+  festive_shipping_enabled: false,
+  festive_campaign_name: "Festive Free Delivery",
+  festive_badge_text: "🌾 Festive Offer: Free Delivery",
+  festive_valid_from: null,
+  festive_valid_until: null,
+  festive_product_ids: [],
+  festive_category_ids: [],
+  festive_coupon_code: "",
+  festive_apply_to_all: false,
 };
 
 export const DEFAULT_RETURNS_POLICY: ReturnsPolicySetting = {
@@ -211,6 +220,34 @@ async function fetchSiteSettings(): Promise<SiteSettingsData> {
     const shippingPolicy: ShippingPolicySetting = {
       free_shipping_threshold: freeShippingThresholdVal,
       standard_shipping_fee: standardShippingFeeVal,
+      festive_shipping_enabled: Boolean(shippingRecord.festive_shipping_enabled),
+      festive_campaign_name:
+        typeof shippingRecord.festive_campaign_name === "string"
+          ? shippingRecord.festive_campaign_name
+          : DEFAULT_SHIPPING_POLICY.festive_campaign_name,
+      festive_badge_text:
+        typeof shippingRecord.festive_badge_text === "string"
+          ? shippingRecord.festive_badge_text
+          : DEFAULT_SHIPPING_POLICY.festive_badge_text,
+      festive_valid_from:
+        typeof shippingRecord.festive_valid_from === "string"
+          ? shippingRecord.festive_valid_from
+          : null,
+      festive_valid_until:
+        typeof shippingRecord.festive_valid_until === "string"
+          ? shippingRecord.festive_valid_until
+          : null,
+      festive_product_ids: Array.isArray(shippingRecord.festive_product_ids)
+        ? (shippingRecord.festive_product_ids as string[])
+        : [],
+      festive_category_ids: Array.isArray(shippingRecord.festive_category_ids)
+        ? (shippingRecord.festive_category_ids as string[])
+        : [],
+      festive_coupon_code:
+        typeof shippingRecord.festive_coupon_code === "string"
+          ? shippingRecord.festive_coupon_code.trim().toUpperCase()
+          : null,
+      festive_apply_to_all: Boolean(shippingRecord.festive_apply_to_all),
     };
 
     const returnsRecord = rawReturnsPolicy as Record<string, unknown>;

@@ -18,6 +18,7 @@ interface OrderReviewSidebarProps {
   totalAmount: number;
   isSubmitting: boolean;
   returnWindowDays: number;
+  freeShippingBadgeText?: string | null;
 }
 
 export function OrderReviewSidebar({
@@ -32,6 +33,7 @@ export function OrderReviewSidebar({
   totalAmount,
   isSubmitting,
   returnWindowDays,
+  freeShippingBadgeText,
 }: OrderReviewSidebarProps) {
   const totalItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -103,7 +105,14 @@ export function OrderReviewSidebar({
         <div className="flex justify-between text-brand-muted">
           <span>Standard Delivery</span>
           {isFreeShipping ? (
-            <span className="font-semibold text-emerald-700 tracking-wide">FREE</span>
+            <div className="text-right">
+              <span className="font-semibold text-emerald-700 tracking-wide">FREE</span>
+              {freeShippingBadgeText && (
+                <p className="text-[10px] text-emerald-600 font-medium">
+                  {freeShippingBadgeText}
+                </p>
+              )}
+            </div>
           ) : (
             <span className="font-medium text-brand-dark">₹{shippingFee.toLocaleString("en-IN")}</span>
           )}

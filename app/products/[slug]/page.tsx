@@ -148,6 +148,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             freeShippingThreshold={siteSettings.shippingPolicy.free_shipping_threshold}
             returnWindowDays={siteSettings.returnsPolicy.return_window_days}
             whatsappNumber={siteSettings.storeProfile.whatsapp_number}
+            festivePolicy={siteSettings.shippingPolicy}
           />
 
           {/* Related Products ("You May Also Like") Section */}

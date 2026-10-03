@@ -23,7 +23,7 @@ export type CartItem = z.infer<typeof CartItemSchema>;
 
 export interface AppliedCoupon {
   code: string;
-  discountType: "percentage" | "flat";
+  discountType: "percentage" | "flat" | "free_shipping";
   discountValue: number;
   minOrderValue: number;
   maxDiscountAmount?: number | null;
@@ -33,6 +33,15 @@ export interface AppliedCoupon {
 export interface ShippingPolicyData {
   free_shipping_threshold: number;
   standard_shipping_fee: number;
+  festive_shipping_enabled?: boolean;
+  festive_campaign_name?: string;
+  festive_badge_text?: string;
+  festive_valid_from?: string | null;
+  festive_valid_until?: string | null;
+  festive_product_ids?: string[];
+  festive_category_ids?: string[];
+  festive_coupon_code?: string | null;
+  festive_apply_to_all?: boolean;
 }
 
 /**
@@ -43,6 +52,8 @@ export interface CartCalculationResult {
   discount: number;
   shippingFee: number;
   isFreeShipping: boolean;
+  freeShippingReason?: "threshold" | "product_offer" | "coupon" | null;
+  freeShippingBadgeText?: string | null;
   amountNeededForFreeShipping: number;
   freeShippingProgress: number; // 0 to 100
   total: number;
@@ -56,12 +67,13 @@ export type CouponValidationResponse =
       coupon: {
         id: string;
         code: string;
-        discountType: "percentage" | "flat";
+        discountType: "percentage" | "flat" | "free_shipping";
         discountValue: number;
         minOrderValue: number;
         maxDiscountAmount: number | null;
       };
       discountAmount: number;
+      notice?: string | null;
     }
   | {
       success: false;

@@ -494,6 +494,10 @@ export async function createOrderAction(
     // 7. Authoritative Coupon Revalidation
     let discountAmount = 0;
     let validatedCouponCode: string | null = null;
+    let validatedCoupon: {
+      code: string;
+      discountType: "percentage" | "flat" | "free_shipping";
+    } | null = null;
 
     if (input.couponCode) {
       const couponRes = await validateCouponAction(input.couponCode, subtotal);
@@ -506,15 +510,57 @@ export async function createOrderAction(
       }
       discountAmount = couponRes.discountAmount;
       validatedCouponCode = couponRes.coupon.code;
+      validatedCoupon = {
+        code: couponRes.coupon.code,
+        discountType: couponRes.coupon.discountType,
+      };
     }
 
-    // 8. Use the same shipping fee shown in the checkout preview.
+    // 8. Authoritative Shipping Fee Calculation (Conflict-Free Precedence)
+    const now = new Date();
     const freeShippingThreshold = siteSettings.shippingPolicy.free_shipping_threshold;
-    const isFreeShipping = subtotal >= freeShippingThreshold;
+    const isThresholdFree = subtotal >= freeShippingThreshold;
+
+    let isFestiveActive = false;
+    if (siteSettings.shippingPolicy.festive_shipping_enabled) {
+      const validFrom = siteSettings.shippingPolicy.festive_valid_from
+        ? new Date(siteSettings.shippingPolicy.festive_valid_from)
+        : null;
+      const validUntil = siteSettings.shippingPolicy.festive_valid_until
+        ? new Date(siteSettings.shippingPolicy.festive_valid_until)
+        : null;
+      const isAfterStart = !validFrom || now >= validFrom;
+      const isBeforeEnd = !validUntil || now <= validUntil;
+      isFestiveActive = isAfterStart && isBeforeEnd;
+    }
+
+    const hasFestiveProduct =
+      isFestiveActive &&
+      (siteSettings.shippingPolicy.festive_apply_to_all ||
+        verifiedItems.some((item) => {
+          if (siteSettings.shippingPolicy.festive_product_ids?.includes(item.productId)) return true;
+          return false;
+        }));
+
+    const isCouponFree = Boolean(
+      validatedCoupon &&
+        (validatedCoupon.discountType === "free_shipping" ||
+          (siteSettings.shippingPolicy.festive_coupon_code &&
+            validatedCoupon.code.toUpperCase() ===
+              siteSettings.shippingPolicy.festive_coupon_code.toUpperCase()))
+    );
+
+    const isFreeShipping = isThresholdFree || hasFestiveProduct || isCouponFree;
     const shippingCharge = isFreeShipping
       ? 0
       : siteSettings.shippingPolicy.standard_shipping_fee;
-    const shippingSource = isFreeShipping ? "free" : "site_default";
+    const shippingSource = isThresholdFree
+      ? "free_threshold"
+      : hasFestiveProduct
+      ? "festive_product_offer"
+      : isCouponFree
+      ? "free_shipping_coupon"
+      : "standard_delivery";
 
     console.info(
       `[Checkout] Shipping charge ₹${shippingCharge} (source: ${shippingSource}, pincode: ${input.shippingAddress.pincode})`

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Heart, Star, ShoppingBag, ArrowRight } from "lucide-react";
 import type { ProductListItem } from "../types";
+import { getProductFestiveShippingBadge } from "../types";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { useWishlistStore } from "@/features/wishlist/store/wishlist-store";
 import { useCartStore } from "@/features/cart/store/cart-store";
@@ -49,6 +50,7 @@ export function ProductCard({
   const activeImageUrl = activeColorObj?.image_url || primaryImage?.image_url;
 
   // Badges & stock calculations
+  const festiveBadge = getProductFestiveShippingBadge(product);
   const isNew = Boolean(product.is_new);
   const isSale = product.compare_at_price != null && product.compare_at_price > product.base_price;
   const discountPercent = isSale
@@ -189,6 +191,12 @@ export function ProductCard({
               </span>
             ) : (
               <>
+                {festiveBadge && (
+                  <span className="rounded-full bg-emerald-900/90 text-amber-200 border border-emerald-600/50 px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold tracking-wide shadow-sm backdrop-blur-xs flex items-center gap-1">
+                    <span>🌾</span>
+                    <span>{festiveBadge}</span>
+                  </span>
+                )}
                 {isNew && (
                   <span className="bg-brand-dark/90 text-brand-gold rounded-full px-2 py-0.5 text-[10px] font-medium tracking-widest uppercase shadow-sm backdrop-blur-xs">
                     New

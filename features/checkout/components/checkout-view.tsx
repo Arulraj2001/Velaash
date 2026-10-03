@@ -148,7 +148,8 @@ export function CheckoutView({
     shippingPolicy: siteSettings.shippingPolicy,
   });
 
-  const { subtotal, discount, shippingFee, isFreeShipping } = pricingCalculation;
+  const { subtotal, discount, shippingFee, isFreeShipping, freeShippingBadgeText } =
+    pricingCalculation;
   const codFee =
     selectedPaymentMethod === "cod" ? siteSettings.paymentSettings.cod_handling_fee : 0;
   const totalAmount = Math.max(0, subtotal - discount) + shippingFee + codFee;
@@ -691,6 +692,7 @@ export function CheckoutView({
               totalAmount={totalAmount}
               isSubmitting={isSubmitting}
               returnWindowDays={siteSettings.returnsPolicy.return_window_days}
+              freeShippingBadgeText={freeShippingBadgeText}
             />
           </div>
         </div>

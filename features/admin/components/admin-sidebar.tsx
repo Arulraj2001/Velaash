@@ -21,6 +21,7 @@ import {
   X,
   Shield,
   ShieldAlert,
+  BookOpen,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -36,6 +37,7 @@ const ICON_MAP = {
   Sliders,
   Settings,
   Users,
+  BookOpen,
 };
 
 export function AdminSidebar({ admin }: AdminSidebarProps) {

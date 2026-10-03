@@ -190,8 +190,19 @@ export async function updateShippingSettingsAction(
         free_shipping_threshold: parsed.data.free_shipping_threshold,
         standard_shipping_fee: parsed.data.standard_shipping_fee,
         cod_available: true,
+        festive_shipping_enabled: parsed.data.festive_shipping_enabled,
+        festive_campaign_name: parsed.data.festive_campaign_name,
+        festive_badge_text: parsed.data.festive_badge_text,
+        festive_valid_from: parsed.data.festive_valid_from || null,
+        festive_valid_until: parsed.data.festive_valid_until || null,
+        festive_product_ids: parsed.data.festive_product_ids || [],
+        festive_category_ids: parsed.data.festive_category_ids || [],
+        festive_coupon_code: parsed.data.festive_coupon_code
+          ? parsed.data.festive_coupon_code.trim().toUpperCase()
+          : null,
+        festive_apply_to_all: parsed.data.festive_apply_to_all,
       },
-      "Shipping rates and free shipping threshold"
+      "Shipping rates, free shipping threshold, and festive campaigns"
     );
 
     // Also sync shipping_rules for legacy compatibility

@@ -16,6 +16,8 @@ import {
   Minus,
 } from "lucide-react";
 import type { ProductDetailItem } from "../types";
+import { getProductFestiveShippingBadge } from "../types";
+import type { ShippingPolicySetting } from "@/features/settings/types";
 import { formatCurrency } from "@/lib/utils";
 import { useCartStore } from "@/features/cart";
 import { ProductGallery } from "./product-gallery";
@@ -32,6 +34,7 @@ interface ProductDetailViewProps {
   freeShippingThreshold?: number;
   returnWindowDays?: number;
   whatsappNumber: string;
+  festivePolicy?: ShippingPolicySetting | null;
 }
 
 export function ProductDetailView({
@@ -39,9 +42,12 @@ export function ProductDetailView({
   freeShippingThreshold = 999, // Placeholder default — MUST be confirmed with client before launch
   returnWindowDays = 7, // Placeholder default — MUST be confirmed with client before launch
   whatsappNumber,
+  festivePolicy,
 }: ProductDetailViewProps) {
   const router = useRouter();
   const addItemToCart = useCartStore((state) => state.addItem);
+
+  const festiveBadge = getProductFestiveShippingBadge(product, festivePolicy);
 
   // Product Type Detection
   const hasVariants = product.has_variants !== false && (product.variants?.length ?? 0) > 0;
@@ -528,7 +534,24 @@ export function ProductDetailView({
               </a>
             </div>
 
-            {/* Delivery Pincode Checker */}
+            {/* Delivery Pincode Checker & Festive Shipping Highlight */}
+            {festiveBadge && (
+              <div className="rounded-xl border border-emerald-500/40 bg-emerald-50/80 p-3 text-xs text-emerald-900 flex items-start gap-2.5 shadow-xs">
+                <span className="text-base leading-none mt-0.5">🌾</span>
+                <div className="space-y-0.5">
+                  <div className="font-semibold text-emerald-950 flex items-center gap-1.5">
+                    <span>{festiveBadge}</span>
+                    <span className="bg-emerald-200/80 text-emerald-800 text-[10px] px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider">
+                      Special Offer
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-emerald-800/90 font-normal">
+                    Standard home delivery is completely free for this item during this festive celebration.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <PincodeChecker freeShippingThreshold={freeShippingThreshold} />
 
             {/* Trust Badges Row */}

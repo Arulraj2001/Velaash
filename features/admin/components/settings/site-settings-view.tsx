@@ -671,6 +671,14 @@ function ShippingSettingsForm({
   const [form, setForm] = useState({
     free_shipping_threshold: initial.free_shipping_threshold ?? 999,
     standard_shipping_fee: initial.standard_shipping_fee ?? 100,
+    festive_shipping_enabled: Boolean(initial.festive_shipping_enabled),
+    festive_campaign_name: initial.festive_campaign_name || "Pongal Festival Special",
+    festive_badge_text: initial.festive_badge_text || "🌾 Pongal Special: Free Delivery",
+    festive_valid_from: initial.festive_valid_from ? initial.festive_valid_from.split("T")[0] : "",
+    festive_valid_until: initial.festive_valid_until ? initial.festive_valid_until.split("T")[0] : "",
+    festive_coupon_code: initial.festive_coupon_code || "PONGALFREE",
+    festive_apply_to_all: Boolean(initial.festive_apply_to_all),
+    festive_product_ids_input: (initial.festive_product_ids || []).join(", "),
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -681,7 +689,32 @@ function ShippingSettingsForm({
     setErrorMsg(null);
 
     try {
-      const res = await updateShippingSettingsAction(form);
+      const payload = {
+        free_shipping_threshold: form.free_shipping_threshold,
+        standard_shipping_fee: form.standard_shipping_fee,
+        festive_shipping_enabled: form.festive_shipping_enabled,
+        festive_campaign_name: form.festive_campaign_name,
+        festive_badge_text: form.festive_badge_text,
+        festive_valid_from: form.festive_valid_from
+          ? new Date(form.festive_valid_from + "T00:00:00").toISOString()
+          : null,
+        festive_valid_until: form.festive_valid_until
+          ? new Date(form.festive_valid_until + "T23:59:59").toISOString()
+          : null,
+        festive_coupon_code: form.festive_coupon_code
+          ? form.festive_coupon_code.trim().toUpperCase()
+          : null,
+        festive_apply_to_all: form.festive_apply_to_all,
+        festive_product_ids: form.festive_product_ids_input
+          ? form.festive_product_ids_input
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [],
+        festive_category_ids: initial.festive_category_ids || [],
+      };
+
+      const res = await updateShippingSettingsAction(payload);
       if (res.success) {
         onSaved();
       } else {
@@ -710,51 +743,201 @@ function ShippingSettingsForm({
         </div>
       )}
 
-      <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 text-amber-900 text-xs leading-relaxed">
-        <strong>Single Source of Truth:</strong> Updating these numbers immediately updates the cart progress bar,
-        product accordion (&quot;Free shipping over ₹X&quot;), and checkout calculations.
+      {/* 1. Base Shipping Policy */}
+      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-4">
+        <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">
+          Standard Domestic Rates
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Free Shipping Threshold (₹ INR)
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-sm text-slate-400 font-semibold">₹</span>
+              <input
+                type="number"
+                min={0}
+                required
+                value={form.free_shipping_threshold}
+                onChange={(e) => setForm({ ...form, free_shipping_threshold: Number(e.target.value) })}
+                className="w-full pl-8 pr-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900 bg-white"
+              />
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Orders equal to or above this subtotal qualify for ₹0 shipping.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Standard Domestic Shipping Fee (₹ INR)
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-sm text-slate-400 font-semibold">₹</span>
+              <input
+                type="number"
+                min={0}
+                required
+                value={form.standard_shipping_fee}
+                onChange={(e) => setForm({ ...form, standard_shipping_fee: Number(e.target.value) })}
+                className="w-full pl-8 pr-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900 bg-white"
+              />
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Applied to orders below the free shipping threshold.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Free Shipping Threshold (₹ INR)
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-2.5 text-sm text-slate-400 font-semibold">₹</span>
-            <input
-              type="number"
-              min={0}
-              required
-              value={form.free_shipping_threshold}
-              onChange={(e) => setForm({ ...form, free_shipping_threshold: Number(e.target.value) })}
-              className="w-full pl-8 pr-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900"
-            />
+      {/* 2. Festive Free Shipping Campaign Section */}
+      <div className="rounded-2xl border border-emerald-200 bg-gradient-to-b from-emerald-50/70 to-white p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-emerald-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-base">🌾</span>
+              <h3 className="text-sm font-heading font-semibold text-emerald-950">
+                Festive Free Shipping Campaign (Pongal / Festivals)
+              </h3>
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Offer Engine
+              </span>
+            </div>
+            <p className="text-xs text-emerald-700 mt-0.5">
+              Offer ₹0 free delivery on specific products or via promo code during festival periods.
+            </p>
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            Orders equal to or above this subtotal qualify for ₹0 shipping.
-          </p>
+
+          <label className="relative inline-flex items-center cursor-pointer select-none shrink-0">
+            <input
+              type="checkbox"
+              checked={form.festive_shipping_enabled}
+              onChange={(e) => setForm({ ...form, festive_shipping_enabled: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+            <span className="ml-2 text-xs font-semibold text-slate-700">
+              {form.festive_shipping_enabled ? "Campaign Active" : "Disabled"}
+            </span>
+          </label>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Standard Domestic Shipping Fee (₹ INR)
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-2.5 text-sm text-slate-400 font-semibold">₹</span>
-            <input
-              type="number"
-              min={0}
-              required
-              value={form.standard_shipping_fee}
-              onChange={(e) => setForm({ ...form, standard_shipping_fee: Number(e.target.value) })}
-              className="w-full pl-8 pr-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900"
-            />
+        {form.festive_shipping_enabled && (
+          <div className="space-y-4 pt-1 animate-in fade-in duration-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Campaign Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.festive_campaign_name}
+                  onChange={(e) => setForm({ ...form, festive_campaign_name: e.target.value })}
+                  placeholder="e.g. Pongal Festival Special"
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-900 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Customer Badge / Banner Label
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.festive_badge_text}
+                  onChange={(e) => setForm({ ...form, festive_badge_text: e.target.value })}
+                  placeholder="e.g. 🌾 Pongal Special: Free Delivery"
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-900 bg-white"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Displayed on product cards, product page, cart drawer, and checkout.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Offer Start Date (00:00)
+                </label>
+                <input
+                  type="date"
+                  value={form.festive_valid_from}
+                  onChange={(e) => setForm({ ...form, festive_valid_from: e.target.value })}
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-900 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Offer End Date (Expires 23:59)
+                </label>
+                <input
+                  type="date"
+                  value={form.festive_valid_until}
+                  onChange={(e) => setForm({ ...form, festive_valid_until: e.target.value })}
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-900 bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Festive Free-Shipping Coupon Code (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={form.festive_coupon_code}
+                  onChange={(e) => setForm({ ...form, festive_coupon_code: e.target.value.toUpperCase() })}
+                  placeholder="e.g. PONGALFREE"
+                  className="w-full px-3.5 py-2 text-sm font-mono uppercase tracking-wider border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-slate-900 bg-white"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Shoppers entering this code in cart/checkout receive 100% free delivery.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Target Product Scope
+                </label>
+                <label className="flex items-center gap-2 p-2.5 rounded-lg border border-emerald-200 bg-white cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={form.festive_apply_to_all}
+                    onChange={(e) => setForm({ ...form, festive_apply_to_all: e.target.checked })}
+                    className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                  />
+                  <span className="text-xs font-medium text-slate-800">
+                    Apply free shipping to <strong>ALL products storewide</strong> during this festival
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {!form.festive_apply_to_all && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Specific Participating Product Slugs or IDs (Comma-separated)
+                </label>
+                <textarea
+                  rows={2}
+                  value={form.festive_product_ids_input}
+                  onChange={(e) => setForm({ ...form, festive_product_ids_input: e.target.value })}
+                  placeholder="e.g. brass-diya-pooja-set, chanderi-silk-saree, pure-linen-coord-set"
+                  className="w-full px-3.5 py-2 text-xs font-mono border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 bg-white"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Enter product slugs or UUIDs that qualify for automatic festive free shipping.
+                </p>
+              </div>
+            )}
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            Applied to orders below the free shipping threshold.
-          </p>
-        </div>
+        )}
       </div>
 
       <div className="pt-4 border-t border-slate-100 flex justify-end">
@@ -764,7 +947,7 @@ function ShippingSettingsForm({
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-colors disabled:opacity-50"
         >
           {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          <span>Save Shipping Rates</span>
+          <span>Save Shipping Policy &amp; Campaign</span>
         </button>
       </div>
     </form>

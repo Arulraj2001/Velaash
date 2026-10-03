@@ -40,6 +40,15 @@ export const ShippingSettingsSchema = z.object({
   standard_shipping_fee: z.coerce
     .number()
     .min(0, "Standard shipping fee cannot be negative"),
+  festive_shipping_enabled: z.boolean().default(false),
+  festive_campaign_name: z.string().trim().max(100).default("Festive Free Delivery"),
+  festive_badge_text: z.string().trim().max(100).default("🌾 Festive Offer: Free Delivery"),
+  festive_valid_from: z.string().nullable().optional(),
+  festive_valid_until: z.string().nullable().optional(),
+  festive_product_ids: z.array(z.string()).default([]),
+  festive_category_ids: z.array(z.string()).default([]),
+  festive_coupon_code: z.string().trim().toUpperCase().nullable().optional(),
+  festive_apply_to_all: z.boolean().default(false),
 });
 
 export type ShippingSettingsFormData = z.infer<typeof ShippingSettingsSchema>;

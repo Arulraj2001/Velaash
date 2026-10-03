@@ -22,6 +22,15 @@ export interface SocialLinksSetting {
 export interface ShippingPolicySetting {
   free_shipping_threshold: number;
   standard_shipping_fee: number;
+  festive_shipping_enabled?: boolean;
+  festive_campaign_name?: string;
+  festive_badge_text?: string;
+  festive_valid_from?: string | null;
+  festive_valid_until?: string | null;
+  festive_product_ids?: string[];
+  festive_category_ids?: string[];
+  festive_coupon_code?: string | null;
+  festive_apply_to_all?: boolean;
 }
 
 /**

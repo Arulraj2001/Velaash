@@ -59,6 +59,7 @@ export function CartOrderSummary({
     discount,
     shippingFee,
     isFreeShipping,
+    freeShippingBadgeText,
     amountNeededForFreeShipping,
     freeShippingProgress,
     total,
@@ -159,7 +160,14 @@ export function CartOrderSummary({
         <div className="flex justify-between text-brand-muted">
           <span>Standard Shipping</span>
           {isFreeShipping ? (
-            <span className="font-semibold text-emerald-700 tracking-wide">FREE</span>
+            <div className="text-right">
+              <span className="font-semibold text-emerald-700 tracking-wide">FREE</span>
+              {freeShippingBadgeText && (
+                <p className="text-[10px] text-emerald-600 font-medium">
+                  {freeShippingBadgeText}
+                </p>
+              )}
+            </div>
           ) : (
             <span className="font-medium text-brand-dark">
               ₹{shippingFee.toLocaleString("en-IN")}

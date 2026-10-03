@@ -104,11 +104,78 @@ export interface ProductListItem {
   has_variants?: boolean;
   stock_quantity?: number;
   specifications?: ProductSpecificationItem[];
+  free_shipping_active?: boolean;
+  free_shipping_start?: string | null;
+  free_shipping_end?: string | null;
+  free_shipping_badge_text?: string | null;
 }
 
 export interface ProductSpecificationItem {
   label: string;
   value: string;
+}
+
+/**
+ * Helper to determine if a product qualifies for festive free shipping based on either
+ * direct product flags or storewide festive campaign settings.
+ */
+export function getProductFestiveShippingBadge(
+  product: {
+    id: string;
+    slug?: string;
+    category_id?: string | null;
+    free_shipping_active?: boolean;
+    free_shipping_start?: string | null;
+    free_shipping_end?: string | null;
+    free_shipping_badge_text?: string | null;
+  },
+  festivePolicy?: {
+    festive_shipping_enabled?: boolean;
+    festive_badge_text?: string;
+    festive_valid_from?: string | null;
+    festive_valid_until?: string | null;
+    festive_product_ids?: string[];
+    festive_category_ids?: string[];
+    festive_apply_to_all?: boolean;
+  } | null,
+  now: Date = new Date()
+): string | null {
+  // 1. Check storewide / settings-driven festive campaign
+  if (festivePolicy?.festive_shipping_enabled) {
+    const validFrom = festivePolicy.festive_valid_from
+      ? new Date(festivePolicy.festive_valid_from)
+      : null;
+    const validUntil = festivePolicy.festive_valid_until
+      ? new Date(festivePolicy.festive_valid_until)
+      : null;
+    const isAfterStart = !validFrom || now >= validFrom;
+    const isBeforeEnd = !validUntil || now <= validUntil;
+
+    if (isAfterStart && isBeforeEnd) {
+      if (
+        festivePolicy.festive_apply_to_all ||
+        festivePolicy.festive_product_ids?.includes(product.id) ||
+        (product.slug && festivePolicy.festive_product_ids?.includes(product.slug)) ||
+        (product.category_id && festivePolicy.festive_category_ids?.includes(product.category_id))
+      ) {
+        return festivePolicy.festive_badge_text || "🌾 Festive Offer: Free Delivery";
+      }
+    }
+  }
+
+  // 2. Check direct product row flags
+  if (product.free_shipping_active) {
+    const start = product.free_shipping_start ? new Date(product.free_shipping_start) : null;
+    const end = product.free_shipping_end ? new Date(product.free_shipping_end) : null;
+    const isAfterStart = !start || now >= start;
+    const isBeforeEnd = !end || now <= end;
+
+    if (isAfterStart && isBeforeEnd) {
+      return product.free_shipping_badge_text || "🌾 Free Delivery";
+    }
+  }
+
+  return null;
 }
 
 /**
