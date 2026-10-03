@@ -27,10 +27,10 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   const title = product.seo_title || `${product.name} | Velaash`;
-  const description =
-    product.seo_description ||
-    product.description ||
-    `${product.name} - Everyday essentials by Velaash.`;
+  const rawDesc = product.seo_description || product.description;
+  const description = rawDesc
+    ? rawDesc.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+    : `${product.name} - Everyday essentials by Velaash.`;
 
   const primaryImage = product.images[0]?.image_url || `${BASE_URL}/og-image.jpg`;
 
@@ -93,7 +93,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description || product.name,
+    description: (product.description
+      ? product.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+      : null) || product.name,
     image: product.images.map((img) => img.image_url),
     sku: product.variants[0]?.sku || product.slug,
     brand: {

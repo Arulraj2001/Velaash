@@ -301,27 +301,47 @@ export function ProductDetailView({
             </div>
           </div>
 
-          {/* Short Description */}
-          {product.description && (
-            <div className="text-brand-muted text-xs leading-relaxed sm:text-sm">
-              <p
-                className={
-                  !isDescriptionExpanded && product.description.length > 150 ? "line-clamp-2" : ""
-                }
-              >
-                {product.description}
-              </p>
-              {product.description.length > 150 && (
-                <button
-                  type="button"
-                  onClick={() => setIsDescriptionExpanded((prev) => !prev)}
-                  className="text-brand-dark hover:text-brand-accent mt-1 text-xs font-semibold underline underline-offset-2 transition-colors"
+          {/* Product Description (Rich Text & Plain Text Support) */}
+          {product.description && (() => {
+            const isHtml = /<[a-z][\s\S]*>/i.test(product.description);
+            const cleanText = product.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+            const isLong = cleanText.length > 200;
+
+            return (
+              <div className="text-brand-muted text-xs leading-relaxed sm:text-sm">
+                <div
+                  className={`relative transition-all duration-300 ${
+                    !isDescriptionExpanded && isLong ? "max-h-24 overflow-hidden" : ""
+                  }`}
                 >
-                  {isDescriptionExpanded ? "Read less" : "Read more"}
-                </button>
-              )}
-            </div>
-          )}
+                  {isHtml ? (
+                    <div
+                      className="prose prose-sm font-sans text-brand-muted max-w-none leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 [&_strong]:text-brand-dark [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_li]:mb-1 [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-xs [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_h1]:text-brand-dark [&_h2]:text-brand-dark [&_h3]:text-brand-dark"
+                      dangerouslySetInnerHTML={{ __html: product.description }}
+                    />
+                  ) : (
+                    <p className="whitespace-pre-line leading-relaxed">
+                      {product.description}
+                    </p>
+                  )}
+
+                  {!isDescriptionExpanded && isLong && (
+                    <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+                  )}
+                </div>
+
+                {isLong && (
+                  <button
+                    type="button"
+                    onClick={() => setIsDescriptionExpanded((prev) => !prev)}
+                    className="text-brand-dark hover:text-brand-accent mt-2 inline-flex items-center gap-1 text-xs font-semibold underline underline-offset-2 transition-colors cursor-pointer"
+                  >
+                    {isDescriptionExpanded ? "Read less" : "Read more"}
+                  </button>
+                )}
+              </div>
+            );
+          })()}
 
           <div className="border-brand-border/60 space-y-5 border-t pt-5">
             {/* Color Selector */}

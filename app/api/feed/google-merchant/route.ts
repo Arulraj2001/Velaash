@@ -83,6 +83,8 @@ export async function GET() {
         slug,
         description,
         base_price,
+        has_variants,
+        stock_quantity,
         stock_status,
         updated_at,
         categories ( slug ),
@@ -98,29 +100,47 @@ export async function GET() {
       return new NextResponse("Internal Server Error", { status: 500 });
     }
 
-    const products: FeedProduct[] = (rawProducts ?? []).map((p) => {
-      const categoryData = Array.isArray(p.categories) ? p.categories[0] : p.categories;
-      const images = (p.product_images ?? []).sort(
-        (a: { is_primary: boolean; display_order: number }, b: { is_primary: boolean; display_order: number }) =>
+    const products: FeedProduct[] = (rawProducts ?? []).map((row) => {
+      const p = row as Record<string, unknown>;
+      const categoryData = Array.isArray(p.categories)
+        ? (p.categories[0] as { slug?: string } | undefined)
+        : (p.categories as { slug?: string } | null);
+      const rawImages = (p.product_images ?? []) as Array<{
+        is_primary: boolean;
+        display_order: number;
+        image_url: string;
+      }>;
+      const images = rawImages.sort(
+        (a, b) =>
           (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0) || a.display_order - b.display_order
       );
       const primaryImage = images[0]?.image_url ?? null;
-      const activeVariants = (p.product_variants ?? []).filter(
-        (v: { is_active: boolean }) => v.is_active
-      );
-      const totalStock = activeVariants.reduce(
-        (sum: number, v: { stock_quantity: number | null }) => sum + (v.stock_quantity ?? 0),
-        0
-      );
+      const rawVariants = (p.product_variants ?? []) as Array<{
+        is_active: boolean;
+        stock_quantity: number | null;
+      }>;
+      const activeVariants = rawVariants.filter((v) => v.is_active);
+      const hasVariants = p.has_variants !== false && activeVariants.length > 0;
+      const totalStock = hasVariants
+        ? activeVariants.reduce(
+            (sum: number, v) => sum + (v.stock_quantity ?? 0),
+            0
+          )
+        : (Number(p.stock_quantity) || 0);
+
+      const cleanDesc =
+        typeof p.description === "string"
+          ? p.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+          : null;
 
       return {
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        description: p.description,
+        id: String(p.id),
+        name: String(p.name),
+        slug: String(p.slug),
+        description: cleanDesc,
         base_price: Number(p.base_price),
-        stock_status: p.stock_status,
-        updated_at: p.updated_at,
+        stock_status: String(p.stock_status || "in_stock"),
+        updated_at: String(p.updated_at),
         category_slug: categoryData?.slug ?? null,
         primary_image: primaryImage,
         total_stock: totalStock,

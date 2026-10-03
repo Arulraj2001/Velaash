@@ -46,7 +46,10 @@ export function mapRawProductToListItem(
   });
 
   const sizes: string[] = Array.from(new Set(variants.map((v) => v.size)));
-  const totalStock = variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0);
+  const hasVariants = p.has_variants !== false && variants.length > 0;
+  const totalStock = hasVariants
+    ? variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)
+    : (Number(p.stock_quantity) || 0);
   const categoryData = Array.isArray(p.categories) ? p.categories[0] : p.categories;
 
   return {
@@ -64,6 +67,9 @@ export function mapRawProductToListItem(
     is_featured: p.is_featured,
     is_new: now - new Date(p.created_at).getTime() <= 30 * 24 * 60 * 60 * 1000,
     stock_status: p.stock_status,
+    has_variants: hasVariants,
+    stock_quantity: Number(p.stock_quantity) || totalStock,
+    specifications: Array.isArray(p.specifications) ? p.specifications : [],
     images,
     variants,
     colors,
