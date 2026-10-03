@@ -183,13 +183,10 @@ export function ProductDetailView({
 
   // 10. WhatsApp enquiry link
   const siteUrl = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
-  const currentUrl =
-    typeof window !== "undefined"
-      ? window.location.href
-      : `${siteUrl}/products/${product.slug}`;
+  const productUrl = `${siteUrl}/products/${product.slug}`;
   const whatsappQuery = hasVariants
-    ? `Hi Velaash! I am interested in ordering "${product.name}" (${currentUrl})${selectedColor ? ` in ${selectedColor}` : ""}${selectedSize ? `, size ${selectedSize}` : ""}. Could you share availability and delivery details?`
-    : `Hi Velaash! I am interested in ordering "${product.name}" (${currentUrl}). Could you share availability and delivery details?`;
+    ? `Hi Velaash! I am interested in ordering "${product.name}" (${productUrl})${selectedColor ? ` in ${selectedColor}` : ""}${selectedSize ? `, size ${selectedSize}` : ""}. Could you share availability and delivery details?`
+    : `Hi Velaash! I am interested in ordering "${product.name}" (${productUrl}). Could you share availability and delivery details?`;
   const whatsappDigits = whatsappNumber.replace(/\D/g, "");
   const whatsappHref = whatsappDigits
     ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(whatsappQuery)}`
