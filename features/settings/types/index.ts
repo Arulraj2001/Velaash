@@ -50,6 +50,7 @@ export interface PaymentPolicySetting {
   cod_enabled: boolean;
   cod_max_order_value: number;
   cod_handling_fee: number;
+  cod_disabled_display_mode: "hidden" | "blurred";
 }
 
 /**
@@ -119,6 +120,14 @@ export interface PromoPopupSetting {
   delay_seconds?: number;
 }
 
+/**
+ * Customer Checkout Policy configuration
+ * Controls whether sign-in is strictly required to place orders or guest checkout is allowed.
+ */
+export interface CheckoutPolicySetting {
+  require_sign_in_to_order: boolean;
+}
+
 export interface SiteSettingsData {
   storeProfile: StoreProfileSetting;
   socialLinks: SocialLinksSetting;
@@ -131,6 +140,7 @@ export interface SiteSettingsData {
   shiprocketSettings: ShiprocketSetting;
   pageBanners: PageBannersSetting;
   promoPopup: PromoPopupSetting;
+  checkoutPolicy: CheckoutPolicySetting;
 }
 
 export type SiteSettings = SiteSettingsData;

@@ -133,7 +133,8 @@ export type CreateOrderResponse =
         | "COD_RATE_LIMIT_EXCEEDED"
         | "VALIDATION_FAILED"
         | "INVALID_INPUT"
-        | "GATEWAY_ERROR";
+        | "GATEWAY_ERROR"
+        | "AUTH_REQUIRED";
     };
 
 export const VerifyRazorpayPaymentSchema = z.object({

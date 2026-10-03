@@ -13,7 +13,12 @@ import type {
   ShiprocketSetting,
   PageBannersSetting,
   PromoPopupSetting,
+  CheckoutPolicySetting,
 } from "../types";
+
+export const DEFAULT_CHECKOUT_POLICY: CheckoutPolicySetting = {
+  require_sign_in_to_order: false,
+};
 
 export const DEFAULT_PROMO_POPUP_SETTING: PromoPopupSetting = {
   is_enabled: false,
@@ -45,6 +50,7 @@ export const DEFAULT_PAYMENT_POLICY: PaymentPolicySetting = {
   cod_enabled: true,
   cod_max_order_value: 20000,
   cod_handling_fee: 99,
+  cod_disabled_display_mode: "hidden",
 };
 
 export const DEFAULT_TAX_POLICY: TaxPolicySetting = {
@@ -101,6 +107,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
   shiprocketSettings: DEFAULT_SHIPROCKET_SETTING,
   pageBanners: DEFAULT_PAGE_BANNERS_SETTING,
   promoPopup: DEFAULT_PROMO_POPUP_SETTING,
+  checkoutPolicy: DEFAULT_CHECKOUT_POLICY,
 };
 
 /**
@@ -129,6 +136,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
         "shiprocket_settings",
         "page_banners",
         "promo_popup",
+        "checkout_policy",
       ]);
 
     if (error || !data || data.length === 0) {
@@ -237,6 +245,10 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
           : typeof paymentRecord.cod_fee === "number"
             ? paymentRecord.cod_fee
             : DEFAULT_PAYMENT_POLICY.cod_handling_fee,
+      cod_disabled_display_mode:
+        rawPayment.cod_disabled_display_mode === "blurred"
+          ? "blurred"
+          : "hidden",
     };
 
     const taxSettings: TaxPolicySetting = {
@@ -303,6 +315,12 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
           : DEFAULT_PROMO_POPUP_SETTING.delay_seconds,
     };
 
+    const checkoutPolicyRow = data.find((row) => row.key === "checkout_policy");
+    const rawCheckoutPolicy = (checkoutPolicyRow?.value as Partial<CheckoutPolicySetting>) || {};
+    const checkoutPolicy: CheckoutPolicySetting = {
+      require_sign_in_to_order: Boolean(rawCheckoutPolicy.require_sign_in_to_order),
+    };
+
     return {
       storeProfile,
       socialLinks,
@@ -315,6 +333,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       shiprocketSettings,
       pageBanners,
       promoPopup,
+      checkoutPolicy,
     };
   } catch (error: unknown) {
     if (

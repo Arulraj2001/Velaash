@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
 import { getCurrentUser } from "@/features/auth/queries/get-current-user";
 import { getCustomerAddresses } from "@/features/checkout/queries/get-customer-addresses";
@@ -18,6 +19,12 @@ export default async function CheckoutPage() {
     getSiteSettings(),
     getCurrentUser(),
   ]);
+
+  // If store settings strictly require customer sign-in to place orders,
+  // redirect unauthenticated guests directly to login with automatic return to checkout
+  if (siteSettings.checkoutPolicy?.require_sign_in_to_order && !authSession?.user) {
+    redirect("/account/login?returnUrl=/checkout");
+  }
 
   const savedAddresses = authSession?.user
     ? await getCustomerAddresses(authSession.user.id)

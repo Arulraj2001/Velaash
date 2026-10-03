@@ -20,6 +20,7 @@ import {
   ShiprocketSettingsSchema,
   PageBannersSchema,
   PromoPopupSettingsSchema,
+  CheckoutPolicySchema,
   type StoreProfileFormData,
   type SocialLinksFormData,
   type ShippingSettingsFormData,
@@ -30,6 +31,7 @@ import {
   type SeoDefaultsFormData,
   type ShiprocketSettingsFormData,
   type PromoPopupSettingsFormData,
+  type CheckoutPolicyFormData,
 } from "../types/settings";
 
 export interface SettingsActionResult {
@@ -587,6 +589,40 @@ export async function updatePromoPopupSettingsAction(
     return {
       success: false,
       error: err instanceof Error ? err.message : "Failed to update promo popup settings.",
+    };
+  }
+}
+
+export async function updateCheckoutPolicySettingsAction(
+  input: CheckoutPolicyFormData
+): Promise<SettingsActionResult> {
+  try {
+    await requireAdmin("manage_settings");
+
+    const parsed = CheckoutPolicySchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues.map((i) => i.message).join(", "),
+      };
+    }
+
+    const result = await upsertSiteSetting(
+      "checkout_policy",
+      parsed.data as Record<string, unknown>,
+      "Customer account requirements and guest checkout policy for order placement"
+    );
+
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    revalidateSettingsPaths();
+    return { success: true, message: "Checkout policy updated successfully." };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to update checkout policy.",
     };
   }
 }

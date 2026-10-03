@@ -97,6 +97,15 @@ export async function createOrderAction(
     // 4. Fetch live site settings for shipping & COD rules
     const siteSettings = await getSiteSettings();
 
+    // 4b. Enforce customer sign-in requirement policy if toggled on in Admin Settings
+    if (siteSettings.checkoutPolicy?.require_sign_in_to_order && !customerId) {
+      return {
+        success: false,
+        error: "Please sign in to your Velaash account to place an order.",
+        code: "AUTH_REQUIRED",
+      };
+    }
+
     // 5. Server-Side Stock Verification & Pricing Snapshot
     // CRITICAL: We NEVER trust prices or stock counts passed from the client!
     //

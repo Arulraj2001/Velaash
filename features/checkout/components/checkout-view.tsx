@@ -672,6 +672,7 @@ export function CheckoutView({
               codEnabled={siteSettings.paymentSettings.cod_enabled}
               codMaxOrderValue={siteSettings.paymentSettings.cod_max_order_value}
               codHandlingFee={siteSettings.paymentSettings.cod_handling_fee}
+              codDisabledDisplayMode={siteSettings.paymentSettings.cod_disabled_display_mode}
               razorpayEnabled={siteSettings.paymentSettings.razorpay_enabled}
             />
           </div>

@@ -15,6 +15,7 @@ import type { ShippingPolicyData, CartItem } from "../types";
 interface CartViewProps {
   shippingPolicy: ShippingPolicyData;
   returnWindowDays: number;
+  requireSignInToOrder?: boolean;
 }
 
 interface UndoState {
@@ -25,7 +26,11 @@ interface UndoState {
 
 const emptySubscribe = () => () => {};
 
-export function CartView({ shippingPolicy, returnWindowDays }: CartViewProps) {
+export function CartView({
+  shippingPolicy,
+  returnWindowDays,
+  requireSignInToOrder = false,
+}: CartViewProps) {
   const isHydrated = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -295,6 +300,7 @@ export function CartView({ shippingPolicy, returnWindowDays }: CartViewProps) {
             shippingPolicy={shippingPolicy}
             returnWindowDays={returnWindowDays}
             hasUnavailableItems={hasUnavailableItems}
+            requireSignInToOrder={requireSignInToOrder}
           />
         </div>
       </div>

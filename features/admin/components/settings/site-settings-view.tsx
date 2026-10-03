@@ -23,10 +23,11 @@ import {
   Image as ImageIcon,
   Trash2,
   Sparkles,
+  UserCheck,
 } from "lucide-react";
 import { AdminModal } from "../admin-modal";
 import { PromoPopupCard } from "@/components/ui/promo-popup-card";
-import type { SiteSettingsData } from "@/features/settings";
+import type { SiteSettingsData, CheckoutPolicySetting } from "@/features/settings";
 import type { ActiveCouponOption } from "../../queries/get-active-coupons";
 import {
   updateStoreProfileSettingsAction,
@@ -40,11 +41,13 @@ import {
   updateShiprocketSettingsAction,
   updatePageBannersAction,
   updatePromoPopupSettingsAction,
+  updateCheckoutPolicySettingsAction,
   uploadBrandAssetAction,
 } from "../../actions/settings-actions";
 
 type SettingsTab =
   | "store_profile"
+  | "checkout"
   | "page_banners"
   | "promo_popup"
   | "social_links"
@@ -58,6 +61,7 @@ type SettingsTab =
 
 const TABS: { id: SettingsTab; label: string; icon: React.ElementType; description: string }[] = [
   { id: "store_profile", label: "Store Profile", icon: Store, description: "Brand name, legal entity, contact info & logos" },
+  { id: "checkout", label: "Checkout & Accounts", icon: UserCheck, description: "Customer account requirements & guest checkout policy" },
   { id: "promo_popup", label: "Promo Popup", icon: Sparkles, description: "Site-wide promotional offer popup tied to an active coupon" },
   { id: "page_banners", label: "Page Banners", icon: ImageIcon, description: "Configure & upload header banner images for customer pages" },
   { id: "social_links", label: "Social Links", icon: Share2, description: "Instagram, Facebook, WhatsApp & Pinterest URLs" },
@@ -158,6 +162,13 @@ export function SiteSettingsView({
             <StoreProfileForm
               initial={initialSettings.storeProfile}
               onSaved={() => showToast("Store profile saved successfully.")}
+            />
+          )}
+
+          {activeTab === "checkout" && (
+            <CheckoutPolicyForm
+              initial={initialSettings.checkoutPolicy}
+              onSaved={() => showToast("Checkout policy saved successfully.")}
             />
           )}
 
@@ -873,6 +884,7 @@ function PaymentSettingsForm({
     cod_enabled: initial.cod_enabled ?? true,
     cod_max_order_value: initial.cod_max_order_value ?? 20000,
     cod_handling_fee: initial.cod_handling_fee ?? 99,
+    cod_disabled_display_mode: (initial.cod_disabled_display_mode ?? "hidden") as "hidden" | "blurred",
     razorpay_enabled: initial.razorpay_enabled ?? true,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -991,6 +1003,71 @@ function PaymentSettingsForm({
             </div>
           </div>
         )}
+
+        {/* When COD is Disabled Display Behavior */}
+        <div className="pt-3 border-t border-slate-100">
+          <span className="block text-xs font-semibold text-slate-800 mb-0.5">
+            When COD is Disabled or Unavailable:
+          </span>
+          <p className="text-[11px] text-slate-500 mb-3">
+            Choose how the payment section renders on checkout when Cash on Delivery is turned off.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label
+              className={`relative flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                form.cod_disabled_display_mode === "hidden"
+                  ? "border-amber-500 bg-amber-50/40 ring-1 ring-amber-500"
+                  : "border-slate-200 bg-white hover:bg-slate-50/80"
+              }`}
+            >
+              <input
+                type="radio"
+                name="cod_disabled_display_mode"
+                value="hidden"
+                checked={form.cod_disabled_display_mode === "hidden"}
+                onChange={() => setForm({ ...form, cod_disabled_display_mode: "hidden" })}
+                className="mt-0.5 text-amber-600 focus:ring-amber-500 cursor-pointer"
+              />
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                  Hide Completely
+                  <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">
+                    Recommended
+                  </span>
+                </span>
+                <span className="block text-[11px] text-slate-500 mt-0.5 leading-snug">
+                  Removes the COD option entirely from checkout. Customers only see online payment options.
+                </span>
+              </div>
+            </label>
+
+            <label
+              className={`relative flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                form.cod_disabled_display_mode === "blurred"
+                  ? "border-amber-500 bg-amber-50/40 ring-1 ring-amber-500"
+                  : "border-slate-200 bg-white hover:bg-slate-50/80"
+              }`}
+            >
+              <input
+                type="radio"
+                name="cod_disabled_display_mode"
+                value="blurred"
+                checked={form.cod_disabled_display_mode === "blurred"}
+                onChange={() => setForm({ ...form, cod_disabled_display_mode: "blurred" })}
+                className="mt-0.5 text-amber-600 focus:ring-amber-500 cursor-pointer"
+              />
+              <div>
+                <span className="block text-xs font-bold text-slate-900">
+                  Show Grayed Out (&quot;Blurred&quot;)
+                </span>
+                <span className="block text-[11px] text-slate-500 mt-0.5 leading-snug">
+                  Keeps the COD card visible but disabled with an explanatory badge that COD is currently unavailable.
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
       </div>
 
       <div className="pt-4 border-t border-slate-100 flex justify-end">
@@ -2218,6 +2295,169 @@ function PromoPopupSettingsForm({
         >
           {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           <span>Save Promo Popup Settings</span>
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ============================================================================
+// CHECKOUT & CUSTOMER ACCOUNTS POLICY FORM
+// ============================================================================
+function CheckoutPolicyForm({
+  initial,
+  onSaved,
+}: {
+  initial: CheckoutPolicySetting;
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    require_sign_in_to_order: initial.require_sign_in_to_order ?? false,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await updateCheckoutPolicySettingsAction(form);
+      if (res.success) {
+        onSaved();
+      } else {
+        setErrorMsg(res.error || "Failed to save checkout policy.");
+      }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Save failed.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="border-b border-slate-100 pb-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-heading font-semibold text-slate-900">
+              Customer Accounts &amp; Checkout Policy
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Control whether visitors can place orders as guests or must sign in first.
+            </p>
+          </div>
+          <div>
+            {form.require_sign_in_to_order ? (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-300 px-3 py-1 rounded-full">
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                Sign-In Required for Orders
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 px-3 py-1 rounded-full">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                Guest Checkout Active (No Sign-In Required)
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {errorMsg && (
+        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {/* Main Switch Card */}
+      <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <span className="block text-sm font-bold text-slate-900">
+              Require Customer Sign-In to Place Order
+            </span>
+            <span className="block text-xs text-slate-500 leading-relaxed max-w-xl">
+              When toggled ON, customers must authenticate via email OTP or Google Sign-In before placing an order.
+              When toggled OFF, guest checkout is enabled and any visitor can complete an order by just entering their email and delivery address.
+            </span>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+            <input
+              type="checkbox"
+              checked={form.require_sign_in_to_order}
+              onChange={(e) => setForm({ ...form, require_sign_in_to_order: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+          </label>
+        </div>
+
+        {/* Dynamic Comparison Guide */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-200/80">
+          <div
+            className={`p-4 rounded-xl border text-xs leading-relaxed space-y-1.5 transition-all ${
+              !form.require_sign_in_to_order
+                ? "bg-white border-emerald-400 shadow-xs ring-1 ring-emerald-400/30"
+                : "bg-slate-100/60 border-slate-200 opacity-60"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-900">Guest Checkout (Current Default)</span>
+              {!form.require_sign_in_to_order && (
+                <span className="text-[10px] uppercase font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                  Active
+                </span>
+              )}
+            </div>
+            <p className="text-slate-600">
+              • Lowest friction for early sales and maximum conversion.
+            </p>
+            <p className="text-slate-600">
+              • Visitors can complete their purchase immediately without waiting for OTP codes.
+            </p>
+            <p className="text-slate-600">
+              • An account can still optionally be created at checkout if the customer chooses.
+            </p>
+          </div>
+
+          <div
+            className={`p-4 rounded-xl border text-xs leading-relaxed space-y-1.5 transition-all ${
+              form.require_sign_in_to_order
+                ? "bg-white border-amber-400 shadow-xs ring-1 ring-amber-400/30"
+                : "bg-slate-100/60 border-slate-200 opacity-60"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-900">Sign-In Required</span>
+              {form.require_sign_in_to_order && (
+                <span className="text-[10px] uppercase font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+                  Active
+                </span>
+              )}
+            </div>
+            <p className="text-slate-600">
+              • Every order is 100% verified and linked to a registered customer account.
+            </p>
+            <p className="text-slate-600">
+              • Prevents typos in email addresses and reduces spam / abandoned COD attempts.
+            </p>
+            <p className="text-slate-600">
+              • Customers can view order progress anytime under their Account dashboard.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="pt-4 border-t border-slate-100 flex justify-end">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs transition-colors disabled:opacity-50"
+        >
+          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          <span>Save Checkout Policy</span>
         </button>
       </div>
     </form>

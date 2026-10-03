@@ -259,6 +259,32 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
       },
     ],
   },
+  {
+    id: "cat-pooja-brass",
+    name: "Pooja & Brass Items",
+    slug: "pooja-and-brass",
+    description: "Traditional lamps, handcrafted brassware, and sacred essentials for sacred spaces and home decor",
+    image_url: "https://images.unsplash.com/photo-1606293926075-69a00dbfde81?auto=format&fit=crop&w=600&q=80",
+    display_order: 8,
+    subcategories: [
+      {
+        id: "sub-lamps-diyas",
+        name: "Lamps & Diyas",
+        slug: "lamps-diyas",
+        description: "Traditional kuthuvilakku, brass lamps, and handcrafted oil diyas",
+        image_url: null,
+        display_order: 1,
+      },
+      {
+        id: "sub-pooja-accessories",
+        name: "Pooja Accessories",
+        slug: "pooja-accessories",
+        description: "Bells, brass trays, and sacred pooja essentials",
+        image_url: null,
+        display_order: 2,
+      },
+    ],
+  },
 ];
 
 /**

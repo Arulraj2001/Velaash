@@ -68,6 +68,7 @@ export const PaymentSettingsSchema = z.object({
   cod_handling_fee: z.coerce
     .number()
     .min(0, "COD handling fee cannot be negative"),
+  cod_disabled_display_mode: z.enum(["hidden", "blurred"]).default("hidden"),
   razorpay_enabled: z.boolean(),
 });
 
@@ -168,5 +169,12 @@ export const PromoPopupSettingsSchema = z.object({
 });
 
 export type PromoPopupSettingsFormData = z.infer<typeof PromoPopupSettingsSchema>;
+
+// 12. Checkout & Customer Account Policy
+export const CheckoutPolicySchema = z.object({
+  require_sign_in_to_order: z.boolean(),
+});
+
+export type CheckoutPolicyFormData = z.infer<typeof CheckoutPolicySchema>;
 
 
