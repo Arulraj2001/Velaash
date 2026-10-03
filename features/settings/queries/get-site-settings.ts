@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { BRAND, DEFAULT_ANNOUNCEMENT } from "@/lib/constants";
 import type {
@@ -111,12 +113,10 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
 };
 
 /**
- * Server query function to fetch store profile, social links, announcement text, policies,
- * tax configuration, and SEO defaults from the site_settings table in Supabase.
- *
- * Single source of truth across the application.
+ * Internal fetch — runs against Supabase directly.
+ * Do not call this outside of the cached wrappers below.
  */
-export async function getSiteSettings(): Promise<SiteSettingsData> {
+async function fetchSiteSettings(): Promise<SiteSettingsData> {
   try {
     const supabase = await createClient();
 
@@ -347,3 +347,19 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     return DEFAULT_SITE_SETTINGS;
   }
 }
+
+/**
+ * Cached version of site settings: revalidates every 60 seconds.
+ * Use revalidateTag('site-settings') from admin actions to bust immediately after saves.
+ */
+const getCachedSiteSettings = unstable_cache(
+  fetchSiteSettings,
+  ["site-settings"],
+  { tags: ["site-settings"], revalidate: 60 }
+);
+
+/**
+ * Request-level deduplicated + cross-request cached site settings.
+ * Safe to call in layout, header, page simultaneously — only one Supabase call per 60s.
+ */
+export const getSiteSettings = cache(getCachedSiteSettings);

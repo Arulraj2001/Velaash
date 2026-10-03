@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type {
   ProductListItem,
@@ -124,9 +126,9 @@ function computeAvailableFilters(allProducts: ProductListItem[]): AvailableFilte
 }
 
 /**
- * Fetch category metadata by slug directly from Postgres
+ * Internal fetch for category metadata.
  */
-export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMetadata | null> {
+async function fetchCategoryBySlug(slug: string): Promise<ProductCategoryMetadata | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("categories")
@@ -182,6 +184,21 @@ export async function getCategoryBySlug(slug: string): Promise<ProductCategoryMe
     parent_slug: parentSlug,
   };
 }
+
+/**
+ * Cached category metadata: revalidates every 5 minutes.
+ * Bust with revalidateTag('navigation-categories') when categories change.
+ */
+const getCachedCategoryBySlug = unstable_cache(
+  fetchCategoryBySlug,
+  ["category-by-slug"],
+  { tags: ["navigation-categories"], revalidate: 300 }
+);
+
+/**
+ * Fetch category metadata by slug — cached within a request and across requests.
+ */
+export const getCategoryBySlug = cache(getCachedCategoryBySlug);
 
 /**
  * Primary server-side query function for the product listing and catalog pages

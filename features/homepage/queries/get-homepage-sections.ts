@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { LiveHomepageSection } from "../types";
 import type { HomepageSectionKind } from "@/features/admin/types/homepage";
@@ -240,11 +242,10 @@ export const DEFAULT_LIVE_HOMEPAGE_SECTIONS: LiveHomepageSection[] = [
 ];
 
 /**
- * Server query function to fetch active homepage sections from the homepage_sections table.
- * Sorted strictly by display_order ascending.
- * Respects is_active = true.
+ * Internal fetch — runs against Supabase directly.
+ * Do not call outside of the cached wrappers below.
  */
-export async function getHomepageSections(): Promise<LiveHomepageSection[]> {
+async function fetchHomepageSections(): Promise<LiveHomepageSection[]> {
   try {
     const supabase = await createClient();
 
@@ -376,3 +377,18 @@ export async function getHomepageSections(): Promise<LiveHomepageSection[]> {
     return DEFAULT_LIVE_HOMEPAGE_SECTIONS;
   }
 }
+
+/**
+ * Cached homepage sections: revalidates every 5 minutes.
+ * Bust with revalidateTag('homepage-sections') when admin saves homepage layout.
+ */
+const getCachedHomepageSections = unstable_cache(
+  fetchHomepageSections,
+  ["homepage-sections"],
+  { tags: ["homepage-sections"], revalidate: 300 }
+);
+
+/**
+ * Request-level deduplicated + cross-request cached homepage sections.
+ */
+export const getHomepageSections = cache(getCachedHomepageSections);

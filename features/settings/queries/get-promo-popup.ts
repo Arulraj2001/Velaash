@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteSettings } from "./get-site-settings";
 
@@ -26,18 +28,9 @@ export interface PromoPopupDisplayData {
 }
 
 /**
- * Server query function to fetch the active promo popup configuration
- * and strictly validate it against the live linked coupon record.
- *
- * Rules:
- * 1. Returns null if promoPopup.is_enabled is false.
- * 2. Returns null if featured_coupon_id is null/empty.
- * 3. Returns null if the linked coupon does not exist, is inactive (is_active = false),
- *    or is expired (now < valid_from or now > valid_until).
- * 4. Returns null if the coupon has reached its usage limit (usage_limit !== null && usage_count >= usage_limit).
- * 5. Returns live, verified discount parameters (code, type, value, min_order_value) directly from the coupons table.
+ * Internal fetch. Do not call outside of the cached wrappers below.
  */
-export async function getPromoPopup(): Promise<PromoPopupDisplayData | null> {
+async function fetchPromoPopup(): Promise<PromoPopupDisplayData | null> {
   try {
     const settings = await getSiteSettings();
     const { promoPopup } = settings;
@@ -109,6 +102,22 @@ export async function getPromoPopup(): Promise<PromoPopupDisplayData | null> {
     return null;
   }
 }
+
+/**
+ * Cached promo popup: revalidates every 60 seconds.
+ * Bust with revalidateTag('site-settings') when admin saves promo settings.
+ */
+const getCachedPromoPopup = unstable_cache(
+  fetchPromoPopup,
+  ["promo-popup"],
+  { tags: ["site-settings"], revalidate: 60 }
+);
+
+/**
+ * Request-level deduplicated + cross-request cached promo popup.
+ */
+export const getPromoPopup = cache(getCachedPromoPopup);
+
 
 /**
  * Queries one real featured or active product image from the database

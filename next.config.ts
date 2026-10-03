@@ -8,6 +8,8 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const nextConfig: NextConfig = {
+  compress: true,
+  poweredByHeader: false,
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb",

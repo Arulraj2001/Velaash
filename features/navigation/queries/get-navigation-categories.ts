@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { NavigationCategory, NavigationSubCategory } from "../types";
 
@@ -288,11 +290,10 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
 ];
 
 /**
- * Server-side query function to fetch active top-level categories
- * and their nested sub-categories, ordered by display_order.
- * Shared between Header and Footer.
+ * Internal fetch — runs against Supabase directly.
+ * Do not call outside of the cached wrappers below.
  */
-export async function getNavigationCategories(): Promise<NavigationCategory[]> {
+async function fetchNavigationCategories(): Promise<NavigationCategory[]> {
   try {
     const supabase = await createClient();
     const { data: categories, error } = await supabase
@@ -356,3 +357,19 @@ export async function getNavigationCategories(): Promise<NavigationCategory[]> {
     return DEFAULT_CLOTHING_CATEGORIES;
   }
 }
+
+/**
+ * Cached navigation categories: revalidates every 5 minutes.
+ * Bust with revalidateTag('navigation-categories') when categories change.
+ */
+const getCachedNavigationCategories = unstable_cache(
+  fetchNavigationCategories,
+  ["navigation-categories"],
+  { tags: ["navigation-categories"], revalidate: 300 }
+);
+
+/**
+ * Request-level deduplicated + cross-request cached navigation categories.
+ * Safe to call in header, homepage, and mobile drawer simultaneously.
+ */
+export const getNavigationCategories = cache(getCachedNavigationCategories);

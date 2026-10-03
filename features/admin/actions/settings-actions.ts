@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/features/auth/queries/get-admin-user";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -44,6 +44,7 @@ export interface SettingsActionResult {
  * Revalidates public customer-facing paths and admin settings.
  */
 function revalidateSettingsPaths() {
+  revalidateTag("site-settings", "max"); // bust unstable_cache for getSiteSettings()
   revalidatePath("/admin/settings");
   revalidatePath("/", "layout");
   revalidatePath("/");

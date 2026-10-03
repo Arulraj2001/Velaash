@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/features/auth/queries/get-admin-user";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -36,6 +36,7 @@ export interface HomepageActionResult {
  * Revalidates public homepage and admin builder.
  */
 function revalidateHomepagePaths() {
+  revalidateTag("homepage-sections", "max"); // bust unstable_cache
   revalidatePath("/admin/homepage");
   revalidatePath("/");
 }

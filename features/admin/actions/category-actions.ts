@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/features/auth/queries/get-admin-user";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -19,6 +19,7 @@ import {
  * Revalidates public store navigation and admin category paths.
  */
 function revalidateCategoryPaths(slug?: string) {
+  revalidateTag("navigation-categories", "max"); // bust unstable_cache
   revalidatePath("/admin/categories");
   revalidatePath("/admin/products");
   revalidatePath("/");

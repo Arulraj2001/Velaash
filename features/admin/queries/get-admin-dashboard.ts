@@ -153,47 +153,75 @@ export async function getAdminDashboardData(
   let financialMetrics: OwnerFinancialMetrics | null = null;
 
   if (admin.role === "owner") {
-    // Query paid orders, excluding cancelled orders
-    const { data: paidOrders, error: paidErr } = await supabase
-      .from("orders")
-      .select("total_amount, payment_status, status, created_at")
-      .in("payment_status", ["paid"])
-      .neq("status", "cancelled");
-
-    if (paidErr) {
-      console.warn("Dashboard revenue metrics query notice:", paidErr.message);
-    }
-
-    const validRows = paidOrders ?? [];
     const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const sevenDaysAgo = now.getTime() - 7 * 24 * 60 * 60 * 1000;
-    const thirtyDaysAgo = now.getTime() - 30 * 24 * 60 * 60 * 1000;
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
 
-    let totalRevenue = 0;
-    let revenueToday = 0;
-    let revenueThisWeek = 0;
-    let revenueThisMonth = 0;
+    // Run all revenue aggregation queries in parallel using targeted date filters
+    // Instead of downloading ALL rows and summing in JS, filter in Postgres
+    const [
+      { data: allTimePaid, error: allTimeErr },
+      { data: todayPaid, error: todayErr },
+      { data: weekPaid, error: weekErr },
+      { data: monthPaid, error: monthErr },
+      { data: trendRows, error: trendErr },
+    ] = await Promise.all([
+      // Total all-time: only fetch total_amount (no created_at needed)
+      supabase
+        .from("orders")
+        .select("total_amount")
+        .in("payment_status", ["paid"])
+        .neq("status", "cancelled"),
+      // Today
+      supabase
+        .from("orders")
+        .select("total_amount")
+        .in("payment_status", ["paid"])
+        .neq("status", "cancelled")
+        .gte("created_at", startOfToday),
+      // Last 7 days
+      supabase
+        .from("orders")
+        .select("total_amount")
+        .in("payment_status", ["paid"])
+        .neq("status", "cancelled")
+        .gte("created_at", sevenDaysAgo),
+      // Last 30 days
+      supabase
+        .from("orders")
+        .select("total_amount")
+        .in("payment_status", ["paid"])
+        .neq("status", "cancelled")
+        .gte("created_at", thirtyDaysAgo),
+      // Last 14 days (for trend chart) — only the slim data needed
+      supabase
+        .from("orders")
+        .select("total_amount, created_at")
+        .in("payment_status", ["paid"])
+        .neq("status", "cancelled")
+        .gte("created_at", fourteenDaysAgo)
+        .order("created_at", { ascending: true }),
+    ]);
 
-    for (const row of validRows) {
-      const amount = Number(row.total_amount || 0);
-      const orderTime = new Date(row.created_at).getTime();
+    if (allTimeErr) console.warn("Dashboard all-time revenue query notice:", allTimeErr.message);
+    if (todayErr) console.warn("Dashboard today revenue query notice:", todayErr.message);
+    if (weekErr) console.warn("Dashboard weekly revenue query notice:", weekErr.message);
+    if (monthErr) console.warn("Dashboard monthly revenue query notice:", monthErr.message);
+    if (trendErr) console.warn("Dashboard trend query notice:", trendErr.message);
 
-      totalRevenue += amount;
-      if (orderTime >= startOfToday) {
-        revenueToday += amount;
-      }
-      if (orderTime >= sevenDaysAgo) {
-        revenueThisWeek += amount;
-      }
-      if (orderTime >= thirtyDaysAgo) {
-        revenueThisMonth += amount;
-      }
-    }
+    const sumRows = (rows: { total_amount: number | null }[] | null) =>
+      (rows ?? []).reduce((sum, r) => sum + Number(r.total_amount || 0), 0);
 
-    const aov = validRows.length > 0 ? Math.round(totalRevenue / validRows.length) : 0;
+    const totalRevenue = sumRows(allTimePaid);
+    const revenueToday = sumRows(todayPaid);
+    const revenueThisWeek = sumRows(weekPaid);
+    const revenueThisMonth = sumRows(monthPaid);
+    const allTimeCount = (allTimePaid ?? []).length;
+    const aov = allTimeCount > 0 ? Math.round(totalRevenue / allTimeCount) : 0;
 
-    // Build 14-day chronological sales trend
+    // Build 14-day chronological sales trend from the slim trendRows
     const salesTrend14Days: DailySalesData[] = [];
     for (let i = 13; i >= 0; i--) {
       const targetDate = new Date();
@@ -205,7 +233,7 @@ export async function getAdminDashboardData(
       const dayStart = new Date(y, m, d, 0, 0, 0, 0).getTime();
       const dayEnd = new Date(y, m, d, 23, 59, 59, 999).getTime();
 
-      const dayRows = validRows.filter((r) => {
+      const dayRows = (trendRows ?? []).filter((r) => {
         const t = new Date(r.created_at).getTime();
         return t >= dayStart && t <= dayEnd;
       });
