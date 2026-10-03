@@ -263,6 +263,7 @@ function SectionEditModalInner({
     position_x?: number;
     position_y?: number;
     text_align?: "left" | "center" | "right";
+    content_width?: "compact" | "balanced" | "wide" | "full";
   }
 
   const DEFAULT_HERO_SLIDES: SlideItemState[] = [
@@ -284,6 +285,7 @@ function SectionEditModalInner({
       position_x: typeof content.position_x === "number" ? content.position_x : 50,
       position_y: typeof content.position_y === "number" ? content.position_y : 50,
       text_align: (content.text_align as "left" | "center" | "right") || "center",
+      content_width: (content.content_width as "compact" | "balanced" | "wide" | "full") || "balanced",
     },
     {
       id: "slide-2",
@@ -332,11 +334,11 @@ function SectionEditModalInner({
     const current = getSlides();
     const newSlide: SlideItemState = {
       id: `slide-${current.length + 1}`,
-      tag: "New Arrivals",
-      headline: "New Luxury Silhouette",
-      subtitle: "Effortless silhouettes, refined textures, and contemporary wardrobe essentials.",
-      cta_text: "Explore Collection",
-      cta_link: "/shop",
+      tag: "",
+      headline: "",
+      subtitle: "",
+      cta_text: "",
+      cta_link: "",
       secondary_cta_text: "",
       secondary_cta_link: "",
       bg_image:
@@ -345,6 +347,7 @@ function SectionEditModalInner({
       position_x: 50,
       position_y: 50,
       text_align: "center",
+      content_width: "balanced",
     };
     handleFieldChange("slides", [...current, newSlide]);
   };
@@ -630,6 +633,7 @@ function SectionEditModalInner({
       if (section.section_type === "hero_banner") {
         const slides = getSlides().map((s) => ({
           ...s,
+          content_width: s.content_width || "balanced",
           cta_link: normalizeLink(s.cta_link),
           secondary_cta_link: normalizeLink(s.secondary_cta_link),
         }));
@@ -646,6 +650,7 @@ function SectionEditModalInner({
           finalContent.position_x = slides[0].position_x ?? 50;
           finalContent.position_y = slides[0].position_y ?? 50;
           finalContent.text_align = slides[0].text_align ?? "center";
+          finalContent.content_width = slides[0].content_width ?? "balanced";
         }
       } else if (section.section_type === "occasion_strip") {
         finalContent.items = getOccasionItems().map((item) => ({
@@ -861,26 +866,25 @@ function SectionEditModalInner({
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                            Tag / Capsule Badge
+                            Tag / Capsule Badge (Optional)
                           </label>
                           <input
                             type="text"
                             value={slide.tag || ""}
                             onChange={(e) => handleUpdateSlide(idx, "tag", e.target.value)}
-                            placeholder="e.g. Spring / Summer 2026"
+                            placeholder="e.g. Spring / Summer (leave blank for none)"
                             className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
                           />
                         </div>
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                            Headline <span className="text-rose-500">*</span>
+                            Headline (Optional)
                           </label>
-                          <input
-                            type="text"
-                            required
+                          <textarea
+                            rows={2}
                             value={slide.headline || ""}
                             onChange={(e) => handleUpdateSlide(idx, "headline", e.target.value)}
-                            placeholder="e.g. Everyday essentials for every home"
+                            placeholder="e.g. Everyday essentials for every home (Press Enter to break onto 2 lines, or leave blank for plain banner)"
                             className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
                           />
                         </div>
@@ -888,13 +892,13 @@ function SectionEditModalInner({
 
                       <div>
                         <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                          Subtitle
+                          Subtitle (Optional)
                         </label>
                         <textarea
                           rows={2}
                           value={slide.subtitle || ""}
                           onChange={(e) => handleUpdateSlide(idx, "subtitle", e.target.value)}
-                          placeholder="e.g. Effortless silhouettes, refined textures, and contemporary essentials..."
+                          placeholder="e.g. Effortless silhouettes, refined textures... (leave blank for none)"
                           className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
                         />
                       </div>
@@ -902,27 +906,25 @@ function SectionEditModalInner({
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                            Primary Button Text <span className="text-rose-500">*</span>
+                            Primary Button Text (Optional)
                           </label>
                           <input
                             type="text"
-                            required
                             value={slide.cta_text || ""}
                             onChange={(e) => handleUpdateSlide(idx, "cta_text", e.target.value)}
-                            placeholder="e.g. Explore Collection"
+                            placeholder="e.g. Explore Collection (leave blank for no button)"
                             className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
                           />
                         </div>
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                            Primary Button Link <span className="text-rose-500">*</span>
+                            Primary Button Link (Optional)
                           </label>
                           <input
                             type="text"
-                            required
                             value={slide.cta_link || ""}
                             onChange={(e) => handleUpdateSlide(idx, "cta_link", e.target.value)}
-                            placeholder="e.g. /shop"
+                            placeholder="e.g. /shop (leave blank for no button)"
                             className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-mono"
                           />
                         </div>
@@ -1257,6 +1259,49 @@ function SectionEditModalInner({
                               Controls how the headline and buttons align within the text box.
                             </p>
                           </div>
+                        </div>
+
+                        {/* Text Width / Line Length */}
+                        <div className="pt-3 border-t border-indigo-100">
+                          <span className="block text-[10px] font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">
+                            Headline Width &amp; Line Length
+                          </span>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {(
+                              [
+                                { value: "compact", label: "Compact", hint: "2–3 lines" },
+                                { value: "balanced", label: "Balanced", hint: "2 lines (recommended)" },
+                                { value: "wide", label: "Wide", hint: "1–2 lines" },
+                                { value: "full", label: "Full Width", hint: "Single line" },
+                              ] as const
+                            ).map((opt) => {
+                              const isCurrent = (slide.content_width ?? "balanced") === opt.value;
+                              return (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => handleUpdateSlide(idx, "content_width", opt.value)}
+                                  className={`px-2.5 py-1.5 rounded-lg border text-left transition-all ${
+                                    isCurrent
+                                      ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                                      : "bg-white text-slate-700 border-slate-200 hover:bg-indigo-50/50"
+                                  }`}
+                                >
+                                  <div className="text-xs font-semibold">{opt.label}</div>
+                                  <div
+                                    className={`text-[10px] ${
+                                      isCurrent ? "text-indigo-100" : "text-slate-400"
+                                    }`}
+                                  >
+                                    {opt.hint}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-2 leading-relaxed">
+                            Adjusts how lengthy the text can stretch before wrapping into 2 lines. <strong>Tip:</strong> You can also press <kbd className="px-1 py-0.5 bg-slate-100 border border-slate-200 rounded text-[9px]">Enter</kbd> directly inside the Headline box to manually split the line where you want.
+                          </p>
                         </div>
                       </div>
                     </div>

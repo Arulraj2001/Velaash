@@ -8,7 +8,7 @@ import { Container } from "@/components/ui/container";
 import { BrandWordmark } from "@/components/ui";
 import { BRAND } from "@/lib/constants";
 import type { NavigationCategory } from "@/features/navigation";
-import type { AnnouncementSetting } from "@/features/settings";
+import type { AnnouncementSetting, ShippingPolicySetting } from "@/features/settings";
 import { AnnouncementBar } from "./announcement-bar";
 import { HeaderNav } from "./header-nav";
 import { SearchOverlay } from "./search-overlay";
@@ -19,6 +19,7 @@ import { useWishlistStore } from "@/features/wishlist/store/wishlist-store";
 
 interface HeaderClientProps {
   categories: NavigationCategory[];
+  shippingPolicy?: ShippingPolicySetting;
   logoUrl?: string;
   storeName?: string;
   whatsappNumber?: string;
@@ -28,6 +29,7 @@ interface HeaderClientProps {
 
 export function HeaderClient({
   categories,
+  shippingPolicy,
   logoUrl,
   storeName,
   whatsappNumber,
@@ -117,7 +119,7 @@ export function HeaderClient({
             </div>
 
             {/* Desktop Navigation Links */}
-            <HeaderNav categories={categories} />
+            <HeaderNav categories={categories} shippingPolicy={shippingPolicy} />
 
             {/* Header Right Action Icons */}
             <div className="flex items-center gap-1 sm:gap-2">
@@ -173,6 +175,7 @@ export function HeaderClient({
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         categories={categories}
+        shippingPolicy={shippingPolicy}
         logoUrl={logoUrl}
         storeName={storeName}
         whatsappNumber={whatsappNumber}

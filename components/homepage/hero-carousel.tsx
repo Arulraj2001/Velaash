@@ -21,21 +21,23 @@ interface HeroCarouselProps {
   fallbackPositionX?: number;
   fallbackPositionY?: number;
   fallbackTextAlign?: "left" | "center" | "right";
+  fallbackContentWidth?: "compact" | "balanced" | "wide" | "full";
 }
 
 export function HeroCarousel({
   slides = [],
-  fallbackHeadline = "Everyday essentials for every home",
-  fallbackSubtitle = "Clothing for men and women, plus traditional pooja and brass essentials.",
-  fallbackCtaText = "Explore Collection",
-  fallbackCtaLink = "/shop",
-  fallbackSecondaryText = "Kurtas & Sets",
-  fallbackSecondaryLink = "/collections/kurtas-sets",
+  fallbackHeadline = "",
+  fallbackSubtitle = "",
+  fallbackCtaText = "",
+  fallbackCtaLink = "",
+  fallbackSecondaryText = "",
+  fallbackSecondaryLink = "",
   fallbackBgImage = "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
   fallbackBgImageMobile = "",
   fallbackPositionX = 50,
   fallbackPositionY = 50,
   fallbackTextAlign = "center",
+  fallbackContentWidth = "balanced",
 }: HeroCarouselProps) {
   // Normalize slides: use slides from database, or fallback to single slide if none provided
   const activeSlides: HeroSlide[] =
@@ -44,7 +46,7 @@ export function HeroCarousel({
       : [
           {
             id: "slide-1",
-            tag: "New Season Arrivals",
+            tag: "",
             headline: fallbackHeadline,
             subtitle: fallbackSubtitle,
             cta_text: fallbackCtaText,
@@ -56,6 +58,7 @@ export function HeroCarousel({
             position_x: fallbackPositionX,
             position_y: fallbackPositionY,
             text_align: fallbackTextAlign,
+            content_width: fallbackContentWidth,
           },
         ];
 
@@ -103,7 +106,7 @@ export function HeroCarousel({
 
   return (
     <section
-      className="relative w-full min-h-[85vh] sm:min-h-[88vh] flex items-center justify-center overflow-hidden bg-brand-dark select-none"
+      className="relative w-full min-h-[85vh] sm:min-h-[88vh] flex items-center justify-center overflow-hidden bg-black select-none"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
@@ -133,7 +136,7 @@ export function HeroCarousel({
                     fill
                     priority={idx === 0}
                     unoptimized={isSlideUnoptimized(slide.bg_image_mobile!)}
-                    className="object-cover object-center brightness-90 contrast-105"
+                    className="object-cover object-center brightness-95 contrast-100"
                     sizes="100vw"
                   />
                 </div>
@@ -145,7 +148,7 @@ export function HeroCarousel({
                     fill
                     priority={idx === 0}
                     unoptimized={isSlideUnoptimized(slide.bg_image)}
-                    className="object-cover object-center brightness-90 contrast-105"
+                    className="object-cover object-center brightness-95 contrast-100"
                     sizes="100vw"
                   />
                 </div>
@@ -157,12 +160,12 @@ export function HeroCarousel({
                 fill
                 priority={idx === 0}
                 unoptimized={isSlideUnoptimized(slide.bg_image)}
-                className="object-cover object-center brightness-90 contrast-105"
+                className="object-cover object-center brightness-95 contrast-100"
                 sizes="100vw"
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/95 via-brand-dark/45 to-black/30" />
-            <div className="absolute inset-0 bg-brand-dark/20 backdrop-blur-[0.5px]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20" />
+            <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]" />
           </div>
         );
       })}
@@ -177,10 +180,19 @@ export function HeroCarousel({
             const posY = typeof slide.position_y === "number" ? slide.position_y : 50;
             const textAlign = slide.text_align || (posX <= 35 ? "left" : posX >= 65 ? "right" : "center");
 
+            const widthClass =
+              slide.content_width === "compact"
+                ? "max-w-xl"
+                : slide.content_width === "wide"
+                ? "max-w-4xl"
+                : slide.content_width === "full"
+                ? "max-w-6xl"
+                : "max-w-3xl";
+
             return (
               <div
                 key={slide.id || idx}
-                className={`pointer-events-auto absolute max-w-2xl w-[90%] sm:w-auto space-y-4 sm:space-y-6 animate-in fade-in zoom-in-95 duration-500 transition-all ${
+                className={`pointer-events-auto absolute w-[94%] sm:w-full ${widthClass} flex flex-col space-y-4 sm:space-y-6 animate-in fade-in zoom-in-95 duration-500 transition-all ${
                   textAlign === "left"
                     ? "text-left items-start"
                     : textAlign === "right"
@@ -194,30 +206,34 @@ export function HeroCarousel({
                 }}
               >
                 {/* Tag / Badge */}
-                <div
-                  className={`flex w-full ${
-                    textAlign === "left"
-                      ? "justify-start"
-                      : textAlign === "right"
-                      ? "justify-end"
-                      : "justify-center"
-                  }`}
-                >
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-gold/40 bg-brand-dark/60 text-brand-gold text-xs font-semibold tracking-widest uppercase backdrop-blur-md shadow-sm">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>{slide.tag || "New Season Arrivals"}</span>
+                {Boolean(slide.tag && slide.tag.trim()) && (
+                  <div
+                    className={`flex w-full ${
+                      textAlign === "left"
+                        ? "justify-start"
+                        : textAlign === "right"
+                        ? "justify-end"
+                        : "justify-center"
+                    }`}
+                  >
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-brand-gold/40 bg-black/60 text-brand-gold text-xs font-semibold tracking-widest uppercase backdrop-blur-md shadow-sm">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{slide.tag.trim()}</span>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Headline */}
-                <h1 className="font-heading text-3xl sm:text-6xl md:text-7xl font-semibold text-white tracking-tight leading-[1.12] sm:leading-[1.08] drop-shadow-md">
-                  {slide.headline}
-                </h1>
+                {Boolean(slide.headline && slide.headline.trim()) && (
+                  <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl font-semibold text-white tracking-tight leading-[1.14] sm:leading-[1.1] drop-shadow-md whitespace-pre-line">
+                    {slide.headline.trim()}
+                  </h1>
+                )}
 
                 {/* Subtitle */}
-                {slide.subtitle && (
+                {Boolean(slide.subtitle && slide.subtitle.trim()) && (
                   <p
-                    className={`max-w-xl text-brand-cream/90 font-sans text-xs sm:text-base md:text-lg leading-relaxed drop-shadow-xs ${
+                    className={`max-w-2xl text-white/90 font-sans text-xs sm:text-base md:text-lg leading-relaxed drop-shadow-xs whitespace-pre-line ${
                       textAlign === "left"
                         ? "mr-auto"
                         : textAlign === "right"
@@ -225,43 +241,60 @@ export function HeroCarousel({
                         : "mx-auto"
                     }`}
                   >
-                    {slide.subtitle}
+                    {slide.subtitle.trim()}
                   </p>
                 )}
 
                 {/* CTA Buttons */}
-                <div
-                  className={`pt-2 sm:pt-4 flex flex-row items-center gap-2.5 sm:gap-4 w-full max-w-sm sm:max-w-none ${
-                    textAlign === "left"
-                      ? "justify-start mr-auto"
-                      : textAlign === "right"
-                      ? "justify-end ml-auto"
-                      : "justify-center mx-auto"
-                  }`}
-                >
-                  <Link href={slide.cta_link || "/shop"} className="flex-1 sm:flex-initial">
-                    <Button
-                      variant="primary"
-                      size="md"
-                      className="w-full sm:w-auto shadow-luxury hover:scale-[1.02] transition-transform text-xs sm:text-sm h-11 px-3.5 sm:px-6 whitespace-nowrap"
-                    >
-                      <span>{slide.cta_text || "Explore Collection"}</span>
-                      <ArrowRight className="w-3.5 h-3.5 ml-1.5 shrink-0" />
-                    </Button>
-                  </Link>
-
-                  {slide.secondary_cta_text && slide.secondary_cta_link ? (
-                    <Link href={slide.secondary_cta_link} className="flex-1 sm:flex-initial">
-                      <Button
-                        variant="outline"
-                        size="md"
-                        className="w-full sm:w-auto border-white/50 text-white hover:bg-white/15 hover:text-white backdrop-blur-xs text-xs sm:text-sm h-11 px-3.5 sm:px-6 whitespace-nowrap"
+                {Boolean(
+                  (slide.cta_text && slide.cta_text.trim()) ||
+                    (slide.secondary_cta_text && slide.secondary_cta_text.trim())
+                ) && (
+                  <div
+                    className={`pt-2 sm:pt-4 flex flex-row items-center gap-2.5 sm:gap-4 w-full max-w-sm sm:max-w-none ${
+                      textAlign === "left"
+                        ? "justify-start mr-auto"
+                        : textAlign === "right"
+                        ? "justify-end ml-auto"
+                        : "justify-center mx-auto"
+                    }`}
+                  >
+                    {slide.cta_text && slide.cta_text.trim() ? (
+                      <Link
+                        href={slide.cta_link && slide.cta_link.trim() ? slide.cta_link.trim() : "/shop"}
+                        className="flex-1 sm:flex-initial"
                       >
-                        {slide.secondary_cta_text}
-                      </Button>
-                    </Link>
-                  ) : null}
-                </div>
+                        <Button
+                          variant="primary"
+                          size="md"
+                          className="w-full sm:w-auto shadow-luxury hover:scale-[1.02] transition-transform text-xs sm:text-sm h-11 px-3.5 sm:px-6 whitespace-nowrap"
+                        >
+                          <span>{slide.cta_text.trim()}</span>
+                          <ArrowRight className="w-3.5 h-3.5 ml-1.5 shrink-0" />
+                        </Button>
+                      </Link>
+                    ) : null}
+
+                    {slide.secondary_cta_text && slide.secondary_cta_text.trim() ? (
+                      <Link
+                        href={
+                          slide.secondary_cta_link && slide.secondary_cta_link.trim()
+                            ? slide.secondary_cta_link.trim()
+                            : "/shop"
+                        }
+                        className="flex-1 sm:flex-initial"
+                      >
+                        <Button
+                          variant="outline"
+                          size="md"
+                          className="w-full sm:w-auto border-white/50 text-white hover:bg-white/15 hover:text-white backdrop-blur-xs text-xs sm:text-sm h-11 px-3.5 sm:px-6 whitespace-nowrap"
+                        >
+                          {slide.secondary_cta_text.trim()}
+                        </Button>
+                      </Link>
+                    ) : null}
+                  </div>
+                )}
               </div>
             );
           })}

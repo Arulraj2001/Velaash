@@ -43,14 +43,8 @@ function runHomepageAuditTests() {
   const slideRes = HeroSlideSchema.safeParse(validSlide);
   assert("HeroSlideSchema accepts valid slide", slideRes.success);
 
-  const invalidHeadline = { ...validSlide, headline: "   " };
-  assert("HeroSlideSchema rejects empty headline", !HeroSlideSchema.safeParse(invalidHeadline).success);
-
-  const invalidCta = { ...validSlide, cta_text: "" };
-  assert("HeroSlideSchema rejects empty cta_text", !HeroSlideSchema.safeParse(invalidCta).success);
-
-  const invalidLink = { ...validSlide, cta_link: "" };
-  assert("HeroSlideSchema rejects empty cta_link", !HeroSlideSchema.safeParse(invalidLink).success);
+  const plainSlide = { ...validSlide, headline: "   ", cta_text: "", cta_link: "" };
+  assert("HeroSlideSchema accepts plain slide with empty headline/buttons", HeroSlideSchema.safeParse(plainSlide).success);
 
   const invalidImage = { ...validSlide, bg_image: "  " };
   assert("HeroSlideSchema rejects empty bg_image", !HeroSlideSchema.safeParse(invalidImage).success);

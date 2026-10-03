@@ -299,15 +299,13 @@ async function fetchHomepageSections(): Promise<LiveHomepageSection[]> {
       // Normalize content to broader lifestyle positioning
       const content = { ...rawContent };
       if (section_type === "hero_banner") {
-        if (!content.headline || content.headline === "Modern Everyday Luxury") {
+        if (content.headline === "Modern Everyday Luxury") {
           content.headline = "Everyday essentials for every home";
         }
         if (
-          !content.subtitle ||
-          (typeof content.subtitle === "string" &&
-            (content.subtitle.includes("contemporary wardrobe essentials") ||
-              content.subtitle.includes("Effortless silhouettes") ||
-              content.headline === "Everyday essentials for every home"))
+          typeof content.subtitle === "string" &&
+          (content.subtitle.includes("contemporary wardrobe essentials") ||
+            content.subtitle.includes("Effortless silhouettes"))
         ) {
           content.subtitle =
             "Clothing for men and women, plus traditional pooja and brass essentials.";
@@ -316,18 +314,15 @@ async function fetchHomepageSections(): Promise<LiveHomepageSection[]> {
           content.slides = (content.slides as Record<string, unknown>[]).map((s) => ({
             ...s,
             headline:
-              !s.headline || s.headline === "Modern Everyday Luxury"
+              s.headline === "Modern Everyday Luxury"
                 ? "Everyday essentials for every home"
-                : s.headline,
+                : (s.headline as string) ?? "",
             subtitle:
-              !s.subtitle ||
-              (typeof s.subtitle === "string" &&
-                (s.subtitle.includes("contemporary wardrobe essentials") ||
-                  s.subtitle.includes("Effortless silhouettes") ||
-                  s.headline === "Modern Everyday Luxury" ||
-                  s.headline === "Everyday essentials for every home"))
+              typeof s.subtitle === "string" &&
+              (s.subtitle.includes("contemporary wardrobe essentials") ||
+                s.subtitle.includes("Effortless silhouettes"))
                 ? "Clothing for men and women, plus traditional pooja and brass essentials."
-                : s.subtitle,
+                : (s.subtitle as string) ?? "",
           }));
         }
       } else if (section_type === "testimonials") {

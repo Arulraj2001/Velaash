@@ -203,33 +203,35 @@ export default async function HomePage() {
 
               const slides = rawSlides.map((slide) => ({
                 ...slide,
+                tag: slide.tag ?? "",
                 headline:
-                  !slide.headline || slide.headline === "Modern Everyday Luxury"
+                  slide.headline === "Modern Everyday Luxury"
                     ? "Everyday essentials for every home"
-                    : slide.headline,
+                    : slide.headline ?? "",
                 subtitle:
-                  !slide.subtitle ||
-                  slide.subtitle.includes("contemporary wardrobe essentials") ||
-                  slide.subtitle.includes("Effortless silhouettes") ||
-                  slide.headline === "Modern Everyday Luxury" ||
-                  slide.headline === "Everyday essentials for every home"
+                  typeof slide.subtitle === "string" &&
+                  (slide.subtitle.includes("contemporary wardrobe essentials") ||
+                    slide.subtitle.includes("Effortless silhouettes"))
                     ? "Clothing for men and women, plus traditional pooja and brass essentials."
-                    : slide.subtitle,
+                    : slide.subtitle ?? "",
+                cta_text: slide.cta_text ?? "",
+                cta_link: slide.cta_link ?? "",
+                secondary_cta_text: slide.secondary_cta_text ?? "",
+                secondary_cta_link: slide.secondary_cta_link ?? "",
+                content_width: slide.content_width ?? "balanced",
               }));
 
               const rawHeadline = (content.headline as string) || "";
               const headline =
-                !rawHeadline || rawHeadline === "Modern Everyday Luxury"
+                rawHeadline === "Modern Everyday Luxury"
                   ? "Everyday essentials for every home"
                   : rawHeadline;
 
               const rawSubtitle =
                 (content.subtitle as string) || (content.subheading as string) || "";
               const subtitle =
-                !rawSubtitle ||
                 rawSubtitle.includes("contemporary wardrobe essentials") ||
-                rawSubtitle.includes("Effortless silhouettes") ||
-                headline === "Everyday essentials for every home"
+                rawSubtitle.includes("Effortless silhouettes")
                   ? "Clothing for men and women, plus traditional pooja and brass essentials."
                   : rawSubtitle;
 
@@ -240,11 +242,11 @@ export default async function HomePage() {
                   fallbackHeadline={headline}
                   fallbackSubtitle={subtitle}
                   fallbackCtaText={
-                    (content.cta_text as string) || (content.cta_label as string) || "Explore Collection"
+                    (content.cta_text as string) || (content.cta_label as string) || ""
                   }
-                  fallbackCtaLink={(content.cta_link as string) || "/shop"}
-                  fallbackSecondaryText={(content.secondary_cta_text as string) || "Kurtas & Sets"}
-                  fallbackSecondaryLink={(content.secondary_cta_link as string) || "/collections/kurtas-sets"}
+                  fallbackCtaLink={(content.cta_link as string) || ""}
+                  fallbackSecondaryText={(content.secondary_cta_text as string) || ""}
+                  fallbackSecondaryLink={(content.secondary_cta_link as string) || ""}
                   fallbackBgImage={
                     (content.bg_image as string) ||
                     (content.image_url as string) ||
@@ -261,6 +263,10 @@ export default async function HomePage() {
                   }
                   fallbackTextAlign={
                     (content.text_align as "left" | "center" | "right") || "center"
+                  }
+                  fallbackContentWidth={
+                    (content.content_width as "compact" | "balanced" | "wide" | "full") ||
+                    "balanced"
                   }
                 />
               );

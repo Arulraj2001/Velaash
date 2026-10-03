@@ -3,8 +3,10 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X, ChevronDown, MessageCircle, User, ArrowRight } from "lucide-react";
+import { X, ChevronDown, MessageCircle, User, ArrowRight, Sparkles, Tag } from "lucide-react";
 import type { NavigationCategory } from "@/features/navigation";
+import type { ShippingPolicySetting } from "@/features/settings";
+import { groupNavigationCategories } from "@/features/navigation/utils/group-navigation";
 import { BRAND, CUSTOMER_SERVICE_LINKS } from "@/lib/constants";
 import { BrandWordmark } from "@/components/ui";
 import { useAuth } from "@/features/auth/components/auth-provider";
@@ -13,6 +15,7 @@ interface MobileNavDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   categories: NavigationCategory[];
+  shippingPolicy?: ShippingPolicySetting;
   logoUrl?: string;
   storeName?: string;
   whatsappNumber?: string;
@@ -23,6 +26,7 @@ export function MobileNavDrawer({
   isOpen,
   onClose,
   categories,
+  shippingPolicy,
   logoUrl,
   storeName,
   whatsappNumber,
@@ -30,6 +34,11 @@ export function MobileNavDrawer({
 }: MobileNavDrawerProps) {
   const [expandedCategories, setExpandedCategories] = React.useState<Record<string, boolean>>({});
   const { user, isAuthenticated } = useAuth();
+
+  const pillars = React.useMemo(
+    () => groupNavigationCategories(categories, shippingPolicy),
+    [categories, shippingPolicy]
+  );
 
   React.useEffect(() => {
     if (isOpen) {
@@ -120,62 +129,109 @@ export function MobileNavDrawer({
           {/* Categories Accordion */}
           <div className="space-y-1">
             <p className="text-brand-accent px-2 pb-1 text-[11px] font-semibold tracking-widest uppercase">
-              Collections
+              Departments &amp; Collections
             </p>
-            {categories.map((cat) => {
-              const hasSub = cat.subcategories && cat.subcategories.length > 0;
-              const isExpanded = Boolean(expandedCategories[cat.id]);
+
+            {pillars.map((pillar) => {
+              if (pillar.dropdownType === "none") {
+                return (
+                  <div key={pillar.id} className="border-brand-border/40 border-b last:border-b-0">
+                    <Link
+                      href={pillar.href}
+                      onClick={onClose}
+                      className="text-brand-dark hover:text-brand-accent flex items-center justify-between px-2 py-3 text-sm font-semibold transition-colors"
+                    >
+                      <span>{pillar.name}</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                    </Link>
+                  </div>
+                );
+              }
+
+              if (pillar.isSpecial) {
+                return (
+                  <div key={pillar.id} className="py-2">
+                    <Link
+                      href={pillar.href}
+                      onClick={onClose}
+                      className="flex items-center justify-between p-3 rounded-xl border border-amber-300 bg-amber-50/80 text-amber-950 hover:bg-amber-100 transition-colors shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-600 animate-pulse" />
+                        <div>
+                          <div className="text-xs font-bold uppercase tracking-wider">
+                            {pillar.name}
+                          </div>
+                          {pillar.featuredCard && (
+                            <div className="text-[10px] text-amber-800 line-clamp-1">
+                              {pillar.featuredCard.subtitle}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {pillar.badge && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-600 text-white shrink-0">
+                          {pillar.badge}
+                        </span>
+                      )}
+                    </Link>
+                  </div>
+                );
+              }
+
+              const isExpanded = Boolean(expandedCategories[pillar.id]);
 
               return (
-                <div key={cat.id} className="border-brand-border/40 border-b last:border-b-0">
-                  {hasSub ? (
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => toggleCategory(cat.id)}
-                        className="text-brand-dark hover:text-brand-accent flex w-full items-center justify-between px-2 py-3 text-sm font-medium transition-colors"
-                        aria-expanded={isExpanded}
+                <div key={pillar.id} className="border-brand-border/40 border-b last:border-b-0">
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(pillar.id)}
+                    className="text-brand-dark hover:text-brand-accent flex w-full items-center justify-between px-2 py-3 text-sm font-semibold transition-colors"
+                    aria-expanded={isExpanded}
+                  >
+                    <span>{pillar.name}</span>
+                    <ChevronDown
+                      className={`text-brand-muted h-4 w-4 transition-transform duration-200 ${
+                        isExpanded ? "text-brand-accent rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {isExpanded && (
+                    <div className="bg-brand-light/15 mb-2 space-y-3 rounded-xl p-3">
+                      <Link
+                        href={pillar.href}
+                        onClick={onClose}
+                        className="text-brand-accent flex items-center justify-between py-1 text-xs font-bold hover:underline border-b border-brand-border/50 pb-2"
                       >
-                        <span>{cat.name}</span>
-                        <ChevronDown
-                          className={`text-brand-muted h-4 w-4 transition-transform duration-200 ${
-                            isExpanded ? "text-brand-accent rotate-180" : ""
-                          }`}
-                        />
-                      </button>
+                        <span>Explore All {pillar.name}</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
 
-                      {isExpanded && (
-                        <div className="bg-brand-light/15 mb-2 space-y-2 rounded-lg pr-2 pb-3 pl-4">
+                      {pillar.sections?.map((sec) => (
+                        <div key={sec.title} className="space-y-1.5">
                           <Link
-                            href={`/collections/${cat.slug}`}
+                            href={sec.href || pillar.href}
                             onClick={onClose}
-                            className="text-brand-accent flex items-center gap-1.5 py-1.5 text-xs font-semibold hover:underline"
+                            className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider hover:text-brand-accent"
                           >
-                            <span>View All {cat.name}</span>
-                            <ArrowRight className="h-3 w-3" />
+                            {sec.title}
                           </Link>
-
-                          {cat.subcategories.map((sub) => (
-                            <Link
-                              key={sub.id}
-                              href={`/collections/${sub.slug}`}
-                              onClick={onClose}
-                              className="text-brand-muted hover:text-brand-accent block py-1 text-xs transition-colors"
-                            >
-                              {sub.name}
-                            </Link>
-                          ))}
+                          <div className="pl-2 space-y-1 border-l-2 border-brand-gold/30">
+                            {sec.items.map((item) => (
+                              <Link
+                                key={item.id}
+                                href={item.href}
+                                onClick={onClose}
+                                className="text-slate-600 hover:text-brand-accent block py-0.5 text-xs transition-colors"
+                              >
+                                {item.name}
+                              </Link>
+                            ))}
+                          </div>
                         </div>
-                      )}
+                      ))}
                     </div>
-                  ) : (
-                    <Link
-                      href={`/collections/${cat.slug}`}
-                      onClick={onClose}
-                      className="text-brand-dark hover:text-brand-accent block px-2 py-3 text-sm font-medium transition-colors"
-                    >
-                      {cat.name}
-                    </Link>
                   )}
                 </div>
               );
