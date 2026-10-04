@@ -16,7 +16,6 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
-    unoptimized: true,
     dangerouslyAllowLocalIP: true,
     remotePatterns: [
       {
