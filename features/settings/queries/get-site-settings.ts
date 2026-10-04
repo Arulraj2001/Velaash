@@ -47,7 +47,7 @@ export const DEFAULT_SHIPPING_POLICY: ShippingPolicySetting = {
 export const DEFAULT_RETURNS_POLICY: ReturnsPolicySetting = {
   return_window_days: 7,
   policy_description:
-    "We accept size exchanges and returns within 7 calendar days of receipt for items that are unused, unaltered, and retained with original tags intact.",
+    "We accept return and replacement requests within strictly 7 calendar days of delivery. A clear, continuous, and uncut unboxing video of the parcel opening and product condition is strictly mandatory for all claims. Upon evaluating both the video and the physical condition of the received item at our warehouse, Velaash will decide whether to provide a replacement or a refund.",
 };
 
 export const DEFAULT_ANNOUNCEMENT_SETTING: AnnouncementSetting = {

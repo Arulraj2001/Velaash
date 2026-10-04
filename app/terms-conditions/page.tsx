@@ -250,13 +250,16 @@ export default async function TermsConditionsPage() {
                   <strong>Order Cancellation:</strong> You may cancel an order directly from your <Link href="/account/orders" className="text-brand-accent hover:underline font-medium">Account Orders</Link> dashboard as long as its status remains &quot;Confirmed&quot;. Once an order transitions to warehouse dispatch or courier transit, cancellations cannot be accepted mid-route; you may instead request a return following delivery.
                 </p>
                 <p>
-                  <strong>Return Window &amp; Eligibility:</strong> We offer a <strong>{returnWindowDays}-day return window</strong> from the date of official courier delivery confirmation. Garments must be returned in their original condition: completely unworn, unwashed, unaltered, and with all designer tags and packaging intact.
+                  <strong>Strict 7-Day Return Window:</strong> All return, exchange, or replacement requests must be registered within strictly <strong>7 calendar days</strong> from the official courier delivery confirmation date. Requests received beyond this 7-day window cannot be processed.
                 </p>
                 <p>
-                  <strong>Current Initiation Procedure:</strong> Because Velaash does not currently operate an automated self-service return portal, customers must contact our Customer Care team on WhatsApp at <strong>{contactPhone}</strong> or via email at <strong>{contactEmail}</strong> quoting their Order Number to initiate return authorization.
+                  <strong>Mandatory Unboxing Video:</strong> To qualify for return, exchange, replacement, or damage claims, customers must provide a <strong>clear, continuous, and uncut video recording</strong> of the parcel opening. The video must start prior to opening the box/courier bag, showing the sealed packaging, intact shipping label with tracking details, brand tags attached, and the condition or defect being reported. Claims submitted without an uncut unboxing video cannot be approved.
                 </p>
                 <p>
-                  Please review our <Link href="/shipping-returns" className="text-brand-accent hover:underline font-medium">Shipping &amp; Returns Policy</Link> for detailed inspection criteria and bank refund timelines.
+                  <strong>Decision (Replacement vs. Refund):</strong> Following verification of the customer&apos;s unboxing video and subsequent physical quality inspection of the received product at our fulfillment facility (confirming it is unworn, unwashed, and retaining original tags and packaging), Velaash reserves the right to determine whether an approved claim is fulfilled via <strong>replacement</strong> (dispatching an identical replacement item) or <strong>refund</strong> (credited to the original payment source or via bank transfer for COD within 5 to 7 business days).
+                </p>
+                <p>
+                  Please review our canonical <Link href="/shipping-returns" className="text-brand-accent hover:underline font-medium">Shipping &amp; Returns Policy</Link> for detailed inspection criteria and initiation steps.
                 </p>
               </div>
             </article>
