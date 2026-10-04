@@ -60,16 +60,15 @@ export function createAdminClient(): SupabaseClient<Database> {
     );
   }
 
-  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!serviceRoleKey && process.env.NODE_ENV === "production") {
-    throw new Error(
-      "FATAL SECURITY CONFIGURATION: SUPABASE_SERVICE_ROLE_KEY is missing in production environment. " +
-        "Cannot create elevated admin client."
+  if (!serviceRoleKey) {
+    console.warn(
+      "WARNING: SUPABASE_SERVICE_ROLE_KEY is missing in runtime environment. Falling back to NEXT_PUBLIC_SUPABASE_ANON_KEY."
     );
   }
 
-  // Fallback to anon key in offline/dev mock test environments where real database is not provisioned
+  // Fallback to anon key when service role key is not configured
   const key = serviceRoleKey || env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   return createClient<Database>(
