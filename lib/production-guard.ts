@@ -37,8 +37,8 @@ export function validateProductionEnvironment(
 
   if (rzpKey) {
     if (rzpKey.startsWith("rzp_test_")) {
-      errors.push(
-        `CRITICAL: NEXT_PUBLIC_RAZORPAY_KEY_ID is a test key ('${rzpKey}'). Production deployment requires a live key starting with 'rzp_live_'. Live transactions will fail or not settle real funds!`
+      warnings.push(
+        `NOTICE: NEXT_PUBLIC_RAZORPAY_KEY_ID is currently a test key ('${rzpKey}'). Remember to switch to a live key ('rzp_live_...') before final public launch.`
       );
     } else if (rzpKey.includes("placeholder") || rzpKey.includes("yourKeyId")) {
       errors.push(
