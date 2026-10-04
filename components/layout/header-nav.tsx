@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown, ArrowRight, Sparkles, Tag } from "lucide-react";
+import { ChevronDown, ArrowRight } from "lucide-react";
 import type { NavigationCategory } from "@/features/navigation";
 import type { ShippingPolicySetting } from "@/features/settings";
 import { groupNavigationCategories, type NavPillar } from "@/features/navigation/utils/group-navigation";
@@ -49,91 +49,6 @@ export function HeaderNav({ categories, shippingPolicy }: HeaderNavProps) {
         const hasDropdown = pillar.dropdownType !== "none";
         const isOpen = activeDropdown === pillar.id;
 
-        // Custom Highlight for Festive Offers
-        if (pillar.isSpecial) {
-          return (
-            <div
-              key={pillar.id}
-              className="relative"
-              onMouseEnter={() => handleMouseEnter(pillar.id)}
-              onMouseLeave={handleMouseLeave}
-            >
-              <div className="flex items-center py-4">
-                <Link
-                  href={pillar.href}
-                  className="group relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 hover:border-amber-400 transition-all text-xs font-semibold tracking-wider uppercase shadow-2xs"
-                  onFocus={() => setActiveDropdown(pillar.id)}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
-                  <span>{pillar.name}</span>
-                  {pillar.badge && (
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-600 text-white tracking-widest">
-                      {pillar.badge}
-                    </span>
-                  )}
-                  <ChevronDown
-                    className={`h-3 w-3 text-amber-700 transition-transform duration-200 ${
-                      isOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </Link>
-              </div>
-
-              {/* Festive Offers Dropdown */}
-              {isOpen && (
-                <div
-                  className="border-amber-200/90 bg-white shadow-2xl animate-in fade-in-0 slide-in-from-top-2 absolute top-full left-1/2 z-50 w-80 -translate-x-1/2 rounded-2xl border p-4 font-sans backdrop-blur-md"
-                  onMouseEnter={() => handleMouseEnter(pillar.id)}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  {pillar.featuredCard && (
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/10 via-amber-100/40 to-transparent border border-amber-200/80 mb-3 space-y-1.5">
-                      <div className="flex items-center gap-1.5 text-amber-900 font-semibold text-xs">
-                        <Tag className="w-3.5 h-3.5 text-amber-600" />
-                        <span>{pillar.featuredCard.title}</span>
-                      </div>
-                      <p className="text-[11px] text-amber-800/90 leading-relaxed">
-                        {pillar.featuredCard.subtitle}
-                      </p>
-                    </div>
-                  )}
-
-                  {pillar.sections && pillar.sections[0] && (
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 block">
-                        Quick Shortcuts
-                      </span>
-                      {pillar.sections[0].items.map((item) => (
-                        <Link
-                          key={item.id}
-                          href={item.href}
-                          onClick={() => setActiveDropdown(null)}
-                          className="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 hover:text-amber-900 hover:bg-amber-50/80 transition-colors"
-                        >
-                          <span>{item.name}</span>
-                          <ArrowRight className="w-3 h-3 text-amber-600 opacity-60" />
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="pt-2 mt-2 border-t border-slate-100">
-                    <Link
-                      href="/shop"
-                      onClick={() => setActiveDropdown(null)}
-                      className="flex items-center justify-center gap-1.5 text-center w-full py-2 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-colors"
-                    >
-                      <span>Explore All Festive Items</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        }
-
-        // Standard Navigation Pillars (Women, Men, Pooja, All)
         return (
           <div
             key={pillar.id}

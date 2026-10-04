@@ -28,10 +28,10 @@ const festivePolicy: ShippingPolicySetting = {
   festive_coupon_code: "PONGALFREE",
 };
 
-const pillarsWithFestive = groupNavigationCategories(DEFAULT_CLOTHING_CATEGORIES, festivePolicy);
-assert("Produces 5 pillars", pillarsWithFestive.length === 5);
+const pillars = groupNavigationCategories(DEFAULT_CLOTHING_CATEGORIES, festivePolicy);
+assert("Produces 4 pillars", pillars.length === 4);
 
-const [women, men, pooja, festive, all] = pillarsWithFestive;
+const [women, men, pooja, all] = pillars;
 
 assert("Pillar 1 is Women", women.name === "Women" && women.dropdownType === "mega-women");
 assert("Women has sections", (women.sections?.length || 0) >= 3);
@@ -45,22 +45,17 @@ assert("Pillar 3 is Pooja & Brass", pooja.name === "Pooja & Brass" && pooja.drop
 assert("Pooja has sections", (pooja.sections?.length || 0) >= 1);
 assert("Pooja has featuredCard", Boolean(pooja.featuredCard?.imageUrl));
 
-assert("Pillar 4 is Festive", festive.isSpecial === true && festive.dropdownType === "dropdown-festive");
-assert("Festive has badge", festive.badge === "FREE SHIPPING");
+assert("Pillar 4 is All Products", all.name === "All Products" && all.href === "/shop" && all.dropdownType === "none");
 
-assert("Pillar 5 is All Products", all.name === "All Products" && all.href === "/shop" && all.dropdownType === "none");
-
-// 2. Test Without Festive Policy
-console.log("\n[Test 2] Without Festive Policy:");
-const pillarsNoFestive = groupNavigationCategories(DEFAULT_CLOTHING_CATEGORIES, undefined);
-assert("Still produces 5 pillars safely", pillarsNoFestive.length === 5);
-const festiveDefault = pillarsNoFestive[3];
-assert("Festive pillar handles undefined policy gracefully", festiveDefault.name === "Festive Offers");
+// 2. Test Without Policy
+console.log("\n[Test 2] Without Policy:");
+const pillarsNoPolicy = groupNavigationCategories(DEFAULT_CLOTHING_CATEGORIES, undefined);
+assert("Still produces 4 pillars safely", pillarsNoPolicy.length === 4);
 
 // 3. Test With Empty Categories
 console.log("\n[Test 3] Empty Categories Array Edge Case:");
 const pillarsEmpty = groupNavigationCategories([], festivePolicy);
-assert("Handles empty categories without throwing", pillarsEmpty.length === 5);
+assert("Handles empty categories without throwing", pillarsEmpty.length === 4);
 assert("Women pillar is present", pillarsEmpty[0].name === "Women");
 assert("Men pillar is present with fallback subcategories", (pillarsEmpty[1].sections?.[0]?.items?.length || 0) > 0);
 assert("Pooja pillar is present with fallback subcategories", (pillarsEmpty[2].sections?.[0]?.items?.length || 0) > 0);

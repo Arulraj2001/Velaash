@@ -28,23 +28,21 @@ export interface NavPillar {
   name: string;
   href: string;
   badge?: string;
-  isSpecial?: boolean;
-  dropdownType: "mega-women" | "dropdown-men" | "dropdown-pooja" | "dropdown-festive" | "none";
+  dropdownType: "mega-women" | "dropdown-men" | "dropdown-pooja" | "none";
   sections?: NavSection[];
   featuredCard?: NavCard;
 }
 
 /**
- * Transforms flat raw categories into the 3-pillar brand architecture:
+ * Transforms flat raw categories into the 4-pillar brand architecture:
  * 1. WOMEN (Multi-column mega-menu containing Kurtas, Dresses, Co-ords, Tops, Bottoms, Loungewear)
  * 2. MEN (Shirts, Kurtas, T-Shirts, Bottoms)
  * 3. POOJA & BRASS ITEMS (Lamps & Diyas, Pooja Accessories, Brassware)
- * 4. FESTIVE OFFERS (Highlighted campaign pill with coupon/free delivery callout)
- * 5. ALL COLLECTIONS (Direct shop link)
+ * 4. ALL PRODUCTS (Direct shop link)
  */
 export function groupNavigationCategories(
   categories: NavigationCategory[],
-  shippingPolicy?: ShippingPolicySetting
+  _shippingPolicy?: ShippingPolicySetting
 ): NavPillar[] {
   // 1. Separate Men, Pooja, and Women categories
   const menCat = categories.find((c) => c.slug === "men" || c.name.toLowerCase() === "men");
@@ -231,60 +229,7 @@ export function groupNavigationCategories(
     },
   };
 
-  // --- PILLAR 4: FESTIVE OFFERS (Highlighted Pill) ---
-  const isFestiveActive = Boolean(shippingPolicy?.festive_shipping_enabled);
-  const campaignName = shippingPolicy?.festive_campaign_name || "Festive Offers";
-  const couponCode = shippingPolicy?.festive_coupon_code || "PONGALFREE";
-
-  const festivePillar: NavPillar = {
-    id: "nav-festive",
-    name: isFestiveActive ? campaignName : "Festive Offers",
-    href: "/shop",
-    badge: isFestiveActive ? "FREE SHIPPING" : "SPECIAL",
-    isSpecial: true,
-    dropdownType: "dropdown-festive",
-    sections: [
-      {
-        title: "Seasonal Celebrations",
-        href: "/shop",
-        items: [
-          {
-            id: "festive-kurtas",
-            name: "Festive Kurtas & Sets",
-            slug: "kurtas-sets",
-            href: "/collections/kurtas-sets",
-            description: "Handcrafted festive ensembles with rich jewel tones",
-          },
-          {
-            id: "festive-diyas",
-            name: "Traditional Brass Deepams",
-            slug: "lamps-diyas",
-            href: "/collections/lamps-diyas",
-            description: "Auspicious brass lamps and kuthuvilakku for celebrations",
-          },
-          {
-            id: "festive-men",
-            name: "Men's Festive Kurtas",
-            slug: "men-kurtas",
-            href: "/collections/men-kurtas",
-            description: "Refined mandarin collar kurtas in pure cotton and linen",
-          },
-        ],
-      },
-    ],
-    featuredCard: {
-      title: isFestiveActive ? `${campaignName} Active` : "Complimentary Delivery",
-      subtitle: isFestiveActive
-        ? `Use code ${couponCode} for ₹0 delivery on festive orders.`
-        : "Enjoy complimentary shipping on all orders above ₹1,999.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
-      href: "/shop",
-      ctaText: "Shop Festive Capsule",
-    },
-  };
-
-  // --- PILLAR 5: ALL PRODUCTS ---
+  // --- PILLAR 4: ALL PRODUCTS ---
   const allProductsPillar: NavPillar = {
     id: "nav-all",
     name: "All Products",
@@ -292,5 +237,5 @@ export function groupNavigationCategories(
     dropdownType: "none",
   };
 
-  return [womenPillar, menPillar, poojaPillar, festivePillar, allProductsPillar];
+  return [womenPillar, menPillar, poojaPillar, allProductsPillar];
 }

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X, ChevronDown, MessageCircle, User, ArrowRight, Sparkles, Tag } from "lucide-react";
+import { X, ChevronDown, MessageCircle, User, ArrowRight } from "lucide-react";
 import type { NavigationCategory } from "@/features/navigation";
 import type { ShippingPolicySetting } from "@/features/settings";
 import { groupNavigationCategories } from "@/features/navigation/utils/group-navigation";
@@ -143,37 +143,6 @@ export function MobileNavDrawer({
                     >
                       <span>{pillar.name}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-                    </Link>
-                  </div>
-                );
-              }
-
-              if (pillar.isSpecial) {
-                return (
-                  <div key={pillar.id} className="py-2">
-                    <Link
-                      href={pillar.href}
-                      onClick={onClose}
-                      className="flex items-center justify-between p-3 rounded-xl border border-amber-300 bg-amber-50/80 text-amber-950 hover:bg-amber-100 transition-colors shadow-2xs"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-amber-600 animate-pulse" />
-                        <div>
-                          <div className="text-xs font-bold uppercase tracking-wider">
-                            {pillar.name}
-                          </div>
-                          {pillar.featuredCard && (
-                            <div className="text-[10px] text-amber-800 line-clamp-1">
-                              {pillar.featuredCard.subtitle}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {pillar.badge && (
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-600 text-white shrink-0">
-                          {pillar.badge}
-                        </span>
-                      )}
                     </Link>
                   </div>
                 );
