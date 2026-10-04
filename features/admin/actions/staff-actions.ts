@@ -18,6 +18,11 @@ const AddStaffSchema = z.object({
     .or(z.literal("")),
 });
 
+const SetStaffPasswordSchema = z.object({
+  userId: z.string().uuid("Invalid staff user."),
+  password: z.string().trim().min(6, "Password must be at least 6 characters"),
+});
+
 /**
  * Retrieves the full list of admin users joined with their Supabase Auth email addresses.
  * Server-side gated: Owner only.
@@ -199,6 +204,69 @@ export async function addStaffMemberAction(
 
     revalidatePath("/admin/staff");
     return { success: true, message: `Staff role successfully assigned to ${email}.` };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unauthorized operation";
+    return { success: false, error: message };
+  }
+}
+
+/**
+ * Sets the password for an existing staff member.
+ * Server-side gated: Owner only. The Auth account is confirmed so an expired
+ * confirmation link does not block password sign-in.
+ */
+export async function setStaffPasswordAction(
+  userId: string,
+  password: string
+): Promise<{ success: boolean; error?: string; message?: string }> {
+  try {
+    const caller = await requireOwner();
+
+    if (userId === caller.id) {
+      return {
+        success: false,
+        error: "You cannot change your own password from staff management.",
+      };
+    }
+
+    const validation = SetStaffPasswordSchema.safeParse({ userId, password });
+    if (!validation.success) {
+      return {
+        success: false,
+        error: validation.error.issues[0]?.message || "Invalid password provided.",
+      };
+    }
+
+    const adminSupabase = createAdminClient();
+    const { data: staffMember, error: staffLookupErr } = await adminSupabase
+      .from("admin_users")
+      .select("id, role")
+      .eq("id", validation.data.userId)
+      .maybeSingle();
+
+    if (staffLookupErr) {
+      console.error("Failed to verify staff member before password update:", staffLookupErr);
+      return { success: false, error: "Failed to verify the staff member." };
+    }
+
+    if (!staffMember || staffMember.role !== "staff") {
+      return { success: false, error: "Only an existing staff member can be updated here." };
+    }
+
+    const { error: updateAuthErr } = await adminSupabase.auth.admin.updateUserById(
+      validation.data.userId,
+      {
+        password: validation.data.password,
+        email_confirm: true,
+      }
+    );
+
+    if (updateAuthErr) {
+      console.error("Failed to set staff password:", updateAuthErr);
+      return { success: false, error: updateAuthErr.message || "Failed to set staff password." };
+    }
+
+    return { success: true, message: "Staff password set successfully. They can now sign in." };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unauthorized operation";
     return { success: false, error: message };

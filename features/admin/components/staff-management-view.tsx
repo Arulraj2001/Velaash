@@ -6,6 +6,7 @@ import type { AdminUserListItem } from "../types";
 import type { AdminRole } from "@/types/database.types";
 import {
   addStaffMemberAction,
+  setStaffPasswordAction,
   updateStaffRoleAction,
   removeStaffMemberAction,
 } from "../actions/staff-actions";
@@ -20,6 +21,7 @@ import {
   Loader2,
   X,
   AlertTriangle,
+  KeyRound,
 } from "lucide-react";
 import { AdminModal } from "./admin-modal";
 
@@ -39,6 +41,12 @@ export function StaffManagementView({
     email: string;
     name: string;
   } | null>(null);
+  const [memberToSetPassword, setMemberToSetPassword] = useState<{
+    id: string;
+    email: string;
+    name: string;
+  } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     message: string;
@@ -97,6 +105,27 @@ export function StaffManagementView({
       } finally {
         setActiveMemberId(null);
         setMemberToRevoke(null);
+      }
+    });
+  };
+
+  const closeSetPasswordModal = () => {
+    setMemberToSetPassword(null);
+    setNewPassword("");
+  };
+
+  const handleSetPassword = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!memberToSetPassword || !newPassword) return;
+
+    setFeedback(null);
+    startTransition(async () => {
+      const res = await setStaffPasswordAction(memberToSetPassword.id, newPassword);
+      if (res.success && res.message) {
+        setFeedback({ type: "success", message: res.message });
+        closeSetPasswordModal();
+      } else if (!res.success && res.error) {
+        setFeedback({ type: "error", message: res.error });
       }
     });
   };
@@ -231,6 +260,22 @@ export function StaffManagementView({
                               <option value="staff">Staff</option>
                               <option value="owner">Owner</option>
                             </select>
+
+                            <button
+                              type="button"
+                              disabled={isPending}
+                              onClick={() =>
+                                setMemberToSetPassword({
+                                  id: member.id,
+                                  email: member.email,
+                                  name: member.fullName,
+                                })
+                              }
+                              title="Set staff password"
+                              className="rounded p-1.5 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors disabled:opacity-50"
+                            >
+                              <KeyRound className="h-3.5 w-3.5" />
+                            </button>
 
                             {/* Revoke Access Button */}
                             <button
@@ -394,6 +439,68 @@ export function StaffManagementView({
           (<span className="font-mono text-slate-700">{memberToRevoke?.email}</span>)?
           They will immediately lose access to the admin portal.
         </p>
+      </AdminModal>
+
+      <AdminModal
+        isOpen={Boolean(memberToSetPassword)}
+        onClose={closeSetPasswordModal}
+        maxWidth="md"
+        icon={<KeyRound className="h-5 w-5 text-indigo-600" />}
+        title="Set Staff Password"
+        description={memberToSetPassword ? `${memberToSetPassword.name} (${memberToSetPassword.email})` : ""}
+      >
+        <form onSubmit={handleSetPassword} className="space-y-4">
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Set a new password for this staff member. Their email will be confirmed so they can sign in
+            without relying on the expired confirmation link.
+          </p>
+          <div>
+            <label
+              htmlFor="staff-password"
+              className="block text-xs font-semibold text-slate-700 mb-1"
+            >
+              New Password
+            </label>
+            <input
+              id="staff-password"
+              type="password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              minLength={6}
+              required
+              autoComplete="new-password"
+              placeholder="Minimum 6 characters"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={closeSetPasswordModal}
+              className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 shadow-2xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isPending || newPassword.length < 6}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <KeyRound className="h-3.5 w-3.5" />
+                  <span>Set Password</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </AdminModal>
     </div>
   );
