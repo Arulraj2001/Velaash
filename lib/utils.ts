@@ -9,14 +9,12 @@ export function cn(...inputs: ClassValue[]): string {
 }
 
 /**
- * Formats a currency amount in Indian Rupees (INR)
+ * Formats a currency amount in Indian Rupees (INR).
+ * Prepending the Rupee symbol directly avoids ICU space / non-breaking space mismatches between SSR and client.
  */
 export function formatCurrencyINR(amount: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(amount);
+  if (typeof amount !== "number" || isNaN(amount)) return "₹0";
+  return `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(amount)}`;
 }
 
 export const formatCurrency = formatCurrencyINR;

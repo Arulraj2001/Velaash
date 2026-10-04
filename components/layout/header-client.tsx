@@ -142,7 +142,10 @@ export function HeaderClient({
                 title="Wishlist"
               >
                 <Heart className="h-5 w-5" />
-                <span className="bg-brand-light text-brand-dark border-brand-gold/40 absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full border text-[10px] font-bold shadow-xs">
+                <span
+                  suppressHydrationWarning
+                  className="bg-brand-light text-brand-dark border-brand-gold/40 absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full border text-[10px] font-bold shadow-xs"
+                >
                   {wishlistCount}
                 </span>
               </Link>
@@ -158,7 +161,10 @@ export function HeaderClient({
                 title="Bag"
               >
                 <ShoppingBag className="h-5 w-5" />
-                <span className="bg-brand-gold text-brand-dark absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold shadow-sm">
+                <span
+                  suppressHydrationWarning
+                  className="bg-brand-gold text-brand-dark absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold shadow-sm"
+                >
                   {cartCount}
                 </span>
               </Link>

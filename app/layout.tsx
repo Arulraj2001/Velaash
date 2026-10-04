@@ -112,78 +112,60 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Detect admin routes via the x-pathname header injected by middleware.
-  // Admin pages have their own sidebar + topbar shell — no customer nav/footer needed.
-  let isAdminRoute = false;
-  try {
-    const { headers } = await import("next/headers");
-    const headersList = await headers();
-    const pathname = headersList.get("x-pathname") ?? "";
-    isAdminRoute = pathname.startsWith("/admin");
-  } catch {
-    // Outside request context — default to showing the customer shell
-  }
-
   let initialUser = null;
   let initialWishlistIds: string[] = [];
   let logoUrl: string | null = null;
   let promoPopupData = null;
-  if (!isAdminRoute) {
-    try {
-      const [{ storeProfile }, supabase, promoPopup] = await Promise.all([
-        getSiteSettings(),
-        createClient(),
-        getPromoPopup(),
-      ]);
-      logoUrl = storeProfile.logo_url || "/logo.png";
-      promoPopupData = promoPopup;
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      initialUser = user;
-      if (user) {
-        initialWishlistIds = await getWishlistProductIds(user.id);
-      }
-    } catch (error: unknown) {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "digest" in error &&
-        (error as { digest: string }).digest === "DYNAMIC_SERVER_USAGE"
-      ) {
-        throw error;
-      }
-      initialUser = null;
+  try {
+    const [{ storeProfile }, supabase, promoPopup] = await Promise.all([
+      getSiteSettings(),
+      createClient(),
+      getPromoPopup(),
+    ]);
+    logoUrl = storeProfile.logo_url || "/logo.png";
+    promoPopupData = promoPopup;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    initialUser = user;
+    if (user) {
+      initialWishlistIds = await getWishlistProductIds(user.id);
     }
+  } catch (error: unknown) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "digest" in error &&
+      (error as { digest: string }).digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
+    initialUser = null;
   }
 
   return (
-    <html lang="en" className={`${cormorant.variable} ${plusJakarta.variable} scroll-smooth`}>
-      <body className="bg-brand-cream text-brand-dark selection:bg-brand-gold selection:text-brand-dark flex min-h-screen flex-col font-sans antialiased">
-        {isAdminRoute ? (
-          // Admin shell: no customer header/footer — admin/layout.tsx handles its own chrome
-          <>{children}</>
-        ) : (
-          <AuthProvider initialUser={initialUser}>
-            <WishlistSync initialWishlistIds={initialWishlistIds} />
-            <CustomerShell
-              header={<Header />}
-              footer={<Footer />}
-              overlays={
-                <>
-                  <BrandPreloader logoUrl={logoUrl} />
-                  <CartToast />
-                  <CookieConsentBanner />
-                  <PromoOfferPopup data={promoPopupData} />
-                </>
-              }
-            >
-              {children}
-            </CustomerShell>
-            <AnalyticsScripts />
-          </AuthProvider>
-        )}
+    <html lang="en" className={`${cormorant.variable} ${plusJakarta.variable} scroll-smooth`} suppressHydrationWarning>
+      <body className="bg-brand-cream text-brand-dark selection:bg-brand-gold selection:text-brand-dark flex min-h-screen flex-col font-sans antialiased" suppressHydrationWarning>
+        <AuthProvider initialUser={initialUser}>
+          <WishlistSync initialWishlistIds={initialWishlistIds} />
+          <CustomerShell
+            header={<Header />}
+            footer={<Footer />}
+            overlays={
+              <>
+                <BrandPreloader logoUrl={logoUrl} />
+                <CartToast />
+                <CookieConsentBanner />
+                <PromoOfferPopup data={promoPopupData} />
+              </>
+            }
+          >
+            {children}
+          </CustomerShell>
+          <AnalyticsScripts />
+        </AuthProvider>
       </body>
     </html>
   );

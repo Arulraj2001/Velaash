@@ -13,6 +13,14 @@ interface AuthContextValue {
   refresh: () => Promise<void>;
 }
 
+const defaultAuthContext: AuthContextValue = {
+  user: null,
+  isAuthenticated: false,
+  isLoading: false,
+  signOut: async () => {},
+  refresh: async () => {},
+};
+
 const AuthContext = React.createContext<AuthContextValue | undefined>(undefined);
 
 export interface AuthProviderProps {
@@ -22,7 +30,7 @@ export interface AuthProviderProps {
 
 export function AuthProvider({ children, initialUser = null }: AuthProviderProps) {
   const [user, setUser] = React.useState<User | null>(initialUser);
-  const [isLoading, setIsLoading] = React.useState<boolean>(!initialUser);
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const supabase = React.useMemo(() => createClient(), []);
 
   const refresh = React.useCallback(async () => {
@@ -91,11 +99,12 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
 
 /**
  * Hook to access current client-side authentication state.
+ * Returns safe fallback default values if called outside AuthProvider to prevent crashing the React tree.
  */
 export function useAuth(): AuthContextValue {
   const context = React.useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    return defaultAuthContext;
   }
   return context;
 }
