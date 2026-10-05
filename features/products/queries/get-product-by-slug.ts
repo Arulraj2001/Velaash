@@ -85,6 +85,10 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailItem 
       created_at,
       updated_at,
       category_id,
+      free_shipping_active,
+      free_shipping_start,
+      free_shipping_end,
+      free_shipping_badge_text,
       categories (
         id,
         name,
@@ -288,6 +292,10 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailItem 
       size_chart: sizeChart,
       reviews_breakdown: reviewData.breakdown,
       reviews: reviewData.reviews,
+      free_shipping_active: Boolean(p.free_shipping_active),
+      free_shipping_start: p.free_shipping_start || null,
+      free_shipping_end: p.free_shipping_end || null,
+      free_shipping_badge_text: p.free_shipping_badge_text || null,
     };
   } catch (err: unknown) {
     if (

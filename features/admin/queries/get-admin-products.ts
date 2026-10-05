@@ -269,8 +269,8 @@ export async function getAdminProductById(
     return null;
   }
 
-  const p = productRes.data;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const p = productRes.data as any;
   const rawImages = (p.product_images ?? []) as any[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rawVariants = (p.product_variants ?? []) as any[];
@@ -332,6 +332,10 @@ export async function getAdminProductById(
     images,
     variants,
     size_chart_id: sizeChartRes.data?.id ?? null,
+    free_shipping_active: Boolean(p.free_shipping_active),
+    free_shipping_start: p.free_shipping_start ?? null,
+    free_shipping_end: p.free_shipping_end ?? null,
+    free_shipping_badge_text: p.free_shipping_badge_text ?? null,
     created_at: p.created_at,
     updated_at: p.updated_at,
     has_orders: (orderedRes.count ?? 0) > 0,

@@ -180,6 +180,18 @@ export function ProductForm({
   const [isFeatured, setIsFeatured] = useState<boolean>(
     initialData?.is_featured ?? false
   );
+  const [freeShippingActive, setFreeShippingActive] = useState<boolean>(
+    initialData?.free_shipping_active ?? false
+  );
+  const [freeShippingStart, setFreeShippingStart] = useState<string>(
+    initialData?.free_shipping_start ? initialData.free_shipping_start.slice(0, 10) : ""
+  );
+  const [freeShippingEnd, setFreeShippingEnd] = useState<string>(
+    initialData?.free_shipping_end ? initialData.free_shipping_end.slice(0, 10) : ""
+  );
+  const [freeShippingBadgeText, setFreeShippingBadgeText] = useState<string>(
+    initialData?.free_shipping_badge_text || "🌾 Special Offer: Free Delivery"
+  );
 
   // Auto-slugify on title changes if slug was not manually touched
   const handleNameChange = (val: string) => {
@@ -268,6 +280,10 @@ export function ProductForm({
       images: normalizedImages,
       variants: hasVariants ? variants : [],
       size_chart_id: hasVariants ? (sizeChartId || null) : null,
+      free_shipping_active: freeShippingActive,
+      free_shipping_start: freeShippingStart ? new Date(freeShippingStart).toISOString() : null,
+      free_shipping_end: freeShippingEnd ? new Date(freeShippingEnd).toISOString() : null,
+      free_shipping_badge_text: freeShippingBadgeText || null,
     };
 
 
@@ -580,6 +596,100 @@ export function ProductForm({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Card: Promotional & Time-Limited Free Delivery Offer */}
+          <div className="rounded-xl border border-amber-200/80 bg-gradient-to-br from-amber-50/40 via-white to-orange-50/20 p-5 shadow-2xs space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🌾</span>
+                  <h3 className="font-semibold text-slate-900 text-sm">
+                    Promotional Free Delivery Offer
+                  </h3>
+                  <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800">
+                    Product-Specific
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                  Offer time-limited zero shipping on this product across customized dates. Multiple products can have independent offers and dates simultaneously.
+                </p>
+              </div>
+
+              {/* Toggle switch */}
+              <label className="relative inline-flex cursor-pointer items-center shrink-0">
+                <input
+                  type="checkbox"
+                  checked={freeShippingActive}
+                  onChange={(e) => setFreeShippingActive(e.target.checked)}
+                  className="peer sr-only"
+                />
+                <div className="peer h-5 w-9 rounded-full bg-slate-200 after:absolute after:top-[2px] after:left-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-600 peer-checked:after:translate-x-full peer-focus:outline-none"></div>
+              </label>
+            </div>
+
+            {freeShippingActive && (
+              <div className="pt-3 border-t border-amber-100 space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Promotional Badge Text
+                  </label>
+                  <input
+                    type="text"
+                    value={freeShippingBadgeText}
+                    onChange={(e) => setFreeShippingBadgeText(e.target.value)}
+                    placeholder="e.g. 🌾 Special Offer: Free Delivery"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Displays as a promotional banner badge on the product card and product page.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Offer Start Date (Inclusive)
+                    </label>
+                    <input
+                      type="date"
+                      value={freeShippingStart}
+                      onChange={(e) => setFreeShippingStart(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">Leave empty to activate immediately</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Offer Expiry Date (Inclusive)
+                    </label>
+                    <input
+                      type="date"
+                      value={freeShippingEnd}
+                      onChange={(e) => setFreeShippingEnd(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">Leave empty for an ongoing offer</p>
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-amber-50/80 border border-amber-200/60 p-2.5 text-[11px] text-amber-900 flex items-center gap-2">
+                  <span className="font-semibold text-xs shrink-0">Current Status:</span>
+                  <span>
+                    {(() => {
+                      const now = new Date();
+                      const start = freeShippingStart ? new Date(freeShippingStart) : null;
+                      const end = freeShippingEnd ? new Date(freeShippingEnd) : null;
+                      if (end) end.setHours(23, 59, 59, 999);
+                      if (start && now < start) return `Scheduled — Starts on ${start.toLocaleDateString()}`;
+                      if (end && now > end) return "Expired — Offer date has ended";
+                      return "Active Now — Free shipping applies to this product at checkout!";
+                    })()}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Card 3: Product Gallery (Images) */}

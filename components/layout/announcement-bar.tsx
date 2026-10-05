@@ -43,29 +43,78 @@ export function AnnouncementBar({
     return null;
   }
 
+  const content = (
+    <div className="flex items-center gap-2">
+      <Sparkles className="text-brand-gold h-3.5 w-3.5 shrink-0 animate-pulse" />
+      <span className="text-[11px] font-semibold tracking-widest uppercase sm:text-xs">
+        {text}
+      </span>
+    </div>
+  );
+
   return (
     <aside
       aria-label="Announcement"
-      className="bg-brand-dark text-brand-gold border-brand-accent/20 relative z-50 border-b px-4 py-2 text-center text-xs font-medium transition-all duration-300"
+      className="bg-brand-dark text-brand-gold border-brand-accent/30 relative z-50 overflow-hidden border-b py-2 text-xs font-medium transition-all duration-300 select-none group"
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 pr-6 pl-2 sm:px-8">
-        <Sparkles className="text-brand-gold hidden h-3.5 w-3.5 shrink-0 sm:inline" />
-        <Link
-          href={link}
-          className="truncate text-[11px] tracking-wider uppercase transition-all hover:underline sm:text-xs"
+      {/* Subtle Golden Shimmer Bottom Border Highlight */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-brand-gold/50 to-transparent" />
+
+      {/* Moving Marquee Ticker Track */}
+      <div className="flex overflow-hidden">
+        <div className="animate-announcement-marquee flex shrink-0 items-center gap-8 pr-8">
+          {[0, 1, 2, 3].map((idx) => (
+            <div key={`track1-${idx}`} className="flex items-center gap-8">
+              {link ? (
+                <Link
+                  href={link}
+                  className="flex items-center hover:text-white transition-colors duration-200"
+                >
+                  {content}
+                </Link>
+              ) : (
+                content
+              )}
+              <span className="text-brand-gold/40 text-[10px]">✦</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Duplicate track for seamless infinite looping */}
+        <div
+          aria-hidden="true"
+          className="animate-announcement-marquee flex shrink-0 items-center gap-8 pr-8"
         >
-          {text}
-        </Link>
+          {[0, 1, 2, 3].map((idx) => (
+            <div key={`track2-${idx}`} className="flex items-center gap-8">
+              {link ? (
+                <Link
+                  href={link}
+                  tabIndex={-1}
+                  className="flex items-center hover:text-white transition-colors duration-200"
+                >
+                  {content}
+                </Link>
+              ) : (
+                content
+              )}
+              <span className="text-brand-gold/40 text-[10px]">✦</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleDismiss}
-        aria-label="Dismiss announcement"
-        className="text-brand-gold/70 hover:text-brand-gold focus-visible:ring-brand-gold absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 transition-colors focus-visible:ring-1 focus-visible:outline-none"
-      >
-        <X className="h-3.5 w-3.5" />
-      </button>
+      {/* Right Gradient Fade Mask & Dismiss Button */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center bg-gradient-to-l from-brand-dark via-brand-dark/90 to-transparent pl-8 pr-3">
+        <button
+          type="button"
+          onClick={handleDismiss}
+          aria-label="Dismiss announcement"
+          className="pointer-events-auto text-brand-gold/70 hover:text-brand-gold hover:bg-brand-gold/10 focus-visible:ring-brand-gold rounded p-1 transition-colors focus-visible:ring-1 focus-visible:outline-none"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </aside>
   );
 }

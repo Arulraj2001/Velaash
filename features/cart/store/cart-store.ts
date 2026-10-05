@@ -14,6 +14,10 @@ export interface AddItemInput {
   compareAtPrice?: number | null;
   image: string;
   maxStock?: number;
+  freeShippingActive?: boolean;
+  freeShippingStart?: string | null;
+  freeShippingEnd?: string | null;
+  freeShippingBadgeText?: string | null;
 }
 
 export interface SyncItemUpdate {
@@ -73,6 +77,10 @@ export const useCartStore = create<CartStoreState>()(
             price: itemInput.price, // ensure latest price
             maxStock,
             isAvailable: true,
+            freeShippingActive: itemInput.freeShippingActive ?? existing.freeShippingActive,
+            freeShippingStart: itemInput.freeShippingStart ?? existing.freeShippingStart,
+            freeShippingEnd: itemInput.freeShippingEnd ?? existing.freeShippingEnd,
+            freeShippingBadgeText: itemInput.freeShippingBadgeText ?? existing.freeShippingBadgeText,
           };
           updatedItems[existingIndex] = finalItem;
 
@@ -98,6 +106,10 @@ export const useCartStore = create<CartStoreState>()(
             quantity: Math.min(quantity, maxStock),
             maxStock,
             isAvailable: true,
+            freeShippingActive: itemInput.freeShippingActive,
+            freeShippingStart: itemInput.freeShippingStart,
+            freeShippingEnd: itemInput.freeShippingEnd,
+            freeShippingBadgeText: itemInput.freeShippingBadgeText,
           };
 
           set({

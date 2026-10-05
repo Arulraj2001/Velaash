@@ -148,6 +148,9 @@ export function getProductFestiveShippingBadge(
     const validUntil = festivePolicy.festive_valid_until
       ? new Date(festivePolicy.festive_valid_until)
       : null;
+    if (validUntil && validUntil.getHours() === 0 && validUntil.getMinutes() === 0) {
+      validUntil.setHours(23, 59, 59, 999);
+    }
     const isAfterStart = !validFrom || now >= validFrom;
     const isBeforeEnd = !validUntil || now <= validUntil;
 
@@ -167,6 +170,9 @@ export function getProductFestiveShippingBadge(
   if (product.free_shipping_active) {
     const start = product.free_shipping_start ? new Date(product.free_shipping_start) : null;
     const end = product.free_shipping_end ? new Date(product.free_shipping_end) : null;
+    if (end && end.getHours() === 0 && end.getMinutes() === 0) {
+      end.setHours(23, 59, 59, 999);
+    }
     const isAfterStart = !start || now >= start;
     const isBeforeEnd = !end || now <= end;
 
@@ -347,4 +353,8 @@ export interface RawDbProduct {
     rating: number;
     is_approved: boolean;
   }[];
+  free_shipping_active?: boolean | null;
+  free_shipping_start?: string | null;
+  free_shipping_end?: string | null;
+  free_shipping_badge_text?: string | null;
 }

@@ -98,6 +98,10 @@ export async function createProductAction(data: AdminProductFormData) {
     seo_title: valid.seo_title || null,
     seo_description: valid.seo_description || null,
     seo_keywords: valid.seo_keywords || [],
+    free_shipping_active: valid.free_shipping_active ?? false,
+    free_shipping_start: valid.free_shipping_start || null,
+    free_shipping_end: valid.free_shipping_end || null,
+    free_shipping_badge_text: valid.free_shipping_badge_text || null,
   };
 
   // 1. Insert product
@@ -262,6 +266,10 @@ export async function updateProductAction(
     seo_title: valid.seo_title || null,
     seo_description: valid.seo_description || null,
     seo_keywords: valid.seo_keywords || [],
+    free_shipping_active: valid.free_shipping_active ?? false,
+    free_shipping_start: valid.free_shipping_start || null,
+    free_shipping_end: valid.free_shipping_end || null,
+    free_shipping_badge_text: valid.free_shipping_badge_text || null,
     updated_at: new Date().toISOString(),
   };
 

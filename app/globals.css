@@ -105,3 +105,33 @@ body {
     transform: translateX(100%);
   }
 }
+
+/* Luxury Announcement Bar Marquee Animation */
+@keyframes announcementMarquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-announcement-marquee {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: announcementMarquee 28s linear infinite;
+}
+
+.animate-announcement-marquee:hover,
+.group:hover .animate-announcement-marquee {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-announcement-marquee {
+    animation: none;
+    transform: none;
+  }
+}
+

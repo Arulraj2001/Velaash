@@ -164,6 +164,10 @@ export function ProductDetailView({
         compareAtPrice: product.compare_at_price,
         image: primaryImg,
         maxStock,
+        freeShippingActive: product.free_shipping_active,
+        freeShippingStart: product.free_shipping_start,
+        freeShippingEnd: product.free_shipping_end,
+        freeShippingBadgeText: product.free_shipping_badge_text,
       },
       quantity
     );

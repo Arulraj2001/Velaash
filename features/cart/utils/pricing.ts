@@ -112,6 +112,9 @@ export function calculateCartTotals({
     const validUntil = shippingPolicy.festive_valid_until
       ? new Date(shippingPolicy.festive_valid_until)
       : null;
+    if (validUntil && validUntil.getHours() === 0 && validUntil.getMinutes() === 0) {
+      validUntil.setHours(23, 59, 59, 999);
+    }
     const isAfterStart = !validFrom || now >= validFrom;
     const isBeforeEnd = !validUntil || now <= validUntil;
     isFestiveActive = isAfterStart && isBeforeEnd;
@@ -127,6 +130,20 @@ export function calculateCartTotals({
         return false;
       }));
 
+  // Check if any available item has direct product-level free shipping
+  const productWithDirectFreeShipping = availableItems.find((item) => {
+    if (!item.freeShippingActive) return false;
+    const start = item.freeShippingStart ? new Date(item.freeShippingStart) : null;
+    const end = item.freeShippingEnd ? new Date(item.freeShippingEnd) : null;
+    if (end && end.getHours() === 0 && end.getMinutes() === 0) {
+      end.setHours(23, 59, 59, 999);
+    }
+    const isAfterStart = !start || now >= start;
+    const isBeforeEnd = !end || now <= end;
+    return isAfterStart && isBeforeEnd;
+  });
+  const hasDirectFreeShipping = Boolean(productWithDirectFreeShipping);
+
   // Check if coupon grants free shipping
   const isCouponFree = Boolean(
     activeCoupon &&
@@ -136,13 +153,17 @@ export function calculateCartTotals({
   );
 
   const isFreeShipping =
-    subtotal > 0 && (isThresholdFree || hasFestiveProduct || isCouponFree);
+    subtotal > 0 && (isThresholdFree || hasFestiveProduct || hasDirectFreeShipping || isCouponFree);
 
   let freeShippingReason: "threshold" | "product_offer" | "coupon" | null = null;
   let freeShippingBadgeText: string | null = null;
 
   if (isFreeShipping) {
-    if (hasFestiveProduct) {
+    if (hasDirectFreeShipping) {
+      freeShippingReason = "product_offer";
+      freeShippingBadgeText =
+        productWithDirectFreeShipping?.freeShippingBadgeText || "🌾 Free Delivery";
+    } else if (hasFestiveProduct) {
       freeShippingReason = "product_offer";
       freeShippingBadgeText =
         shippingPolicy.festive_badge_text || "🌾 Festive Special: Free Delivery";
@@ -158,9 +179,9 @@ export function calculateCartTotals({
   const shippingFee =
     subtotal === 0 ? 0 : isFreeShipping ? 0 : shippingPolicy.standard_shipping_fee;
   const amountNeededForFreeShipping =
-    hasFestiveProduct || isCouponFree ? 0 : Math.max(0, freeThreshold - subtotal);
+    hasFestiveProduct || hasDirectFreeShipping || isCouponFree ? 0 : Math.max(0, freeThreshold - subtotal);
   const freeShippingProgress =
-    hasFestiveProduct || isCouponFree || isThresholdFree
+    hasFestiveProduct || hasDirectFreeShipping || isCouponFree || isThresholdFree
       ? 100
       : freeThreshold > 0
         ? Math.min(100, Math.round((subtotal / freeThreshold) * 100))

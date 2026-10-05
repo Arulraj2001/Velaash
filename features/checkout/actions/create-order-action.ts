@@ -357,8 +357,12 @@ export async function createOrderAction(
               products (
                 id,
                 name,
+                slug,
                 base_price,
-                is_active
+                is_active,
+                free_shipping_active,
+                free_shipping_start,
+                free_shipping_end
               )
             `)
             .in("id", variantIds);
@@ -378,7 +382,7 @@ export async function createOrderAction(
         try {
           const res = await adminSupabase
             .from("products")
-            .select("id, name, base_price, is_active, stock_quantity")
+            .select("id, name, slug, base_price, is_active, stock_quantity, free_shipping_active, free_shipping_start, free_shipping_end")
             .in("id", simpleProductIds);
 
           if (!res.error && res.data) {
@@ -388,10 +392,10 @@ export async function createOrderAction(
             // Fallback without stock_quantity column if column migration pending
             const fallbackRes = await adminSupabase
               .from("products")
-              .select("id, name, base_price, is_active")
+              .select("id, name, slug, base_price, is_active, free_shipping_active, free_shipping_start, free_shipping_end")
               .in("id", simpleProductIds);
             if (fallbackRes.data) {
-              liveProducts = fallbackRes.data.map((p) => ({
+              liveProducts = (fallbackRes.data as any[]).map((p: any) => ({
                 ...p,
                 stock_quantity: 999,
               }));
@@ -405,6 +409,7 @@ export async function createOrderAction(
 
     interface VerifiedLineItem {
       productId: string;
+      slug?: string;
       variantId: string | null;
       title: string;
       size: string | null;
@@ -413,6 +418,9 @@ export async function createOrderAction(
       quantity: number;
       lineSubtotal: number;
       availableStock: number;
+      freeShippingActive?: boolean;
+      freeShippingStart?: string | null;
+      freeShippingEnd?: string | null;
     }
 
     const verifiedItems: VerifiedLineItem[] = [];
@@ -421,7 +429,8 @@ export async function createOrderAction(
       const isSimple = !requestedItem.variantId || requestedItem.variantId === "simple" || requestedItem.variantId === "null";
 
       if (isSimple) {
-        const prodMatch = liveProducts.find((p) => p.id === requestedItem.productId);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const prodMatch = liveProducts.find((p) => p.id === requestedItem.productId) as any;
         if (!prodMatch || !prodMatch.is_active) {
           return {
             success: false,
@@ -442,6 +451,7 @@ export async function createOrderAction(
         const unitPrice = Number(prodMatch.base_price);
         verifiedItems.push({
           productId: prodMatch.id,
+          slug: prodMatch.slug,
           variantId: null,
           title: prodMatch.name,
           size: null,
@@ -450,9 +460,13 @@ export async function createOrderAction(
           quantity: requestedItem.quantity,
           lineSubtotal: unitPrice * requestedItem.quantity,
           availableStock,
+          freeShippingActive: prodMatch.free_shipping_active,
+          freeShippingStart: prodMatch.free_shipping_start,
+          freeShippingEnd: prodMatch.free_shipping_end,
         });
       } else {
-        const liveMatch = liveVariants.find((v) => v.id === requestedItem.variantId);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const liveMatch = liveVariants.find((v) => v.id === requestedItem.variantId) as any;
         if (!liveMatch || !liveMatch.is_active || !liveMatch.products?.is_active) {
           return {
             success: false,
@@ -476,6 +490,7 @@ export async function createOrderAction(
 
         verifiedItems.push({
           productId: liveMatch.product_id,
+          slug: liveMatch.products.slug,
           variantId: liveMatch.id,
           title: liveMatch.products.name,
           size: liveMatch.size,
@@ -484,6 +499,9 @@ export async function createOrderAction(
           quantity: requestedItem.quantity,
           lineSubtotal: unitPrice * requestedItem.quantity,
           availableStock: liveMatch.stock_quantity,
+          freeShippingActive: liveMatch.products.free_shipping_active,
+          freeShippingStart: liveMatch.products.free_shipping_start,
+          freeShippingEnd: liveMatch.products.free_shipping_end,
         });
       }
     }
@@ -529,6 +547,9 @@ export async function createOrderAction(
       const validUntil = siteSettings.shippingPolicy.festive_valid_until
         ? new Date(siteSettings.shippingPolicy.festive_valid_until)
         : null;
+      if (validUntil && validUntil.getHours() === 0 && validUntil.getMinutes() === 0) {
+        validUntil.setHours(23, 59, 59, 999);
+      }
       const isAfterStart = !validFrom || now >= validFrom;
       const isBeforeEnd = !validUntil || now <= validUntil;
       isFestiveActive = isAfterStart && isBeforeEnd;
@@ -539,8 +560,22 @@ export async function createOrderAction(
       (siteSettings.shippingPolicy.festive_apply_to_all ||
         verifiedItems.some((item) => {
           if (siteSettings.shippingPolicy.festive_product_ids?.includes(item.productId)) return true;
+          if (item.slug && siteSettings.shippingPolicy.festive_product_ids?.includes(item.slug)) return true;
           return false;
         }));
+
+    // Direct product-level free shipping (supports multiple simultaneous product offers)
+    const hasProductDirectFreeShipping = verifiedItems.some((item) => {
+      if (!item.freeShippingActive) return false;
+      const start = item.freeShippingStart ? new Date(item.freeShippingStart) : null;
+      const end = item.freeShippingEnd ? new Date(item.freeShippingEnd) : null;
+      if (end && end.getHours() === 0 && end.getMinutes() === 0) {
+        end.setHours(23, 59, 59, 999);
+      }
+      const isAfterStart = !start || now >= start;
+      const isBeforeEnd = !end || now <= end;
+      return isAfterStart && isBeforeEnd;
+    });
 
     const isCouponFree = Boolean(
       validatedCoupon &&
@@ -550,14 +585,16 @@ export async function createOrderAction(
               siteSettings.shippingPolicy.festive_coupon_code.toUpperCase()))
     );
 
-    const isFreeShipping = isThresholdFree || hasFestiveProduct || isCouponFree;
+    const isFreeShipping = isThresholdFree || hasFestiveProduct || hasProductDirectFreeShipping || isCouponFree;
     const shippingCharge = isFreeShipping
       ? 0
       : siteSettings.shippingPolicy.standard_shipping_fee;
     const shippingSource = isThresholdFree
       ? "free_threshold"
       : hasFestiveProduct
-      ? "festive_product_offer"
+      ? "festive_campaign_offer"
+      : hasProductDirectFreeShipping
+      ? "product_direct_offer"
       : isCouponFree
       ? "free_shipping_coupon"
       : "standard_delivery";

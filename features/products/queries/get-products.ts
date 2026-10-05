@@ -27,6 +27,10 @@ const PRODUCT_SELECT = `
   is_featured,
   stock_status,
   category_id,
+  free_shipping_active,
+  free_shipping_start,
+  free_shipping_end,
+  free_shipping_badge_text,
   categories (
     id,
     name,
@@ -467,6 +471,10 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
         sizes,
         total_stock: totalStock,
         rating: avgRating ? { average: avgRating, count: approvedReviews.length } : null,
+        free_shipping_active: Boolean(p.free_shipping_active),
+        free_shipping_start: p.free_shipping_start || null,
+        free_shipping_end: p.free_shipping_end || null,
+        free_shipping_badge_text: p.free_shipping_badge_text || null,
       };
     });
 

@@ -17,6 +17,10 @@ export const CartItemSchema = z.object({
   isAvailable: z.boolean().default(true),
   availabilityWarning: z.string().optional(),
   priceUpdated: z.boolean().optional(),
+  freeShippingActive: z.boolean().optional(),
+  freeShippingStart: z.string().optional().nullable(),
+  freeShippingEnd: z.string().optional().nullable(),
+  freeShippingBadgeText: z.string().optional().nullable(),
 });
 
 export type CartItem = z.infer<typeof CartItemSchema>;
