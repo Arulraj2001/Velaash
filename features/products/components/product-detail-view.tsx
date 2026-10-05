@@ -312,21 +312,21 @@ export function ProductDetailView({
 
             {/* Promotional / Festive Free Delivery Badge */}
             {festiveBadge && (
-              <div className="w-full mt-2.5 overflow-hidden rounded-xl border border-amber-300/80 bg-gradient-to-r from-amber-50/95 via-orange-50/40 to-amber-50/70 p-3 shadow-2xs">
+              <div className="w-full mt-2.5 overflow-hidden rounded-xl border border-emerald-300/80 bg-gradient-to-r from-emerald-50 via-teal-50/40 to-emerald-50/80 p-3 shadow-2xs">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-800 ring-1 ring-amber-500/25">
-                    <Sparkles className="h-4 w-4 animate-pulse text-amber-700" />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600/15 text-emerald-800 ring-1 ring-emerald-600/25">
+                    <Sparkles className="h-4 w-4 animate-pulse text-emerald-700" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-bold tracking-tight text-amber-950 sm:text-[13px]">
+                      <span className="text-xs font-bold tracking-tight text-emerald-950 sm:text-[13px]">
                         {festiveBadge}
                       </span>
-                      <span className="inline-flex items-center rounded-full bg-amber-600/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800 ring-1 ring-amber-600/20">
+                      <span className="inline-flex items-center rounded-full bg-emerald-700/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800 ring-1 ring-emerald-700/20">
                         Zero Delivery Fee
                       </span>
                     </div>
-                    <p className="mt-0.5 text-[11px] text-amber-900/80">
+                    <p className="mt-0.5 text-[11px] text-emerald-900/85">
                       Standard home delivery is free on this item during this promotional celebration.
                     </p>
                   </div>
