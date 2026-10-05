@@ -167,6 +167,11 @@ export type ValueStripContent = z.infer<typeof ValueStripContentSchema>;
 export const NewsletterContentSchema = z.object({
   headline: z.string().trim().min(1, "Headline is required"),
   subtext: z.string().trim().min(1, "Subtext description is required"),
+  incentive: z
+    .string()
+    .trim()
+    .optional()
+    .default("Get early access to new arrivals & exclusive member offers"),
 });
 
 export type NewsletterContent = z.infer<typeof NewsletterContentSchema>;

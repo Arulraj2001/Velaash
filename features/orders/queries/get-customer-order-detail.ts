@@ -8,6 +8,7 @@ import type {
   PaymentStatus,
 } from "../types";
 import { extractTrackingInfo, extractCustomerNotes } from "@/features/admin/utils/order-metadata";
+import { deduplicateOrderStatusHistory } from "../utils/order-history-dedup";
 
 /**
  * Retrieves full details for a customer's specific order.
@@ -146,12 +147,14 @@ export async function getCustomerOrderDetail(
     .eq("order_id", order.id)
     .order("created_at", { ascending: true });
 
-  const statusHistory: OrderStatusHistoryRecord[] = (historyData || []).map((h) => ({
+  const rawStatusHistory: OrderStatusHistoryRecord[] = (historyData || []).map((h) => ({
     id: h.id,
     status: h.status as OrderStatus,
     note: h.note,
     createdAt: h.created_at,
   }));
+
+  const statusHistory: OrderStatusHistoryRecord[] = deduplicateOrderStatusHistory(rawStatusHistory);
 
   // If no history records exist yet, synthesize the initial placement event
   if (statusHistory.length === 0) {

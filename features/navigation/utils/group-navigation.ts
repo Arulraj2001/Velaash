@@ -1,5 +1,4 @@
-import type { NavigationCategory, NavigationSubCategory } from "../types";
-import type { ShippingPolicySetting } from "@/features/settings/types";
+import type { NavigationCategory } from "../types";
 
 export interface NavSectionItem {
   id: string;
@@ -42,8 +41,9 @@ export interface NavPillar {
  */
 export function groupNavigationCategories(
   categories: NavigationCategory[],
-  _shippingPolicy?: ShippingPolicySetting
+  policy?: unknown
 ): NavPillar[] {
+  void policy;
   // 1. Separate Men, Pooja, and Women categories
   const menCat = categories.find((c) => c.slug === "men" || c.name.toLowerCase() === "men");
   const poojaCat = categories.find(

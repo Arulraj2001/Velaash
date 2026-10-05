@@ -44,6 +44,16 @@ try {
   // Ignore if already set in environment
 }
 
+// Mock server-only for standalone script execution outside Next.js bundler
+const Module = require("node:module");
+const originalRequire = Module.prototype.require;
+Module.prototype.require = function (path: string) {
+  if (path === "server-only") {
+    return {};
+  }
+  return originalRequire.apply(this, arguments);
+};
+
 import crypto from "node:crypto";
 import { NextRequest } from "next/server";
 

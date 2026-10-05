@@ -2281,6 +2281,22 @@ function SectionEditModalInner({
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Incentive Badge Text
+                </label>
+                <input
+                  type="text"
+                  value={getString("incentive", "Get early access to new arrivals & exclusive member offers")}
+                  onChange={(e) => handleFieldChange("incentive", e.target.value)}
+                  placeholder="e.g. Get ₹100 off your first order"
+                  className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+                <p className="mt-1 text-[11px] text-slate-500">
+                  This appears as a highlighted badge above the headline — use it as a conversion hook (e.g. discount or early access offer).
+                </p>
+              </div>
+
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-xs">
                 Note: The actual email subscription input form and verification mechanism are managed
                 automatically.

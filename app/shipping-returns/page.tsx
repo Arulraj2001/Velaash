@@ -13,7 +13,6 @@ import {
   ShieldAlert,
   ArrowRight,
   Video,
-  AlertTriangle,
   FileCheck2,
 } from "lucide-react";
 

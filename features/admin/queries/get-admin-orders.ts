@@ -14,6 +14,7 @@ import {
   extractAdminNotes,
   extractCustomerNotes,
 } from "../utils/order-metadata";
+import { deduplicateOrderStatusHistory } from "@/features/orders/utils/order-history-dedup";
 
 export interface GetAdminOrdersParams {
   search?: string;
@@ -315,13 +316,13 @@ export async function getAdminOrderDetail(
   });
 
   // Map status history
-  const mappedHistory: AdminOrderStatusHistoryItem[] = (historyData || []).map(
-    (h) => ({
+  const mappedHistory: AdminOrderStatusHistoryItem[] = deduplicateOrderStatusHistory(
+    (historyData || []).map((h) => ({
       id: h.id,
       status: h.status as OrderStatus,
       note: h.note,
       createdAt: h.created_at,
-    })
+    }))
   );
 
   const currentStatus = order.status as OrderStatus;

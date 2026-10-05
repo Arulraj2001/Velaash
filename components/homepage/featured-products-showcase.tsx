@@ -11,12 +11,14 @@ interface FeaturedProductsShowcaseProps {
   title?: string;
   subtitle?: string;
   products: ProductListItem[];
+  showQuickAdd?: boolean;
 }
 
 export function FeaturedProductsShowcase({
   title = "Featured Arrivals",
   subtitle = "Handpicked styles from our collection.",
   products = [],
+  showQuickAdd = false,
 }: FeaturedProductsShowcaseProps) {
   const [activeTab, setActiveTab] = useState<string>("all");
 
@@ -109,7 +111,7 @@ export function FeaturedProductsShowcase({
         {displayedProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-5 lg:gap-6 animate-in fade-in duration-300">
             {displayedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} showQuickAdd={showQuickAdd} />
             ))}
           </div>
         ) : (

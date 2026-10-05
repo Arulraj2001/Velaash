@@ -3,9 +3,17 @@ export {};
 // Load environment variables for standalone Node execution
 try {
   process.loadEnvFile(".env.local");
-} catch {
-  // Ignore if already set in environment
-}
+} catch {}
+
+// Mock server-only for standalone script execution outside Next.js bundler
+const Module = require("node:module");
+const originalRequire = Module.prototype.require;
+Module.prototype.require = function (path: string) {
+  if (path === "server-only") {
+    return {};
+  }
+  return originalRequire.apply(this, arguments);
+};
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://mock-project-ref.supabase.co";

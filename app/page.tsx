@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import React from "react";
-import Link from "next/link";
-import Image from "next/image";
 import {
-  ArrowRight,
   Truck,
   RotateCcw,
   ShieldCheck,
@@ -17,7 +14,7 @@ import {
 import { Container } from "@/components/ui/container";
 import { BRAND } from "@/lib/constants";
 import { getNavigationCategories } from "@/features/navigation";
-import { getProducts, type ProductListItem } from "@/features/products";
+import { getProducts, RecentlyViewedSection, type ProductListItem } from "@/features/products";
 import { getSiteSettings, getStoreContact } from "@/features/settings";
 import { env } from "@/lib/env";
 
@@ -29,6 +26,7 @@ import { OccasionStrip, type OccasionItem } from "@/components/homepage/occasion
 import { FeaturedProductsShowcase } from "@/components/homepage/featured-products-showcase";
 import { BrandStory } from "@/components/homepage/brand-story";
 import { ClientTestimonials } from "@/components/homepage/client-testimonials";
+import { CategoryVisualGrid } from "@/components/homepage/category-visual-grid";
 import type { HeroSlide } from "@/features/admin/types/homepage";
 
 // SEO: Generate homepage metadata using dynamic site settings and brand fallbacks
@@ -86,20 +84,6 @@ export async function generateMetadata(): Promise<Metadata> {
     },
   };
 }
-
-// Fallback images for category tiles if not configured in the database
-const DEFAULT_CATEGORY_IMAGES: Record<string, string> = {
-  "kurtas-sets":
-    "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",
-  dresses:
-    "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80",
-  "co-ord-sets":
-    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
-  "tops-tunics":
-    "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=800&q=80",
-  "pants-trousers":
-    "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80",
-};
 
 const TRUST_ICON_MAP: Record<string, LucideIcon> = {
   Truck,
@@ -298,56 +282,15 @@ export default async function HomePage() {
                 (content.subtitle as string) || "Thoughtfully tailored pieces across modern everyday silhouettes.";
 
               return (
-                <section key={section.id} className="py-10 sm:py-14 border-b border-brand-border/60 bg-white">
-                    <Container size="xl">
-                      {/* Section Header */}
-                      <div className="max-w-2xl mx-auto text-center space-y-2 mb-8 sm:mb-10">
-                        <span className="text-brand-accent-dark text-xs font-semibold tracking-widest uppercase">
-                          Curated Collections
-                        </span>
-                        <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-semibold text-brand-dark tracking-tight">
-                          {title}
-                        </h2>
-                        <p className="text-brand-muted text-xs sm:text-sm font-sans">{subtitle}</p>
-                      </div>
-
-                      {/* Category Grid: Single line across desktop (6 columns) */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-                        {categories.map((category) => {
-                          const categoryImage =
-                            category.image_url ||
-                            DEFAULT_CATEGORY_IMAGES[category.slug] ||
-                            "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80";
-
-                          return (
-                            <Link
-                              key={category.id}
-                              href={`/collections/${category.slug}`}
-                              className="group relative w-full aspect-[4/5] rounded-2xl overflow-hidden shadow-xs hover:shadow-luxury transition-all duration-300 border border-brand-border/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
-                            >
-                              <Image
-                                src={categoryImage}
-                                alt={category.name}
-                                fill
-                                className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/90 via-brand-dark/25 to-transparent transition-opacity duration-300 group-hover:from-brand-dark/95" />
-                              <div className="absolute inset-x-0 bottom-0 p-3 sm:p-3.5 flex flex-col justify-end text-left">
-                                <h3 className="font-heading text-sm sm:text-base font-semibold text-white tracking-tight line-clamp-1">
-                                  {category.name}
-                                </h3>
-                                <div className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-brand-gold group-hover:text-brand-gold/90 transition-colors">
-                                  <span>Explore</span>
-                                  <ArrowRight className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-1" />
-                                </div>
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </Container>
-                  </section>
+                <section key={section.id} className="py-12 sm:py-16 border-b border-brand-border/60 bg-white">
+                  <Container size="xl">
+                    <CategoryVisualGrid
+                      categories={categories}
+                      title={title}
+                      subtitle={subtitle}
+                    />
+                  </Container>
+                </section>
               );
             }
 
@@ -362,6 +305,7 @@ export default async function HomePage() {
                   title={title}
                   subtitle={subtitle}
                   products={featuredProducts}
+                  showQuickAdd
                 />
               );
             }
@@ -493,6 +437,9 @@ export default async function HomePage() {
               const subtext =
                 (content.subtext as string) ||
                 "Subscribe to receive updates on new arrivals, seasonal collections, and wardrobe inspiration directly to your inbox.";
+              // Admin-configurable incentive badge (e.g. "Get ₹100 off your first order")
+              const incentive =
+                (content.incentive as string) || "Get early access to new arrivals & exclusive member offers";
 
               return (
                 <section key={section.id} className="py-16 sm:py-24 bg-luxury-dots-cream relative">
@@ -502,9 +449,14 @@ export default async function HomePage() {
                       <div className="absolute bottom-0 left-1/4 translate-y-1/2 w-64 h-64 bg-brand-accent/15 rounded-full blur-3xl pointer-events-none" />
 
                       <div className="relative z-10 max-w-lg mx-auto space-y-3">
-                        <div className="inline-flex items-center gap-1.5 text-brand-gold text-xs font-semibold tracking-widest uppercase">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>Stay In Touch</span>
+                        {/* Incentive badge — the conversion hook */}
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-gold/15 border border-brand-gold/40 text-brand-gold text-[11px] font-semibold tracking-wide">
+                          <Sparkles className="w-3 h-3" />
+                          <span>{incentive}</span>
+                        </div>
+
+                        <div className="inline-flex items-center gap-1.5 text-brand-muted/60 text-[10px] font-semibold tracking-widest uppercase pt-1">
+                          <span>Newsletter</span>
                         </div>
 
                         <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-semibold text-white tracking-tight">
@@ -527,6 +479,9 @@ export default async function HomePage() {
               return null;
           }
         })}
+
+        {/* Dynamic Personalization: Recently Viewed (only visible to visitors with browsing history) */}
+        <RecentlyViewedSection />
       </div>
     </>
   );

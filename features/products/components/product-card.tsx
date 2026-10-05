@@ -192,14 +192,20 @@ export function ProductCard({
             ) : (
               <>
                 {festiveBadge && (
-                  <span className="rounded-full bg-emerald-900/90 text-amber-200 border border-emerald-600/50 px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold tracking-wide shadow-sm backdrop-blur-xs flex items-center gap-1">
-                    <span>🌾</span>
-                    <span>{festiveBadge}</span>
+                  <span className="rounded-full bg-emerald-900/90 text-amber-200 border border-emerald-600/50 px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold tracking-wide shadow-sm backdrop-blur-xs">
+                    {festiveBadge}
                   </span>
                 )}
                 {isNew && (
                   <span className="bg-brand-dark/90 text-brand-gold rounded-full px-2 py-0.5 text-[10px] font-medium tracking-widest uppercase shadow-sm backdrop-blur-xs">
                     New
+                  </span>
+                )}
+                {/* Bestseller badge — shows for is_featured products that aren't also "New" */}
+                {!isNew && product.is_featured && !isOutOfStock && (
+                  <span className="rounded-full bg-amber-600/90 text-white px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase shadow-sm backdrop-blur-xs flex items-center gap-1">
+                    <span>🔥</span>
+                    <span>Bestseller</span>
                   </span>
                 )}
                 {isSale && discountPercent && (

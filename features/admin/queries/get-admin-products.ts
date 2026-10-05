@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database.types";
 import type {
 
   AdminProductListItem,
@@ -269,11 +270,39 @@ export async function getAdminProductById(
     return null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const p = productRes.data as any;
-  const rawImages = (p.product_images ?? []) as any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rawVariants = (p.product_variants ?? []) as any[];
+  interface ProductImageRecord {
+    id: string;
+    image_url: string;
+    alt_text: string | null;
+    is_primary: boolean | null;
+    display_order: number | null;
+    variant_id: string | null;
+  }
+
+  interface ProductVariantRecord {
+    id: string;
+    size: string;
+    color: string;
+    color_hex: string | null;
+    sku: string;
+    stock_quantity: number;
+    price_override: number | null;
+    is_active: boolean;
+  }
+
+  const p = productRes.data as Database["public"]["Tables"]["products"]["Row"] & {
+    product_images?: ProductImageRecord[];
+    product_variants?: ProductVariantRecord[];
+    has_variants?: boolean;
+    stock_quantity?: number;
+    specifications?: unknown;
+    free_shipping_active?: boolean;
+    free_shipping_start?: string | null;
+    free_shipping_end?: string | null;
+    free_shipping_badge_text?: string | null;
+  };
+  const rawImages = p.product_images ?? [];
+  const rawVariants = p.product_variants ?? [];
 
   // Sort images by display_order
   rawImages.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));

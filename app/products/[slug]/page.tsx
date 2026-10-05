@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/container";
-import { ProductCard } from "@/features/products/components/product-card";
 import { ProductDetailView } from "@/features/products/components/product-detail-view";
+import {
+  RecentlyViewedTracker,
+  RecentlyViewedSection,
+  RelatedProductsSection,
+} from "@/features/products";
 import { getProductBySlug } from "@/features/products/queries/get-product-by-slug";
 import { getRelatedProducts } from "@/features/products/queries/get-related-products";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
@@ -84,7 +88,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   // Concurrently fetch related products and site settings
   const [relatedProducts, siteSettings] = await Promise.all([
-    getRelatedProducts(product.id, product.category_id, 4),
+    getRelatedProducts(product.id, product.category_id, 8),
     getSiteSettings(),
   ]);
 
@@ -142,6 +146,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
       <div className="bg-brand-cream/40 min-h-screen py-8 sm:py-12">
         <Container size="xl">
+          {/* Invisible Tracker to record recently viewed products in localStorage */}
+          <RecentlyViewedTracker product={product} />
+
           {/* Interactive PDP View (Gallery, Sizing, Cart Actions, Accordion, Reviews) */}
           <ProductDetailView
             product={product}
@@ -151,27 +158,19 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             festivePolicy={siteSettings.shippingPolicy}
           />
 
-          {/* Related Products ("You May Also Like") Section */}
-          {relatedProducts.length > 0 && (
-            <section className="border-brand-border/70 mt-16 border-t pt-12 font-sans sm:mt-24 sm:pt-16">
-              <div className="space-y-8">
-                <div className="space-y-1 text-center sm:text-left">
-                  <span className="text-brand-accent text-[11px] font-semibold tracking-widest uppercase">
-                    Curated Complements
-                  </span>
-                  <h2 className="font-heading text-brand-dark text-2xl font-semibold sm:text-3xl">
-                    You May Also Like
-                  </h2>
-                </div>
+          {/* Related Products ("You May Also Like") */}
+          <RelatedProductsSection
+            products={relatedProducts}
+            title="You May Also Like"
+            subtitle="Curated Complements"
+            wrapInContainer={false}
+          />
 
-                <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
-                  {relatedProducts.map((relProduct) => (
-                    <ProductCard key={relProduct.id} product={relProduct} />
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
+          {/* Recently Viewed Products */}
+          <RecentlyViewedSection
+            excludeProductId={product.id}
+            wrapInContainer={false}
+          />
         </Container>
       </div>
     </>

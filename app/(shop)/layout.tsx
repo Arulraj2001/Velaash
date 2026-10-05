@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Container } from "@/components/ui/container";
 
 export default function ShopLayout({ children }: { children: React.ReactNode }) {
   return (

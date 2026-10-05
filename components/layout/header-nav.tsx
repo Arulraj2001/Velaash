@@ -6,20 +6,20 @@ import Image from "next/image";
 import { ChevronDown, ArrowRight } from "lucide-react";
 import type { NavigationCategory } from "@/features/navigation";
 import type { ShippingPolicySetting } from "@/features/settings";
-import { groupNavigationCategories, type NavPillar } from "@/features/navigation/utils/group-navigation";
+import { groupNavigationCategories } from "@/features/navigation/utils/group-navigation";
 
 interface HeaderNavProps {
   categories: NavigationCategory[];
   shippingPolicy?: ShippingPolicySetting;
 }
 
-export function HeaderNav({ categories, shippingPolicy }: HeaderNavProps) {
+export function HeaderNav({ categories }: HeaderNavProps) {
   const [activeDropdown, setActiveDropdown] = React.useState<string | null>(null);
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const pillars = React.useMemo(
-    () => groupNavigationCategories(categories, shippingPolicy),
-    [categories, shippingPolicy]
+    () => groupNavigationCategories(categories),
+    [categories]
   );
 
   const handleMouseEnter = (pillarId: string) => {

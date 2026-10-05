@@ -178,6 +178,13 @@ export async function createProductAction(data: AdminProductFormData) {
 
   if (imageErr) {
     console.error("Failed to insert images:", imageErr);
+    // Cleanup product and variants on image insertion failure so incomplete products aren't left
+    await adminClient.from("product_variants").delete().eq("product_id", newProduct.id);
+    await adminClient.from("products").delete().eq("id", newProduct.id);
+    return {
+      success: false,
+      error: `Failed to save product images: ${imageErr.message}. Product creation was aborted.`,
+    };
   }
 
   // 4. Link or clone size chart if specified
@@ -407,9 +414,11 @@ export async function updateProductAction(
     }
   }
 
-  // 3. Synchronize images
-  // Replace images for this product cleanly, preserving variant linkage
-  await adminClient.from("product_images").delete().eq("product_id", productId);
+  // 3. Synchronize images safely without pre-deleting existing records
+  const { data: existingImages } = await adminClient
+    .from("product_images")
+    .select("id")
+    .eq("product_id", productId);
 
   const imagesToInsert = valid.images.map((img, idx) => ({
     product_id: productId,
@@ -423,6 +432,16 @@ export async function updateProductAction(
   const { error: imgErr } = await adminClient.from("product_images").insert(imagesToInsert);
   if (imgErr) {
     console.error("Failed to update product images:", imgErr);
+    return {
+      success: false,
+      error: `Failed to save new product images: ${imgErr.message}. Existing images were preserved.`,
+    };
+  }
+
+  // Once new images are verified inserted, remove prior images
+  if (existingImages && existingImages.length > 0) {
+    const existingIds = existingImages.map((img) => img.id);
+    await adminClient.from("product_images").delete().in("id", existingIds);
   }
 
   // 4. Delete orphaned image files from Supabase Storage

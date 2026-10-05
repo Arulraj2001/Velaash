@@ -66,10 +66,9 @@ export async function submitProductReview(input: SubmitReviewInput): Promise<Sub
 
     if (error) {
       console.error("Error submitting review to Supabase:", error);
-      // If table doesn't exist or RLS issue in preview, still inform user gracefully
       return {
-        success: true,
-        message: "Thanks! Your review has been submitted and is pending moderation.",
+        success: false,
+        error: "Failed to submit your review. Please try again.",
       };
     }
 
@@ -80,8 +79,8 @@ export async function submitProductReview(input: SubmitReviewInput): Promise<Sub
   } catch (err: unknown) {
     console.error("Unexpected error in submitProductReview:", err);
     return {
-      success: true,
-      message: "Thanks! Your review has been submitted and is pending moderation.",
+      success: false,
+      error: "An unexpected error occurred while submitting your review. Please try again.",
     };
   }
 }

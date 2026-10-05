@@ -19,8 +19,6 @@ import {
   Sliders,
   ChevronDown,
   ChevronUp,
-  Tag,
-  Truck,
   Flame,
   Layers,
 } from "lucide-react";

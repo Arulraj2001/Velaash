@@ -11,55 +11,11 @@ import {
   type AdminUserSession,
 } from "../types";
 
-/**
- * Basic in-process brute-force rate limiter for admin login attempts.
- * Stores failed attempts keyed by IP + email in memory.
- * Note: In distributed serverless environments, this will be supplemented
- * by Upstash Redis edge rate limiting in a subsequent phase.
- */
-interface RateLimitRecord {
-  attempts: number;
-  lockedUntil?: number;
-}
-
-const rateLimitStore = new Map<string, RateLimitRecord>();
-const MAX_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
-
-async function checkRateLimit(key: string): Promise<boolean> {
-  const now = Date.now();
-  const record = rateLimitStore.get(key);
-
-  if (!record) return true;
-
-  if (record.lockedUntil && record.lockedUntil > now) {
-    return false; // Still locked out
-  }
-
-  // If lockout expired, reset
-  if (record.lockedUntil && record.lockedUntil <= now) {
-    rateLimitStore.delete(key);
-    return true;
-  }
-
-  return record.attempts < MAX_ATTEMPTS;
-}
-
-function recordFailedAttempt(key: string): void {
-  const now = Date.now();
-  const record = rateLimitStore.get(key) || { attempts: 0 };
-  record.attempts += 1;
-
-  if (record.attempts >= MAX_ATTEMPTS) {
-    record.lockedUntil = now + LOCKOUT_DURATION_MS;
-  }
-
-  rateLimitStore.set(key, record);
-}
-
-function clearRateLimit(key: string): void {
-  rateLimitStore.delete(key);
-}
+import {
+  checkAdminLoginRateLimit,
+  recordFailedAdminLoginAttempt,
+  clearAdminLoginRateLimit,
+} from "@/lib/rate-limit";
 
 /**
  * Admin authentication action with email + password and strict RBAC verification.
@@ -78,13 +34,13 @@ export async function signInAdminAction(
   // Derive client IP for brute force throttling
   const headerList = await headers();
   const clientIp = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
-  const rateLimitKey = `${clientIp}:${parsed.data.email.toLowerCase()}`;
+  const userEmail = parsed.data.email.toLowerCase();
 
-  const isAllowed = await checkRateLimit(rateLimitKey);
-  if (!isAllowed) {
+  const rateCheck = await checkAdminLoginRateLimit(clientIp, userEmail);
+  if (!rateCheck.allowed) {
     return {
       success: false,
-      error: "Too many failed login attempts. Access is locked for 15 minutes for security.",
+      error: rateCheck.errorMessage || "Too many failed login attempts. Access is locked for 15 minutes for security.",
     };
   }
 
@@ -101,7 +57,7 @@ export async function signInAdminAction(
     });
 
     if (authError || !user) {
-      recordFailedAttempt(rateLimitKey);
+      await recordFailedAdminLoginAttempt(clientIp, userEmail);
       // Generic error: never reveal if email exists
       return {
         success: false,
@@ -120,7 +76,7 @@ export async function signInAdminAction(
       // User is authenticated in Supabase but is NOT an authorized admin (e.g. regular customer)
       // Immediately revoke session and treat as failed attempt
       await supabase.auth.signOut();
-      recordFailedAttempt(rateLimitKey);
+      await recordFailedAdminLoginAttempt(clientIp, userEmail);
       return {
         success: false,
         error: "Access denied. Invalid credentials.",
@@ -128,7 +84,7 @@ export async function signInAdminAction(
     }
 
     // Clear failed attempts upon successful authorized login
-    clearRateLimit(rateLimitKey);
+    await clearAdminLoginRateLimit(clientIp, userEmail);
     revalidatePath("/admin", "layout");
 
     return {
@@ -143,7 +99,7 @@ export async function signInAdminAction(
     };
   } catch (err) {
     console.error("Admin sign-in error:", err);
-    recordFailedAttempt(rateLimitKey);
+    await recordFailedAdminLoginAttempt(clientIp, userEmail);
     return {
       success: false,
       error: "Access denied. Invalid credentials.",

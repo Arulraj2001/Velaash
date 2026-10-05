@@ -509,6 +509,7 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
           {/* Brand Identity & Logo */}
           <View style={styles.brandBlock}>
             {logoDataUri ? (
+              // eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image does not support alt prop
               <Image src={logoDataUri} style={styles.brandLogo} />
             ) : null}
             <View style={styles.brandInfo}>

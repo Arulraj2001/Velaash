@@ -26,7 +26,6 @@ export function MobileNavDrawer({
   isOpen,
   onClose,
   categories,
-  shippingPolicy,
   logoUrl,
   storeName,
   whatsappNumber,
@@ -36,8 +35,8 @@ export function MobileNavDrawer({
   const { user, isAuthenticated } = useAuth();
 
   const pillars = React.useMemo(
-    () => groupNavigationCategories(categories, shippingPolicy),
-    [categories, shippingPolicy]
+    () => groupNavigationCategories(categories),
+    [categories]
   );
 
   React.useEffect(() => {

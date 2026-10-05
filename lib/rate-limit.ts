@@ -228,3 +228,111 @@ export function resetTrackOrderRateLimitsForTest() {
   IN_MEMORY_RATE_LIMIT_STORE.clear();
 }
 
+/**
+ * Admin Login Rate Limiting (Brute Force Protection)
+ * Threshold: Max 5 failed login attempts per IP + email per 15 minutes.
+ */
+export const MAX_ADMIN_LOGIN_ATTEMPTS = 5;
+export const ADMIN_LOGIN_WINDOW_SECONDS = 15 * 60; // 15 minutes
+
+export async function checkAdminLoginRateLimit(
+  ip: string,
+  email: string
+): Promise<{ allowed: boolean; errorMessage?: string }> {
+  const cleanIp = ip.trim() || "127.0.0.1";
+  const cleanEmail = email.trim().toLowerCase();
+  const key = `ratelimit:admin_login:${cleanIp}:${cleanEmail}`;
+
+  const redis = getRedisClient();
+  if (redis) {
+    try {
+      const val = await redis.get<number>(key);
+      const current = val ? Number(val) : 0;
+      if (current >= MAX_ADMIN_LOGIN_ATTEMPTS) {
+        return {
+          allowed: false,
+          errorMessage: "Too many failed login attempts. Access is locked for 15 minutes for security.",
+        };
+      }
+      return { allowed: true };
+    } catch (err) {
+      console.warn("[RateLimit] Redis get failed for admin login, falling back to memory:", err);
+    }
+  }
+
+  const now = Date.now();
+  const existing = IN_MEMORY_RATE_LIMIT_STORE.get(key);
+  if (existing && existing.expiresAt > now) {
+    if (existing.count >= MAX_ADMIN_LOGIN_ATTEMPTS) {
+      return {
+        allowed: false,
+        errorMessage: "Too many failed login attempts. Access is locked for 15 minutes for security.",
+      };
+    }
+  }
+
+  return { allowed: true };
+}
+
+export async function recordFailedAdminLoginAttempt(ip: string, email: string): Promise<void> {
+  const cleanIp = ip.trim() || "127.0.0.1";
+  const cleanEmail = email.trim().toLowerCase();
+  const key = `ratelimit:admin_login:${cleanIp}:${cleanEmail}`;
+  await incrementAndCheckLimit(key, MAX_ADMIN_LOGIN_ATTEMPTS, ADMIN_LOGIN_WINDOW_SECONDS);
+}
+
+export async function clearAdminLoginRateLimit(ip: string, email: string): Promise<void> {
+  const cleanIp = ip.trim() || "127.0.0.1";
+  const cleanEmail = email.trim().toLowerCase();
+  const key = `ratelimit:admin_login:${cleanIp}:${cleanEmail}`;
+
+  const redis = getRedisClient();
+  if (redis) {
+    try {
+      await redis.del(key);
+    } catch {
+      // Best-effort
+    }
+  }
+  IN_MEMORY_RATE_LIMIT_STORE.delete(key);
+}
+
+/**
+ * Contact Form Rate Limiting
+ * Threshold: Max 5 submissions per IP per 10 minutes.
+ */
+export const MAX_CONTACT_SUBMISSIONS_PER_IP = 5;
+export const CONTACT_WINDOW_SECONDS = 10 * 60; // 10 minutes
+
+export async function checkContactFormRateLimit(
+  ip: string
+): Promise<{ allowed: boolean; errorMessage?: string }> {
+  const cleanIp = ip.trim() || "127.0.0.1";
+  const key = `ratelimit:contact:${cleanIp}`;
+  const res = await incrementAndCheckLimit(key, MAX_CONTACT_SUBMISSIONS_PER_IP, CONTACT_WINDOW_SECONDS);
+
+  if (!res.allowed) {
+    return {
+      allowed: false,
+      errorMessage: "Too many messages sent from this network. Please wait a few minutes before submitting again.",
+    };
+  }
+  return { allowed: true };
+}
+
+/**
+ * Courier Serviceability Rate Limiting
+ * Threshold: Max 40 lookups per IP per 5 minutes.
+ */
+export const MAX_SERVICEABILITY_LOOKUPS_PER_IP = 40;
+export const SERVICEABILITY_WINDOW_SECONDS = 5 * 60; // 5 minutes
+
+export async function checkServiceabilityRateLimit(
+  ip: string
+): Promise<{ allowed: boolean }> {
+  const cleanIp = ip.trim() || "127.0.0.1";
+  const key = `ratelimit:serviceability:${cleanIp}`;
+  const res = await incrementAndCheckLimit(key, MAX_SERVICEABILITY_LOOKUPS_PER_IP, SERVICEABILITY_WINDOW_SECONDS);
+  return { allowed: res.allowed };
+}
+

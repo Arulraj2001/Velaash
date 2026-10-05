@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CartToast } from "@/features/cart";
 import { WishlistSync, getWishlistProductIds } from "@/features/wishlist";
 import { AnalyticsScripts, CookieConsentBanner } from "@/features/analytics";
-import { BrandPreloader, PromoOfferPopup } from "@/components/ui";
+import { BrandPreloader, PromoOfferPopup, WhatsAppFloat } from "@/components/ui";
 import { env } from "@/lib/env";
 
 const cormorant = Cormorant_Garamond({
@@ -30,7 +30,8 @@ import { getSiteSettings, getPromoPopup } from "@/features/settings";
 export async function generateMetadata(): Promise<Metadata> {
   const { storeProfile, seoDefaults } = await getSiteSettings();
   const brandName = storeProfile.name || BRAND.name;
-  const titleDefault = seoDefaults.meta_title || `${brandName} — Everyday essentials for every home`;
+  const titleDefault =
+    seoDefaults.meta_title || `${brandName} — Everyday essentials for every home`;
   const descriptionDefault = seoDefaults.meta_description || BRAND.description;
 
   const defaultKeywords = [
@@ -47,7 +48,10 @@ export async function generateMetadata(): Promise<Metadata> {
     "கடை",
   ];
   const configuredKeywords = seoDefaults.keywords
-    ? seoDefaults.keywords.split(",").map((k) => k.trim()).filter(Boolean)
+    ? seoDefaults.keywords
+        .split(",")
+        .map((k) => k.trim())
+        .filter(Boolean)
     : [];
   const siteKeywords = Array.from(new Set([...defaultKeywords, ...configuredKeywords]));
 
@@ -106,7 +110,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     // Google Search Console HTML-tag verification.
     verification: {
-      google: env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "PiKfxQxUuM8Kq1JpvpByh0u8dBuRdHMWvlKPqpBUylk",
+      google:
+        env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "PiKfxQxUuM8Kq1JpvpByh0u8dBuRdHMWvlKPqpBUylk",
     },
   };
 }
@@ -116,6 +121,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let initialWishlistIds: string[] = [];
   let logoUrl: string | null = null;
   let promoPopupData = null;
+  let whatsappHref = "";
+  let whatsappDisplay = "";
 
   try {
     const [{ storeProfile }, supabase, promoPopup] = await Promise.all([
@@ -125,6 +132,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ]);
     logoUrl = storeProfile.logo_url || "/logo.png";
     promoPopupData = promoPopup;
+
+    // Build WhatsApp contact from admin-configured number
+    const waRaw = (storeProfile.whatsapp_number || storeProfile.phone || "").trim();
+    const waDigits = waRaw.replace(/\D/g, "");
+    if (waDigits) {
+      const defaultMessage =
+        "Hi Velaash! I would like help choosing a product or placing an order.";
+      whatsappHref = `https://wa.me/${waDigits}?text=${encodeURIComponent(defaultMessage)}`;
+      whatsappDisplay = waRaw.startsWith("+") ? waRaw : `+${waDigits}`;
+    }
 
     const {
       data: { user },
@@ -146,8 +163,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <html lang="en" className={`${cormorant.variable} ${plusJakarta.variable} scroll-smooth`} suppressHydrationWarning>
-      <body className="bg-brand-cream text-brand-dark selection:bg-brand-gold selection:text-brand-dark flex min-h-screen flex-col font-sans antialiased" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${cormorant.variable} ${plusJakarta.variable} scroll-smooth`}
+      suppressHydrationWarning
+    >
+      <body
+        className="bg-brand-cream text-brand-dark selection:bg-brand-gold selection:text-brand-dark flex min-h-screen flex-col font-sans antialiased"
+        suppressHydrationWarning
+      >
         <AuthProvider initialUser={initialUser}>
           <WishlistSync initialWishlistIds={initialWishlistIds} />
           <CustomerShell
@@ -159,6 +183,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <CartToast />
                 <CookieConsentBanner />
                 <PromoOfferPopup data={promoPopupData} />
+                <WhatsAppFloat href={whatsappHref} displayNumber={whatsappDisplay} />
               </>
             }
           >

@@ -63,12 +63,18 @@ export function createAdminClient(): SupabaseClient<Database> {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!serviceRoleKey) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "CRITICAL SECURITY CONFIGURATION ERROR: SUPABASE_SERVICE_ROLE_KEY is required in production for createAdminClient(). " +
+          "Never fall back to anon key in production as it bypasses authorization and causes RLS violation failures."
+      );
+    }
     console.warn(
-      "WARNING: SUPABASE_SERVICE_ROLE_KEY is missing in runtime environment. Falling back to NEXT_PUBLIC_SUPABASE_ANON_KEY."
+      "WARNING: SUPABASE_SERVICE_ROLE_KEY is missing in non-production runtime environment. Falling back to NEXT_PUBLIC_SUPABASE_ANON_KEY for offline mock testing."
     );
   }
 
-  // Fallback to anon key when service role key is not configured
+  // Fallback to anon key only in non-production/offline testing environments
   const key = serviceRoleKey || env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   return createClient<Database>(

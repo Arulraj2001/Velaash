@@ -15,16 +15,9 @@ import { AccountWelcomeEmail } from "../emails/account-welcome-email";
 import { generateOrderAccessToken } from "../utils/order-access-token";
 import { MOCK_ORDERS_STORE } from "../queries/get-order-by-number";
 import { MOCK_ONLINE_PENDING_ORDERS } from "../services/order-cleanup";
-import {
-  CreateOrderInputSchema,
-  type CreateOrderInput,
-  type CreateOrderResponse,
-} from "../types";
+import { CreateOrderInputSchema, type CreateOrderInput, type CreateOrderResponse } from "../types";
 
-
-export async function createOrderAction(
-  rawInput: CreateOrderInput
-): Promise<CreateOrderResponse> {
+export async function createOrderAction(rawInput: CreateOrderInput): Promise<CreateOrderResponse> {
   // 1. Check for empty cart
   if (!rawInput.items || rawInput.items.length === 0) {
     return {
@@ -125,9 +118,26 @@ export async function createOrderAction(
     }
 
     if (adminSupabase) {
+      if (customerId) {
+        try {
+          await adminSupabase.from("customers").upsert(
+            {
+              id: customerId,
+              full_name: input.shippingAddress.fullName || "Valued Customer",
+              phone: input.shippingAddress.phone || input.contact.phone || null,
+            },
+            { onConflict: "id" }
+          );
+        } catch (err) {
+          console.warn("[Checkout] Customer profile auto-sync warning:", err);
+        }
+      }
+
       const { data: existingOrder, error: idempotencyLookupError } = await adminSupabase
         .from("orders")
-        .select("id, order_number, status, payment_method, payment_status, total_amount, razorpay_order_id")
+        .select(
+          "id, order_number, status, payment_method, payment_status, total_amount, razorpay_order_id"
+        )
         .eq("idempotency_key", input.idempotencyKey)
         .maybeSingle();
 
@@ -143,7 +153,8 @@ export async function createOrderAction(
         if (existingOrder.status === "cancelled" && existingOrder.payment_status === "paid") {
           return {
             success: false,
-            error: "Payment was received after this order was cancelled. Please contact support for a refund update.",
+            error:
+              "Payment was received after this order was cancelled. Please contact support for a refund update.",
             code: "VALIDATION_FAILED",
           };
         }
@@ -151,7 +162,8 @@ export async function createOrderAction(
         if (existingOrder.payment_method !== input.paymentMethod) {
           return {
             success: false,
-            error: "This checkout request was already used with a different payment method. Please refresh checkout.",
+            error:
+              "This checkout request was already used with a different payment method. Please refresh checkout.",
             code: "VALIDATION_FAILED",
           };
         }
@@ -171,7 +183,8 @@ export async function createOrderAction(
         ) {
           return {
             success: false,
-            error: "This order is no longer awaiting payment. Refresh checkout to place a new order.",
+            error:
+              "This order is no longer awaiting payment. Refresh checkout to place a new order.",
             code: "VALIDATION_FAILED",
           };
         }
@@ -224,15 +237,14 @@ export async function createOrderAction(
     // auto-populating public.customers via database trigger and dispatching an account welcome email.
     if (!customerId && input.contact.createAccount && adminSupabase) {
       try {
-        const { data: createdUser, error: createErr } =
-          await adminSupabase.auth.admin.createUser({
-            email: input.contact.email,
-            email_confirm: true,
-            user_metadata: {
-              full_name: input.shippingAddress.fullName,
-              phone: input.contact.phone,
-            },
-          });
+        const { data: createdUser, error: createErr } = await adminSupabase.auth.admin.createUser({
+          email: input.contact.email,
+          email_confirm: true,
+          user_metadata: {
+            full_name: input.shippingAddress.fullName,
+            phone: input.contact.phone,
+          },
+        });
 
         if (!createErr && createdUser?.user) {
           customerId = createdUser.user.id;
@@ -279,9 +291,14 @@ export async function createOrderAction(
             is_default: true,
           });
           if (addressErr) {
-            console.warn("[GuestAccount] Failed to auto-save default shipping address:", addressErr.message);
+            console.warn(
+              "[GuestAccount] Failed to auto-save default shipping address:",
+              addressErr.message
+            );
           } else {
-            console.info(`[GuestAccount] Auto-saved default shipping address for customer UID: ${customerId}`);
+            console.info(
+              `[GuestAccount] Auto-saved default shipping address for customer UID: ${customerId}`
+            );
           }
 
           // Send account confirmation email explaining the OTP login flow (no password link)
@@ -306,7 +323,6 @@ export async function createOrderAction(
         console.warn("[GuestAccount] Supabase account creation caught exception:", authErr);
       }
     }
-
 
     const variantIds = input.items
       .map((i) => i.variantId)
@@ -346,7 +362,8 @@ export async function createOrderAction(
         try {
           const { data, error } = await adminSupabase
             .from("product_variants")
-            .select(`
+            .select(
+              `
               id,
               product_id,
               stock_quantity,
@@ -364,7 +381,8 @@ export async function createOrderAction(
                 free_shipping_start,
                 free_shipping_end
               )
-            `)
+            `
+            )
             .in("id", variantIds);
 
           if (error) {
@@ -382,7 +400,9 @@ export async function createOrderAction(
         try {
           const res = await adminSupabase
             .from("products")
-            .select("id, name, slug, base_price, is_active, stock_quantity, free_shipping_active, free_shipping_start, free_shipping_end")
+            .select(
+              "id, name, slug, base_price, is_active, stock_quantity, free_shipping_active, free_shipping_start, free_shipping_end"
+            )
             .in("id", simpleProductIds);
 
           if (!res.error && res.data) {
@@ -392,10 +412,23 @@ export async function createOrderAction(
             // Fallback without stock_quantity column if column migration pending
             const fallbackRes = await adminSupabase
               .from("products")
-              .select("id, name, slug, base_price, is_active, free_shipping_active, free_shipping_start, free_shipping_end")
+              .select(
+                "id, name, slug, base_price, is_active, free_shipping_active, free_shipping_start, free_shipping_end"
+              )
               .in("id", simpleProductIds);
             if (fallbackRes.data) {
-              liveProducts = (fallbackRes.data as any[]).map((p: any) => ({
+              liveProducts = (
+                fallbackRes.data as unknown as Array<{
+                  id: string;
+                  name: string;
+                  slug: string;
+                  base_price: number;
+                  is_active: boolean;
+                  free_shipping_active?: boolean | null;
+                  free_shipping_start?: string | null;
+                  free_shipping_end?: string | null;
+                }>
+              ).map((p) => ({
                 ...p,
                 stock_quantity: 999,
               }));
@@ -426,7 +459,10 @@ export async function createOrderAction(
     const verifiedItems: VerifiedLineItem[] = [];
 
     for (const requestedItem of input.items) {
-      const isSimple = !requestedItem.variantId || requestedItem.variantId === "simple" || requestedItem.variantId === "null";
+      const isSimple =
+        !requestedItem.variantId ||
+        requestedItem.variantId === "simple" ||
+        requestedItem.variantId === "null";
 
       if (isSimple) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -559,8 +595,10 @@ export async function createOrderAction(
       isFestiveActive &&
       (siteSettings.shippingPolicy.festive_apply_to_all ||
         verifiedItems.some((item) => {
-          if (siteSettings.shippingPolicy.festive_product_ids?.includes(item.productId)) return true;
-          if (item.slug && siteSettings.shippingPolicy.festive_product_ids?.includes(item.slug)) return true;
+          if (siteSettings.shippingPolicy.festive_product_ids?.includes(item.productId))
+            return true;
+          if (item.slug && siteSettings.shippingPolicy.festive_product_ids?.includes(item.slug))
+            return true;
           return false;
         }));
 
@@ -579,25 +617,24 @@ export async function createOrderAction(
 
     const isCouponFree = Boolean(
       validatedCoupon &&
-        (validatedCoupon.discountType === "free_shipping" ||
-          (siteSettings.shippingPolicy.festive_coupon_code &&
-            validatedCoupon.code.toUpperCase() ===
-              siteSettings.shippingPolicy.festive_coupon_code.toUpperCase()))
+      (validatedCoupon.discountType === "free_shipping" ||
+        (siteSettings.shippingPolicy.festive_coupon_code &&
+          validatedCoupon.code.toUpperCase() ===
+            siteSettings.shippingPolicy.festive_coupon_code.toUpperCase()))
     );
 
-    const isFreeShipping = isThresholdFree || hasFestiveProduct || hasProductDirectFreeShipping || isCouponFree;
-    const shippingCharge = isFreeShipping
-      ? 0
-      : siteSettings.shippingPolicy.standard_shipping_fee;
+    const isFreeShipping =
+      isThresholdFree || hasFestiveProduct || hasProductDirectFreeShipping || isCouponFree;
+    const shippingCharge = isFreeShipping ? 0 : siteSettings.shippingPolicy.standard_shipping_fee;
     const shippingSource = isThresholdFree
       ? "free_threshold"
       : hasFestiveProduct
-      ? "festive_campaign_offer"
-      : hasProductDirectFreeShipping
-      ? "product_direct_offer"
-      : isCouponFree
-      ? "free_shipping_coupon"
-      : "standard_delivery";
+        ? "festive_campaign_offer"
+        : hasProductDirectFreeShipping
+          ? "product_direct_offer"
+          : isCouponFree
+            ? "free_shipping_coupon"
+            : "standard_delivery";
 
     console.info(
       `[Checkout] Shipping charge ₹${shippingCharge} (source: ${shippingSource}, pincode: ${input.shippingAddress.pincode})`
@@ -627,7 +664,8 @@ export async function createOrderAction(
       if (!razorpay_enabled) {
         return {
           success: false,
-          error: "Online payments via Razorpay are temporarily paused. Please choose Cash on Delivery or contact support.",
+          error:
+            "Online payments via Razorpay are temporarily paused. Please choose Cash on Delivery or contact support.",
           code: "GATEWAY_ERROR",
         };
       }
@@ -657,165 +695,64 @@ export async function createOrderAction(
     // The RPC commits the order, order items, coupon usage, and stock reservation atomically.
     let dbWriteSuccess = false;
 
-    const hasSimpleItems = verifiedItems.some((i) => !i.variantId);
-
     if (adminSupabase && verifiedItems.length > 0) {
       try {
-        if (!hasSimpleItems) {
-          // Standard pure variant clothing checkout using atomic RPC
-          const { data, error } = await adminSupabase.rpc("create_checkout_order_atomic", {
-            p_idempotency_key: input.idempotencyKey,
-            p_customer_id: customerId,
-            p_payment_method: input.paymentMethod,
-            p_subtotal: subtotal,
-            p_shipping_charge: shippingCharge,
-            p_discount_amount: discountAmount,
-            p_total_amount: totalAmount,
-            p_shipping_address: shippingAddressSnapshot,
-            p_coupon_code: validatedCouponCode,
-            p_notes: `${codHandlingFee > 0 ? `[COD handling fee: ₹${codHandlingFee}]` : ""}${guestAccountCreated ? " [guest_account_created: true]" : ""}`.trim(),
-            p_items: verifiedItems.map((item) => ({
-              product_id: item.productId,
-              variant_id: item.variantId,
-              title: item.title,
-              size: item.size || "",
-              color: item.color || "",
-              unit_price: item.unitPrice,
-              quantity: item.quantity,
-              line_subtotal: item.lineSubtotal,
-            })),
-          });
+        // The RPC handles variant and simple-product reservations in one transaction.
+        const { data, error } = await adminSupabase.rpc("create_checkout_order_atomic", {
+          p_idempotency_key: input.idempotencyKey,
+          p_customer_id: customerId,
+          p_payment_method: input.paymentMethod,
+          p_subtotal: subtotal,
+          p_shipping_charge: shippingCharge,
+          p_discount_amount: discountAmount,
+          p_total_amount: totalAmount,
+          p_shipping_address: shippingAddressSnapshot,
+          p_coupon_code: validatedCouponCode,
+          p_notes:
+            `${codHandlingFee > 0 ? `[COD handling fee: ₹${codHandlingFee}]` : ""}${guestAccountCreated ? " [guest_account_created: true]" : ""}`.trim(),
+          p_items: verifiedItems.map((item) => ({
+            product_id: item.productId,
+            variant_id: item.variantId,
+            title: item.title,
+            size: item.size || "",
+            color: item.color || "",
+            unit_price: item.unitPrice,
+            quantity: item.quantity,
+            line_subtotal: item.lineSubtotal,
+          })),
+        });
 
-          if (error) {
-            const isOutOfStock = error.message.includes("OUT_OF_STOCK");
-            const isCouponInvalid = error.message.includes("COUPON_INVALID");
-            return {
-              success: false,
-              error: isOutOfStock
-                ? "An item in your cart is no longer available in the requested quantity. Please update your cart."
-                : isCouponInvalid
-                  ? "Your coupon is no longer valid. Please review the discount and try again."
-                  : "Failed to safely reserve your items. Please try again.",
-              code: isOutOfStock ? "OUT_OF_STOCK" : isCouponInvalid ? "COUPON_INVALID" : "VALIDATION_FAILED",
-            };
-          }
-
-          const persistedOrder = data?.[0];
-          if (!persistedOrder) {
-            return {
-              success: false,
-              error: "Order could not be persisted. Please try again.",
-              code: "VALIDATION_FAILED",
-            };
-          }
-
-          orderId = persistedOrder.order_id;
-          orderNumber = persistedOrder.order_number;
-          isDuplicateOrder = persistedOrder.is_duplicate;
-          dbWriteSuccess = true;
-        } else {
-          // Checkout with simple products (no-variant) or mixed items:
-          // Check idempotency first
-          const { data: existingIdemp } = await adminSupabase
-            .from("orders")
-            .select("id, order_number, status, payment_method, payment_status, total_amount, razorpay_order_id")
-            .eq("idempotency_key", input.idempotencyKey)
-            .maybeSingle();
-
-          if (existingIdemp) {
-            orderId = existingIdemp.id;
-            orderNumber = existingIdemp.order_number;
-            isDuplicateOrder = true;
-            dbWriteSuccess = true;
-          } else {
-            // Direct insertion of order
-            const { data: insertedOrder, error: orderInsertErr } = await adminSupabase
-              .from("orders")
-              .insert({
-                customer_id: customerId,
-                status: "pending",
-                payment_method: input.paymentMethod,
-                payment_status: "pending",
-                subtotal,
-                shipping_charge: shippingCharge,
-                discount_amount: discountAmount,
-                total_amount: totalAmount,
-                shipping_address: shippingAddressSnapshot,
-                billing_address: shippingAddressSnapshot,
-                coupon_code: validatedCouponCode,
-                idempotency_key: input.idempotencyKey,
-                notes: `${codHandlingFee > 0 ? `[COD handling fee: ₹${codHandlingFee}]` : ""}${guestAccountCreated ? " [guest_account_created: true]" : ""}`.trim() || null,
-              })
-              .select("id, order_number")
-              .single();
-
-            if (orderInsertErr || !insertedOrder) {
-              console.error("Direct order insertion error:", orderInsertErr);
-              return {
-                success: false,
-                error: "Failed to safely record your order. Please try again.",
-                code: "VALIDATION_FAILED",
-              };
-            }
-
-            orderId = insertedOrder.id;
-            orderNumber = insertedOrder.order_number;
-            dbWriteSuccess = true;
-
-            // Insert line items
-            const orderItemsPayload = verifiedItems.map((item) => ({
-              order_id: orderId!,
-              product_id: item.productId,
-              variant_id: item.variantId || null,
-              product_name_snapshot: item.title,
-              variant_details_snapshot: [item.size, item.color].filter(Boolean).join(" / ") || "Standard",
-              unit_price: item.unitPrice,
-              quantity: item.quantity,
-              subtotal: item.lineSubtotal,
-            }));
-
-            const { error: itemsInsertErr } = await adminSupabase
-              .from("order_items")
-              .insert(orderItemsPayload);
-
-            if (itemsInsertErr) {
-              console.error("Direct order_items insertion error:", itemsInsertErr);
-            }
-
-            // Decrement variant and product stocks
-            for (const item of verifiedItems) {
-              if (item.variantId) {
-                const { data: curVar } = await adminSupabase
-                  .from("product_variants")
-                  .select("stock_quantity")
-                  .eq("id", item.variantId)
-                  .single();
-                if (curVar) {
-                  await adminSupabase
-                    .from("product_variants")
-                    .update({ stock_quantity: Math.max(0, curVar.stock_quantity - item.quantity) })
-                    .eq("id", item.variantId);
-                }
-              } else {
-                try {
-                  const { data: curProd } = await adminSupabase
-                    .from("products")
-                    .select("stock_quantity")
-                    .eq("id", item.productId)
-                    .maybeSingle();
-                  if (curProd && curProd.stock_quantity !== undefined) {
-                    await adminSupabase
-                      .from("products")
-                      .update({ stock_quantity: Math.max(0, (curProd.stock_quantity || 0) - item.quantity) })
-                      .eq("id", item.productId);
-                  }
-                } catch {
-                  // stock_quantity column might be pending on remote DB
-                }
-              }
-            }
-          }
+        if (error) {
+          const isOutOfStock = error.message.includes("OUT_OF_STOCK");
+          const isCouponInvalid = error.message.includes("COUPON_INVALID");
+          return {
+            success: false,
+            error: isOutOfStock
+              ? "An item in your cart is no longer available in the requested quantity. Please update your cart."
+              : isCouponInvalid
+                ? "Your coupon is no longer valid. Please review the discount and try again."
+                : "Failed to safely reserve your items. Please try again.",
+            code: isOutOfStock
+              ? "OUT_OF_STOCK"
+              : isCouponInvalid
+                ? "COUPON_INVALID"
+                : "VALIDATION_FAILED",
+          };
         }
+
+        const persistedOrder = data?.[0];
+        if (!persistedOrder) {
+          return {
+            success: false,
+            error: "Order could not be persisted. Please try again.",
+            code: "VALIDATION_FAILED",
+          };
+        }
+
+        orderId = persistedOrder.order_id;
+        orderNumber = persistedOrder.order_number;
+        isDuplicateOrder = persistedOrder.is_duplicate;
+        dbWriteSuccess = true;
 
         if (isDuplicateOrder) {
           const { data: existingOrder, error: existingOrderError } = await adminSupabase
@@ -835,7 +772,8 @@ export async function createOrderAction(
           if (existingOrder.payment_method !== input.paymentMethod) {
             return {
               success: false,
-              error: "This checkout request was already used with a different payment method. Please refresh checkout.",
+              error:
+                "This checkout request was already used with a different payment method. Please refresh checkout.",
               code: "VALIDATION_FAILED",
             };
           }
@@ -850,11 +788,7 @@ export async function createOrderAction(
 
           totalAmount = Number(existingOrder.total_amount);
           existingRazorpayOrderId = existingOrder.razorpay_order_id || undefined;
-        } else if (
-          customerId &&
-          !guestAccountCreated &&
-          input.shippingAddress.saveAddress
-        ) {
+        } else if (customerId && !guestAccountCreated && input.shippingAddress.saveAddress) {
           await adminSupabase.from("addresses").insert({
             customer_id: customerId,
             full_name: input.shippingAddress.fullName,
@@ -937,7 +871,8 @@ export async function createOrderAction(
           console.error("Razorpay order creation error:", rzpErr);
           return {
             success: false,
-            error: "Unable to initialize payment gateway. Please retry checkout; your reservation will expire automatically.",
+            error:
+              "Unable to initialize payment gateway. Please retry checkout; your reservation will expire automatically.",
             code: "GATEWAY_ERROR",
           };
         }
@@ -975,35 +910,36 @@ export async function createOrderAction(
     }
 
     // Save in shared MOCK_ORDERS_STORE for immediate retrieval across DB & offline modes
-    if (!isDuplicateOrder) MOCK_ORDERS_STORE.set(orderNumber!, {
-      id: orderId!,
-      orderNumber: orderNumber!,
-      status: "pending",
-      paymentMethod: input.paymentMethod,
-      paymentStatus: "pending",
-      subtotal,
-      shippingCharge,
-      discountAmount,
-      codHandlingFee,
-      totalAmount,
-      couponCode: validatedCouponCode,
-      createdAt: new Date().toISOString(),
-      shippingAddress: shippingAddressSnapshot,
-      items: verifiedItems.map((item) => ({
-        id: `item-${item.variantId || item.productId}`,
-        productId: item.productId,
-        variantId: item.variantId || "",
-        title: item.title,
-        size: item.size || "",
-        color: item.color || "",
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        subtotal: item.lineSubtotal,
-      })),
-      razorpayOrderId,
-      accountCreatedFromGuest: guestAccountCreated,
-      accessLevel: "FULL",
-    });
+    if (!isDuplicateOrder)
+      MOCK_ORDERS_STORE.set(orderNumber!, {
+        id: orderId!,
+        orderNumber: orderNumber!,
+        status: "pending",
+        paymentMethod: input.paymentMethod,
+        paymentStatus: "pending",
+        subtotal,
+        shippingCharge,
+        discountAmount,
+        codHandlingFee,
+        totalAmount,
+        couponCode: validatedCouponCode,
+        createdAt: new Date().toISOString(),
+        shippingAddress: shippingAddressSnapshot,
+        items: verifiedItems.map((item) => ({
+          id: `item-${item.variantId || item.productId}`,
+          productId: item.productId,
+          variantId: item.variantId || "",
+          title: item.title,
+          size: item.size || "",
+          color: item.color || "",
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          subtotal: item.lineSubtotal,
+        })),
+        razorpayOrderId,
+        accountCreatedFromGuest: guestAccountCreated,
+        accessLevel: "FULL",
+      });
 
     // 12c. Transactional Email Dispatch for COD Orders
     if (input.paymentMethod === "cod" && !isDuplicateOrder) {
@@ -1043,7 +979,6 @@ export async function createOrderAction(
             accountCreatedFromGuest: guestAccountCreated,
             supportEmail: siteSettings.storeProfile.email,
           }),
-
         });
       } catch (emailErr) {
         console.error(
@@ -1066,7 +1001,6 @@ export async function createOrderAction(
       currency: "INR",
       accessToken,
     };
-
   } catch (err: unknown) {
     if (
       typeof err === "object" &&

@@ -9,12 +9,12 @@ import { useCartStore } from "../store/cart-store";
  * and updates to the actual localStorage cart count immediately after hydration.
  */
 export function useCartCount(): { count: number; isHydrated: boolean } {
-  const [isHydrated, setIsHydrated] = React.useState(false);
+  const isHydrated = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const items = useCartStore((state) => state.items);
-
-  React.useEffect(() => {
-    setIsHydrated(true);
-  }, []);
 
   const count = isHydrated ? items.reduce((sum, item) => sum + item.quantity, 0) : 0;
 

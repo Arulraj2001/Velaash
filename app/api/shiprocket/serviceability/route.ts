@@ -1,32 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkServiceability } from "@/lib/shiprocket";
+import { checkServiceabilityRateLimit } from "@/lib/rate-limit";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
 
-/**
- * GET /api/shiprocket/serviceability
- *
- * Query params:
- *   pincode        – 6-digit destination pincode (required)
- *   weight         – item weight in grams (optional, default 500g)
- *   declared_value – total order value in INR (optional, default 999)
- *   cod            – "1" or "0" (optional, default "0")
- *
- * Response (200):
- *   { serviceable, estimatedDays, courierName, codAvailable, isLive }
- *
- * Response (400): { error: "..." }
- * Response (503): { serviceable: false, estimatedDays: null }  – API failure fallback
- */
 export async function GET(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+  const rateCheck = await checkServiceabilityRateLimit(ip);
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: "Too many serviceability lookups. Please wait a few moments before trying again." },
+      { status: 429 }
+    );
+  }
+
   const { searchParams } = req.nextUrl;
   const pincode = searchParams.get("pincode")?.trim() ?? "";
   const weightGrams = parseInt(searchParams.get("weight") ?? "500", 10);
   const declaredValue = parseFloat(searchParams.get("declared_value") ?? "999");
   const cod = searchParams.get("cod") === "1";
 
-  if (!/^\d{6}$/.test(pincode)) {
+  if (!/^[1-9]\d{5}$/.test(pincode)) {
     return NextResponse.json(
-      { error: "Invalid pincode. Must be exactly 6 digits." },
+      { error: "Invalid pincode. Must be a valid 6-digit Indian PIN code starting with digits 1-9." },
       { status: 400 }
     );
   }

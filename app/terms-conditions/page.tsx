@@ -250,7 +250,7 @@ export default async function TermsConditionsPage() {
                   <strong>Order Cancellation:</strong> You may cancel an order directly from your <Link href="/account/orders" className="text-brand-accent hover:underline font-medium">Account Orders</Link> dashboard as long as its status remains &quot;Confirmed&quot;. Once an order transitions to warehouse dispatch or courier transit, cancellations cannot be accepted mid-route; you may instead request a return following delivery.
                 </p>
                 <p>
-                  <strong>Strict 7-Day Return Window:</strong> All return, exchange, or replacement requests must be registered within strictly <strong>7 calendar days</strong> from the official courier delivery confirmation date. Requests received beyond this 7-day window cannot be processed.
+                  <strong>Strict {returnWindowDays}-Day Return Window:</strong> All return, exchange, or replacement requests must be registered within strictly <strong>{returnWindowDays} calendar days</strong> from the official courier delivery confirmation date. Requests received beyond this window cannot be processed.
                 </p>
                 <p>
                   <strong>Mandatory Unboxing Video:</strong> To qualify for return, exchange, replacement, or damage claims, customers must provide a <strong>clear, continuous, and uncut video recording</strong> of the parcel opening. The video must start prior to opening the box/courier bag, showing the sealed packaging, intact shipping label with tracking details, brand tags attached, and the condition or defect being reported. Claims submitted without an uncut unboxing video cannot be approved.

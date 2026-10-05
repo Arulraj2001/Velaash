@@ -31,17 +31,21 @@ export function PincodeChecker({
   const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error" | "unserviceable">("idle");
   const [result, setResult] = React.useState<ServiceabilityResponse | null>(null);
 
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+
   const handleCheck = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanPin = pincode.trim();
 
-    if (!/^\d{6}$/.test(cleanPin)) {
+    if (!/^[1-9]\d{5}$/.test(cleanPin)) {
       setStatus("error");
+      setErrorMessage("Please enter a valid 6-digit Indian PIN code (digits 1–9).");
       setResult(null);
       return;
     }
 
     setStatus("loading");
+    setErrorMessage(null);
     setResult(null);
 
     try {
@@ -63,16 +67,9 @@ export function PincodeChecker({
       setStatus("success");
       setResult(data);
     } catch {
-      // Network failure — show fallback success (non-blocking)
-      setStatus("success");
-      setResult({
-        serviceable: true,
-        estimatedDays: 7,
-        courierName: null,
-        codAvailable: true,
-        isLive: false,
-        degraded: true,
-      });
+      setStatus("error");
+      setErrorMessage("Unable to verify delivery serviceability right now. Please try again or contact us on WhatsApp.");
+      setResult(null);
     }
   };
 
@@ -154,7 +151,7 @@ export function PincodeChecker({
       {status === "error" && (
         <div className="animate-in fade-in mt-2.5 flex items-start gap-2 text-xs text-rose-700 duration-200">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
-          <span>Please enter a valid 6-digit Indian PIN code.</span>
+          <span>{errorMessage || "Please enter a valid 6-digit Indian PIN code."}</span>
         </div>
       )}
 

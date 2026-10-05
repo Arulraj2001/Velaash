@@ -1,8 +1,10 @@
 "use server";
 
 import React from "react";
+import { headers } from "next/headers";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
 import { sendTransactionalEmail } from "@/lib/email/resend";
+import { checkContactFormRateLimit } from "@/lib/rate-limit";
 import { ContactInquiryEmail } from "../emails/contact-inquiry-email";
 import {
   ContactFormSchema,
@@ -41,7 +43,18 @@ export async function submitContactFormAction(
       };
     }
 
-    // 2. Validate input schema
+    // 2. IP-based Abuse Throttling
+    const headerList = await headers();
+    const clientIp = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+    const rateCheck = await checkContactFormRateLimit(clientIp);
+    if (!rateCheck.allowed) {
+      return {
+        success: false,
+        error: rateCheck.errorMessage || "Too many messages sent. Please wait before submitting again.",
+      };
+    }
+
+    // 3. Validate input schema
     const parsed = ContactFormSchema.safeParse(rawObject);
     if (!parsed.success) {
       const fieldErrors: Record<string, string> = {};
@@ -60,11 +73,11 @@ export async function submitContactFormAction(
 
     const { name, email, subject, message } = parsed.data;
 
-    // 3. Retrieve store contact email from site settings
+    // 4. Retrieve store contact email from site settings
     const siteSettings = await getSiteSettings();
     const storeEmail = siteSettings.storeProfile.email;
 
-    // 4. Dispatch Email via Resend
+    // 5. Dispatch Email via Resend
     const emailResult = await sendTransactionalEmail({
       to: storeEmail,
       subject: `[Velaash Inquiry] ${subject} - ${name}`,
@@ -79,7 +92,11 @@ export async function submitContactFormAction(
     });
 
     if (!emailResult.success) {
-      console.warn("[Contact:Email] Failed to send email, but form data valid:", emailResult.error);
+      console.warn("[Contact:Email] Failed to send email:", emailResult.error);
+      return {
+        success: false,
+        error: "Unable to deliver your message right now. Please try again or reach out on WhatsApp.",
+      };
     }
 
     return {
