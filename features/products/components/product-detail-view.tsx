@@ -309,6 +309,30 @@ export function ProductDetailView({
             <div className="text-brand-muted w-full text-[11px]">
               Inclusive of all taxes & duties &bull; Free shipping over {formatCurrency(freeShippingThreshold)}
             </div>
+
+            {/* Promotional / Festive Free Delivery Badge */}
+            {festiveBadge && (
+              <div className="w-full mt-2.5 overflow-hidden rounded-xl border border-amber-300/80 bg-gradient-to-r from-amber-50/95 via-orange-50/40 to-amber-50/70 p-3 shadow-2xs">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-800 ring-1 ring-amber-500/25">
+                    <Sparkles className="h-4 w-4 animate-pulse text-amber-700" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold tracking-tight text-amber-950 sm:text-[13px]">
+                        {festiveBadge}
+                      </span>
+                      <span className="inline-flex items-center rounded-full bg-amber-600/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800 ring-1 ring-amber-600/20">
+                        Zero Delivery Fee
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-amber-900/80">
+                      Standard home delivery is free on this item during this promotional celebration.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Product Description (Rich Text & Plain Text Support) */}
@@ -538,23 +562,7 @@ export function ProductDetailView({
               </a>
             </div>
 
-            {/* Delivery Pincode Checker & Festive Shipping Highlight */}
-            {festiveBadge && (
-              <div className="rounded-xl border border-emerald-500/40 bg-emerald-50/80 p-3 text-xs text-emerald-900 flex items-start gap-2.5 shadow-xs">
-                <span className="text-base leading-none mt-0.5">🌾</span>
-                <div className="space-y-0.5">
-                  <div className="font-semibold text-emerald-950 flex items-center gap-1.5">
-                    <span>{festiveBadge}</span>
-                    <span className="bg-emerald-200/80 text-emerald-800 text-[10px] px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider">
-                      Special Offer
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-emerald-800/90 font-normal">
-                    Standard home delivery is completely free for this item during this festive celebration.
-                  </p>
-                </div>
-              </div>
-            )}
+            {/* Delivery Pincode Checker */}
 
             <PincodeChecker freeShippingThreshold={freeShippingThreshold} />
 
