@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { BRAND, DEFAULT_ANNOUNCEMENT } from "@/lib/constants";
 import type {
   SiteSettingsData,
@@ -128,7 +128,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettingsData = {
  */
 async function fetchSiteSettings(): Promise<SiteSettingsData> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     const { data, error } = await supabase
       .from("site_settings")
@@ -388,13 +388,13 @@ async function fetchSiteSettings(): Promise<SiteSettingsData> {
 }
 
 /**
- * Cached version of site settings: revalidates every 60 seconds.
+ * Cached version of site settings: revalidates every 5 minutes.
  * Use revalidateTag('site-settings') from admin actions to bust immediately after saves.
  */
 const getCachedSiteSettings = unstable_cache(
   fetchSiteSettings,
   ["site-settings"],
-  { tags: ["site-settings"], revalidate: 60 }
+  { tags: ["site-settings"], revalidate: 300 }
 );
 
 /**

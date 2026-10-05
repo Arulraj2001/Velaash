@@ -157,7 +157,8 @@ export function ProductCard({
               alt={primaryImage?.alt_text || product.name}
               fill
               priority={priority}
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              quality={72}
+              sizes="(max-width: 640px) calc((100vw - 2rem - 0.875rem) / 2), (max-width: 1024px) calc((100vw - 2rem - 2.5rem) / 3), 25vw"
               className={`object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105 ${
                 isInactive ? "grayscale-30" : ""
               } ${
@@ -178,7 +179,8 @@ export function ProductCard({
               src={secondaryImage.image_url}
               alt={secondaryImage.alt_text || `${product.name} back view`}
               fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              quality={72}
+              sizes="(max-width: 640px) calc((100vw - 2rem - 0.875rem) / 2), (max-width: 1024px) calc((100vw - 2rem - 2.5rem) / 3), 25vw"
               className="absolute inset-0 hidden object-cover object-top opacity-0 transition-all duration-500 ease-out group-hover:scale-105 group-hover:opacity-100 sm:block"
             />
           )}

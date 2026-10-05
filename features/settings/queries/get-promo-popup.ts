@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { getSiteSettings } from "./get-site-settings";
 
 export interface LivePromoCoupon {
@@ -39,7 +39,7 @@ async function fetchPromoPopup(): Promise<PromoPopupDisplayData | null> {
       return null;
     }
 
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     // Query the linked coupon record live
     const { data: coupon, error } = await supabase
@@ -104,13 +104,13 @@ async function fetchPromoPopup(): Promise<PromoPopupDisplayData | null> {
 }
 
 /**
- * Cached promo popup: revalidates every 60 seconds.
+ * Cached promo popup: revalidates every 5 minutes.
  * Bust with revalidateTag('site-settings') when admin saves promo settings.
  */
 const getCachedPromoPopup = unstable_cache(
   fetchPromoPopup,
   ["promo-popup"],
-  { tags: ["site-settings"], revalidate: 60 }
+  { tags: ["site-settings"], revalidate: 300 }
 );
 
 /**
@@ -124,10 +124,10 @@ export const getPromoPopup = cache(getCachedPromoPopup);
  * to display as a small rounded thumbnail on the promo popup modal.
  */
 export async function getFeaturedProductThumbnail(
-  existingClient?: Awaited<ReturnType<typeof createClient>>
+  existingClient?: ReturnType<typeof createPublicClient>
 ): Promise<PromoProductThumbnail | null> {
   try {
-    const supabase = existingClient || (await createClient());
+    const supabase = existingClient || createPublicClient();
 
     // 1. Prioritize active products marked as is_featured = true
     const { data: featuredProducts } = await supabase
@@ -170,4 +170,3 @@ export async function getFeaturedProductThumbnail(
     return null;
   }
 }
-

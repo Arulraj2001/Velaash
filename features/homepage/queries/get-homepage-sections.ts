@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import type { LiveHomepageSection } from "../types";
 import type { HomepageSectionKind } from "@/features/admin/types/homepage";
 
@@ -247,7 +247,7 @@ export const DEFAULT_LIVE_HOMEPAGE_SECTIONS: LiveHomepageSection[] = [
  */
 async function fetchHomepageSections(): Promise<LiveHomepageSection[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     const { data, error } = await supabase
       .from("homepage_sections")

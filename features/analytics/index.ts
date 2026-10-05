@@ -4,6 +4,7 @@ export * from "./utils/consent";
 export * from "./utils/track";
 export * from "./hooks/use-cookie-consent";
 export * from "./components/cookie-consent-banner";
+export * from "./components/deferred-cookie-consent-banner";
 export * from "./components/cookie-preferences-button";
 export * from "./components/analytics-scripts";
 export * from "./components/order-confirmation-tracker";

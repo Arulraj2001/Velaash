@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import React from "react";
 import {
   Truck,
@@ -14,13 +15,12 @@ import {
 import { Container } from "@/components/ui/container";
 import { BRAND } from "@/lib/constants";
 import { getNavigationCategories } from "@/features/navigation";
-import { getProducts, RecentlyViewedSection, type ProductListItem } from "@/features/products";
+import { getProducts, type ProductListItem } from "@/features/products";
 import { getSiteSettings, getStoreContact } from "@/features/settings";
 import { env } from "@/lib/env";
 
 const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 import { getHomepageSections } from "@/features/homepage";
-import { HomepageNewsletter } from "@/components/homepage/homepage-newsletter";
 import { HeroCarousel } from "@/components/homepage/hero-carousel";
 import { OccasionStrip, type OccasionItem } from "@/components/homepage/occasion-strip";
 import { FeaturedProductsShowcase } from "@/components/homepage/featured-products-showcase";
@@ -28,6 +28,14 @@ import { BrandStory } from "@/components/homepage/brand-story";
 import { ClientTestimonials } from "@/components/homepage/client-testimonials";
 import { CategoryVisualGrid } from "@/components/homepage/category-visual-grid";
 import type { HeroSlide } from "@/features/admin/types/homepage";
+
+const HomepageNewsletter = dynamic(
+  () => import("@/components/homepage/homepage-newsletter").then((mod) => mod.HomepageNewsletter),
+  { ssr: true }
+);
+import { DeferredRecentlyViewedSection } from "@/components/homepage/deferred-recently-viewed-section";
+
+export const revalidate = 300;
 
 // SEO: Generate homepage metadata using dynamic site settings and brand fallbacks
 export async function generateMetadata(): Promise<Metadata> {
@@ -415,9 +423,9 @@ export default async function HomePage() {
                               <IconComponent className="w-5 h-5 text-brand-accent" />
                             </div>
                             <div className="space-y-1">
-                              <h4 className="font-heading text-base sm:text-lg font-semibold text-brand-dark">
+                              <h3 className="font-heading text-base sm:text-lg font-semibold text-brand-dark">
                                 {item.title}
-                              </h4>
+                              </h3>
                               <p className="text-brand-muted text-xs font-sans leading-relaxed">
                                 {item.description}
                               </p>
@@ -481,7 +489,7 @@ export default async function HomePage() {
         })}
 
         {/* Dynamic Personalization: Recently Viewed (only visible to visitors with browsing history) */}
-        <RecentlyViewedSection />
+        <DeferredRecentlyViewedSection />
       </div>
     </>
   );

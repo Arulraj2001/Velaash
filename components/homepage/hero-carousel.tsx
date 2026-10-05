@@ -1,12 +1,59 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import Image from "next/image";
+import Image, { getImageProps } from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Button } from "@/components/ui/button";
 import type { HeroSlide } from "@/features/admin/types/homepage";
+
+function HeroArtDirectedImage({
+  desktopSrc,
+  mobileSrc,
+  alt,
+  className,
+  priority,
+  onLoad,
+}: {
+  desktopSrc: string;
+  mobileSrc: string;
+  alt: string;
+  className: string;
+  priority: boolean;
+  onLoad: () => void;
+}) {
+  const desktop = getImageProps({
+    src: desktopSrc,
+    alt,
+    width: 2000,
+    height: 1400,
+    quality: 72,
+    sizes: "100vw",
+  });
+  const mobile = getImageProps({
+    src: mobileSrc,
+    alt,
+    width: 900,
+    height: 1200,
+    quality: 72,
+    sizes: "100vw",
+  });
+
+  return (
+    <picture>
+      <source media="(max-width: 639px)" srcSet={mobile.props.srcSet} />
+      <img
+        {...desktop.props}
+        alt={alt}
+        className={`absolute inset-0 h-full w-full ${className}`}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
+        onLoad={onLoad}
+      />
+    </picture>
+  );
+}
 
 interface HeroCarouselProps {
   slides?: HeroSlide[];
@@ -104,6 +151,11 @@ export function HeroCarousel({
     !url.includes(".supabase.co") &&
     !url.includes("res.cloudinary.com");
 
+  const handleHeroLoad = () => {
+    window.__velaashHeroLoaded = true;
+    window.dispatchEvent(new Event("velaash:hero-lcp-loaded"));
+  };
+
   return (
     <section
       className="relative w-full min-h-[85vh] sm:min-h-[88vh] flex items-center justify-center overflow-hidden bg-black select-none"
@@ -129,29 +181,14 @@ export function HeroCarousel({
             {hasMobileImage ? (
               <>
                 {/* Mobile View Image (< 640px) */}
-                <div className="relative w-full h-full sm:hidden">
-                  <Image
-                    src={slide.bg_image_mobile!.trim()}
-                    alt={slide.headline}
-                    fill
-                    priority={idx === 0}
-                    unoptimized={isSlideUnoptimized(slide.bg_image_mobile!)}
-                    className="object-cover object-center brightness-95 contrast-100"
-                    sizes="100vw"
-                  />
-                </div>
-                {/* Desktop View Image (>= 640px) */}
-                <div className="relative w-full h-full hidden sm:block">
-                  <Image
-                    src={slide.bg_image.trim()}
-                    alt={slide.headline}
-                    fill
-                    priority={idx === 0}
-                    unoptimized={isSlideUnoptimized(slide.bg_image)}
-                    className="object-cover object-center brightness-95 contrast-100"
-                    sizes="100vw"
-                  />
-                </div>
+                <HeroArtDirectedImage
+                  desktopSrc={slide.bg_image.trim()}
+                  mobileSrc={slide.bg_image_mobile!.trim()}
+                  alt={slide.headline}
+                  priority={idx === 0}
+                  onLoad={handleHeroLoad}
+                  className="object-cover object-center brightness-95 contrast-100"
+                />
               </>
             ) : (
               <Image
@@ -160,6 +197,8 @@ export function HeroCarousel({
                 fill
                 priority={idx === 0}
                 unoptimized={isSlideUnoptimized(slide.bg_image)}
+                onLoad={idx === 0 ? handleHeroLoad : undefined}
+                quality={72}
                 className="object-cover object-center brightness-95 contrast-100"
                 sizes="100vw"
               />

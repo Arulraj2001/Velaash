@@ -121,9 +121,9 @@ export function CategoryVisualGrid({
             src={womenImage}
             alt="Women's Collection"
             fill
-            priority
+            quality={72}
             className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, 60vw"
+            sizes="(max-width: 768px) calc(100vw - 2rem), 60vw"
           />
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/85 via-brand-dark/20 to-transparent group-hover:from-brand-dark/90 transition-all duration-300" />
@@ -172,6 +172,7 @@ export function CategoryVisualGrid({
               src={menImage}
               alt="Men's Collection"
               fill
+              quality={72}
               className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 40vw"
             />
@@ -200,6 +201,7 @@ export function CategoryVisualGrid({
               src={poojaImage}
               alt="Pooja & Brass Collection"
               fill
+              quality={72}
               className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 40vw"
             />

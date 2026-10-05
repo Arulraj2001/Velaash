@@ -98,9 +98,9 @@ export function ClientTestimonials({
                 {/* Minimal Author & Verification */}
                 <div className="pt-4 mt-4 border-t border-brand-border/40 flex items-center justify-between">
                   <div>
-                    <h4 className="font-heading text-xs sm:text-sm font-semibold text-brand-dark">
+                    <h3 className="font-heading text-xs sm:text-sm font-semibold text-brand-dark">
                       {item.name}
-                    </h4>
+                    </h3>
                     <p className="text-[11px] text-brand-muted truncate max-w-[180px]">
                       {item.location || "India"}
                       {item.productName || item.product_name

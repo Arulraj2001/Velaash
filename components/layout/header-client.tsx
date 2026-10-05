@@ -108,7 +108,6 @@ export function HeaderClient({
                       fill
                       className="object-cover"
                       sizes="(max-width: 640px) 44px, 48px"
-                      priority
                     />
                   </div>
                 )}

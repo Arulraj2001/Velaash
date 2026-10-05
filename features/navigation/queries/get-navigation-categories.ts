@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import type { NavigationCategory, NavigationSubCategory } from "../types";
 
 /**
@@ -295,7 +295,7 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
  */
 async function fetchNavigationCategories(): Promise<NavigationCategory[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data: categories, error } = await supabase
       .from("categories")
       .select("id, name, slug, description, image_url, display_order, is_active, parent_id")

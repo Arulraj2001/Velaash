@@ -3,13 +3,17 @@
 import * as React from "react";
 import Image from "next/image";
 
+declare global {
+  interface Window {
+    __velaashHeroLoaded?: boolean;
+  }
+}
+
 interface BrandPreloaderProps {
   /** Optional custom logo image URL from store profile settings */
   logoUrl?: string | null;
   /** Force previewing the preloader regardless of sessionStorage (e.g. for testing) */
   forcePreview?: boolean;
-  /** Active display duration in milliseconds before fade-out begins (default: 2800ms) */
-  displayDurationMs?: number;
   /** Fade-out transition duration in milliseconds (default: 700ms) */
   fadeDurationMs?: number;
 }
@@ -19,7 +23,7 @@ interface BrandPreloaderProps {
  *
  * Provides a high-end cinematic splash intro for visits to Velaash.
  * Features:
- * - 2.8s active showcase + 0.7s silky curtain fade-out (3.5s total) so the emblem & animations shine.
+ * - Hero-load-driven dismissal with a 500ms minimum and 1200ms fallback, followed by a silky curtain fade-out.
  * - Server-rendered initial HTML + synchronous inline script to eliminate 100% of homepage flash.
  * - Precision circular medallion clipping (clipPath: circle) so the logo never shows square corners.
  * - Warm silk alabaster ivory palette with soft golden vignette.
@@ -31,7 +35,6 @@ interface BrandPreloaderProps {
 export function BrandPreloader({
   logoUrl,
   forcePreview = false,
-  displayDurationMs = 2000,
   fadeDurationMs = 600,
 }: BrandPreloaderProps) {
   const [isFadingOut, setIsFadingOut] = React.useState(false);
@@ -58,16 +61,26 @@ export function BrandPreloader({
       // Ignore storage errors in private browsing modes
     }
 
-    // Phase 1: Active showcase
-    const fadeTimer = setTimeout(() => {
+    const dismiss = () => {
       setIsFadingOut(true);
       document.body.style.overflow = originalOverflow;
-    }, displayDurationMs);
+      window.setTimeout(() => setIsDismissed(true), fadeDurationMs);
+    };
 
-    // Phase 2: Complete unmount after silky fade-out
-    const removeTimer = setTimeout(() => {
-      setIsDismissed(true);
-    }, displayDurationMs + fadeDurationMs);
+    const minimumVisibleTimer = window.setTimeout(() => {
+      if (window.__velaashHeroLoaded) {
+        dismiss();
+      }
+    }, 500);
+
+    const handleHeroLoaded = () => {
+      window.__velaashHeroLoaded = true;
+      window.setTimeout(dismiss, 500);
+    };
+
+    window.addEventListener("velaash:hero-lcp-loaded", handleHeroLoaded, { once: true });
+
+    const fallbackTimer = window.setTimeout(dismiss, 1200);
 
     // Allow user to dismiss on Escape key
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -81,12 +94,13 @@ export function BrandPreloader({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(removeTimer);
+      clearTimeout(minimumVisibleTimer);
+      clearTimeout(fallbackTimer);
+      window.removeEventListener("velaash:hero-lcp-loaded", handleHeroLoaded);
       window.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = originalOverflow;
     };
-  }, [displayDurationMs, fadeDurationMs]);
+  }, [fadeDurationMs]);
 
   // Dismiss immediately on user tap/click
   const handleDismiss = () => {
@@ -219,7 +233,6 @@ export function BrandPreloader({
               src={logoUrl || "/logo.png"}
               alt="Velaash Royal Emblem"
               fill
-              priority
               className="object-cover object-top scale-100 rounded-full"
               sizes="(max-width: 640px) 176px, 208px"
             />
