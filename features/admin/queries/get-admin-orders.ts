@@ -79,8 +79,8 @@ export async function getAdminOrders(
     supabase = serverClient as unknown as ReturnType<typeof createAdminClient>;
   }
 
-  // Count total 'needs action' orders across the system
-  const { count: needsActionCount } = await supabase
+  // Concurrently count total 'needs action' orders across the system
+  const needsActionPromise = supabase
     .from("orders")
     .select("id", { count: "exact", head: true })
     .in("status", ["confirmed", "pending"])
@@ -162,7 +162,10 @@ export async function getAdminOrders(
   const toIndex = fromIndex + pageSize - 1;
   query = query.range(fromIndex, toIndex);
 
-  const { data: rawOrders, count, error } = await query;
+  const [{ count: needsActionCount }, { data: rawOrders, count, error }] = await Promise.all([
+    needsActionPromise,
+    query,
+  ]);
 
   if (error) {
     console.error("Error fetching admin orders list:", error);

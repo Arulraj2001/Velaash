@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useTransition } from "react";
+import React, { useState, useMemo, useTransition, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -53,6 +53,11 @@ interface ProductsTableProps {
   categories: { id: string; name: string; slug: string }[];
   role: AdminRole;
   initialCategoryFilter?: string;
+  /** Server-side pagination metadata — forwarded from the page for future use */
+  totalCount?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
 }
 
 const columnHelper = createColumnHelper<AdminProductListItem>();
@@ -77,6 +82,17 @@ export function ProductsTable({
     type: "success" | "warning" | "error";
     message: string;
   } | null>(null);
+
+  // Sync state when props change (e.g. on server navigation or router.refresh)
+  useEffect(() => {
+    setData(initialProducts);
+  }, [initialProducts]);
+
+  useEffect(() => {
+    if (initialCategoryFilter) {
+      setCategoryFilter(initialCategoryFilter);
+    }
+  }, [initialCategoryFilter]);
 
   // Quick Edit Modal state
   const [quickEditProduct, setQuickEditProduct] = useState<AdminProductListItem | null>(null);
@@ -126,7 +142,7 @@ export function ProductsTable({
           type: "success",
           message: res.message || "Product duplicated as draft.",
         });
-        window.location.reload();
+        router.refresh();
       } else {
         setBannerMessage({ type: "error", message: res.error || "Duplication failed." });
       }
@@ -184,7 +200,7 @@ export function ProductsTable({
       if (res.success) {
         setBannerMessage({ type: "success", message: res.message || "Bulk action completed." });
         setRowSelection({});
-        window.location.reload();
+        router.refresh();
       } else {
         setBannerMessage({ type: "error", message: res.error || "Bulk action failed." });
       }
@@ -806,7 +822,10 @@ export function ProductsTable({
           variants={quickEditProduct.variants || []}
           isOpen={Boolean(quickEditProduct)}
           onClose={() => setQuickEditProduct(null)}
-          onSuccess={() => window.location.reload()}
+          onSuccess={() => {
+            setQuickEditProduct(null);
+            router.refresh();
+          }}
         />
       )}
 
@@ -815,7 +834,10 @@ export function ProductsTable({
         <CsvImportModal
           isOpen={isCsvImportOpen}
           onClose={() => setIsCsvImportOpen(false)}
-          onSuccess={() => window.location.reload()}
+          onSuccess={() => {
+            setIsCsvImportOpen(false);
+            router.refresh();
+          }}
         />
       )}
     </div>

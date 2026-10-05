@@ -1,4 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { safeUnstableCache } from "@/lib/safe-cache";
+import { cache } from "react";
+import { createPublicClient } from "@/lib/supabase/server";
 import type { ProductListItem, RawDbProduct } from "../types";
 
 export interface GetRelatedProductsOptions {
@@ -126,13 +128,13 @@ function mapDbProductsToListItems(dbProducts: RawDbProduct[]): ProductListItem[]
   });
 }
 
-export async function getRelatedProducts(
+async function fetchRelatedProducts(
   productIdOrOptions: string | GetRelatedProductsOptions,
   categoryId?: string | null,
   limit = 4
 ): Promise<ProductListItem[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     let excludeIds: string[] = [];
     let catIds: string[] = [];
@@ -230,3 +232,15 @@ export async function getRelatedProducts(
     throw err;
   }
 }
+
+/**
+ * Cross-request cache: related products rarely change, so we use a 10-minute TTL.
+ * Bust with revalidateTag('products') when any product is updated.
+ */
+const getCachedRelatedProducts = safeUnstableCache(
+  fetchRelatedProducts,
+  ["related-products"],
+  { tags: ["products"], revalidate: 600 }
+);
+
+export const getRelatedProducts = cache(getCachedRelatedProducts);

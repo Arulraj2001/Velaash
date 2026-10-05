@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   DndContext,
   closestCenter,
@@ -48,6 +49,7 @@ export function HomepageBuilderView({
   initialSections,
   allProducts,
 }: HomepageBuilderViewProps) {
+  const router = useRouter();
   const [sections, setSections] = useState<AdminHomepageSection[]>(initialSections);
   const [editingSection, setEditingSection] = useState<AdminHomepageSection | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -56,6 +58,10 @@ export function HomepageBuilderView({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    setSections(initialSections);
+  }, [initialSections]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -294,7 +300,7 @@ export function HomepageBuilderView({
         existingTypes={sections.map((s) => s.section_type)}
         onAdded={(msg) => {
           showToast(msg);
-          window.location.reload();
+          router.refresh();
         }}
       />
 

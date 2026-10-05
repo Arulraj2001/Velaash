@@ -1,4 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { safeUnstableCache } from "@/lib/safe-cache";
+import { cache } from "react";
+import { createPublicClient } from "@/lib/supabase/server";
 import type { ProductDetailItem, ProductImageItem, ProductVariantItem } from "../types";
 import { getSizeChart } from "./get-size-chart";
 import { getProductReviews } from "@/features/reviews/queries/get-product-reviews";
@@ -48,164 +50,101 @@ const DEFAULT_METADATA = {
   tips: ["Standard fit.", "Refer to size guide for exact dimensions."],
 };
 
-export async function getProductBySlug(slug: string): Promise<ProductDetailItem | null> {
+// Single consolidated field selection — fallback removed since migration 025 is applied
+const PRODUCT_SELECT = `
+  id,
+  name,
+  slug,
+  description,
+  base_price,
+  compare_at_price,
+  fabric,
+  care_instructions,
+  craftsmanship,
+  has_variants,
+  stock_quantity,
+  specifications,
+  is_active,
+  is_featured,
+  is_made_to_order,
+  stock_status,
+  weight_grams,
+  length_cm,
+  width_cm,
+  height_cm,
+  hsn_code,
+  gst_rate,
+  blouse_included,
+  saree_length_meters,
+  seo_title,
+  seo_description,
+  seo_keywords,
+  created_at,
+  updated_at,
+  category_id,
+  free_shipping_active,
+  free_shipping_start,
+  free_shipping_end,
+  free_shipping_badge_text,
+  categories (
+    id,
+    name,
+    slug,
+    parent_id
+  ),
+  product_variants (
+    id,
+    size,
+    color,
+    color_hex,
+    stock_quantity,
+    sku,
+    price_override,
+    is_active
+  ),
+  product_images (
+    id,
+    image_url,
+    alt_text,
+    display_order,
+    is_primary,
+    variant_id
+  )
+`;
+
+/**
+ * Internal fetcher — hits the DB directly. No caching here.
+ */
+async function fetchProductBySlug(slug: string): Promise<ProductDetailItem | null> {
   const normalizedSlug = slug.toLowerCase().trim();
 
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
-    const selectFieldsWithNew = `
-      id,
-      name,
-      slug,
-      description,
-      base_price,
-      compare_at_price,
-      fabric,
-      care_instructions,
-      craftsmanship,
-      has_variants,
-      stock_quantity,
-      specifications,
-      is_active,
-      is_featured,
-      is_made_to_order,
-      stock_status,
-      weight_grams,
-      length_cm,
-      width_cm,
-      height_cm,
-      hsn_code,
-      gst_rate,
-      blouse_included,
-      saree_length_meters,
-      seo_title,
-      seo_description,
-      seo_keywords,
-      created_at,
-      updated_at,
-      category_id,
-      free_shipping_active,
-      free_shipping_start,
-      free_shipping_end,
-      free_shipping_badge_text,
-      categories (
-        id,
-        name,
-        slug,
-        parent_id
-      ),
-      product_variants (
-        id,
-        size,
-        color,
-        color_hex,
-        stock_quantity,
-        sku,
-        price_override,
-        is_active
-      ),
-      product_images (
-        id,
-        image_url,
-        alt_text,
-        display_order,
-        is_primary,
-        variant_id
-      )
-    `;
-
-    const selectFieldsFallback = `
-      id,
-      name,
-      slug,
-      description,
-      base_price,
-      compare_at_price,
-      fabric,
-      care_instructions,
-      craftsmanship,
-      is_active,
-      is_featured,
-      is_made_to_order,
-      stock_status,
-      weight_grams,
-      length_cm,
-      width_cm,
-      height_cm,
-      hsn_code,
-      gst_rate,
-      blouse_included,
-      saree_length_meters,
-      seo_title,
-      seo_description,
-      seo_keywords,
-      created_at,
-      updated_at,
-      category_id,
-      categories (
-        id,
-        name,
-        slug,
-        parent_id
-      ),
-      product_variants (
-        id,
-        size,
-        color,
-        color_hex,
-        stock_quantity,
-        sku,
-        price_override,
-        is_active
-      ),
-      product_images (
-        id,
-        image_url,
-        alt_text,
-        display_order,
-        is_primary,
-        variant_id
-      )
-    `;
-
-    // Try query with new schema columns first
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let p: any = null;
-    const { data: primaryData, error: primaryError } = await supabase
+    const { data: p, error } = await supabase
       .from("products")
-      .select(selectFieldsWithNew)
+      .select(PRODUCT_SELECT)
       .eq("slug", normalizedSlug)
       .eq("is_active", true)
       .maybeSingle();
 
-    if (!primaryError) {
-      p = primaryData;
-    } else {
-      // Fallback query if remote database has not applied column migration yet
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from("products")
-        .select(selectFieldsFallback)
-        .eq("slug", normalizedSlug)
-        .eq("is_active", true)
-        .maybeSingle();
-
-      if (fallbackError) {
-        console.error("Database query failed in getProductBySlug:", fallbackError);
-        throw new Error(`Database error fetching product: ${fallbackError.message} (${fallbackError.code || "UNKNOWN"})`);
-      }
-      p = fallbackData;
+    if (error) {
+      console.error("[getProductBySlug] Database query failed:", error);
+      throw new Error(`Database error fetching product: ${error.message} (${error.code || "UNKNOWN"})`);
     }
 
     if (!p) {
       return null;
     }
 
-    const variants: ProductVariantItem[] = (p.product_variants || []).filter(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const prod = p as any;
+
+    const variants: ProductVariantItem[] = (prod.product_variants || []).filter(
       (v: ProductVariantItem) => v.is_active
     );
 
-    const images: ProductImageItem[] = (p.product_images || []).sort(
+    const images: ProductImageItem[] = (prod.product_images || []).sort(
       (a: ProductImageItem, b: ProductImageItem) =>
         (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0) || a.display_order - b.display_order
     );
@@ -232,39 +171,39 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailItem 
     });
 
     const sizes: string[] = Array.from(new Set(variants.map((v) => v.size).filter(Boolean)));
-    const hasVariants = p.has_variants !== false && variants.length > 0;
+    const hasVariants = prod.has_variants !== false && variants.length > 0;
     const totalStock = hasVariants
       ? variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0)
-      : (p.stock_quantity ?? 999);
-    const categoryData = Array.isArray(p.categories) ? p.categories[0] : p.categories;
+      : (prod.stock_quantity ?? 999);
+    const categoryData = Array.isArray(prod.categories) ? prod.categories[0] : prod.categories;
 
-    // Only fetch size chart if product has size variants
+    // Fetch size chart and reviews in parallel — they don't depend on each other
     const hasSizeVariants = variants.some((v) => Boolean(v.size));
     const [sizeChart, reviewData] = await Promise.all([
-      hasSizeVariants ? getSizeChart(p.id, p.category_id) : Promise.resolve(null),
-      getProductReviews(p.id),
+      hasSizeVariants ? getSizeChart(prod.id, prod.category_id) : Promise.resolve(null),
+      getProductReviews(prod.id),
     ]);
 
     const meta = PDP_EXTENDED_METADATA[normalizedSlug] || (hasVariants ? DEFAULT_METADATA : null);
 
     return {
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      description: p.description,
-      category_id: p.category_id,
+      id: prod.id,
+      name: prod.name,
+      slug: prod.slug,
+      description: prod.description,
+      category_id: prod.category_id,
       category_name: categoryData?.name || null,
       category_slug: categoryData?.slug || null,
-      base_price: Number(p.base_price),
-      compare_at_price: p.compare_at_price ? Number(p.compare_at_price) : null,
-      created_at: p.created_at,
-      is_active: p.is_active,
-      is_featured: p.is_featured,
-      is_new: Date.now() - new Date(p.created_at).getTime() <= 30 * 24 * 60 * 60 * 1000,
-      stock_status: p.stock_status,
+      base_price: Number(prod.base_price),
+      compare_at_price: prod.compare_at_price ? Number(prod.compare_at_price) : null,
+      created_at: prod.created_at,
+      is_active: prod.is_active,
+      is_featured: prod.is_featured,
+      is_new: Date.now() - new Date(prod.created_at).getTime() <= 30 * 24 * 60 * 60 * 1000,
+      stock_status: prod.stock_status,
       has_variants: hasVariants,
-      stock_quantity: p.stock_quantity ?? totalStock,
-      specifications: Array.isArray(p.specifications) ? p.specifications : [],
+      stock_quantity: prod.stock_quantity ?? totalStock,
+      specifications: Array.isArray(prod.specifications) ? prod.specifications : [],
       images,
       variants,
       colors,
@@ -274,28 +213,28 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailItem 
         reviewData.breakdown.totalCount > 0
           ? { average: reviewData.breakdown.average, count: reviewData.breakdown.totalCount }
           : null,
-      fabric: p.fabric || meta?.fabric || null,
-      care_instructions: p.care_instructions || meta?.care_instructions || null,
-      craftsmanship: p.craftsmanship || meta?.craftsmanship || null,
-      is_made_to_order: p.is_made_to_order,
-      weight_grams: p.weight_grams,
-      length_cm: p.length_cm,
-      width_cm: p.width_cm,
-      height_cm: p.height_cm,
-      hsn_code: p.hsn_code || "6204",
-      gst_rate: Number(p.gst_rate) || 5,
-      blouse_included: p.blouse_included ?? false,
-      saree_length_meters: p.saree_length_meters,
-      seo_title: p.seo_title,
-      seo_description: p.seo_description,
-      seo_keywords: p.seo_keywords ?? undefined,
+      fabric: prod.fabric || meta?.fabric || null,
+      care_instructions: prod.care_instructions || meta?.care_instructions || null,
+      craftsmanship: prod.craftsmanship || meta?.craftsmanship || null,
+      is_made_to_order: prod.is_made_to_order,
+      weight_grams: prod.weight_grams,
+      length_cm: prod.length_cm,
+      width_cm: prod.width_cm,
+      height_cm: prod.height_cm,
+      hsn_code: prod.hsn_code || "6204",
+      gst_rate: Number(prod.gst_rate) || 5,
+      blouse_included: prod.blouse_included ?? false,
+      saree_length_meters: prod.saree_length_meters,
+      seo_title: prod.seo_title,
+      seo_description: prod.seo_description,
+      seo_keywords: prod.seo_keywords ?? undefined,
       size_chart: sizeChart,
       reviews_breakdown: reviewData.breakdown,
       reviews: reviewData.reviews,
-      free_shipping_active: Boolean(p.free_shipping_active),
-      free_shipping_start: p.free_shipping_start || null,
-      free_shipping_end: p.free_shipping_end || null,
-      free_shipping_badge_text: p.free_shipping_badge_text || null,
+      free_shipping_active: Boolean(prod.free_shipping_active),
+      free_shipping_start: prod.free_shipping_start || null,
+      free_shipping_end: prod.free_shipping_end || null,
+      free_shipping_badge_text: prod.free_shipping_badge_text || null,
     };
   } catch (err: unknown) {
     if (
@@ -311,3 +250,20 @@ export async function getProductBySlug(slug: string): Promise<ProductDetailItem 
     throw err;
   }
 }
+
+/**
+ * Cross-request cache: revalidates every 5 minutes or when 'products' tag is busted.
+ * Bust with revalidateTag('products') whenever a product is saved/updated in admin actions.
+ */
+const getCachedProductBySlug = safeUnstableCache(
+  fetchProductBySlug,
+  ["product-by-slug"],
+  { tags: ["products"], revalidate: 300 }
+);
+
+/**
+ * Per-request memoization via React cache():
+ * guarantees that generateMetadata() and the Page component share ONE DB call per request.
+ * Cross-request result comes from unstable_cache above.
+ */
+export const getProductBySlug = cache(getCachedProductBySlug);

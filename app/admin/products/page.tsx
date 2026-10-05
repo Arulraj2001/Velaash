@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminProductsPageProps {
-  searchParams?: Promise<{ category?: string }>;
+  searchParams?: Promise<{ category?: string; status?: string; search?: string; page?: string }>;
 }
 
 export default async function AdminProductsPage({ searchParams }: AdminProductsPageProps) {
@@ -32,12 +32,22 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
 
   const resolvedParams = searchParams ? await searchParams : {};
   const initialCategoryFilter = resolvedParams.category || "all";
+  const initialStatus = (resolvedParams.status as "all" | "active" | "inactive") || "all";
+  const initialSearch = resolvedParams.search || "";
+  const page = Math.max(1, Number(resolvedParams.page) || 1);
 
-  const [products, categories] = await Promise.all([
-    getAdminProductsList(),
+  const [result, categories] = await Promise.all([
+    getAdminProductsList({
+      categoryId: initialCategoryFilter !== "all" ? initialCategoryFilter : undefined,
+      status: initialStatus,
+      search: initialSearch,
+      page,
+      pageSize: 50,
+    }),
     getCategoriesForSelect(),
   ]);
 
+  const products = result.products;
   const isOwner = admin.role === "owner";
   const activeCount = products.filter((p) => p.is_active).length;
   const lowStockCount = products.filter((p) => p.total_stock > 0 && p.total_stock <= 5).length;
@@ -75,7 +85,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
           <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
             Total Catalog
           </span>
-          <div className="mt-1 text-2xl font-bold text-slate-900">{products.length}</div>
+          <div className="mt-1 text-2xl font-bold text-slate-900">{result.totalCount}</div>
           <p className="text-[10px] text-slate-400 mt-0.5">Styles defined</p>
         </div>
 
@@ -110,6 +120,10 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
         categories={categories}
         role={admin.role}
         initialCategoryFilter={initialCategoryFilter}
+        totalCount={result.totalCount}
+        page={result.page}
+        pageSize={result.pageSize}
+        totalPages={result.totalPages}
       />
     </div>
   );

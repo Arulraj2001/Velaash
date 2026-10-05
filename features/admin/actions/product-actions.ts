@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/features/auth/queries/get-admin-user";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -19,6 +19,8 @@ import {
  */
 function revalidateProductPaths(slug?: string) {
   try {
+    // Bust cross-request unstable_cache entries for products
+    revalidateTag("products", "max");
     revalidatePath("/admin/products");
     revalidatePath("/admin/dashboard");
     revalidatePath("/shop");
