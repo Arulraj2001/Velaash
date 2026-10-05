@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import type {
   ProductListItem,
   ProductFilterParams,
@@ -133,7 +133,7 @@ function computeAvailableFilters(allProducts: ProductListItem[]): AvailableFilte
  * Internal fetch for category metadata.
  */
 async function fetchCategoryBySlug(slug: string): Promise<ProductCategoryMetadata | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("categories")
     .select("id, name, slug, description, image_url, banner_image_url, banner_badge, banner_subtitle, seo_title, seo_description, parent_id")
@@ -223,7 +223,7 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     // 1. DATABASE-LEVEL CATEGORY RESOLUTION
     let targetCategoryIds: string[] | null = null;

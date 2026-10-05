@@ -6,10 +6,9 @@ import { Footer } from "@/components/layout/footer";
 import { CustomerShell } from "@/components/layout/customer-shell";
 import { BRAND } from "@/lib/constants";
 import { AuthProvider } from "@/features/auth/components/auth-provider";
-import { createClient } from "@/lib/supabase/server";
 import { CartToast } from "@/features/cart";
-import { WishlistSync, getWishlistProductIds } from "@/features/wishlist";
-import { AnalyticsScripts, CookieConsentBanner } from "@/features/analytics";
+import { WishlistSync } from "@/features/wishlist";
+import { AnalyticsScripts, DeferredCookieConsentBanner } from "@/features/analytics";
 import { BrandPreloader, PromoOfferPopup, WhatsAppFloat } from "@/components/ui";
 import { env } from "@/lib/env";
 
@@ -117,17 +116,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  let initialUser = null;
-  let initialWishlistIds: string[] = [];
   let logoUrl: string | null = null;
   let promoPopupData = null;
   let whatsappHref = "";
   let whatsappDisplay = "";
 
   try {
-    const [{ storeProfile }, supabase, promoPopup] = await Promise.all([
+    const [{ storeProfile }, promoPopup] = await Promise.all([
       getSiteSettings(),
-      createClient(),
       getPromoPopup(),
     ]);
     logoUrl = storeProfile.logo_url || "/logo.png";
@@ -142,14 +138,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       whatsappHref = `https://wa.me/${waDigits}?text=${encodeURIComponent(defaultMessage)}`;
       whatsappDisplay = waRaw.startsWith("+") ? waRaw : `+${waDigits}`;
     }
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    initialUser = user;
-    if (user) {
-      initialWishlistIds = await getWishlistProductIds(user.id);
-    }
   } catch (error: unknown) {
     if (
       typeof error === "object" &&
@@ -159,7 +147,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ) {
       throw error;
     }
-    initialUser = null;
   }
 
   return (
@@ -172,8 +159,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         className="bg-brand-cream text-brand-dark selection:bg-brand-gold selection:text-brand-dark flex min-h-screen flex-col font-sans antialiased"
         suppressHydrationWarning
       >
-        <AuthProvider initialUser={initialUser}>
-          <WishlistSync initialWishlistIds={initialWishlistIds} />
+        <AuthProvider>
+          <WishlistSync />
           <CustomerShell
             header={<Header />}
             footer={<Footer />}
@@ -181,7 +168,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <>
                 <BrandPreloader logoUrl={logoUrl} />
                 <CartToast />
-                <CookieConsentBanner />
+                <DeferredCookieConsentBanner />
                 <PromoOfferPopup data={promoPopupData} />
                 <WhatsAppFloat href={whatsappHref} displayNumber={whatsappDisplay} />
               </>

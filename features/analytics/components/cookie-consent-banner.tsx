@@ -14,7 +14,7 @@ export function CookieConsentBanner() {
   }
 
   return (
-    <aside
+    <div
       role="dialog"
       aria-live="polite"
       aria-label="Cookie and Privacy Preferences"
@@ -85,6 +85,6 @@ export function CookieConsentBanner() {
           </button>
         </div>
       </div>
-    </aside>
+    </div>
   );
 }

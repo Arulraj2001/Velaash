@@ -37,6 +37,7 @@ export function BrandStory({
                 src={imageUrl}
                 alt={headline}
                 fill
+                quality={72}
                 className="object-cover object-center"
                 sizes="(max-width: 1024px) 100vw, 42vw"
               />
@@ -83,9 +84,9 @@ export function BrandStory({
                   <Feather className="w-5 h-5 text-brand-accent" />
                 </div>
                 <div>
-                  <h4 className="font-heading text-base font-semibold text-brand-dark">
+                  <h3 className="font-heading text-base font-semibold text-brand-dark">
                     Pure Breathable Weaves
-                  </h4>
+                  </h3>
                   <p className="text-xs text-brand-muted font-sans mt-0.5">
                     Premium Chanderi, mulmul cottons, and linen blends selected for soft, all-day comfort against your skin.
                   </p>
@@ -97,9 +98,9 @@ export function BrandStory({
                   <Scissors className="w-5 h-5 text-brand-accent" />
                 </div>
                 <div>
-                  <h4 className="font-heading text-base font-semibold text-brand-dark">
+                  <h3 className="font-heading text-base font-semibold text-brand-dark">
                     Flattering Contemporary Tailoring
-                  </h4>
+                  </h3>
                   <p className="text-xs text-brand-muted font-sans mt-0.5">
                     Engineered drape lines that celebrate movement without stiffness, excess bulk, or restrictive seams.
                   </p>
@@ -111,9 +112,9 @@ export function BrandStory({
                   <Sparkles className="w-5 h-5 text-brand-accent" />
                 </div>
                 <div>
-                  <h4 className="font-heading text-base font-semibold text-brand-dark">
+                  <h3 className="font-heading text-base font-semibold text-brand-dark">
                     Delicate Hand-Touched Details
-                  </h4>
+                  </h3>
                   <p className="text-xs text-brand-muted font-sans mt-0.5">
                     Subtle zari trims, artisanal button detailing, and durable French seam construction.
                   </p>

@@ -92,6 +92,7 @@ export function OccasionStrip({
                 src={item.image}
                 alt={item.name}
                 fill
+                quality={72}
                 className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
                 sizes="(max-width: 640px) 50vw, 25vw"
               />

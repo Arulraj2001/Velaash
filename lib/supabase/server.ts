@@ -1,5 +1,5 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { type SupabaseClient } from "@supabase/supabase-js";
+import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { env } from "@/lib/env";
 import type { Database } from "@/types/database.types";
@@ -40,4 +40,15 @@ export async function createClient(): Promise<SupabaseClient<Database>> {
   );
 
   return client as unknown as SupabaseClient<Database>;
+}
+
+/**
+ * Creates a cookie-free client for public, cached reads. Keeping these reads
+ * independent of request cookies allows ISR pages to be rendered ahead of time.
+ */
+export function createPublicClient(): SupabaseClient<Database> {
+  return createSupabaseClient<Database>(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
 }
