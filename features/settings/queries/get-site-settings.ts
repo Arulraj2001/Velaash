@@ -54,6 +54,7 @@ export const DEFAULT_ANNOUNCEMENT_SETTING: AnnouncementSetting = {
   is_enabled: true,
   text: DEFAULT_ANNOUNCEMENT.text,
   link: DEFAULT_ANNOUNCEMENT.link,
+  speed: 28,
 };
 
 export const DEFAULT_PAYMENT_POLICY: PaymentPolicySetting = {
@@ -266,6 +267,7 @@ async function fetchSiteSettings(): Promise<SiteSettingsData> {
       is_enabled: rawAnnouncement.is_enabled ?? DEFAULT_ANNOUNCEMENT_SETTING.is_enabled,
       text: rawAnnouncement.text || DEFAULT_ANNOUNCEMENT_SETTING.text,
       link: rawAnnouncement.link || DEFAULT_ANNOUNCEMENT_SETTING.link,
+      speed: Number(rawAnnouncement.speed) || DEFAULT_ANNOUNCEMENT_SETTING.speed || 28,
     };
 
     const paymentRecord = rawPayment as Record<string, unknown>;

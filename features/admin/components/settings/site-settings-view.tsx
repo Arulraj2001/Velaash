@@ -1387,6 +1387,7 @@ function AnnouncementSettingsForm({
     is_enabled: initial.is_enabled ?? true,
     text: initial.text || "Welcome to Velaash — New Arrivals Every Week",
     link: initial.link || "/shop",
+    speed: initial.speed ?? 28,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -1415,7 +1416,7 @@ function AnnouncementSettingsForm({
       <div>
         <h2 className="text-lg font-heading font-semibold text-slate-900">Announcement Bar</h2>
         <p className="text-xs text-slate-500">
-          The top notification strip on every storefront page. Configure promotional text and destination link.
+          The top notification strip on every storefront page. Configure promotional text, destination link, and marquee moving speed.
         </p>
       </div>
 
@@ -1473,13 +1474,116 @@ function AnnouncementSettingsForm({
         />
       </div>
 
-      {/* Live Preview of Announcement Bar */}
+      {/* Ticker Animation Speed Control */}
+      <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="block text-sm font-bold text-slate-900">
+              Ticker Moving Speed
+            </span>
+            <span className="block text-xs text-slate-500 mt-0.5">
+              Control how fast the notification text glides across the top bar.
+            </span>
+          </div>
+          <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+            {form.speed}s ({form.speed <= 15 ? "Fastest" : form.speed <= 22 ? "Fast" : form.speed <= 34 ? "Normal" : "Slow"})
+          </span>
+        </div>
+
+        {/* Speed Preset Buttons */}
+        <div className="grid grid-cols-4 gap-2 pt-1">
+          {[
+            { label: "Slow", seconds: 42, icon: "🐢" },
+            { label: "Normal", seconds: 28, icon: "🚶" },
+            { label: "Fast", seconds: 18, icon: "⚡" },
+            { label: "Very Fast", seconds: 12, icon: "🚀" },
+          ].map((preset) => {
+            const isSelected = form.speed === preset.seconds;
+            return (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => setForm({ ...form, speed: preset.seconds })}
+                className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                  isSelected
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs ring-1 ring-slate-900"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100/80"
+                }`}
+              >
+                <span className="text-sm mb-0.5">{preset.icon}</span>
+                <span>{preset.label}</span>
+                <span className={`text-[10px] font-normal ${isSelected ? "text-slate-300" : "text-slate-400"}`}>
+                  {preset.seconds}s
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Custom Duration Slider */}
+        <div className="pt-2">
+          <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 mb-1">
+            <span>Faster (10s)</span>
+            <span>Custom Duration: {form.speed}s</span>
+            <span>Slower (60s)</span>
+          </div>
+          <input
+            type="range"
+            min="10"
+            max="60"
+            step="1"
+            value={form.speed}
+            onChange={(e) => setForm({ ...form, speed: Number(e.target.value) })}
+            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
+          />
+        </div>
+      </div>
+
+      {/* Live Animated Preview of Announcement Bar */}
       {form.is_enabled && (
         <div className="space-y-1.5 pt-2">
-          <span className="text-xs font-semibold text-slate-500">Live Header Preview</span>
-          <div className="w-full bg-brand-dark py-2 px-4 rounded-xl text-center text-xs font-medium text-brand-gold flex items-center justify-center gap-2">
-            <span>{form.text}</span>
-            <ExternalLink className="w-3.5 h-3.5" />
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-600">
+              Live Animated Preview (Moving at {form.speed}s)
+            </span>
+            <span className="text-[10px] text-slate-400">Hover pauses marquee</span>
+          </div>
+          <div className="w-full bg-brand-dark py-2 px-3 rounded-xl overflow-hidden text-xs font-medium text-brand-gold border border-brand-accent/30 relative shadow-inner group">
+            <div className="flex overflow-hidden">
+              <div
+                style={{ animationDuration: `${form.speed}s` }}
+                className="animate-announcement-marquee flex shrink-0 items-center gap-8 pr-8"
+              >
+                {[0, 1, 2].map((idx) => (
+                  <div key={`p1-${idx}`} className="flex items-center gap-8">
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-brand-gold animate-pulse shrink-0" />
+                      <span className="text-[11px] font-semibold tracking-wider uppercase">
+                        {form.text}
+                      </span>
+                    </span>
+                    <span className="text-brand-gold/40 text-[10px]">✦</span>
+                  </div>
+                ))}
+              </div>
+              <div
+                aria-hidden="true"
+                style={{ animationDuration: `${form.speed}s` }}
+                className="animate-announcement-marquee flex shrink-0 items-center gap-8 pr-8"
+              >
+                {[0, 1, 2].map((idx) => (
+                  <div key={`p2-${idx}`} className="flex items-center gap-8">
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-brand-gold animate-pulse shrink-0" />
+                      <span className="text-[11px] font-semibold tracking-wider uppercase">
+                        {form.text}
+                      </span>
+                    </span>
+                    <span className="text-brand-gold/40 text-[10px]">✦</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

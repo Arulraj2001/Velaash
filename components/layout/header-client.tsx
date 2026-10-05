@@ -68,6 +68,7 @@ export function HeaderClient({
           text={announcement?.text}
           link={announcement?.link}
           isEnabled={announcement?.is_enabled}
+          speed={announcement?.speed}
         />
 
         <Container size="xl">

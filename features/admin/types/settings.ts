@@ -114,6 +114,7 @@ export const AnnouncementSettingsSchema = z.object({
   is_enabled: z.boolean(),
   text: z.string().trim().min(1, "Announcement text is required"),
   link: z.string().trim().default("/shop"),
+  speed: z.coerce.number().min(8).max(120).default(28),
 });
 
 export type AnnouncementSettingsFormData = z.infer<typeof AnnouncementSettingsSchema>;

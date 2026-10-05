@@ -49,6 +49,7 @@ export interface AnnouncementSetting {
   is_enabled: boolean;
   text: string;
   link: string;
+  speed?: number;
 }
 
 /**

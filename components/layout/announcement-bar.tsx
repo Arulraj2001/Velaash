@@ -14,12 +14,14 @@ interface AnnouncementBarProps {
   text?: string;
   link?: string;
   isEnabled?: boolean;
+  speed?: number;
 }
 
 export function AnnouncementBar({
   text = DEFAULT_ANNOUNCEMENT.text,
   link = DEFAULT_ANNOUNCEMENT.link,
   isEnabled = true,
+  speed = 28,
 }: AnnouncementBarProps) {
   const isServerOrDismissed = React.useSyncExternalStore(
     subscribe,
@@ -62,7 +64,10 @@ export function AnnouncementBar({
 
       {/* Moving Marquee Ticker Track */}
       <div className="flex overflow-hidden">
-        <div className="animate-announcement-marquee flex shrink-0 items-center gap-8 pr-8">
+        <div
+          style={{ animationDuration: `${speed}s` }}
+          className="animate-announcement-marquee flex shrink-0 items-center gap-8 pr-8"
+        >
           {[0, 1, 2, 3].map((idx) => (
             <div key={`track1-${idx}`} className="flex items-center gap-8">
               {link ? (
@@ -83,6 +88,7 @@ export function AnnouncementBar({
         {/* Duplicate track for seamless infinite looping */}
         <div
           aria-hidden="true"
+          style={{ animationDuration: `${speed}s` }}
           className="animate-announcement-marquee flex shrink-0 items-center gap-8 pr-8"
         >
           {[0, 1, 2, 3].map((idx) => (
