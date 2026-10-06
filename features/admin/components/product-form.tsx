@@ -302,7 +302,7 @@ export function ProductForm({
         );
         if (res.success) {
           setSuccessMsg(res.message || "Product updated successfully.");
-          router.refresh();
+          setDeletedImageUrls([]);
         } else {
           setErrorMsg(res.error || "Failed to update product.");
         }

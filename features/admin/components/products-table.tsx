@@ -199,8 +199,17 @@ export function ProductsTable({
       const res = await bulkProductsAction({ action, productIds: selectedIds });
       if (res.success) {
         setBannerMessage({ type: "success", message: res.message || "Bulk action completed." });
+        if (action === "activate" || action === "deactivate") {
+          const isActive = action === "activate";
+          setData((prev) =>
+            prev.map((item) =>
+              selectedIds.includes(item.id) ? { ...item, is_active: isActive } : item
+            )
+          );
+        } else if (action === "delete") {
+          setData((prev) => prev.filter((item) => !selectedIds.includes(item.id)));
+        }
         setRowSelection({});
-        router.refresh();
       } else {
         setBannerMessage({ type: "error", message: res.error || "Bulk action failed." });
       }
@@ -822,9 +831,23 @@ export function ProductsTable({
           variants={quickEditProduct.variants || []}
           isOpen={Boolean(quickEditProduct)}
           onClose={() => setQuickEditProduct(null)}
-          onSuccess={() => {
+          onSuccess={(newTotalStock, updatedVariants) => {
+            if (typeof newTotalStock === "number") {
+              setData((prev) =>
+                prev.map((item) =>
+                  item.id === quickEditProduct.id
+                    ? {
+                        ...item,
+                        total_stock: newTotalStock,
+                        stock_quantity: newTotalStock,
+                        stock_status: newTotalStock > 0 ? "in_stock" : "out_of_stock",
+                        variants: updatedVariants || item.variants,
+                      }
+                    : item
+                )
+              );
+            }
             setQuickEditProduct(null);
-            router.refresh();
           }}
         />
       )}

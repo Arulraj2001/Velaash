@@ -75,7 +75,7 @@ export async function updateSession(request: NextRequest) {
     // User is logged in — verify whether they exist in admin_users
     const { data: adminRecord } = await supabase
       .from("admin_users")
-      .select("id, role")
+      .select("id, role, full_name")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -95,7 +95,21 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(new URL(returnUrl, request.url));
     }
 
-    return supabaseResponse;
+    // Forward verified admin identity to downstream Server Components to eliminate redundant DB calls
+    requestHeaders.set("x-admin-user-id", adminRecord.id);
+    requestHeaders.set("x-admin-user-role", adminRecord.role);
+    requestHeaders.set("x-admin-user-email", user.email || "");
+    requestHeaders.set("x-admin-user-name", adminRecord.full_name || "");
+
+    const authenticatedAdminResponse = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+    supabaseResponse.cookies.getAll().forEach((c) => {
+      authenticatedAdminResponse.cookies.set(c.name, c.value);
+    });
+    return authenticatedAdminResponse;
   }
 
   // ==========================================

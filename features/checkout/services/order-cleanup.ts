@@ -80,7 +80,50 @@ export async function cancelExpiredPendingOnlineOrders(
   }
 
   if (cancelledOrderNumbers.length > 0) {
-    revalidateProductCatalog();
+    const affectedSlugs = new Set<string>();
+
+    if (adminSupabase) {
+      try {
+        const { data: orderItems } = await adminSupabase
+          .from("orders")
+          .select("order_items (products (slug))")
+          .in("order_number", cancelledOrderNumbers);
+
+        if (orderItems) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          for (const order of orderItems as any[]) {
+            if (Array.isArray(order.order_items)) {
+              for (const item of order.order_items) {
+                if (item.products?.slug) {
+                  affectedSlugs.add(item.products.slug);
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching slugs for cancelled expired orders:", err);
+      }
+    }
+
+    // Check mock orders if relevant
+    for (const mockOrder of MOCK_ONLINE_PENDING_ORDERS) {
+      if (cancelledOrderNumbers.includes(mockOrder.orderNumber)) {
+        const mockProduct = MOCK_CLOTHING_PRODUCTS[0];
+        if (mockProduct?.slug) {
+          affectedSlugs.add(mockProduct.slug);
+        }
+      }
+    }
+
+    if (affectedSlugs.size > 0) {
+      revalidateProductCatalog({
+        slugs: Array.from(affectedSlugs),
+        tags: ["products"],
+        revalidateListings: false,
+        revalidateAdmin: false,
+      });
+    }
   }
 
   return {

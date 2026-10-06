@@ -20,7 +20,7 @@ interface StockQuickEditModalProps {
   variants: VariantQuickItem[];
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (totalStock?: number, variants?: VariantQuickItem[]) => void;
 }
 
 function StockQuickEditDialogContent({
@@ -34,7 +34,7 @@ function StockQuickEditDialogContent({
   initialVariants: VariantQuickItem[];
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (totalStock?: number, variants?: VariantQuickItem[]) => void;
 }) {
   const isSimpleProduct = product.has_variants === false || initialVariants.length === 0;
   const [variants, setVariants] = useState<VariantQuickItem[]>(initialVariants);
@@ -81,10 +81,10 @@ function StockQuickEditDialogContent({
           type: "success",
           message: res.message || "Stock updated successfully.",
         });
-        if (onSuccess) onSuccess();
+        if (onSuccess) onSuccess(res.totalStock, isSimpleProduct ? undefined : variants);
         setTimeout(() => {
           onClose();
-        }, 1200);
+        }, 800);
       } else {
         setFeedback({
           type: "error",

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { AdminRole } from "@/types/database.types";
+export type { AdminRole };
 
 export const SendOtpSchema = z.object({
   email: z.string().trim().email("Please enter a valid email address"),

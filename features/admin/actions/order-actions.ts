@@ -520,9 +520,18 @@ export async function cancelAdminOrderAction(
             }
           }
         }
-        revalidateProductCatalog(slugs);
+        revalidateProductCatalog({
+          slugs,
+          tags: ["products"],
+          revalidateListings: true,
+          revalidateAdmin: false,
+        });
       } catch {
-        revalidateProductCatalog();
+        revalidateProductCatalog({
+          tags: ["products"],
+          revalidateListings: false,
+          revalidateAdmin: false,
+        });
       }
     }
 

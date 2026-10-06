@@ -994,7 +994,14 @@ export async function createOrderAction(rawInput: CreateOrderInput): Promise<Cre
     const affectedSlugs = Array.from(
       new Set(verifiedItems.map((it) => it.slug).filter((s): s is string => Boolean(s)))
     );
-    revalidateProductCatalog(affectedSlugs);
+    const anyItemWentOutOfStock = verifiedItems.some(
+      (it) => it.availableStock > 0 && it.availableStock - it.quantity <= 0
+    );
+    revalidateProductCatalog({
+      slugs: affectedSlugs,
+      revalidateListings: anyItemWentOutOfStock,
+      revalidateAdmin: false, // Customer checkout: NEVER revalidate admin
+    });
 
     return {
       success: true,

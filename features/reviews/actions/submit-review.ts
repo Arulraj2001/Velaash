@@ -81,9 +81,18 @@ export async function submitProductReview(input: SubmitReviewInput): Promise<Sub
         .eq("id", productId)
         .maybeSingle();
 
-      revalidateProductCatalog(prod?.slug);
+      revalidateProductCatalog({
+        slugs: prod?.slug ? [prod.slug] : [],
+        tags: ["reviews", "products"],
+        revalidateListings: false,
+        revalidateAdmin: false,
+      });
     } catch {
-      revalidateProductCatalog();
+      revalidateProductCatalog({
+        tags: ["reviews", "products"],
+        revalidateListings: false,
+        revalidateAdmin: false,
+      });
     }
 
     return {

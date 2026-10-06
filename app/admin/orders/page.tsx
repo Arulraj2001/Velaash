@@ -29,9 +29,7 @@ interface AdminOrdersPageProps {
 export default async function AdminOrdersPage({
   searchParams,
 }: AdminOrdersPageProps) {
-  const admin = await getAdminUser();
-  if (!admin) redirect("/admin/login?returnUrl=/admin/orders");
-  await requireAdmin("view_orders");
+  const admin = await requireAdmin("view_orders");
 
   const resolvedParams = await searchParams;
 

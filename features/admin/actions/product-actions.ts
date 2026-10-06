@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { after } from "next/server";
 import { requireAdmin } from "@/features/auth/queries/get-admin-user";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -16,10 +17,34 @@ import {
 import { revalidateProductCatalog } from "@/lib/revalidation";
 
 /**
- * Helper to revalidate all affected routes across admin and storefront
+ * Helper to revalidate affected routes across admin and storefront in the background.
+ * Uses after() from next/server so the admin response returns immediately without waiting for CDN purge or warming.
  */
-function revalidateProductPaths(slug?: string) {
-  revalidateProductCatalog(slug);
+function revalidateProductPaths(
+  slug?: string | string[],
+  options?: {
+    revalidateListings?: boolean;
+    revalidateAdmin?: boolean;
+    warm?: boolean;
+  }
+) {
+  try {
+    after(() => {
+      revalidateProductCatalog({
+        slugs: slug,
+        revalidateListings: options?.revalidateListings ?? true,
+        revalidateAdmin: options?.revalidateAdmin ?? false,
+        warm: options?.warm ?? true,
+      });
+    });
+  } catch {
+    revalidateProductCatalog({
+      slugs: slug,
+      revalidateListings: options?.revalidateListings ?? true,
+      revalidateAdmin: options?.revalidateAdmin ?? false,
+      warm: options?.warm ?? true,
+    });
+  }
 }
 
 /**
@@ -269,7 +294,41 @@ export async function updateProductAction(
     updated_at: new Date().toISOString(),
   };
 
-  // 1. Update product base record
+  // 1. Fetch existing product state, existing variants, and existing images in parallel
+  const [prevProdRes, currentVariantsRes, existingImagesRes] = await Promise.all([
+    adminClient
+      .from("products")
+      .select("name, base_price, category_id, is_active, stock_status")
+      .eq("id", productId)
+      .maybeSingle(),
+    adminClient
+      .from("product_variants")
+      .select("id")
+      .eq("product_id", productId),
+    adminClient
+      .from("product_images")
+      .select("id, image_url, is_primary")
+      .eq("product_id", productId),
+  ]);
+
+  const prevProd = prevProdRes.data;
+  const currentVariants = currentVariantsRes.data;
+  const existingImages = existingImagesRes.data;
+
+  // Determine whether customer card-visible fields changed:
+  // (name, base_price, category_id, is_active, stock_status, or primary image)
+  const prevPrimaryImage = existingImages?.find((img) => img.is_primary)?.image_url;
+  const nextPrimaryImage = valid.images.find((img) => img.is_primary)?.image_url;
+  const cardVisibleChanged =
+    !prevProd ||
+    prevProd.name !== valid.name ||
+    prevProd.base_price !== valid.base_price ||
+    prevProd.category_id !== valid.category_id ||
+    prevProd.is_active !== valid.is_active ||
+    prevProd.stock_status !== stockStatus ||
+    prevPrimaryImage !== nextPrimaryImage;
+
+  // 2. Update product base record
   const { error: updateErr } = await adminClient
     .from("products")
     .update(productUpdateData)
@@ -295,12 +354,7 @@ export async function updateProductAction(
     }
   }
 
-  // 2. Synchronize variants
-  const { data: currentVariants } = await adminClient
-    .from("product_variants")
-    .select("id")
-    .eq("product_id", productId);
-
+  // 3. Synchronize variants
   const currentVariantIds = new Set((currentVariants ?? []).map((v) => v.id));
 
   if (!hasVariants) {
@@ -356,8 +410,8 @@ export async function updateProductAction(
       }
     }
 
-    // Upsert variants with strict uniqueness and error verification
-    for (const v of valid.variants) {
+    // Upsert variants concurrently with Promise.all
+    const variantOps = valid.variants.map(async (v) => {
       if (v.id && currentVariantIds.has(v.id)) {
         const { error: vUpdErr } = await adminClient
           .from("product_variants")
@@ -373,13 +427,7 @@ export async function updateProductAction(
           })
           .eq("id", v.id);
 
-        if (vUpdErr) {
-          console.error("Failed to update variant:", vUpdErr);
-          if (vUpdErr.code === "23505" || vUpdErr.message?.includes("sku")) {
-            return { success: false, error: `SKU "${v.sku}" is already in use by another product variant.` };
-          }
-          return { success: false, error: `Failed to update variant "${v.size}/${v.color}": ${vUpdErr.message}` };
-        }
+        if (vUpdErr) throw vUpdErr;
       } else {
         const { error: vInsErr } = await adminClient.from("product_variants").insert({
           product_id: productId,
@@ -392,23 +440,22 @@ export async function updateProductAction(
           is_active: v.is_active,
         });
 
-        if (vInsErr) {
-          console.error("Failed to insert variant:", vInsErr);
-          if (vInsErr.code === "23505" || vInsErr.message?.includes("sku")) {
-            return { success: false, error: `SKU "${v.sku}" is already in use by another product variant.` };
-          }
-          return { success: false, error: `Failed to create variant "${v.size}/${v.color}": ${vInsErr.message}` };
-        }
+        if (vInsErr) throw vInsErr;
       }
+    });
+
+    try {
+      await Promise.all(variantOps);
+    } catch (err: any) {
+      console.error("Failed to sync variants:", err);
+      if (err.code === "23505" || err.message?.includes("sku")) {
+        return { success: false, error: `SKU is already in use by another product variant.` };
+      }
+      return { success: false, error: `Failed to update variants: ${err.message || err}` };
     }
   }
 
-  // 3. Synchronize images safely without pre-deleting existing records
-  const { data: existingImages } = await adminClient
-    .from("product_images")
-    .select("id")
-    .eq("product_id", productId);
-
+  // 4. Synchronize images safely without pre-deleting existing records
   const imagesToInsert = valid.images.map((img, idx) => ({
     product_id: productId,
     image_url: img.image_url,
@@ -485,7 +532,11 @@ export async function updateProductAction(
       .eq("product_id", productId);
   }
 
-  revalidateProductPaths(valid.slug);
+  revalidateProductPaths(valid.slug, {
+    revalidateListings: cardVisibleChanged,
+    revalidateAdmin: false,
+    warm: true,
+  });
 
   return {
     success: true,
@@ -735,6 +786,12 @@ export async function updateProductStockAction(input: ProductStockQuickEditInput
     const newStock = Math.floor(input.stockQuantity);
     const stockStatus = newStock > 0 ? "in_stock" : "out_of_stock";
 
+    const { data: prevProd } = await adminClient
+      .from("products")
+      .select("stock_status, slug")
+      .eq("id", input.productId)
+      .maybeSingle();
+
     let prod: { slug: string } | null = null;
     const updRes = await adminClient
       .from("products")
@@ -762,9 +819,18 @@ export async function updateProductStockAction(input: ProductStockQuickEditInput
       prod = fbRes.data;
     }
 
-    revalidateProductPaths(prod?.slug);
+    const slug = prod?.slug || prevProd?.slug;
+    const availabilityChanged = prevProd?.stock_status !== stockStatus;
+
+    revalidateProductPaths(slug, {
+      revalidateListings: availabilityChanged,
+      revalidateAdmin: false,
+      warm: true,
+    });
+
     return {
       success: true,
+      productId: input.productId,
       totalStock: newStock,
       message: `Stock quantity successfully updated (Total: ${newStock} units).`,
     };
@@ -775,31 +841,42 @@ export async function updateProductStockAction(input: ProductStockQuickEditInput
     return { success: false, error: "Invalid stock update parameters." };
   }
 
-  // Update each variant stock count
-  for (const item of input.updates) {
-    if (item.stockQuantity < 0) {
-      return { success: false, error: "Stock quantity cannot be negative." };
-    }
+  // Fetch previous product state
+  const { data: prevProd } = await adminClient
+    .from("products")
+    .select("stock_status, slug")
+    .eq("id", input.productId)
+    .maybeSingle();
 
-    const { error: variantErr } = await adminClient
-      .from("product_variants")
-      .update({
-        stock_quantity: Math.floor(item.stockQuantity),
-        updated_at: new Date().toISOString(),
+  // Update all variant stock counts concurrently
+  try {
+    await Promise.all(
+      input.updates.map(async (item) => {
+        if (item.stockQuantity < 0) {
+          throw new Error("Stock quantity cannot be negative.");
+        }
+
+        const { error: variantErr } = await adminClient
+          .from("product_variants")
+          .update({
+            stock_quantity: Math.floor(item.stockQuantity),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", item.variantId)
+          .eq("product_id", input.productId);
+
+        if (variantErr) throw variantErr;
       })
-      .eq("id", item.variantId)
-      .eq("product_id", input.productId);
-
-    if (variantErr) {
-      console.error("Variant stock update failed:", variantErr);
-      return { success: false, error: `Database error updating variant stock: ${variantErr.message}` };
-    }
+    );
+  } catch (err: any) {
+    console.error("Variant stock update failed:", err);
+    return { success: false, error: `Database error updating variant stock: ${err.message || err}` };
   }
 
   // Re-derive overall stock status on the product
   const { data: allVariants } = await adminClient
     .from("product_variants")
-    .select("stock_quantity")
+    .select("id, size, color, sku, stock_quantity")
     .eq("product_id", input.productId)
     .eq("is_active", true);
 
@@ -812,6 +889,7 @@ export async function updateProductStockAction(input: ProductStockQuickEditInput
   const { data: prod } = await adminClient
     .from("products")
     .update({
+      stock_quantity: totalStock,
       stock_status: stockStatus,
       updated_at: new Date().toISOString(),
     })
@@ -819,11 +897,20 @@ export async function updateProductStockAction(input: ProductStockQuickEditInput
     .select("slug")
     .maybeSingle();
 
-  revalidateProductPaths(prod?.slug);
+  const slug = prod?.slug || prevProd?.slug;
+  const availabilityChanged = prevProd?.stock_status !== stockStatus;
+
+  revalidateProductPaths(slug, {
+    revalidateListings: availabilityChanged,
+    revalidateAdmin: false,
+    warm: true,
+  });
 
   return {
     success: true,
+    productId: input.productId,
     totalStock,
+    variants: allVariants || [],
     message: `Stock quantities successfully updated (Total: ${totalStock} units).`,
   };
 }

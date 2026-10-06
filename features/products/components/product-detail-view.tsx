@@ -73,6 +73,49 @@ export function ProductDetailView({
 
   const [selectedSize, setSelectedSize] = React.useState<string>(firstInStockSize);
 
+  // URL sync helper: updates query params using window.history.replaceState (no router navigation, no server round trip)
+  const syncVariantUrl = React.useCallback((color?: string, size?: string) => {
+    if (typeof window === "undefined") return;
+    try {
+      const url = new URL(window.location.href);
+      if (color) url.searchParams.set("color", color);
+      else url.searchParams.delete("color");
+      if (size) url.searchParams.set("size", size);
+      else url.searchParams.delete("size");
+      window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+    } catch {
+      // Safe no-op in non-browser contexts
+    }
+  }, []);
+
+  // Sync from initial URL query params on mount on client only (keeps SSR/ISR completely static)
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const urlColor = sp.get("color");
+      const urlSize = sp.get("size");
+      if (urlColor && product.colors?.some((c) => c.color.toLowerCase() === urlColor.toLowerCase())) {
+        setSelectedColor(urlColor);
+      }
+      if (urlSize && product.sizes?.includes(urlSize)) {
+        setSelectedSize(urlSize);
+      }
+    } catch {
+      // Safe no-op
+    }
+  }, [product.colors, product.sizes]);
+
+  const handleColorSelect = (newColor: string) => {
+    setSelectedColor(newColor);
+    syncVariantUrl(newColor, selectedSize);
+  };
+
+  const handleSizeSelect = (newSize: string) => {
+    setSelectedSize(newSize);
+    syncVariantUrl(selectedColor, newSize);
+  };
+
   // Update selected size when color changes if the current size is out of stock in new color
   const [prevColor, setPrevColor] = React.useState(selectedColor);
   if (prevColor !== selectedColor) {
@@ -83,6 +126,7 @@ export function ProductDetailView({
         const available = colorVariants.find((v) => v.stock_quantity > 0);
         if (available) {
           setSelectedSize(available.size);
+          syncVariantUrl(selectedColor, available.size);
         }
       }
     }
@@ -393,7 +437,7 @@ export function ProductDetailView({
                       <button
                         key={c.color}
                         type="button"
-                        onClick={() => setSelectedColor(c.color)}
+                        onClick={() => handleColorSelect(c.color)}
                         className={`group relative flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-all ${
                           isSelected
                             ? "border-brand-dark bg-brand-dark text-white shadow-xs"
@@ -450,7 +494,7 @@ export function ProductDetailView({
                       <button
                         key={size}
                         type="button"
-                        onClick={() => setSelectedSize(size)}
+                        onClick={() => handleSizeSelect(size)}
                         className={`relative min-w-[50px] rounded-lg border px-3.5 py-2 text-xs font-semibold transition-all ${
                           isSelected
                             ? "border-brand-dark bg-brand-dark text-white shadow-xs"

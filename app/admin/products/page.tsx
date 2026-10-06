@@ -21,14 +21,7 @@ interface AdminProductsPageProps {
 }
 
 export default async function AdminProductsPage({ searchParams }: AdminProductsPageProps) {
-  const admin = await getAdminUser();
-
-  if (!admin) {
-    redirect("/admin/login?returnUrl=/admin/products");
-  }
-
-  // Ensure caller has at least view_products permission
-  await requireAdmin("view_products");
+  const admin = await requireAdmin("view_products");
 
   const resolvedParams = searchParams ? await searchParams : {};
   const initialCategoryFilter = resolvedParams.category || "all";

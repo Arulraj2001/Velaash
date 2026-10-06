@@ -47,6 +47,45 @@ export function ProductGallery({
     setActiveIndex(0);
   }
 
+  // Idle-time prefetching of remaining gallery & variant images
+  // Once the primary hero image loads, prefetch all other images in idle time
+  const prefetchedUrls = React.useRef(new Set<string>());
+
+  const prefetchOtherImages = React.useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    const runPrefetch = () => {
+      const screenW = window.innerWidth;
+      const targetW = screenW <= 640 ? 640 : screenW <= 1024 ? 750 : 828;
+
+      allImages.forEach((img) => {
+        if (!img.image_url || prefetchedUrls.current.has(img.image_url)) return;
+        prefetchedUrls.current.add(img.image_url);
+
+        // 1. Prefetch Next.js optimized variant image at the exact matching quality and size
+        const nextUrl = `/_next/image?url=${encodeURIComponent(img.image_url)}&w=${targetW}&q=75`;
+        const preloader = new window.Image();
+        preloader.src = nextUrl;
+
+        // 2. Also prefetch raw source image
+        const rawPreloader = new window.Image();
+        rawPreloader.src = img.image_url;
+      });
+    };
+
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(() => runPrefetch(), { timeout: 2000 });
+    } else {
+      setTimeout(runPrefetch, 250);
+    }
+  }, [allImages]);
+
+  // Fallback trigger if onLoad already fired or for cached initial renders
+  React.useEffect(() => {
+    const timer = setTimeout(prefetchOtherImages, 500);
+    return () => clearTimeout(timer);
+  }, [prefetchOtherImages]);
+
   // Handle keyboard events for lightbox
   React.useEffect(() => {
     if (!isLightboxOpen) return;
@@ -121,6 +160,8 @@ export function ProductGallery({
             fill
             priority
             fetchPriority="high"
+            quality={75}
+            onLoad={prefetchOtherImages}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
             className="object-cover object-top transition-opacity duration-300"
           />

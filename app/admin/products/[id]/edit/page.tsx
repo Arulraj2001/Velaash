@@ -23,19 +23,13 @@ interface AdminEditProductPageProps {
 export default async function AdminEditProductPage({
   params,
 }: AdminEditProductPageProps) {
-  const admin = await getAdminUser();
   const { id } = await params;
-
-  if (!admin) {
-    redirect(`/admin/login?returnUrl=/admin/products/${id}/edit`);
-  }
+  const admin = await requireAdmin("manage_products");
 
   // Hard-block non-owners at the server level: staff cannot access full edit form
   if (admin.role !== "owner") {
     redirect("/admin/products?error=unauthorized_owner_only");
   }
-
-  await requireAdmin("manage_products");
 
   const [product, categories, sizeCharts] = await Promise.all([
     getAdminProductById(id),
