@@ -417,7 +417,7 @@ export function CategoryFormModal({
               <label className="block text-xs font-bold text-slate-700 mb-1">
                 Category Grid Thumbnail Image
               </label>
-              <div className="flex items-center gap-4">
+              <div className="flex items-start gap-4">
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center">
                   {imageUrl ? (
                     <Image
@@ -432,7 +432,7 @@ export function CategoryFormModal({
                   )}
                 </div>
 
-                <div className="flex-1 space-y-1">
+                <div className="flex-1 space-y-1.5 w-full">
                   <div className="flex items-center gap-2">
                     <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs">
                       {isUploading ? (
@@ -460,8 +460,15 @@ export function CategoryFormModal({
                       </button>
                     )}
                   </div>
+                  <input
+                    type="text"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="Or enter image URL / static path (e.g. /categories/sarees.jpg)"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] text-slate-800 focus:border-indigo-500 focus:outline-none transition-all font-mono"
+                  />
                   <p className="text-[11px] text-slate-500">
-                    Recommended: 800×800 JPG, PNG or WebP (max 5MB).
+                    Recommended: 800×800 JPG, PNG or WebP. Static files in /categories/ or uploaded URLs are supported.
                   </p>
                 </div>
               </div>

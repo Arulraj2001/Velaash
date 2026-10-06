@@ -10,28 +10,27 @@ interface CategoryVisualGridProps {
   subtitle?: string;
 }
 
-// Curated high-resolution fallback photography
+// Curated South Indian heritage static photography fallbacks
 const DEFAULT_IMAGES: Record<string, string> = {
-  // Women fallbacks (rich, warm editorial tones)
-  "kurtas-sets":
-    "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=85",
-  dresses:
-    "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1200&q=85",
-  sarees:
-    "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=85",
-  "tops-shirts":
-    "https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&w=1200&q=85",
-  women_fallback:
-    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=85",
+  // Women fallbacks
+  "kurtas-sets": "/categories/kurtas-sets.jpg",
+  dresses: "/categories/dresses.jpg",
+  sarees: "/categories/sarees.jpg",
+  "tops-shirts": "/categories/tops-shirts.jpg",
+  bottoms: "/categories/bottoms.jpg",
+  loungewear: "/categories/loungewear.jpg",
+  women_fallback: "/categories/kurtas-sets.jpg",
   // Men fallbacks
-  men: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=85",
-  "men-shirts":
-    "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=85",
-  // Pooja fallbacks
-  "pooja-and-brass":
-    "https://images.unsplash.com/photo-1605647540924-852290f6b0d5?auto=format&fit=crop&w=900&q=85",
-  pooja:
-    "https://images.unsplash.com/photo-1605647540924-852290f6b0d5?auto=format&fit=crop&w=900&q=85",
+  men: "/categories/men.jpg",
+  "men-kurtas": "/categories/men-kurtas.jpg",
+  "men-t-shirts": "/categories/men-t-shirts.jpg",
+  "men-bottoms": "/categories/men-bottoms.jpg",
+  "men-shirts": "/categories/men-kurtas.jpg",
+  // Pooja & Brass fallbacks
+  "pooja-and-brass": "/categories/pooja-and-brass.jpg",
+  "lamps-diyas": "/categories/lamps-diyas.jpg",
+  "pooja-accessories": "/categories/pooja-accessories.jpg",
+  pooja: "/categories/pooja-and-brass.jpg",
 };
 
 function getImageUrl(
