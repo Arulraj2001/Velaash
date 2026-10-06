@@ -12,148 +12,124 @@ export interface GetAdminProductsFilter {
   search?: string;
   categoryId?: string;
   status?: "all" | "active" | "inactive";
+  page?: number;
+  pageSize?: number;
+}
+
+export interface AdminProductsListResult {
+  products: AdminProductListItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 /**
  * Fetches products list for the TanStack Table with joined categories, variants, images, and order history flags.
+ * Server-side pagination and filtering; search is pushed to Postgres via ILIKE.
  */
 export async function getAdminProductsList(
   filter: GetAdminProductsFilter = {}
-): Promise<AdminProductListItem[]> {
+): Promise<AdminProductsListResult> {
+  const { search, categoryId, status, page = 1, pageSize = 50 } = filter;
   const supabase = await createClient();
 
-  // 1. Fetch set of product IDs currently referenced in order_items
-  const { data: orderedItems } = await supabase
-    .from("order_items")
-    .select("product_id")
-    .not("product_id", "is", null);
+  const fromIndex = (page - 1) * pageSize;
+  const toIndex = fromIndex + pageSize - 1;
 
-  const orderedProductIds = new Set<string>();
-  if (orderedItems) {
-    for (const item of orderedItems) {
-      if (item.product_id) orderedProductIds.add(item.product_id);
-    }
-  }
-
-  const selectWithNew = `
-    id,
-    name,
-    slug,
-    category_id,
-    base_price,
-    compare_at_price,
-    has_variants,
-    stock_quantity,
-    specifications,
-    is_active,
-    is_featured,
-    stock_status,
-    created_at,
-    updated_at,
-    categories (
-      id,
-      name
-    ),
-    product_variants (
-      id,
-      size,
-      color,
-      sku,
-      stock_quantity,
-      price_override,
-      is_active
-    ),
-    product_images (
-      id,
-      image_url,
-      alt_text,
-      is_primary,
-      display_order
-    )
-  `;
-
-  const selectFallback = `
-    id,
-    name,
-    slug,
-    category_id,
-    base_price,
-    compare_at_price,
-    is_active,
-    is_featured,
-    stock_status,
-    created_at,
-    updated_at,
-    categories (
-      id,
-      name
-    ),
-    product_variants (
-      id,
-      size,
-      color,
-      sku,
-      stock_quantity,
-      price_override,
-      is_active
-    ),
-    product_images (
-      id,
-      image_url,
-      alt_text,
-      is_primary,
-      display_order
-    )
-  `;
-
-  // 2. Query products with categories, variants, and images
+  // 1. Fetch products with server-side filtering — no full table scan on order_items
   let query = supabase
     .from("products")
-    .select(selectWithNew)
-    .order("updated_at", { ascending: false });
+    .select(
+      `
+        id,
+        name,
+        slug,
+        category_id,
+        base_price,
+        compare_at_price,
+        has_variants,
+        stock_quantity,
+        specifications,
+        is_active,
+        is_featured,
+        stock_status,
+        created_at,
+        updated_at,
+        categories (
+          id,
+          name
+        ),
+        product_variants (
+          id,
+          size,
+          color,
+          sku,
+          stock_quantity,
+          price_override,
+          is_active
+        ),
+        product_images (
+          id,
+          image_url,
+          alt_text,
+          is_primary,
+          display_order
+        )
+      `,
+      { count: "exact" }
+    )
+    .order("updated_at", { ascending: false })
+    .range(fromIndex, toIndex);
 
-  if (filter.categoryId && filter.categoryId !== "all") {
-    query = query.eq("category_id", filter.categoryId);
+  if (categoryId && categoryId !== "all") {
+    query = query.eq("category_id", categoryId);
   }
 
-  if (filter.status === "active") {
+  if (status === "active") {
     query = query.eq("is_active", true);
-  } else if (filter.status === "inactive") {
+  } else if (status === "inactive") {
     query = query.eq("is_active", false);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let products: any[] | null = null;
-  const { data: primaryData, error: primaryError } = await query;
+  // Server-side search: name ILIKE or slug ILIKE (avoids JS client-side filter over all rows)
+  if (search && search.trim()) {
+    const cleanSearch = search.trim().replace(/[%_]/g, "\\$&");
+    query = query.or(`name.ilike.%${cleanSearch}%,slug.ilike.%${cleanSearch}%`);
+  }
 
-  if (!primaryError) {
-    products = primaryData;
-  } else {
-    // Fallback if column migration is pending on remote DB
-    let fallbackQuery = supabase
-      .from("products")
-      .select(selectFallback)
-      .order("updated_at", { ascending: false });
+  const { data: products, count, error: productsError } = await query;
 
-    if (filter.categoryId && filter.categoryId !== "all") {
-      fallbackQuery = fallbackQuery.eq("category_id", filter.categoryId);
-    }
-    if (filter.status === "active") {
-      fallbackQuery = fallbackQuery.eq("is_active", true);
-    } else if (filter.status === "inactive") {
-      fallbackQuery = fallbackQuery.eq("is_active", false);
-    }
+  if (productsError) {
+    console.error("Failed to query admin products list:", productsError);
+    return { products: [], totalCount: 0, page, pageSize, totalPages: 0 };
+  }
 
-    const { data: fallbackData, error: fallbackError } = await fallbackQuery;
-    if (fallbackError) {
-      console.error("Failed to query admin products list:", fallbackError);
-      return [];
+  const productList = products ?? [];
+  const totalCount = count ?? productList.length;
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+
+  // 2. Fetch only the product_ids in this page that have been ordered
+  //    Uses idx_order_items_product_id index — not a full table scan
+  const pageProductIds = productList.map((p) => p.id);
+  const orderedProductIds = new Set<string>();
+
+  if (pageProductIds.length > 0) {
+    const { data: orderedItems } = await supabase
+      .from("order_items")
+      .select("product_id")
+      .in("product_id", pageProductIds)
+      .not("product_id", "is", null);
+
+    if (orderedItems) {
+      for (const item of orderedItems) {
+        if (item.product_id) orderedProductIds.add(item.product_id);
+      }
     }
-    products = fallbackData;
   }
 
   // 3. Map into AdminProductListItem
-  const mappedList: AdminProductListItem[] = (products ?? []).map((p) => {
+  const mappedList: AdminProductListItem[] = productList.map((p) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const category = p.categories as any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -207,18 +183,7 @@ export async function getAdminProductsList(
     };
   });
 
-  // Client-side search matching by product name OR SKU
-  if (filter.search && filter.search.trim()) {
-    const q = filter.search.trim().toLowerCase();
-    return mappedList.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.slug.toLowerCase().includes(q) ||
-        p.skus.some((sku) => sku.toLowerCase().includes(q))
-    );
-  }
-
-  return mappedList;
+  return { products: mappedList, totalCount, page, pageSize, totalPages };
 }
 
 /**

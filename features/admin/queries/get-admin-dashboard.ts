@@ -11,9 +11,32 @@ import type {
 } from "../types";
 
 /**
+ * Shape returned by the get_admin_dashboard_metrics Postgres RPC (migration 031).
+ */
+interface DashboardRpcResult {
+  operational: {
+    pendingOrdersCount: number;
+    ordersNeedingActionCount: number;
+    lowStockCount: number;
+    totalOrdersCount: number;
+  };
+  financial: {
+    totalRevenue: number;
+    revenueToday: number;
+    revenueThisWeek: number;
+    revenueThisMonth: number;
+    aov: number;
+    salesTrend14Days: { date: string; revenue: number; orders: number }[];
+  } | null;
+}
+
+/**
  * Fetches role-aware metrics, recent orders, inventory alerts, and analytics.
+ *
+ * Operational metrics + financial aggregates are now resolved via a single
+ * get_admin_dashboard_metrics() Postgres RPC call instead of 10 separate queries.
  * Staff members will NEVER receive financial metrics (revenue, AOV, sales trends) —
- * these are explicitly withheld at the query boundary.
+ * the RPC enforces this at the database boundary.
  */
 export async function getAdminDashboardData(
   admin: AdminUserSession
@@ -26,54 +49,27 @@ export async function getAdminDashboardData(
     supabase = serverClient as unknown as ReturnType<typeof createAdminClient>;
   }
 
-  // 1. Operational Counts
-  const [
-    { count: pendingCount, error: pendingErr },
-    { count: confirmedCount, error: confirmedErr },
-    { count: pendingPaidCount, error: pendingPaidErr },
-    { count: totalOrdersCount, error: totalErr },
-    { count: lowStockCount, error: lowStockErr },
-  ] = await Promise.all([
-    supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending"),
-    supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "confirmed"),
-    supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending")
-      .eq("payment_status", "paid"),
-    supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true }),
-    supabase
-      .from("product_variants")
-      .select("id", { count: "exact", head: true })
-      .lte("stock_quantity", 5)
-      .eq("is_active", true),
-  ]);
+  // ── 1. Single RPC replaces 10 separate COUNT / SUM queries ────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: rpcData, error: rpcErr } = await (supabase as any).rpc(
+    "get_admin_dashboard_metrics",
+    { p_role: admin.role }
+  );
 
-  if (pendingErr) console.warn("Dashboard pending orders query notice:", pendingErr.message);
-  if (confirmedErr) console.warn("Dashboard confirmed orders query notice:", confirmedErr.message);
-  if (pendingPaidErr) console.warn("Dashboard pending paid orders query notice:", pendingPaidErr.message);
-  if (totalErr) console.warn("Dashboard total orders query notice:", totalErr.message);
-  if (lowStockErr) console.warn("Dashboard low stock query notice:", lowStockErr.message);
+  if (rpcErr) {
+    console.warn("Dashboard metrics RPC error:", rpcErr.message);
+  }
 
-  // An order qualifies as needing action if it is confirmed OR pending and already paid
-  const ordersNeedingActionCount = (confirmedCount ?? 0) + (pendingPaidCount ?? 0);
+  const metrics = rpcData as DashboardRpcResult | null;
 
   const operationalMetrics: OperationalMetrics = {
-    pendingOrdersCount: pendingCount ?? 0,
-    ordersNeedingActionCount,
-    lowStockCount: lowStockCount ?? 0,
-    totalOrdersCount: totalOrdersCount ?? 0,
+    pendingOrdersCount: metrics?.operational?.pendingOrdersCount ?? 0,
+    ordersNeedingActionCount: metrics?.operational?.ordersNeedingActionCount ?? 0,
+    lowStockCount: metrics?.operational?.lowStockCount ?? 0,
+    totalOrdersCount: metrics?.operational?.totalOrdersCount ?? 0,
   };
 
-  // 2. Recent 10 Orders (visible to both Owner and Staff for fulfillment)
+  // ── 2. Recent 10 Orders — slim select, no financial data needed ───────────
   const { data: rawOrders, error: ordersErr } = await supabase
     .from("orders")
     .select(`
@@ -94,7 +90,6 @@ export async function getAdminDashboardData(
   }
 
   const recentOrders: RecentOrderRow[] = (rawOrders ?? []).map((order) => {
-    // Attempt parsing customer name & contact from shipping_address snapshot (supports both fullName and full_name)
     const addr = order.shipping_address as { fullName?: string; full_name?: string; phone?: string; email?: string } | null;
     return {
       id: order.id,
@@ -109,7 +104,7 @@ export async function getAdminDashboardData(
     };
   });
 
-  // 3. Low Stock Alerts (products/variants <= 5 inventory)
+  // ── 3. Low Stock Alerts — uses partial index idx_variants_low_stock ────────
   const { data: rawVariants, error: variantsErr } = await supabase
     .from("product_variants")
     .select(`
@@ -149,114 +144,32 @@ export async function getAdminDashboardData(
     };
   });
 
-  // 4. Financial & Revenue Metrics (Strictly withheld if role is NOT 'owner')
+  // ── 4. Financial metrics — map from RPC result (owner only) ───────────────
   let financialMetrics: OwnerFinancialMetrics | null = null;
 
-  if (admin.role === "owner") {
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  if (admin.role === "owner" && metrics?.financial) {
+    const fin = metrics.financial;
 
-    // Run all revenue aggregation queries in parallel using targeted date filters
-    // Instead of downloading ALL rows and summing in JS, filter in Postgres
-    const [
-      { data: allTimePaid, error: allTimeErr },
-      { data: todayPaid, error: todayErr },
-      { data: weekPaid, error: weekErr },
-      { data: monthPaid, error: monthErr },
-      { data: trendRows, error: trendErr },
-    ] = await Promise.all([
-      // Total all-time: only fetch total_amount (no created_at needed)
-      supabase
-        .from("orders")
-        .select("total_amount")
-        .in("payment_status", ["paid"])
-        .neq("status", "cancelled"),
-      // Today
-      supabase
-        .from("orders")
-        .select("total_amount")
-        .in("payment_status", ["paid"])
-        .neq("status", "cancelled")
-        .gte("created_at", startOfToday),
-      // Last 7 days
-      supabase
-        .from("orders")
-        .select("total_amount")
-        .in("payment_status", ["paid"])
-        .neq("status", "cancelled")
-        .gte("created_at", sevenDaysAgo),
-      // Last 30 days
-      supabase
-        .from("orders")
-        .select("total_amount")
-        .in("payment_status", ["paid"])
-        .neq("status", "cancelled")
-        .gte("created_at", thirtyDaysAgo),
-      // Last 14 days (for trend chart) — only the slim data needed
-      supabase
-        .from("orders")
-        .select("total_amount, created_at")
-        .in("payment_status", ["paid"])
-        .neq("status", "cancelled")
-        .gte("created_at", fourteenDaysAgo)
-        .order("created_at", { ascending: true }),
-    ]);
-
-    if (allTimeErr) console.warn("Dashboard all-time revenue query notice:", allTimeErr.message);
-    if (todayErr) console.warn("Dashboard today revenue query notice:", todayErr.message);
-    if (weekErr) console.warn("Dashboard weekly revenue query notice:", weekErr.message);
-    if (monthErr) console.warn("Dashboard monthly revenue query notice:", monthErr.message);
-    if (trendErr) console.warn("Dashboard trend query notice:", trendErr.message);
-
-    const sumRows = (rows: { total_amount: number | null }[] | null) =>
-      (rows ?? []).reduce((sum, r) => sum + Number(r.total_amount || 0), 0);
-
-    const totalRevenue = sumRows(allTimePaid);
-    const revenueToday = sumRows(todayPaid);
-    const revenueThisWeek = sumRows(weekPaid);
-    const revenueThisMonth = sumRows(monthPaid);
-    const allTimeCount = (allTimePaid ?? []).length;
-    const aov = allTimeCount > 0 ? Math.round(totalRevenue / allTimeCount) : 0;
-
-    // Build 14-day chronological sales trend from the slim trendRows
-    const salesTrend14Days: DailySalesData[] = [];
-    for (let i = 13; i >= 0; i--) {
-      const targetDate = new Date();
-      targetDate.setDate(targetDate.getDate() - i);
-      const y = targetDate.getFullYear();
-      const m = targetDate.getMonth();
-      const d = targetDate.getDate();
-
-      const dayStart = new Date(y, m, d, 0, 0, 0, 0).getTime();
-      const dayEnd = new Date(y, m, d, 23, 59, 59, 999).getTime();
-
-      const dayRows = (trendRows ?? []).filter((r) => {
-        const t = new Date(r.created_at).getTime();
-        return t >= dayStart && t <= dayEnd;
-      });
-
-      const dayRevenue = dayRows.reduce((sum, r) => sum + Number(r.total_amount || 0), 0);
-      const formattedDate = targetDate.toLocaleDateString("en-IN", {
+    // RPC returns ISO date strings (YYYY-MM-DD); format them for the chart
+    const salesTrend14Days: DailySalesData[] = (fin.salesTrend14Days ?? []).map((row) => {
+      const d = new Date(row.date);
+      const formattedDate = d.toLocaleDateString("en-IN", {
         month: "short",
         day: "numeric",
       });
-
-      salesTrend14Days.push({
+      return {
         date: formattedDate,
-        revenue: dayRevenue,
-        orders: dayRows.length,
-      });
-    }
+        revenue: Number(row.revenue ?? 0),
+        orders: Number(row.orders ?? 0),
+      };
+    });
 
     financialMetrics = {
-      totalRevenue,
-      revenueToday,
-      revenueThisWeek,
-      revenueThisMonth,
-      aov,
+      totalRevenue: Number(fin.totalRevenue ?? 0),
+      revenueToday: Number(fin.revenueToday ?? 0),
+      revenueThisWeek: Number(fin.revenueThisWeek ?? 0),
+      revenueThisMonth: Number(fin.revenueThisMonth ?? 0),
+      aov: Number(fin.aov ?? 0),
       salesTrend14Days,
     };
   }

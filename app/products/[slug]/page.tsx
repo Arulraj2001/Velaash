@@ -10,8 +10,34 @@ import {
 import { getProductBySlug } from "@/features/products/queries/get-product-by-slug";
 import { getRelatedProducts } from "@/features/products/queries/get-related-products";
 import { getSiteSettings } from "@/features/settings/queries/get-site-settings";
+import { createPublicClient } from "@/lib/supabase/server";
 import { BRAND } from "@/lib/constants";
 import { env } from "@/lib/env";
+
+export const dynamicParams = true;
+export const revalidate = 300;
+
+/**
+ * Pre-generate static HTML and RSC payloads for active products at build time (ISR).
+ * Allows instant CDN edge delivery without hitting Netlify functions.
+ */
+export async function generateStaticParams() {
+  try {
+    const supabase = createPublicClient();
+    const { data: products } = await supabase
+      .from("products")
+      .select("slug")
+      .eq("is_active", true)
+      .limit(50);
+
+    return (products || []).map((p) => ({
+      slug: p.slug,
+    }));
+  } catch (err) {
+    console.error("[generateStaticParams] Error fetching product slugs:", err);
+    return [];
+  }
+}
 
 const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 
@@ -79,7 +105,10 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = await params;
+  const startT = Date.now();
+
   const product = await getProductBySlug(slug);
+  const productDuration = Date.now() - startT;
 
   // If slug doesn't match any active product, render 404
   if (!product) {
@@ -87,10 +116,18 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   }
 
   // Concurrently fetch related products and site settings
+  const subStartT = Date.now();
   const [relatedProducts, siteSettings] = await Promise.all([
     getRelatedProducts(product.id, product.category_id, 8),
     getSiteSettings(),
   ]);
+  const subDuration = Date.now() - subStartT;
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      `[PDP Server-Timing] /products/${slug} -> product: ${productDuration}ms | related+settings: ${subDuration}ms | total: ${Date.now() - startT}ms`
+    );
+  }
 
   // JSON-LD Schema.org Structured Data
   const jsonLd = {

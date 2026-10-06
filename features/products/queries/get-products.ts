@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { safeUnstableCache } from "@/lib/safe-cache";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/server";
 import type {
@@ -193,7 +193,7 @@ async function fetchCategoryBySlug(slug: string): Promise<ProductCategoryMetadat
  * Cached category metadata: revalidates every 5 minutes.
  * Bust with revalidateTag('navigation-categories') when categories change.
  */
-const getCachedCategoryBySlug = unstable_cache(
+const getCachedCategoryBySlug = safeUnstableCache(
   fetchCategoryBySlug,
   ["category-by-slug"],
   { tags: ["navigation-categories"], revalidate: 300 }
@@ -205,18 +205,17 @@ const getCachedCategoryBySlug = unstable_cache(
 export const getCategoryBySlug = cache(getCachedCategoryBySlug);
 
 /**
- * Primary server-side query function for the product listing and catalog pages
- *
+ * Internal implementation — called by the cached wrapper below.
  * Pushes down all filtering (category, size, color, price range, stock status),
  * sorting (.order()), and pagination (.range()) directly to the Postgres database.
- * No mock fallbacks are used: fails fast and surfaces real database errors.
  */
-export async function getProducts(params: ProductFilterParams = {}): Promise<ProductQueryResult> {
+async function fetchProducts(params: ProductFilterParams = {}): Promise<ProductQueryResult> {
   const page = Math.max(1, Number(params.page) || 1);
   const limit = Math.max(1, Number(params.limit) || PAGE_SIZE_DEFAULT);
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
+  // Fetch category metadata and resolve category IDs in parallel when a category filter is active
   let categoryMeta: ProductCategoryMetadata | null = null;
   if (params.category) {
     categoryMeta = await getCategoryBySlug(params.category);
@@ -225,74 +224,78 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
   try {
     const supabase = createPublicClient();
 
-    // 1. DATABASE-LEVEL CATEGORY RESOLUTION
+    // 1. DATABASE-LEVEL CATEGORY RESOLUTION + VARIANT FILTER — run in parallel
     let targetCategoryIds: string[] | null = null;
-    if (params.category) {
-      const { data: allCategories, error: catErr } = await supabase
-        .from("categories")
-        .select("id, slug, parent_id")
-        .eq("is_active", true);
 
-      if (catErr) {
-        console.error("Database error querying categories:", catErr);
-        throw new Error(`Database error fetching categories: ${catErr.message} (${catErr.code || "UNKNOWN"})`);
-      }
+    const hasSizeFilter = params.size && params.size.length > 0;
+    const hasColorFilter = params.color && params.color.length > 0;
+    const hasVariantFilter = hasSizeFilter || hasColorFilter;
 
-      if (allCategories && allCategories.length > 0) {
-        const currentCat = allCategories.find(
-          (c) => c.slug.toLowerCase() === params.category?.toLowerCase()
-        );
+    // Build both pre-filter queries and run them concurrently
+    const categoryPromise = params.category
+      ? supabase
+          .from("categories")
+          .select("id, slug, parent_id")
+          .eq("is_active", true)
+      : Promise.resolve({ data: null, error: null });
 
-        if (currentCat) {
-          const childIds = allCategories
-            .filter((c) => c.parent_id === currentCat.id)
-            .map((c) => c.id);
-          targetCategoryIds = [currentCat.id, ...childIds];
-        } else {
-          // Category slug does not exist in database
-          return {
-            products: [],
-            totalCount: 0,
-            page,
-            pageSize: limit,
-            totalPages: 0,
-            category: categoryMeta,
-            availableFilters: {
-              categories: [],
-              sizes: [],
-              colors: [],
-              priceRange: { min: 0, max: 10000 },
-            },
-          };
-        }
+    const variantPromise = hasVariantFilter
+      ? (() => {
+          let vq = supabase
+            .from("product_variants")
+            .select("product_id")
+            .eq("is_active", true);
+          if (hasSizeFilter) vq = vq.in("size", params.size!);
+          if (hasColorFilter) vq = vq.in("color", params.color!);
+          return vq;
+        })()
+      : Promise.resolve({ data: null, error: null });
+
+    const [{ data: allCategories, error: catErr }, { data: matchedVariants, error: variantErr }] =
+      await Promise.all([categoryPromise, variantPromise]);
+
+    if (catErr) {
+      console.error("Database error querying categories:", catErr);
+      throw new Error(`Database error fetching categories: ${catErr.message} (${catErr.code || "UNKNOWN"})`);
+    }
+    if (variantErr) {
+      console.error("Database error querying product_variants:", variantErr);
+      throw new Error(`Database error filtering variants: ${variantErr.message} (${variantErr.code || "UNKNOWN"})`);
+    }
+
+    if (params.category && allCategories && allCategories.length > 0) {
+      const currentCat = allCategories.find(
+        (c) => c.slug.toLowerCase() === params.category?.toLowerCase()
+      );
+
+      if (currentCat) {
+        const childIds = allCategories
+          .filter((c) => c.parent_id === currentCat.id)
+          .map((c) => c.id);
+        targetCategoryIds = [currentCat.id, ...childIds];
+      } else {
+        // Category slug does not exist in database
+        return {
+          products: [],
+          totalCount: 0,
+          page,
+          pageSize: limit,
+          totalPages: 0,
+          category: categoryMeta,
+          availableFilters: {
+            categories: [],
+            sizes: [],
+            colors: [],
+            priceRange: { min: 0, max: 10000 },
+          },
+        };
       }
     }
 
-    // 2. DATABASE-LEVEL VARIANT FILTERING (SIZE & COLOR)
+    // 2. PROCESS VARIANT FILTER RESULTS (already fetched in parallel above)
     let matchingProductIds: string[] | null = null;
-    const hasSizeFilter = params.size && params.size.length > 0;
-    const hasColorFilter = params.color && params.color.length > 0;
 
-    if (hasSizeFilter || hasColorFilter) {
-      let variantQuery = supabase
-        .from("product_variants")
-        .select("product_id")
-        .eq("is_active", true);
-
-      if (hasSizeFilter) {
-        variantQuery = variantQuery.in("size", params.size!);
-      }
-      if (hasColorFilter) {
-        variantQuery = variantQuery.in("color", params.color!);
-      }
-
-      const { data: matchedVariants, error: variantErr } = await variantQuery;
-
-      if (variantErr) {
-        console.error("Database error querying product_variants:", variantErr);
-        throw new Error(`Database error filtering variants: ${variantErr.message} (${variantErr.code || "UNKNOWN"})`);
-      }
-
+    if (hasVariantFilter) {
       matchingProductIds = Array.from(new Set((matchedVariants || []).map((v) => v.product_id)));
 
       // If variant filter matched 0 products in Postgres, return 0 results immediately
@@ -501,3 +504,17 @@ export async function getProducts(params: ProductFilterParams = {}): Promise<Pro
     throw err;
   }
 }
+
+/**
+ * Cross-request cached wrapper for getProducts.
+ * Revalidates every 120 seconds or when revalidateTag('products') is called.
+ * Per-request deduplication via React cache() ensures a page rendering identical
+ * filter params only hits this once per SSR pass.
+ */
+const getCachedProducts = safeUnstableCache(
+  fetchProducts,
+  ["get-products"],
+  { tags: ["products"], revalidate: 120 }
+);
+
+export const getProducts = cache(getCachedProducts);

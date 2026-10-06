@@ -21,6 +21,7 @@ import { OrderConfirmationEmail } from "@/features/checkout/emails/order-confirm
 import { env } from "@/lib/env";
 import type { Database } from "@/types/database.types";
 import { getSiteSettings } from "@/features/settings";
+import { revalidateProductCatalog } from "@/lib/revalidation";
 
 export interface OrderActionResult {
   success: boolean;
@@ -501,6 +502,28 @@ export async function cancelAdminOrderAction(
       revalidatePath(`/admin/orders/${orderNumber}`);
       revalidatePath(`/account/orders/${orderNumber}`);
       revalidatePath("/account/orders");
+
+      // Revalidate product catalog and affected PDPs for restored inventory
+      try {
+        const { data: orderData } = await adminSupabase
+          .from("orders")
+          .select("order_items (products (slug))")
+          .eq("order_number", orderNumber)
+          .maybeSingle();
+
+        const slugs: string[] = [];
+        if (orderData?.order_items) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          for (const item of orderData.order_items as any[]) {
+            if (item.products?.slug) {
+              slugs.push(item.products.slug);
+            }
+          }
+        }
+        revalidateProductCatalog(slugs);
+      } catch {
+        revalidateProductCatalog();
+      }
     }
 
     return result;

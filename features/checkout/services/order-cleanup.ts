@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MOCK_CLOTHING_PRODUCTS } from "@/features/products/queries/mock-products";
+import { revalidateProductCatalog } from "@/lib/revalidation";
 
 export interface CleanupResult {
   success: boolean;
@@ -76,6 +77,10 @@ export async function cancelExpiredPendingOnlineOrders(
         mockVariant.stock_quantity += mockOrder.quantity;
       }
     }
+  }
+
+  if (cancelledOrderNumbers.length > 0) {
+    revalidateProductCatalog();
   }
 
   return {

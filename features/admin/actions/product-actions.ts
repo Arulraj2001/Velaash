@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/features/auth/queries/get-admin-user";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -13,24 +13,13 @@ import {
   deleteProductImagesFromStorage,
   ensureProductImagesBucket,
 } from "../utils/storage";
+import { revalidateProductCatalog } from "@/lib/revalidation";
 
 /**
  * Helper to revalidate all affected routes across admin and storefront
  */
 function revalidateProductPaths(slug?: string) {
-  try {
-    revalidatePath("/admin/products");
-    revalidatePath("/admin/dashboard");
-    revalidatePath("/shop");
-    revalidatePath("/category", "layout");
-    revalidatePath("/collections", "layout");
-    revalidatePath("/");
-    if (slug) {
-      revalidatePath(`/products/${slug}`);
-    }
-  } catch {
-    // Graceful no-op when executed outside a Next.js request context
-  }
+  revalidateProductCatalog(slug);
 }
 
 /**

@@ -21,9 +21,9 @@ const nextConfig: NextConfig = {
     dangerouslyAllowLocalIP: true,
     minimumCacheTTL: 31536000,
     formats: ["image/avif", "image/webp"],
-    deviceSizes: [320, 375, 414, 640, 750, 828, 960, 1080, 1200, 1280, 1366, 1440, 1470, 1536, 1920],
-    imageSizes: [16, 32, 48, 64, 96, 128, 160, 192, 256, 384, 512, 640],
-    qualities: [70, 72, 75],
+    deviceSizes: [320, 640, 750, 828, 1080, 1200, 1440, 1920],
+    imageSizes: [16, 32, 64, 96, 128, 256, 384],
+    qualities: [72, 75],
     remotePatterns: [
       {
         protocol: "https",

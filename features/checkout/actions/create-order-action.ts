@@ -16,6 +16,7 @@ import { generateOrderAccessToken } from "../utils/order-access-token";
 import { MOCK_ORDERS_STORE } from "../queries/get-order-by-number";
 import { MOCK_ONLINE_PENDING_ORDERS } from "../services/order-cleanup";
 import { CreateOrderInputSchema, type CreateOrderInput, type CreateOrderResponse } from "../types";
+import { revalidateProductCatalog } from "@/lib/revalidation";
 
 export async function createOrderAction(rawInput: CreateOrderInput): Promise<CreateOrderResponse> {
   // 1. Check for empty cart
@@ -988,6 +989,12 @@ export async function createOrderAction(rawInput: CreateOrderInput): Promise<Cre
         // Non-blocking: Order creation must not fail if email fails
       }
     }
+
+    // 12d. Revalidate product catalog and affected PDPs for decremented stock
+    const affectedSlugs = Array.from(
+      new Set(verifiedItems.map((it) => it.slug).filter((s): s is string => Boolean(s)))
+    );
+    revalidateProductCatalog(affectedSlugs);
 
     return {
       success: true,
