@@ -9,13 +9,21 @@ import type { NavigationCategory, NavigationSubCategory } from "../types";
  */
 export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
   {
+    id: "cat-sarees",
+    name: "Sarees",
+    slug: "sarees",
+    description: "Authentic handloom silk and linen sarees with traditional zari weaves",
+    image_url: "/categories/sarees.jpg",
+    display_order: 1,
+    subcategories: [],
+  },
+  {
     id: "cat-kurtas",
     name: "Kurtas & Sets",
     slug: "kurtas-sets",
     description: "Everyday and festive kurtas crafted in contemporary silhouettes",
-    image_url:
-      "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80",
-    display_order: 1,
+    image_url: "/categories/kurtas-sets.jpg",
+    display_order: 2,
     subcategories: [
       {
         id: "sub-straight-kurtas",
@@ -56,9 +64,8 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
     name: "Dresses",
     slug: "dresses",
     description: "Refined midi, maxi, and shift dresses for relaxed sophistication",
-    image_url:
-      "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=600&q=80",
-    display_order: 2,
+    image_url: "/categories/dresses.jpg",
+    display_order: 3,
     subcategories: [
       {
         id: "sub-midi-dresses",
@@ -91,9 +98,8 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
     name: "Co-ord Sets",
     slug: "coord-sets",
     description: "Effortlessly paired top and bottom ensembles for elevated simplicity",
-    image_url:
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
-    display_order: 3,
+    image_url: "/categories/kurtas-sets.jpg",
+    display_order: 4,
     subcategories: [
       {
         id: "sub-linen-coords",
@@ -126,9 +132,8 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
     name: "Tops & Shirts",
     slug: "tops-shirts",
     description: "Crisp shirts, breezy tunics, and delicately detailed blouses",
-    image_url:
-      "https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&w=600&q=80",
-    display_order: 4,
+    image_url: "/categories/tops-shirts.jpg",
+    display_order: 5,
     subcategories: [
       {
         id: "sub-formal-shirts",
@@ -161,9 +166,8 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
     name: "Bottoms",
     slug: "bottoms",
     description: "Comfortable trousers, flowing palazzos, and versatile culottes",
-    image_url:
-      "https://images.unsplash.com/photo-1509551388413-e18d0ac5d495?auto=format&fit=crop&w=600&q=80",
-    display_order: 5,
+    image_url: "/categories/bottoms.jpg",
+    display_order: 6,
     subcategories: [
       {
         id: "sub-pants-trousers",
@@ -196,9 +200,8 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
     name: "Loungewear",
     slug: "loungewear",
     description: "Soft mulmul and modal separates designed for tranquil moments",
-    image_url:
-      "https://images.unsplash.com/photo-1571513722275-4b41940f54b8?auto=format&fit=crop&w=600&q=80",
-    display_order: 6,
+    image_url: "/categories/loungewear.jpg",
+    display_order: 7,
     subcategories: [
       {
         id: "sub-sleepwear",
@@ -223,9 +226,8 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
     name: "Men",
     slug: "men",
     description: "Contemporary handcrafted clothing for men, tailored in premium natural fabrics",
-    image_url:
-      "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=600&q=80",
-    display_order: 7,
+    image_url: "/categories/men.jpg",
+    display_order: 8,
     subcategories: [
       {
         id: "sub-men-shirts",
@@ -266,8 +268,8 @@ export const DEFAULT_CLOTHING_CATEGORIES: NavigationCategory[] = [
     name: "Pooja & Brass Items",
     slug: "pooja-and-brass",
     description: "Traditional lamps, handcrafted brassware, and sacred essentials for sacred spaces and home decor",
-    image_url: "https://images.unsplash.com/photo-1606293926075-69a00dbfde81?auto=format&fit=crop&w=600&q=80",
-    display_order: 8,
+    image_url: "/categories/pooja-and-brass.jpg",
+    display_order: 9,
     subcategories: [
       {
         id: "sub-lamps-diyas",

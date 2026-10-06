@@ -110,8 +110,7 @@ export function groupNavigationCategories(
     featuredCard: {
       title: "Handcrafted Women's Wear",
       subtitle: "Fluid silhouettes in pure cottons, festive jewel tones, and coordinated sets.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80",
+      imageUrl: womenCategories[0]?.image_url || "/categories/kurtas-sets.jpg",
       href: "/collections/kurtas-sets",
       ctaText: "Explore Women's Wear",
     },
@@ -174,8 +173,7 @@ export function groupNavigationCategories(
     featuredCard: {
       title: "Natural Fabrics for Men",
       subtitle: "Tailored in breathable linen and handloom cotton for timeless everyday poise.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=600&q=80",
+      imageUrl: menCat?.image_url || "/categories/men.jpg",
       href: "/collections/men",
       ctaText: "Explore Men's Wear",
     },
@@ -222,8 +220,7 @@ export function groupNavigationCategories(
     featuredCard: {
       title: "Sacred Living & Brassware",
       subtitle: "Traditional deepams, handcrafted kuthuvilakku, and sacred essentials for your sanctuary.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1606293926075-69a00dbfde81?auto=format&fit=crop&w=600&q=80",
+      imageUrl: poojaCat?.image_url || "/categories/pooja-and-brass.jpg",
       href: "/collections/pooja-and-brass",
       ctaText: "Discover Pooja Items",
     },

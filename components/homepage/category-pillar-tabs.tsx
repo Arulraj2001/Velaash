@@ -32,27 +32,29 @@ interface PillarTab {
   gridColsClass: string;
 }
 
-// Curated high-resolution fallback photography for all brand categories
+// Curated South Indian heritage static photography fallbacks
 const DEFAULT_IMAGES: Record<string, string> = {
   // Women
-  "kurtas-sets": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",
-  dresses: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80",
-  sarees: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80",
-  "coord-sets": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
-  "tops-shirts": "https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&w=800&q=80",
-  bottoms: "https://images.unsplash.com/photo-1509551388413-e18d0ac5d495?auto=format&fit=crop&w=800&q=80",
-  loungewear: "https://images.unsplash.com/photo-1571513722275-4b41940f54b8?auto=format&fit=crop&w=800&q=80",
+  "kurtas-sets": "/categories/kurtas-sets.jpg",
+  dresses: "/categories/dresses.jpg",
+  sarees: "/categories/sarees.jpg",
+  "coord-sets": "/categories/kurtas-sets.jpg",
+  "tops-shirts": "/categories/tops-shirts.jpg",
+  bottoms: "/categories/bottoms.jpg",
+  loungewear: "/categories/loungewear.jpg",
 
   // Men
-  "men-shirts": "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80",
-  "men-kurtas": "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80",
-  "men-t-shirts": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
-  "men-bottoms": "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=800&q=80",
+  "men-shirts": "/categories/tops-shirts.jpg",
+  "men-kurtas": "/categories/men-kurtas.jpg",
+  "men-t-shirts": "/categories/men-t-shirts.jpg",
+  "men-bottoms": "/categories/men-bottoms.jpg",
+  men: "/categories/men.jpg",
 
   // Pooja & Brassware
-  "lamps-diyas": "https://images.unsplash.com/photo-1605647540924-852290f6b0d5?auto=format&fit=crop&w=800&q=80",
-  "pooja-accessories": "https://images.unsplash.com/photo-1582738411706-bfc8e691d1c2?auto=format&fit=crop&w=800&q=80",
-  "brass-urli-decor": "https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=800&q=80",
+  "lamps-diyas": "/categories/lamps-diyas.jpg",
+  "pooja-accessories": "/categories/pooja-accessories.jpg",
+  "brass-urli-decor": "/categories/pooja-and-brass.jpg",
+  "pooja-and-brass": "/categories/pooja-and-brass.jpg",
 };
 
 export function CategoryPillarTabs({
