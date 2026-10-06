@@ -705,6 +705,7 @@ export function ProductForm({
               images={images}
               onChange={setImages}
               onTrackDeletedUrl={handleTrackDeletedUrl}
+              productName={name}
             />
           </div>
 
