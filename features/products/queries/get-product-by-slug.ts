@@ -128,6 +128,84 @@ const PRODUCT_SELECT = `
   )
 `;
 
+const PRODUCT_SELECT_WITH_RETURNABLE = `
+  id,
+  name,
+  slug,
+  description,
+  base_price,
+  compare_at_price,
+  fabric,
+  care_instructions,
+  craftsmanship,
+  has_variants,
+  stock_quantity,
+  specifications,
+  is_active,
+  is_featured,
+  is_made_to_order,
+  stock_status,
+  weight_grams,
+  length_cm,
+  width_cm,
+  height_cm,
+  hsn_code,
+  gst_rate,
+  blouse_included,
+  saree_length_meters,
+  seo_title,
+  seo_description,
+  seo_keywords,
+  created_at,
+  updated_at,
+  category_id,
+  free_shipping_active,
+  free_shipping_start,
+  free_shipping_end,
+  free_shipping_badge_text,
+  is_returnable,
+  return_override_note,
+  categories (
+    id,
+    name,
+    slug,
+    parent_id
+  ),
+  product_variants (
+    id,
+    size,
+    color,
+    color_hex,
+    stock_quantity,
+    sku,
+    price_override,
+    is_active
+  ),
+  product_images (
+    id,
+    image_url,
+    alt_text,
+    display_order,
+    is_primary,
+    variant_id
+  ),
+  reviews (
+    id,
+    customer_name,
+    rating,
+    title,
+    comment,
+    is_verified_purchase,
+    created_at
+  ),
+  size_charts (
+    id,
+    name,
+    chart_data,
+    measurement_unit
+  )
+`;
+
 /**
  * Internal fetcher — hits the DB directly. No caching here.
  */
@@ -137,9 +215,10 @@ async function fetchProductBySlug(slug: string): Promise<ProductDetailItem | nul
   try {
     const supabase = createPublicClient();
 
-    const { data: p, error } = await supabase
+    let p = null;
+    const queryPrimary = await supabase
       .from("products")
-      .select(PRODUCT_SELECT)
+      .select(PRODUCT_SELECT_WITH_RETURNABLE)
       .eq("slug", normalizedSlug)
       .eq("is_active", true)
       .eq("reviews.is_approved", true)
@@ -147,9 +226,28 @@ async function fetchProductBySlug(slug: string): Promise<ProductDetailItem | nul
       .limit(50, { foreignTable: "reviews" })
       .maybeSingle();
 
-    if (error) {
-      console.error("[getProductBySlug] Database query failed:", error);
-      throw new Error(`Database error fetching product: ${error.message} (${error.code || "UNKNOWN"})`);
+    if (queryPrimary.error && queryPrimary.error.code === "42703") {
+      // Fallback if migration 34 is pending
+      const queryFallback = await supabase
+        .from("products")
+        .select(PRODUCT_SELECT)
+        .eq("slug", normalizedSlug)
+        .eq("is_active", true)
+        .eq("reviews.is_approved", true)
+        .order("created_at", { foreignTable: "reviews", ascending: false })
+        .limit(50, { foreignTable: "reviews" })
+        .maybeSingle();
+
+      if (queryFallback.error) {
+        console.error("[getProductBySlug] Database fallback query failed:", queryFallback.error);
+        throw new Error(`Database error fetching product: ${queryFallback.error.message}`);
+      }
+      p = queryFallback.data;
+    } else if (queryPrimary.error) {
+      console.error("[getProductBySlug] Database query failed:", queryPrimary.error);
+      throw new Error(`Database error fetching product: ${queryPrimary.error.message} (${queryPrimary.error.code || "UNKNOWN"})`);
+    } else {
+      p = queryPrimary.data;
     }
 
     if (!p) {
@@ -304,6 +402,8 @@ async function fetchProductBySlug(slug: string): Promise<ProductDetailItem | nul
       free_shipping_start: prod.free_shipping_start || null,
       free_shipping_end: prod.free_shipping_end || null,
       free_shipping_badge_text: prod.free_shipping_badge_text || null,
+      is_returnable: prod.is_returnable !== undefined && prod.is_returnable !== null ? Boolean(prod.is_returnable) : true,
+      return_override_note: prod.return_override_note || null,
     };
   } catch (err: unknown) {
     if (

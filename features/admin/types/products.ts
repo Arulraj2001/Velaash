@@ -102,6 +102,8 @@ export interface AdminProductDetail {
   free_shipping_start?: string | null;
   free_shipping_end?: string | null;
   free_shipping_badge_text?: string | null;
+  is_returnable?: boolean;
+  return_override_note?: string | null;
   created_at: string;
   updated_at: string;
   has_orders?: boolean;
@@ -215,6 +217,8 @@ export const AdminProductFormSchema = z.object({
   free_shipping_start: z.string().optional().nullable(),
   free_shipping_end: z.string().optional().nullable(),
   free_shipping_badge_text: z.string().trim().optional().nullable(),
+  is_returnable: z.boolean().default(true),
+  return_override_note: z.string().trim().optional().nullable(),
 }).superRefine((data, ctx) => {
   if (data.has_variants && data.variants.length === 0) {
     ctx.addIssue({

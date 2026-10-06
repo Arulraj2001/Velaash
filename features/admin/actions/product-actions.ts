@@ -116,6 +116,8 @@ export async function createProductAction(data: AdminProductFormData) {
     free_shipping_start: valid.free_shipping_start || null,
     free_shipping_end: valid.free_shipping_end || null,
     free_shipping_badge_text: valid.free_shipping_badge_text || null,
+    is_returnable: valid.is_returnable ?? true,
+    return_override_note: valid.return_override_note || null,
   };
 
   // 1. Insert product
@@ -133,6 +135,8 @@ export async function createProductAction(data: AdminProductFormData) {
     delete fallbackInsert.has_variants;
     delete fallbackInsert.stock_quantity;
     delete fallbackInsert.specifications;
+    delete fallbackInsert.is_returnable;
+    delete fallbackInsert.return_override_note;
     const fbRes = await adminClient
       .from("products")
       .insert(fallbackInsert)
@@ -291,6 +295,8 @@ export async function updateProductAction(
     free_shipping_start: valid.free_shipping_start || null,
     free_shipping_end: valid.free_shipping_end || null,
     free_shipping_badge_text: valid.free_shipping_badge_text || null,
+    is_returnable: valid.is_returnable ?? true,
+    return_override_note: valid.return_override_note || null,
     updated_at: new Date().toISOString(),
   };
 
@@ -340,6 +346,8 @@ export async function updateProductAction(
       delete fallbackUpdate.has_variants;
       delete fallbackUpdate.stock_quantity;
       delete fallbackUpdate.specifications;
+      delete fallbackUpdate.is_returnable;
+      delete fallbackUpdate.return_override_note;
       const { error: fbErr } = await adminClient
         .from("products")
         .update(fallbackUpdate)

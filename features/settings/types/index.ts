@@ -39,7 +39,9 @@ export interface ShippingPolicySetting {
  */
 export interface ReturnsPolicySetting {
   return_window_days: number;
-  policy_description: string;
+  policy_description?: string;
+  short_summary: string;
+  full_policy_html: string;
 }
 
 /**

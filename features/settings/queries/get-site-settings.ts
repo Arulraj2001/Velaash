@@ -44,10 +44,16 @@ export const DEFAULT_SHIPPING_POLICY: ShippingPolicySetting = {
   festive_apply_to_all: false,
 };
 
-export const DEFAULT_RETURNS_POLICY: ReturnsPolicySetting = {
-  return_window_days: 7,
-  policy_description:
-    "We accept return and replacement requests within strictly 7 calendar days of delivery. A clear, continuous, and uncut unboxing video of the parcel opening and product condition is strictly mandatory for all claims. Upon evaluating both the video and the physical condition of the received item at our warehouse, Velaash will decide whether to provide a replacement or a refund.",
+import {
+  DEFAULT_RETURNS_POLICY,
+  DEFAULT_RETURNS_SHORT_SUMMARY,
+  DEFAULT_RETURNS_FULL_HTML,
+} from "../constants";
+
+export {
+  DEFAULT_RETURNS_POLICY,
+  DEFAULT_RETURNS_SHORT_SUMMARY,
+  DEFAULT_RETURNS_FULL_HTML,
 };
 
 export const DEFAULT_ANNOUNCEMENT_SETTING: AnnouncementSetting = {
@@ -261,6 +267,13 @@ async function fetchSiteSettings(): Promise<SiteSettingsData> {
         rawReturnsPolicy.policy_description ||
         (typeof returnsRecord.conditions === "string" ? returnsRecord.conditions : "") ||
         DEFAULT_RETURNS_POLICY.policy_description,
+      short_summary:
+        rawReturnsPolicy.short_summary ||
+        rawReturnsPolicy.policy_description ||
+        DEFAULT_RETURNS_POLICY.short_summary,
+      full_policy_html:
+        rawReturnsPolicy.full_policy_html ||
+        DEFAULT_RETURNS_POLICY.full_policy_html,
     };
 
     const announcement: AnnouncementSetting = {

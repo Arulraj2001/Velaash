@@ -265,6 +265,8 @@ export async function getAdminProductById(
     free_shipping_start?: string | null;
     free_shipping_end?: string | null;
     free_shipping_badge_text?: string | null;
+    is_returnable?: boolean;
+    return_override_note?: string | null;
   };
   const rawImages = p.product_images ?? [];
   const rawVariants = p.product_variants ?? [];
@@ -330,6 +332,8 @@ export async function getAdminProductById(
     free_shipping_start: p.free_shipping_start ?? null,
     free_shipping_end: p.free_shipping_end ?? null,
     free_shipping_badge_text: p.free_shipping_badge_text ?? null,
+    is_returnable: p.is_returnable !== undefined && p.is_returnable !== null ? Boolean(p.is_returnable) : true,
+    return_override_note: p.return_override_note ?? null,
     created_at: p.created_at,
     updated_at: p.updated_at,
     has_orders: (orderedRes.count ?? 0) > 0,

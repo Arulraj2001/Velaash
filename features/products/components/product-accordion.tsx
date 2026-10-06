@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { ChevronDown, Sparkles, Truck, Ruler, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, Sparkles, Truck, Ruler, SlidersHorizontal, ShieldAlert } from "lucide-react";
 import type { ProductDetailItem } from "../types";
 import { formatCurrency } from "@/lib/utils";
 
@@ -9,12 +10,14 @@ interface ProductAccordionProps {
   product: ProductDetailItem;
   freeShippingThreshold?: number;
   returnWindowDays?: number;
+  returnsShortSummary?: string;
 }
 
 export function ProductAccordion({
   product,
   freeShippingThreshold = 999, // Placeholder default — MUST be confirmed with client before launch
   returnWindowDays = 7, // Placeholder default — MUST be confirmed with client before launch
+  returnsShortSummary,
 }: ProductAccordionProps) {
   const hasDetails = Boolean(
     product.fabric || product.craftsmanship || product.care_instructions || product.hsn_code
@@ -168,19 +171,45 @@ export function ProductAccordion({
         </button>
 
         {openSections.shipping && (
-          <div className="space-y-3 pb-5 pt-1 text-xs sm:text-sm text-brand-muted leading-relaxed animate-in fade-in duration-200">
+          <div className="space-y-3.5 pb-5 pt-1 text-xs sm:text-sm text-brand-muted leading-relaxed animate-in fade-in duration-200">
             <p>
               <strong className="text-brand-dark">Free Shipping: </strong>
               Delivery across India with free shipping on prepaid orders exceeding {formatCurrency(freeShippingThreshold)}.
             </p>
             <p>
-              <strong className="text-brand-dark">Dispatch & Delivery: </strong>
+              <strong className="text-brand-dark">Dispatch &amp; Delivery: </strong>
               Orders are dispatched via standard domestic courier services. Tracking details are shared via email and SMS upon dispatch.
             </p>
-            <p>
-              <strong className="text-brand-dark">{`${returnWindowDays}-Day Returns: `}</strong>
-              Returns and exchanges are accepted within {returnWindowDays} days of delivery for unworn items with tags attached.
-            </p>
+
+            {product.is_returnable === false ? (
+              <div className="rounded-xl bg-amber-50/80 border border-amber-200/90 p-3.5 text-xs text-amber-950 space-y-1.5 shadow-2xs">
+                <div className="flex items-center gap-2 font-semibold text-amber-900">
+                  <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span>Final Sale Notice (Non-Returnable)</span>
+                </div>
+                <p className="text-[12px] text-amber-900/90 leading-relaxed pl-6">
+                  {product.return_override_note ||
+                    "This item is marked as Final Sale and cannot be returned or exchanged once delivered."}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-1.5 pt-1">
+                <p>
+                  <strong className="text-brand-dark">{`${returnWindowDays}-Day Returns: `}</strong>
+                  {returnsShortSummary ||
+                    `Returns and exchanges are accepted within ${returnWindowDays} days of delivery for unworn items with tags attached.`}
+                </p>
+                <div className="pt-0.5">
+                  <Link
+                    href="/shipping-returns"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-gold hover:text-brand-dark transition-colors"
+                  >
+                    <span>Read full Shipping &amp; Returns Policy</span>
+                    <span aria-hidden="true">&rarr;</span>
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

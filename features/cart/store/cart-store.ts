@@ -18,6 +18,8 @@ export interface AddItemInput {
   freeShippingStart?: string | null;
   freeShippingEnd?: string | null;
   freeShippingBadgeText?: string | null;
+  isReturnable?: boolean;
+  returnOverrideNote?: string | null;
 }
 
 export interface SyncItemUpdate {
@@ -81,6 +83,8 @@ export const useCartStore = create<CartStoreState>()(
             freeShippingStart: itemInput.freeShippingStart ?? existing.freeShippingStart,
             freeShippingEnd: itemInput.freeShippingEnd ?? existing.freeShippingEnd,
             freeShippingBadgeText: itemInput.freeShippingBadgeText ?? existing.freeShippingBadgeText,
+            isReturnable: itemInput.isReturnable ?? existing.isReturnable,
+            returnOverrideNote: itemInput.returnOverrideNote ?? existing.returnOverrideNote,
           };
           updatedItems[existingIndex] = finalItem;
 
@@ -110,6 +114,8 @@ export const useCartStore = create<CartStoreState>()(
             freeShippingStart: itemInput.freeShippingStart,
             freeShippingEnd: itemInput.freeShippingEnd,
             freeShippingBadgeText: itemInput.freeShippingBadgeText,
+            isReturnable: itemInput.isReturnable,
+            returnOverrideNote: itemInput.returnOverrideNote,
           };
 
           set({

@@ -21,6 +21,8 @@ export const CartItemSchema = z.object({
   freeShippingStart: z.string().optional().nullable(),
   freeShippingEnd: z.string().optional().nullable(),
   freeShippingBadgeText: z.string().optional().nullable(),
+  isReturnable: z.boolean().optional(),
+  returnOverrideNote: z.string().optional().nullable(),
 });
 
 export type CartItem = z.infer<typeof CartItemSchema>;

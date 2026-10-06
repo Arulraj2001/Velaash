@@ -63,7 +63,22 @@ export const ReturnsSettingsSchema = z.object({
   policy_description: z
     .string()
     .trim()
-    .min(10, "Policy description must be at least 10 characters"),
+    .optional()
+    .default(""),
+  short_summary: z
+    .string()
+    .trim()
+    .min(10, "Short summary must be at least 10 characters")
+    .optional()
+    .default(
+      "Returns and exchanges are accepted within 7 days of delivery for unworn items with tags attached."
+    ),
+  full_policy_html: z
+    .string()
+    .trim()
+    .min(10, "Full policy content must be at least 10 characters")
+    .optional()
+    .default("<p>Returns and exchanges are accepted within 7 days of delivery.</p>"),
 });
 
 export type ReturnsSettingsFormData = z.infer<typeof ReturnsSettingsSchema>;

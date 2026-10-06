@@ -10,6 +10,7 @@ import {
   MessageCircle,
   ShieldCheck,
   RotateCcw,
+  ShieldAlert,
   Sparkles,
   ChevronRight,
   Plus,
@@ -33,6 +34,7 @@ interface ProductDetailViewProps {
   product: ProductDetailItem;
   freeShippingThreshold?: number;
   returnWindowDays?: number;
+  returnsShortSummary?: string;
   whatsappNumber: string;
   festivePolicy?: ShippingPolicySetting | null;
 }
@@ -41,6 +43,7 @@ export function ProductDetailView({
   product,
   freeShippingThreshold = 999, // Placeholder default — MUST be confirmed with client before launch
   returnWindowDays = 7, // Placeholder default — MUST be confirmed with client before launch
+  returnsShortSummary,
   whatsappNumber,
   festivePolicy,
 }: ProductDetailViewProps) {
@@ -212,6 +215,8 @@ export function ProductDetailView({
         freeShippingStart: product.free_shipping_start,
         freeShippingEnd: product.free_shipping_end,
         freeShippingBadgeText: product.free_shipping_badge_text,
+        isReturnable: product.is_returnable !== false,
+        returnOverrideNote: product.return_override_note || null,
       },
       quantity
     );
@@ -616,10 +621,17 @@ export function ProductDetailView({
                 <ShieldCheck className="text-brand-accent h-4 w-4 shrink-0" />
                 <span>Quality Checked</span>
               </div>
-              <div className="border-brand-border/60 text-brand-muted flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]">
-                <RotateCcw className="text-brand-accent h-4 w-4 shrink-0" />
-                <span>{`${returnWindowDays}-Day Returns`}</span>
-              </div>
+              {product.is_returnable === false ? (
+                <div className="border-amber-200 bg-amber-50/80 text-amber-900 flex items-center gap-2 rounded-lg border p-2.5 text-[11px] font-medium shadow-2xs">
+                  <ShieldAlert className="text-amber-700 h-4 w-4 shrink-0" />
+                  <span>Final Sale (Non-Returnable)</span>
+                </div>
+              ) : (
+                <div className="border-brand-border/60 text-brand-muted flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]">
+                  <RotateCcw className="text-brand-accent h-4 w-4 shrink-0" />
+                  <span>{`${returnWindowDays}-Day Returns`}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -631,6 +643,7 @@ export function ProductDetailView({
           product={product}
           freeShippingThreshold={freeShippingThreshold}
           returnWindowDays={returnWindowDays}
+          returnsShortSummary={returnsShortSummary}
         />
       </div>
 

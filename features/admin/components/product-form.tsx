@@ -27,6 +27,7 @@ import {
   AlertCircle,
   Loader2,
   Eye,
+  RotateCcw,
 } from "lucide-react";
 
 
@@ -192,6 +193,14 @@ export function ProductForm({
   const [freeShippingBadgeText, setFreeShippingBadgeText] = useState<string>(
     initialData?.free_shipping_badge_text || "🌾 Special Offer: Free Delivery"
   );
+  const [isReturnable, setIsReturnable] = useState<boolean>(
+    initialData?.is_returnable !== undefined && initialData?.is_returnable !== null
+      ? Boolean(initialData.is_returnable)
+      : true
+  );
+  const [returnOverrideNote, setReturnOverrideNote] = useState<string>(
+    initialData?.return_override_note || ""
+  );
 
   // Auto-slugify on title changes if slug was not manually touched
   const handleNameChange = (val: string) => {
@@ -284,6 +293,8 @@ export function ProductForm({
       free_shipping_start: freeShippingStart ? new Date(freeShippingStart).toISOString() : null,
       free_shipping_end: freeShippingEnd ? new Date(freeShippingEnd).toISOString() : null,
       free_shipping_badge_text: freeShippingBadgeText || null,
+      is_returnable: isReturnable,
+      return_override_note: returnOverrideNote || null,
     };
 
 
@@ -687,6 +698,70 @@ export function ProductForm({
                       return "Active Now — Free shipping applies to this product at checkout!";
                     })()}
                   </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Returns & Exchange Eligibility Section */}
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs space-y-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4 text-slate-800" />
+                  <h3 className="font-semibold text-slate-900 text-sm">
+                    Returns &amp; Exchange Eligibility
+                  </h3>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      isReturnable
+                        ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                        : "bg-rose-50 text-rose-800 border border-rose-200"
+                    }`}
+                  >
+                    {isReturnable ? "Returnable (Standard Policy)" : "Final Sale / Non-Returnable"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  Toggle whether customers can request returns/exchanges for this item. Turn OFF for custom-stitched sarees, made-to-order couture, or clearance items.
+                </p>
+              </div>
+
+              {/* Toggle switch */}
+              <label className="relative inline-flex cursor-pointer items-center shrink-0">
+                <input
+                  type="checkbox"
+                  checked={isReturnable}
+                  onChange={(e) => setIsReturnable(e.target.checked)}
+                  className="peer sr-only"
+                />
+                <div className="peer h-5 w-9 rounded-full bg-slate-200 after:absolute after:top-[2px] after:left-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-emerald-600 peer-checked:after:translate-x-full peer-focus:outline-none"></div>
+              </label>
+            </div>
+
+            {!isReturnable && (
+              <div className="pt-3 border-t border-rose-100 space-y-2.5">
+                <div className="rounded-lg bg-rose-50 border border-rose-200 p-2.5 text-[11px] text-rose-900 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Final Sale Notice:</strong> On the product page and cart, the standard return badge will be replaced with a prominent <em>&ldquo;Final Sale (Non-Returnable)&rdquo;</em> disclosure.
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Custom Non-Returnable Reason / Disclosure (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={returnOverrideNote}
+                    onChange={(e) => setReturnOverrideNote(e.target.value)}
+                    placeholder="e.g. Made-to-order couture / Custom stitching / Final Clearance"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Displayed alongside the Final Sale notice in the product accordion and checkout summary.
+                  </p>
                 </div>
               </div>
             )}

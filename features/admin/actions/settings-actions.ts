@@ -51,6 +51,7 @@ function revalidateSettingsPaths() {
   revalidatePath("/cart");
   revalidatePath("/checkout");
   revalidatePath("/shop");
+  revalidatePath("/shipping-returns");
 }
 
 /**

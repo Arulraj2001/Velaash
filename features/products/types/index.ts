@@ -108,6 +108,8 @@ export interface ProductListItem {
   free_shipping_start?: string | null;
   free_shipping_end?: string | null;
   free_shipping_badge_text?: string | null;
+  is_returnable?: boolean;
+  return_override_note?: string | null;
 }
 
 export interface ProductSpecificationItem {
@@ -357,4 +359,6 @@ export interface RawDbProduct {
   free_shipping_start?: string | null;
   free_shipping_end?: string | null;
   free_shipping_badge_text?: string | null;
+  is_returnable?: boolean | null;
+  return_override_note?: string | null;
 }

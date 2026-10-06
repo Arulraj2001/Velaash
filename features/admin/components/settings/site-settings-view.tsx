@@ -26,8 +26,10 @@ import {
   UserCheck,
 } from "lucide-react";
 import { AdminModal } from "../admin-modal";
+import { TiptapEditor } from "../tiptap-editor";
 import { PromoPopupCard } from "@/components/ui/promo-popup-card";
 import type { SiteSettingsData, CheckoutPolicySetting } from "@/features/settings";
+import { DEFAULT_RETURNS_SHORT_SUMMARY, DEFAULT_RETURNS_FULL_HTML } from "@/features/settings/constants";
 import type { ActiveCouponOption } from "../../queries/get-active-coupons";
 import {
   updateStoreProfileSettingsAction,
@@ -966,10 +968,26 @@ function ReturnsSettingsForm({
 }) {
   const [form, setForm] = useState({
     return_window_days: initial.return_window_days ?? 7,
+    short_summary: initial.short_summary || initial.policy_description || DEFAULT_RETURNS_SHORT_SUMMARY,
+    full_policy_html: initial.full_policy_html || DEFAULT_RETURNS_FULL_HTML,
     policy_description: initial.policy_description || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleLoadDefaultTemplate = () => {
+    if (
+      window.confirm(
+        "Load standard legal return policy template? This will replace the full policy editor content with the verified store standard."
+      )
+    ) {
+      setForm((prev) => ({
+        ...prev,
+        short_summary: DEFAULT_RETURNS_SHORT_SUMMARY,
+        full_policy_html: DEFAULT_RETURNS_FULL_HTML,
+      }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -977,7 +995,12 @@ function ReturnsSettingsForm({
     setErrorMsg(null);
 
     try {
-      const res = await updateReturnsSettingsAction(form);
+      const res = await updateReturnsSettingsAction({
+        return_window_days: form.return_window_days,
+        short_summary: form.short_summary,
+        full_policy_html: form.full_policy_html,
+        policy_description: form.short_summary,
+      });
       if (res.success) {
         onSaved();
       } else {
@@ -991,11 +1014,11 @@ function ReturnsSettingsForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <div>
         <h2 className="text-lg font-heading font-semibold text-slate-900">Returns &amp; Exchange Policy</h2>
         <p className="text-xs text-slate-500">
-          Single source of truth controlling the return period badges on product pages and policy terms.
+          Single source of truth controlling the return period badges, product page accordion summary, and the comprehensive /shipping-returns policy page.
         </p>
       </div>
 
@@ -1006,8 +1029,9 @@ function ReturnsSettingsForm({
         </div>
       )}
 
-      <div>
-        <label className="block text-xs font-semibold text-slate-700 mb-1">
+      {/* 1. Return Window Duration */}
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs space-y-3">
+        <label className="block text-xs font-semibold text-slate-900">
           Return Window Period (Calendar Days)
         </label>
         <div className="w-full sm:w-48">
@@ -1021,25 +1045,73 @@ function ReturnsSettingsForm({
             className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-900"
           />
         </div>
-        <p className="text-[11px] text-slate-500 mt-1">
-          e.g. 7 days. Displayed across the product detail page accordion and cart trust badges.
+        <p className="text-[11px] text-slate-500">
+          e.g. 7 days. Displayed across the product detail page trust badge and cart policy tags.
         </p>
       </div>
 
-      <div>
-        <label className="block text-xs font-semibold text-slate-700 mb-1">
-          Policy Terms Description
-        </label>
-        <textarea
-          rows={4}
-          required
-          value={form.policy_description}
-          onChange={(e) => setForm({ ...form, policy_description: e.target.value })}
-          className="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-        />
+      {/* 2. Short Policy Version for Under Each Product (PDP) */}
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4">
+        <div>
+          <label className="block text-xs font-semibold text-slate-900 mb-1">
+            Short Policy Summary (Shown Under Every Product)
+          </label>
+          <p className="text-[11px] text-slate-500 mb-3">
+            Displayed inside the &ldquo;Shipping &amp; Returns&rdquo; accordion on each product page and cart drawer. Keep it concise, transparent, and direct (2 to 3 sentences).
+          </p>
+          <textarea
+            rows={3}
+            required
+            value={form.short_summary}
+            onChange={(e) => setForm({ ...form, short_summary: e.target.value })}
+            placeholder="e.g. Returns and exchanges are accepted within 7 days of delivery for unworn items with tags attached. A continuous unboxing video is mandatory for all claims."
+            className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-900"
+          />
+        </div>
+
+        {/* Live Product Accordion Preview */}
+        <div className="rounded-lg bg-slate-50 border border-slate-200/80 p-3.5 space-y-1.5">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+            <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
+            <span>Storefront PDP Accordion Preview</span>
+          </div>
+          <div className="text-xs text-slate-600 leading-relaxed pl-5 border-l-2 border-amber-500">
+            <strong className="text-slate-900">{`${form.return_window_days}-Day Returns: `}</strong>
+            {form.short_summary || "No short summary entered."}
+          </div>
+        </div>
       </div>
 
-      <div className="pt-4 border-t border-slate-100 flex justify-end">
+      {/* 3. Full Return Policy Page Content (Rich Text) */}
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <label className="block text-xs font-semibold text-slate-900">
+              Full Return Policy Page Content (/shipping-returns)
+            </label>
+            <p className="text-[11px] text-slate-500">
+              Powers Part B of the public /shipping-returns page. Use rich headings, bullet points, and conditions.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleLoadDefaultTemplate}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium transition-colors shrink-0"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+            <span>Load Standard Legal Template</span>
+          </button>
+        </div>
+
+        <div>
+          <TiptapEditor
+            content={form.full_policy_html}
+            onChange={(html) => setForm({ ...form, full_policy_html: html })}
+          />
+        </div>
+      </div>
+
+      <div className="pt-4 border-t border-slate-200 flex justify-end">
         <button
           type="submit"
           disabled={isSubmitting}

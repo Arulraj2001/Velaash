@@ -201,100 +201,109 @@ export default async function ShippingReturnsPage() {
                     Returns, Replacement &amp; Refund Policy
                   </h2>
                   <p className="text-xs text-brand-muted">
-                    Strict 7-day return window, mandatory video requirement, and quality inspection guidelines
+                    Strict {returnDays}-day return window, mandatory video requirement, and quality inspection guidelines
                   </p>
                 </div>
               </div>
 
               <div className="space-y-7 text-sm text-brand-muted leading-relaxed">
-                {/* 1. Return Window */}
-                <div>
-                  <h3 className="font-heading text-base font-semibold text-brand-dark mb-1.5 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-brand-gold" />
-                    <span>1. 7-Day Return Window</span>
-                  </h3>
-                  <p>
-                    All return, exchange, or replacement requests must be initiated within strictly <strong>7 calendar days</strong> from the official date and timestamp of delivery confirmed by our courier partner. Requests raised after this 7-day period will not be eligible for return or refund.
-                  </p>
-                </div>
+                {returnsPolicy.full_policy_html ? (
+                  <div
+                    className="prose prose-sm sm:prose max-w-none text-brand-muted leading-relaxed prose-headings:font-heading prose-headings:text-brand-dark prose-headings:font-semibold prose-strong:text-brand-dark prose-a:text-brand-gold space-y-4"
+                    dangerouslySetInnerHTML={{ __html: returnsPolicy.full_policy_html }}
+                  />
+                ) : (
+                  <>
+                    {/* 1. Return Window */}
+                    <div>
+                      <h3 className="font-heading text-base font-semibold text-brand-dark mb-1.5 flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-brand-gold" />
+                        <span>1. {returnDays}-Day Return Window</span>
+                      </h3>
+                      <p>
+                        All return, exchange, or replacement requests must be initiated within strictly <strong>{returnDays} calendar days</strong> from the official date and timestamp of delivery confirmed by our courier partner. Requests raised after this {returnDays}-day period will not be eligible for return or refund.
+                      </p>
+                    </div>
 
-                {/* 2. Mandatory Unboxing Video Callout */}
-                <div className="p-6 rounded-xl bg-amber-50/70 border border-amber-300/80 space-y-3.5 shadow-2xs">
-                  <div className="flex items-center gap-2.5 text-amber-950 font-heading font-semibold text-base">
-                    <Video className="w-5 h-5 text-amber-700 shrink-0" />
-                    <span>2. Mandatory Unboxing &amp; Product Video Requirement</span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
-                    To ensure complete authenticity and fair evaluation for both customers and our team, a <strong>clear, uncut, continuous video recording</strong> of the parcel opening and product inspection is <strong>strictly mandatory</strong> for all return, replacement, defect, or damage claims.
-                  </p>
-                  <div className="bg-white/90 rounded-lg p-4 border border-amber-200/80 space-y-2 text-xs text-amber-950">
-                    <p className="font-semibold text-amber-900">Your video must clearly show:</p>
-                    <ul className="list-disc list-inside space-y-1.5 pl-1">
-                      <li>The <strong>unopened outer shipping package</strong> from all angles, with the courier shipping label and tracking number clearly visible and readable.</li>
-                      <li>The <strong>entire unboxing process</strong> in one single, continuous, unedited take (videos that are paused, cut, edited, or recorded after opening the parcel will not be accepted).</li>
-                      <li>The <strong>product being taken out</strong>, showing all brand tags, barcode labels, and packaging intact.</li>
-                      <li>A clear, close-up view of the <strong>exact damage, defect, or incorrect item</strong> being reported.</li>
-                    </ul>
-                  </div>
-                  <p className="text-[11px] text-amber-900/80 italic">
-                    ⚠️ Note: Requests submitted without a valid, uncut unboxing video cannot be approved for return, replacement, or refund.
-                  </p>
-                </div>
+                    {/* 2. Mandatory Unboxing Video Callout */}
+                    <div className="p-6 rounded-xl bg-amber-50/70 border border-amber-300/80 space-y-3.5 shadow-2xs">
+                      <div className="flex items-center gap-2.5 text-amber-950 font-heading font-semibold text-base">
+                        <Video className="w-5 h-5 text-amber-700 shrink-0" />
+                        <span>2. Mandatory Unboxing &amp; Product Video Requirement</span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
+                        To ensure complete authenticity and fair evaluation for both customers and our team, a <strong>clear, uncut, continuous video recording</strong> of the parcel opening and product inspection is <strong>strictly mandatory</strong> for all return, replacement, defect, or damage claims.
+                      </p>
+                      <div className="bg-white/90 rounded-lg p-4 border border-amber-200/80 space-y-2 text-xs text-amber-950">
+                        <p className="font-semibold text-amber-900">Your video must clearly show:</p>
+                        <ul className="list-disc list-inside space-y-1.5 pl-1">
+                          <li>The <strong>unopened outer shipping package</strong> from all angles, with the courier shipping label and tracking number clearly visible and readable.</li>
+                          <li>The <strong>entire unboxing process</strong> in one single, continuous, unedited take (videos that are paused, cut, edited, or recorded after opening the parcel will not be accepted).</li>
+                          <li>The <strong>product being taken out</strong>, showing all brand tags, barcode labels, and packaging intact.</li>
+                          <li>A clear, close-up view of the <strong>exact damage, defect, or incorrect item</strong> being reported.</li>
+                        </ul>
+                      </div>
+                      <p className="text-[11px] text-amber-900/80 italic">
+                        ⚠️ Note: Requests submitted without a valid, uncut unboxing video cannot be approved for return, replacement, or refund.
+                      </p>
+                    </div>
 
-                {/* 3. Product Condition & Eligibility */}
-                <div>
-                  <h3 className="font-heading text-base font-semibold text-brand-dark mb-2.5 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>3. Product Condition Criteria</span>
-                  </h3>
-                  <div className="space-y-2 text-xs sm:text-sm">
-                    <div className="flex items-start gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <span><strong>Unworn &amp; Unwashed:</strong> The product must be completely unused, unwashed, unaltered, and free from any signs of wear.</span>
+                    {/* 3. Product Condition & Eligibility */}
+                    <div>
+                      <h3 className="font-heading text-base font-semibold text-brand-dark mb-2.5 flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>3. Product Condition Criteria</span>
+                      </h3>
+                      <div className="space-y-2 text-xs sm:text-sm">
+                        <div className="flex items-start gap-2.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <span><strong>Unworn &amp; Unwashed:</strong> The product must be completely unused, unwashed, unaltered, and free from any signs of wear.</span>
+                        </div>
+                        <div className="flex items-start gap-2.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <span><strong>Tags &amp; Labels Intact:</strong> Original brand tags, security tags, barcode labels, and woven tags must remain securely attached in their original condition.</span>
+                        </div>
+                        <div className="flex items-start gap-2.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <span><strong>Original Packaging:</strong> The merchandise must be returned inside its original protective polybag, box, and brand packaging.</span>
+                        </div>
+                        <div className="flex items-start gap-2.5">
+                          <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                          <span><strong>Disqualification:</strong> Products with perfume or deodorant scents, makeup stains, body odor, pet hair, wash marks, or detached tags fail inspection and will be returned to the customer without a refund.</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-start gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <span><strong>Tags &amp; Labels Intact:</strong> Original brand tags, security tags, barcode labels, and woven tags must remain securely attached in their original condition.</span>
-                    </div>
-                    <div className="flex items-start gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <span><strong>Original Packaging:</strong> The merchandise must be returned inside its original protective polybag, box, and brand packaging.</span>
-                    </div>
-                    <div className="flex items-start gap-2.5">
-                      <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                      <span><strong>Disqualification:</strong> Products with perfume or deodorant scents, makeup stains, body odor, pet hair, wash marks, or detached tags fail inspection and will be returned to the customer without a refund.</span>
-                    </div>
-                  </div>
-                </div>
 
-                {/* 4. Decision: Refund vs. Replacement */}
-                <div className="p-5 rounded-xl bg-brand-light/30 border border-brand-border/70 space-y-3">
-                  <h3 className="font-heading text-base font-semibold text-brand-dark flex items-center gap-2">
-                    <FileCheck2 className="w-4 h-4 text-brand-gold" />
-                    <span>4. Dual Inspection &amp; Final Resolution Decision (Refund or Replacement)</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">
-                    Once your return request is logged and the physical package reaches our fulfillment facility, our Quality Assurance team conducts a thorough <strong>two-step verification</strong>:
-                  </p>
-                  <ol className="list-decimal list-inside space-y-1.5 text-xs sm:text-sm text-brand-dark font-medium pl-1">
-                    <li>Verification of the initial unboxing video submitted by the customer.</li>
-                    <li>Physical hands-on inspection of the received product condition at our warehouse.</li>
-                  </ol>
-                  <p className="text-xs sm:text-sm text-brand-muted leading-relaxed pt-1">
-                    <strong>Upon satisfactory evaluation of both the video and the received product condition, Velaash will decide whether to provide a replacement or a refund:</strong>
-                  </p>
-                  <ul className="list-disc list-inside space-y-1.5 text-xs text-brand-dark pl-2">
-                    <li>
-                      <strong>Replacement:</strong> If the product is defective, damaged in transit, or the wrong item was sent, a fresh replacement piece will be dispatched promptly at no additional shipping fee (subject to stock availability).
-                    </li>
-                    <li>
-                      <strong>Refund:</strong> If an identical replacement is unavailable or if the customer prefers a refund following a verified valid claim, a refund will be issued to the original payment source (Credit/Debit Card, UPI, NetBanking via Razorpay) or direct NEFT/UPI bank transfer for Cash on Delivery (COD) orders within <strong>5 to 7 business days</strong> of physical inspection approval.
-                    </li>
-                    <li>
-                      <strong>Rejection:</strong> If the physically received product does not match the unboxing video, shows signs of usage, or fails our condition criteria, the claim will be rejected and the product returned to the customer.
-                    </li>
-                  </ul>
-                </div>
+                    {/* 4. Decision: Refund vs. Replacement */}
+                    <div className="p-5 rounded-xl bg-brand-light/30 border border-brand-border/70 space-y-3">
+                      <h3 className="font-heading text-base font-semibold text-brand-dark flex items-center gap-2">
+                        <FileCheck2 className="w-4 h-4 text-brand-gold" />
+                        <span>4. Dual Inspection &amp; Final Resolution Decision (Refund or Replacement)</span>
+                      </h3>
+                      <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">
+                        Once your return request is logged and the physical package reaches our fulfillment facility, our Quality Assurance team conducts a thorough <strong>two-step verification</strong>:
+                      </p>
+                      <ol className="list-decimal list-inside space-y-1.5 text-xs sm:text-sm text-brand-dark font-medium pl-1">
+                        <li>Verification of the initial unboxing video submitted by the customer.</li>
+                        <li>Physical hands-on inspection of the received product condition at our warehouse.</li>
+                      </ol>
+                      <p className="text-xs sm:text-sm text-brand-muted leading-relaxed pt-1">
+                        <strong>Upon satisfactory evaluation of both the video and the received product condition, Velaash will decide whether to provide a replacement or a refund:</strong>
+                      </p>
+                      <ul className="list-disc list-inside space-y-1.5 text-xs text-brand-dark pl-2">
+                        <li>
+                          <strong>Replacement:</strong> If the product is defective, damaged in transit, or the wrong item was sent, a fresh replacement piece will be dispatched promptly at no additional shipping fee (subject to stock availability).
+                        </li>
+                        <li>
+                          <strong>Refund:</strong> If an identical replacement is unavailable or if the customer prefers a refund following a verified valid claim, a refund will be issued to the original payment source (Credit/Debit Card, UPI, NetBanking via Razorpay) or direct NEFT/UPI bank transfer for Cash on Delivery (COD) orders within <strong>5 to 7 business days</strong> of physical inspection approval.
+                        </li>
+                        <li>
+                          <strong>Rejection:</strong> If the physically received product does not match the unboxing video, shows signs of usage, or fails our condition criteria, the claim will be rejected and the product returned to the customer.
+                        </li>
+                      </ul>
+                    </div>
+                  </>
+                )}
 
                 {/* 5. How to Initiate a Return */}
                 <div className="p-5 rounded-xl bg-brand-cream/60 border border-brand-border/80 space-y-3">

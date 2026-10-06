@@ -86,6 +86,14 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowPro
                   )}
                 </div>
               )}
+
+              {item.isReturnable === false && (
+                <div className="mt-1">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
+                    Final Sale (Non-Returnable)
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Remove Button (Desktop & Mobile) */}
