@@ -1,4 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
+import { safeUnstableCache } from "@/lib/safe-cache";
+import { cache } from "react";
 import type { ProductReviewItem, ProductReviewBreakdown } from "@/features/products/types";
 
 /**
@@ -57,11 +59,11 @@ export function calculateReviewBreakdown(
 /**
  * Fetch approved reviews and metrics for a specific product directly from Supabase
  */
-export async function getProductReviews(
+async function fetchProductReviews(
   productId: string
 ): Promise<{ reviews: ProductReviewItem[]; breakdown: ProductReviewBreakdown }> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     const { data, error } = await supabase
       .from("reviews")
@@ -98,3 +100,11 @@ export async function getProductReviews(
     throw err;
   }
 }
+
+const getCachedProductReviews = safeUnstableCache(
+  fetchProductReviews,
+  ["product-reviews"],
+  { tags: ["products", "reviews"], revalidate: 300 }
+);
+
+export const getProductReviews = cache(getCachedProductReviews);

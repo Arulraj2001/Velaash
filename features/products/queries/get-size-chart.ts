@@ -1,4 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
+import { safeUnstableCache } from "@/lib/safe-cache";
+import { cache } from "react";
 import type { SizeChartData } from "../types";
 
 function isPlaceholderEnvironment(): boolean {
@@ -37,12 +39,12 @@ export const DEFAULT_CLOTHING_SIZE_CHART: SizeChartData = {
 /**
  * Fetch size chart by product override or category default
  */
-export async function getSizeChart(
+async function fetchSizeChart(
   productId: string,
   categoryId?: string | null
 ): Promise<SizeChartData> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     // 1. Check for product-specific override
     const { data: productChart, error: pErr } = await supabase
@@ -141,3 +143,11 @@ export async function getSizeChart(
 
   return DEFAULT_CLOTHING_SIZE_CHART;
 }
+
+const getCachedSizeChart = safeUnstableCache(
+  fetchSizeChart,
+  ["size-chart"],
+  { tags: ["products"], revalidate: 3600 }
+);
+
+export const getSizeChart = cache(getCachedSizeChart);

@@ -120,6 +120,7 @@ export function ProductGallery({
             alt={currentImage.alt_text || `${productName} view ${activeIndex + 1}`}
             fill
             priority
+            fetchPriority="high"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
             className="object-cover object-top transition-opacity duration-300"
           />
@@ -234,6 +235,7 @@ export function ProductGallery({
                 alt={img.alt_text || `${productName} thumbnail ${idx + 1}`}
                 fill
                 sizes="80px"
+                loading="lazy"
                 className="object-cover object-top"
               />
             </button>

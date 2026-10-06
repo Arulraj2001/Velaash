@@ -2,8 +2,9 @@ import { safeUnstableCache } from "@/lib/safe-cache";
 import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/server";
 import type { ProductDetailItem, ProductImageItem, ProductVariantItem } from "../types";
-import { getSizeChart } from "./get-size-chart";
-import { getProductReviews } from "@/features/reviews/queries/get-product-reviews";
+import { getSizeChart, DEFAULT_CLOTHING_SIZE_CHART } from "./get-size-chart";
+import { calculateReviewBreakdown } from "@/features/reviews/queries/get-product-reviews";
+import type { ProductReviewItem } from "@/features/products/types";
 
 /**
  * Curated fabric and craftsmanship metadata for realistic PDP display
@@ -109,6 +110,22 @@ const PRODUCT_SELECT = `
     display_order,
     is_primary,
     variant_id
+  ),
+  reviews (
+    id,
+    customer_name,
+    rating,
+    title,
+    comment,
+    is_verified_purchase,
+    is_approved,
+    created_at
+  ),
+  size_charts (
+    id,
+    name,
+    chart_data,
+    measurement_unit
   )
 `;
 
@@ -177,12 +194,35 @@ async function fetchProductBySlug(slug: string): Promise<ProductDetailItem | nul
       : (prod.stock_quantity ?? 999);
     const categoryData = Array.isArray(prod.categories) ? prod.categories[0] : prod.categories;
 
-    // Fetch size chart and reviews in parallel — they don't depend on each other
+    // Calculate reviews directly from the single joined query — zero separate roundtrips
+    const approvedReviews = ((prod.reviews || []) as ProductReviewItem[])
+      .filter((r) => r.is_approved)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const reviewBreakdown = calculateReviewBreakdown(approvedReviews);
+
+    // Resolve size chart from joined override or cached category default
     const hasSizeVariants = variants.some((v) => Boolean(v.size));
-    const [sizeChart, reviewData] = await Promise.all([
-      hasSizeVariants ? getSizeChart(prod.id, prod.category_id) : Promise.resolve(null),
-      getProductReviews(prod.id),
-    ]);
+    let sizeChart = null;
+    if (hasSizeVariants) {
+      if (Array.isArray(prod.size_charts) && prod.size_charts.length > 0) {
+        const sc = prod.size_charts[0];
+        const scData = sc.chart_data as {
+          headers?: string[];
+          rows?: Record<string, string>[];
+          tips?: string[];
+        } | null;
+        sizeChart = {
+          id: sc.id,
+          name: sc.name,
+          measurement_unit: (sc.measurement_unit as "inches" | "cm") || "inches",
+          headers: scData?.headers || DEFAULT_CLOTHING_SIZE_CHART.headers,
+          rows: scData?.rows || DEFAULT_CLOTHING_SIZE_CHART.rows,
+          tips: scData?.tips || DEFAULT_CLOTHING_SIZE_CHART.tips,
+        };
+      } else {
+        sizeChart = await getSizeChart(prod.id, prod.category_id);
+      }
+    }
 
     const meta = PDP_EXTENDED_METADATA[normalizedSlug] || (hasVariants ? DEFAULT_METADATA : null);
 
@@ -210,8 +250,8 @@ async function fetchProductBySlug(slug: string): Promise<ProductDetailItem | nul
       sizes,
       total_stock: totalStock,
       rating:
-        reviewData.breakdown.totalCount > 0
-          ? { average: reviewData.breakdown.average, count: reviewData.breakdown.totalCount }
+        reviewBreakdown.totalCount > 0
+          ? { average: reviewBreakdown.average, count: reviewBreakdown.totalCount }
           : null,
       fabric: prod.fabric || meta?.fabric || null,
       care_instructions: prod.care_instructions || meta?.care_instructions || null,
@@ -229,8 +269,8 @@ async function fetchProductBySlug(slug: string): Promise<ProductDetailItem | nul
       seo_description: prod.seo_description,
       seo_keywords: prod.seo_keywords ?? undefined,
       size_chart: sizeChart,
-      reviews_breakdown: reviewData.breakdown,
-      reviews: reviewData.reviews,
+      reviews_breakdown: reviewBreakdown,
+      reviews: approvedReviews,
       free_shipping_active: Boolean(prod.free_shipping_active),
       free_shipping_start: prod.free_shipping_start || null,
       free_shipping_end: prod.free_shipping_end || null,

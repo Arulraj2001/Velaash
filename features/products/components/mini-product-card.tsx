@@ -27,6 +27,7 @@ export function MiniProductCard({ product, className = "" }: MiniProductCardProp
   return (
     <Link
       href={`/products/${product.slug}`}
+      prefetch={true}
       className={`group flex flex-col shrink-0 w-36 sm:w-48 rounded-xl bg-white border border-brand-border/70 hover:border-brand-gold/70 p-2 sm:p-2.5 transition-all duration-200 hover:shadow-md snap-start ${className}`}
     >
       {/* Thumbnail Container */}
