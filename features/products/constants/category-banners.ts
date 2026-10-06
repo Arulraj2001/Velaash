@@ -5,6 +5,12 @@ export interface CategoryBannerConfig {
 }
 
 export const CATEGORY_BANNER_MAP: Record<string, CategoryBannerConfig> = {
+  women: {
+    imageUrl: "/categories/kurtas-sets.jpg",
+    badge: "Women's Collection",
+    description:
+      "Handcrafted silhouettes in pure cottons, festive jewel tones, elegant sarees, and artisanal coordinated sets.",
+  },
   sarees: {
     imageUrl: "/categories/sarees.jpg",
     badge: "Heritage Handloom Weaves",

@@ -7,6 +7,7 @@ import { PaymentFailedEmail } from "@/features/checkout/emails/payment-failed-em
 import { sendPaidOrderConfirmationEmail } from "@/features/checkout/services/send-paid-order-confirmation";
 import { env } from "@/lib/env";
 import { getSiteSettings } from "@/features/settings";
+import type { Database } from "@/types/database.types";
 
 
 // In-memory mock store for automated webhook test assertions
@@ -340,6 +341,99 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         received: true,
         event: eventName,
         status: "payment_attempt_failed_retryable",
+      });
+    }
+
+    // 5. Handle Refund Lifecycle Events (refund.processed, refund.created, refund.failed)
+    if (eventName === "refund.processed" || eventName === "refund.created" || eventName === "refund.failed") {
+      const refundEntity = payload.payload?.refund?.entity;
+      const refundId = refundEntity?.id;
+      const paymentId = refundEntity?.payment_id;
+      const orderNumberNote = refundEntity?.notes?.order_number;
+      const refundArn = refundEntity?.acquirer_data?.arn || null;
+      const refundAmount = refundEntity?.amount ? refundEntity.amount / 100 : null;
+      const newRefundStatus =
+        eventName === "refund.processed"
+          ? "processed"
+          : eventName === "refund.failed"
+          ? "failed"
+          : "initiated";
+
+      let matchedOrderId: string | null = null;
+      let matchedOrderNumber: string | null = orderNumberNote || null;
+
+      if (adminSupabase && (orderNumberNote || paymentId || refundId)) {
+        try {
+          // Attempt to find order by order_number first, then payment_id, then refund_id
+          let query = adminSupabase.from("orders").select("id, order_number, status, payment_status");
+          if (orderNumberNote) {
+            query = query.eq("order_number", orderNumberNote);
+          } else if (paymentId) {
+            query = query.eq("razorpay_payment_id", paymentId);
+          }
+
+          const { data: matchedOrder, error: findError } = await query.maybeSingle();
+
+          if (!findError && matchedOrder) {
+            matchedOrderId = matchedOrder.id;
+            matchedOrderNumber = matchedOrder.order_number;
+
+            // Attempt update with refund columns
+            const fullUpdate: Database["public"]["Tables"]["orders"]["Update"] = {
+              payment_status: newRefundStatus === "failed" ? matchedOrder.payment_status : "refunded",
+              razorpay_refund_id: refundId,
+              refund_status: newRefundStatus,
+              refund_amount: refundAmount,
+              refund_arn: refundArn,
+              refunded_at: new Date().toISOString(),
+            };
+
+            const { error: updateError } = await adminSupabase
+              .from("orders")
+              .update(fullUpdate)
+              .eq("id", matchedOrderId);
+
+            if (updateError) {
+              if (updateError.code === "42703") {
+                // Defensive fallback if migration 035 columns are missing
+                await adminSupabase
+                  .from("orders")
+                  .update({
+                    payment_status: newRefundStatus === "failed" ? matchedOrder.payment_status : "refunded",
+                  })
+                  .eq("id", matchedOrderId);
+              } else {
+                console.error("[Razorpay:Webhook] Error updating order refund status:", updateError);
+              }
+            }
+
+            // Append status history entry
+            await adminSupabase.from("order_status_history").insert({
+              order_id: matchedOrderId,
+              status: matchedOrder.status,
+              note: `Razorpay Refund update (${eventName}): Status set to ${newRefundStatus}.${
+                refundAmount ? ` Amount: ₹${refundAmount}.` : ""
+              }${refundArn ? ` Bank ARN: ${refundArn}.` : ""}`,
+            });
+          }
+        } catch (dbErr) {
+          console.error("Database error processing refund webhook:", dbErr);
+        }
+      }
+
+      MOCK_WEBHOOK_EVENT_LOG.push({
+        event: eventName,
+        orderNumber: matchedOrderNumber || undefined,
+        paymentId: paymentId || undefined,
+        status: newRefundStatus,
+        timestamp: Date.now(),
+      });
+
+      return NextResponse.json({
+        received: true,
+        event: eventName,
+        status: newRefundStatus,
+        orderNumber: matchedOrderNumber,
       });
     }
 

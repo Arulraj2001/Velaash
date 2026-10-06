@@ -36,8 +36,8 @@ export async function getCustomerOrderDetail(
     return null;
   }
 
-  // 1. Fetch Order Record
-  const { data: order, error: orderErr } = await adminSupabase
+  // 1. Fetch Order Record (with defensive fallback if migration 035 not yet run)
+  let { data: order, error: orderErr } = await adminSupabase
     .from("orders")
     .select(`
       id,
@@ -59,11 +59,52 @@ export async function getCustomerOrderDetail(
       courier_name,
       shiprocket_order_id,
       shiprocket_shipment_id,
+      razorpay_payment_id,
+      razorpay_refund_id,
+      refund_status,
+      refund_amount,
+      refund_arn,
+      refunded_at,
       created_at,
       updated_at
     `)
     .eq("order_number", orderNumber)
     .maybeSingle();
+
+  if (orderErr && (orderErr as { code?: string }).code === "42703") {
+    // Undefined column fallback if migration 035 hasn't been executed in database yet
+    const fallbackRes = await adminSupabase
+      .from("orders")
+      .select(`
+        id,
+        order_number,
+        customer_id,
+        status,
+        payment_method,
+        payment_status,
+        subtotal,
+        shipping_charge,
+        discount_amount,
+        total_amount,
+        shipping_address,
+        billing_address,
+        coupon_code,
+        notes,
+        cancel_reason,
+        tracking_number,
+        courier_name,
+        shiprocket_order_id,
+        shiprocket_shipment_id,
+        razorpay_payment_id,
+        created_at,
+        updated_at
+      `)
+      .eq("order_number", orderNumber)
+      .maybeSingle();
+
+    order = fallbackRes.data as typeof order;
+    orderErr = fallbackRes.error;
+  }
 
   if (orderErr || !order) {
     return null;
@@ -200,6 +241,12 @@ export async function getCustomerOrderDetail(
     courierName: extractTrackingInfo(order).courierName,
     shiprocketOrderId: order.shiprocket_order_id ?? null,
     shiprocketShipmentId: order.shiprocket_shipment_id ?? null,
+    razorpayPaymentId: order.razorpay_payment_id ?? null,
+    razorpayRefundId: (order as Record<string, unknown>).razorpay_refund_id ? String((order as Record<string, unknown>).razorpay_refund_id) : null,
+    refundStatus: ((order as Record<string, unknown>).refund_status as CustomerOrderDetail["refundStatus"]) ?? null,
+    refundAmount: (order as Record<string, unknown>).refund_amount != null ? Number((order as Record<string, unknown>).refund_amount) : null,
+    refundArn: (order as Record<string, unknown>).refund_arn ? String((order as Record<string, unknown>).refund_arn) : null,
+    refundedAt: (order as Record<string, unknown>).refunded_at ? String((order as Record<string, unknown>).refunded_at) : null,
     createdAt: order.created_at,
     updatedAt: order.updated_at,
     shippingAddress: {

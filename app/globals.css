@@ -129,9 +129,53 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-announcement-marquee {
+  .animate-announcement-marquee,
+  .animate-hero-kenburns,
+  .animate-slide-progress {
     animation: none;
     transform: none;
   }
+}
+
+/* Luxury Hero Ken Burns slow zoom */
+@keyframes heroKenBurns {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.06);
+  }
+}
+
+.animate-hero-kenburns {
+  animation: heroKenBurns 8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* Slide timer progress bar */
+@keyframes slideTimerProgress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-slide-progress {
+  animation: slideTimerProgress 6.5s linear infinite;
+}
+
+/* Subtle Golden Pulse */
+@keyframes pulseGoldGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(242, 169, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(242, 169, 0, 0.45);
+  }
+}
+
+.animate-pulse-gold {
+  animation: pulseGoldGlow 3s ease-in-out infinite;
 }
 

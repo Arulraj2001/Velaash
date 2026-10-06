@@ -11,6 +11,7 @@ export type OrderStatus =
 
 export type PaymentMethod = "cod" | "razorpay";
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
+export type RefundStatus = "not_applicable" | "initiated" | "processed" | "failed";
 
 export interface CustomerOrderListItem {
   id: string;
@@ -23,6 +24,8 @@ export interface CustomerOrderListItem {
   itemCount: number;
   firstItemTitle?: string;
   firstItemImage?: string;
+  refundStatus?: RefundStatus | null;
+  refundAmount?: number | null;
 }
 
 export interface CustomerOrderItem {
@@ -66,6 +69,12 @@ export interface CustomerOrderDetail {
   courierName?: string | null;
   shiprocketOrderId?: string | null;
   shiprocketShipmentId?: string | null;
+  razorpayPaymentId?: string | null;
+  razorpayRefundId?: string | null;
+  refundStatus?: RefundStatus | null;
+  refundAmount?: number | null;
+  refundArn?: string | null;
+  refundedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   shippingAddress: {

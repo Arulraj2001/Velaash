@@ -99,8 +99,8 @@ export function ProductFilters({
 
   return (
     <div className={`text-brand-dark space-y-6 font-sans ${isMobileDrawer ? "p-1" : ""}`}>
-      {/* Category Navigation Links (Only on Shop All page or when no category is fixed) */}
-      {!currentCategorySlug && availableFilters.categories.length > 0 && (
+      {/* Category Navigation Links (On Shop All page or on top-level pillar like Women) */}
+      {(!currentCategorySlug || currentCategorySlug === "women") && availableFilters.categories.length > 0 && (
         <div className="border-brand-border/60 border-b pb-5">
           <h4 className="text-brand-dark mb-3 text-xs font-semibold tracking-wider uppercase">
             Categories
@@ -109,7 +109,7 @@ export function ProductFilters({
             {availableFilters.categories.map((cat) => (
               <li key={cat.slug}>
                 <Link
-                  href={`/category/${cat.slug}`}
+                  href={`/collections/${cat.slug}`}
                   className="text-brand-muted hover:text-brand-accent flex items-center justify-between py-1 transition-colors"
                 >
                   <span>{cat.name}</span>

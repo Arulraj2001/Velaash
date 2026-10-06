@@ -1,12 +1,17 @@
 import React from "react";
-import { Check, Clock, Package, Truck, Home, XCircle } from "lucide-react";
-import type { OrderStatus, OrderStatusHistoryRecord } from "../types";
+import { Check, Clock, Package, Truck, Home, XCircle, RotateCcw, ShieldCheck, AlertCircle } from "lucide-react";
+import type { OrderStatus, OrderStatusHistoryRecord, RefundStatus } from "../types";
 import { cn } from "@/lib/utils";
 
 interface OrderTimelineProps {
   currentStatus: OrderStatus;
   history: OrderStatusHistoryRecord[];
   createdAt: string;
+  refundStatus?: RefundStatus | null;
+  refundAmount?: number | null;
+  refundedAt?: string | null;
+  paymentMethod?: string;
+  paymentStatus?: string;
 }
 
 interface StepDefinition {
@@ -48,7 +53,16 @@ const STANDARD_STEPS: StepDefinition[] = [
   },
 ];
 
-export function OrderTimeline({ currentStatus, history, createdAt }: OrderTimelineProps) {
+export function OrderTimeline({
+  currentStatus,
+  history,
+  createdAt,
+  refundStatus,
+  refundAmount,
+  refundedAt,
+  paymentMethod,
+  paymentStatus,
+}: OrderTimelineProps) {
   const isCancelled = ["cancelled", "refunded", "payment_failed"].includes(currentStatus);
 
   // Map history events to timestamp lookup
@@ -81,26 +95,95 @@ export function OrderTimeline({ currentStatus, history, createdAt }: OrderTimeli
 
   if (isCancelled) {
     const cancelRecord = historyMap.get("cancelled") || history[history.length - 1];
+    const isPrepaid = paymentMethod === "razorpay" || paymentStatus === "refunded" || !!refundStatus;
+    const isProcessed = refundStatus === "processed";
+    const isFailed = refundStatus === "failed";
+    const isInitiated = refundStatus === "initiated" || paymentStatus === "refunded" || (!isProcessed && !isFailed && isPrepaid);
+
     return (
-      <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-6">
-        <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700">
-            <XCircle className="h-6 w-6 stroke-[2]" />
-          </div>
-          <div className="space-y-1">
-            <h4 className="font-heading text-base font-semibold text-rose-900">
-              Order Cancelled
-            </h4>
-            <p className="text-xs text-rose-700">
-              {cancelRecord?.note || "This order was cancelled."}
-            </p>
-            {cancelRecord && (
-              <p className="font-mono text-[11px] text-rose-600/80">
-                {formatDate(cancelRecord.createdAt)}
+      <div className="space-y-3">
+        {/* Order Cancelled Notification */}
+        <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-5">
+          <div className="flex items-start gap-3.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700">
+              <XCircle className="h-5 w-5 stroke-[2]" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-heading text-sm font-semibold text-rose-900">
+                Order Cancelled
+              </h4>
+              <p className="text-xs text-rose-700 leading-relaxed">
+                {cancelRecord?.note || "This order was cancelled."}
               </p>
-            )}
+              {cancelRecord && (
+                <p className="font-mono text-[11px] text-rose-600/80">
+                  {formatDate(cancelRecord.createdAt)}
+                </p>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Refund Status Journey for Prepaid Orders */}
+        {isPrepaid && (
+          <div className={cn(
+            "rounded-xl border p-5 transition-all",
+            isProcessed ? "border-emerald-200 bg-emerald-50/40" :
+            isFailed ? "border-amber-200 bg-amber-50/50" :
+            "border-brand-accent/20 bg-brand-light/30"
+          )}>
+            <div className="flex items-start gap-3.5">
+              <div className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+                isProcessed ? "bg-emerald-100 text-emerald-700" :
+                isFailed ? "bg-amber-100 text-amber-700" :
+                "bg-brand-gold/20 text-brand-accent"
+              )}>
+                {isProcessed ? (
+                  <ShieldCheck className="h-5 w-5" />
+                ) : isFailed ? (
+                  <AlertCircle className="h-5 w-5" />
+                ) : (
+                  <RotateCcw className="h-5 w-5" />
+                )}
+              </div>
+              <div className="space-y-1 flex-1">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <h4 className={cn(
+                    "font-heading text-sm font-semibold",
+                    isProcessed ? "text-emerald-950" : isFailed ? "text-amber-950" : "text-brand-dark"
+                  )}>
+                    {isProcessed
+                      ? "Refund Successfully Processed"
+                      : isFailed
+                      ? "Refund Attention Required"
+                      : "100% Refund Initiated to Original Payment Source"}
+                  </h4>
+                  {refundAmount ? (
+                    <span className="font-heading text-sm font-bold text-brand-dark">
+                      ₹{refundAmount.toLocaleString("en-IN")}
+                    </span>
+                  ) : null}
+                </div>
+                <p className={cn(
+                  "text-xs leading-relaxed",
+                  isProcessed ? "text-emerald-800" : isFailed ? "text-amber-800" : "text-brand-muted"
+                )}>
+                  {isProcessed
+                    ? "Your refund has been completed by our banking network and credited back to your original source account."
+                    : isFailed
+                    ? "Our automated refund system encountered a bank delay. Our finance concierge has been notified to assist you."
+                    : "The refund request was automatically sent to Razorpay. Banking clearing typically credits funds to your UPI/Card/Bank within 5–7 business days."}
+                </p>
+                {refundedAt && (
+                  <p className="font-mono text-[11px] text-brand-muted pt-0.5">
+                    Updated: {formatDate(refundedAt)}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

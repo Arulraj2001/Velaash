@@ -745,6 +745,44 @@ export function AdminOrderDetailView({
                   </p>
                 </div>
               )}
+
+              {(order.razorpayRefundId || order.refundStatus) && (
+                <div className="pt-2 border-t border-slate-100 space-y-2 bg-purple-50/50 p-2.5 rounded-lg border border-purple-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-purple-900 uppercase">
+                      Refund Status
+                    </span>
+                    <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-purple-100 text-purple-800">
+                      {order.refundStatus || "Initiated"}
+                    </span>
+                  </div>
+
+                  {order.refundAmount && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500">Refund Amount:</span>
+                      <span className="font-semibold text-slate-900">₹{order.refundAmount.toLocaleString("en-IN")}</span>
+                    </div>
+                  )}
+
+                  {order.razorpayRefundId && (
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] text-slate-400 uppercase">Refund ID:</span>
+                      <p className="font-mono text-[11px] font-medium text-slate-800 break-all select-all">
+                        {order.razorpayRefundId}
+                      </p>
+                    </div>
+                  )}
+
+                  {order.refundArn && (
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] text-slate-400 uppercase">Bank ARN:</span>
+                      <p className="font-mono text-[11px] text-slate-700">
+                        {order.refundArn}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

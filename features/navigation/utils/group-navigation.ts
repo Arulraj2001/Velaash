@@ -11,6 +11,7 @@ export interface NavSectionItem {
 export interface NavSection {
   title: string;
   href?: string;
+  description?: string | null;
   items: NavSectionItem[];
 }
 
@@ -29,6 +30,8 @@ export interface NavPillar {
   badge?: string;
   dropdownType: "mega-women" | "dropdown-men" | "dropdown-pooja" | "none";
   sections?: NavSection[];
+  columns?: NavSection[][];
+  hasSubcategories?: boolean;
   featuredCard?: NavCard;
 }
 
@@ -59,30 +62,46 @@ export function groupNavigationCategories(
   );
 
   // --- PILLAR 1: WOMEN ---
-  // Group women's categories into 3 structured columns
-  const kurtasAndCoords = womenCategories.filter((c) =>
-    ["kurtas-sets", "coord-sets", "co-ord-sets"].includes(c.slug)
-  );
-  const dressesAndTops = womenCategories.filter((c) =>
-    ["dresses", "tops-shirts", "tops-tunics"].includes(c.slug)
-  );
-  const bottomsAndLounge = womenCategories.filter((c) =>
-    ["bottoms", "pants-trousers", "loungewear"].includes(c.slug)
+  // Group women's categories into 3 balanced semantic columns
+  // Column 1: Traditional & Festive (Sarees, Kurtas & Sets, Co-ords)
+  const festiveCategories = womenCategories.filter((c) =>
+    ["sarees", "kurtas-sets", "coord-sets", "co-ord-sets"].includes(c.slug) ||
+    c.name.toLowerCase().includes("saree") ||
+    c.name.toLowerCase().includes("kurta") ||
+    c.name.toLowerCase().includes("coord") ||
+    c.name.toLowerCase().includes("co-ord")
   );
 
-  // Catch any unclassified women categories
+  // Column 2: Contemporary & Everyday (Dresses, Tops & Shirts)
+  const contemporaryCategories = womenCategories.filter((c) =>
+    !festiveCategories.some((f) => f.id === c.id) &&
+    (["dresses", "tops-shirts", "tops-tunics"].includes(c.slug) ||
+      c.name.toLowerCase().includes("dress") ||
+      c.name.toLowerCase().includes("top"))
+  );
+
+  // Column 3: Bottoms & Loungewear (Bottoms, Loungewear)
+  const bottomsCategories = womenCategories.filter((c) =>
+    !festiveCategories.some((f) => f.id === c.id) &&
+    !contemporaryCategories.some((ct) => ct.id === c.id) &&
+    (["bottoms", "pants-trousers", "loungewear"].includes(c.slug) ||
+      c.name.toLowerCase().includes("bottom") ||
+      c.name.toLowerCase().includes("pant") ||
+      c.name.toLowerCase().includes("lounge"))
+  );
+
+  // Catch any unclassified women categories and distribute across columns
   const otherWomen = womenCategories.filter(
     (c) =>
-      !kurtasAndCoords.some((k) => k.id === c.id) &&
-      !dressesAndTops.some((d) => d.id === c.id) &&
-      !bottomsAndLounge.some((b) => b.id === c.id)
+      !festiveCategories.some((f) => f.id === c.id) &&
+      !contemporaryCategories.some((ct) => ct.id === c.id) &&
+      !bottomsCategories.some((b) => b.id === c.id)
   );
-
-  const womenSections: NavSection[] = [];
 
   const mapCategoryToSection = (cat: NavigationCategory): NavSection => ({
     title: cat.name,
     href: `/collections/${cat.slug}`,
+    description: cat.description,
     items: (cat.subcategories || []).map((sub) => ({
       id: sub.id,
       name: sub.name,
@@ -92,26 +111,37 @@ export function groupNavigationCategories(
     })),
   });
 
-  // Group 1: Indian & Festive
-  kurtasAndCoords.forEach((cat) => womenSections.push(mapCategoryToSection(cat)));
-  // Group 2: Contemporary & Everyday
-  dressesAndTops.forEach((cat) => womenSections.push(mapCategoryToSection(cat)));
-  // Group 3: Bottoms & Lounge
-  bottomsAndLounge.forEach((cat) => womenSections.push(mapCategoryToSection(cat)));
-  // Group 4: Others (if any added in future)
-  otherWomen.forEach((cat) => womenSections.push(mapCategoryToSection(cat)));
+  const col1Sections: NavSection[] = festiveCategories.map(mapCategoryToSection);
+  const col2Sections: NavSection[] = contemporaryCategories.map(mapCategoryToSection);
+  const col3Sections: NavSection[] = bottomsCategories.map(mapCategoryToSection);
+
+  otherWomen.forEach((cat, idx) => {
+    const sec = mapCategoryToSection(cat);
+    if (idx % 3 === 0) col1Sections.push(sec);
+    else if (idx % 3 === 1) col2Sections.push(sec);
+    else col3Sections.push(sec);
+  });
+
+  const womenColumns: NavSection[][] = [col1Sections, col2Sections, col3Sections].filter(
+    (col) => col.length > 0
+  );
+
+  const womenSections: NavSection[] = [...col1Sections, ...col2Sections, ...col3Sections];
+  const womenHasSubcategories = womenSections.some((sec) => sec.items.length > 0);
 
   const womenPillar: NavPillar = {
     id: "nav-women",
     name: "Women",
-    href: "/collections/kurtas-sets",
+    href: "/collections/women",
     dropdownType: "mega-women",
     sections: womenSections,
+    columns: womenColumns,
+    hasSubcategories: womenHasSubcategories,
     featuredCard: {
       title: "Handcrafted Women's Wear",
       subtitle: "Fluid silhouettes in pure cottons, festive jewel tones, and coordinated sets.",
       imageUrl: womenCategories[0]?.image_url || "/categories/kurtas-sets.jpg",
-      href: "/collections/kurtas-sets",
+      href: "/collections/women",
       ctaText: "Explore Women's Wear",
     },
   };
@@ -157,6 +187,7 @@ export function groupNavigationCategories(
     name: "Men",
     href: "/collections/men",
     dropdownType: "dropdown-men",
+    hasSubcategories: menSubcategories.length > 0,
     sections: [
       {
         title: "Men's Apparel",
@@ -204,6 +235,7 @@ export function groupNavigationCategories(
     name: "Pooja & Brass",
     href: "/collections/pooja-and-brass",
     dropdownType: "dropdown-pooja",
+    hasSubcategories: poojaSubcategories.length > 0,
     sections: [
       {
         title: "Sacred Brass Essentials",

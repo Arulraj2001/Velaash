@@ -122,16 +122,38 @@ export function BrandStory({
               </div>
             </div>
 
-            {ctaText && ctaLink ? (
-              <div className="pt-2">
+            {/* 3 Proof Stat Cards */}
+            <div className="grid grid-cols-3 gap-3 pt-2">
+              <div className="rounded-xl border border-brand-border/60 bg-white/80 p-3 text-center shadow-2xs">
+                <span className="font-heading text-xl sm:text-2xl font-bold text-brand-dark block">100%</span>
+                <span className="text-[10px] text-brand-muted font-sans font-medium uppercase tracking-wider block mt-0.5">Natural Weaves</span>
+              </div>
+              <div className="rounded-xl border border-brand-border/60 bg-white/80 p-3 text-center shadow-2xs">
+                <span className="font-heading text-xl sm:text-2xl font-bold text-brand-dark block">500+</span>
+                <span className="text-[10px] text-brand-muted font-sans font-medium uppercase tracking-wider block mt-0.5">Artisans Empowered</span>
+              </div>
+              <div className="rounded-xl border border-brand-border/60 bg-white/80 p-3 text-center shadow-2xs">
+                <span className="font-heading text-xl sm:text-2xl font-bold text-brand-dark block">0%</span>
+                <span className="text-[10px] text-brand-muted font-sans font-medium uppercase tracking-wider block mt-0.5">Synthetic Blends</span>
+              </div>
+            </div>
+
+            {/* CTA & Concierge Hook */}
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center gap-4">
+              {ctaText && ctaLink ? (
                 <Link href={ctaLink}>
-                  <Button variant="primary" size="md" className="shadow-luxury">
+                  <Button variant="primary" size="md" className="shadow-luxury hover:scale-[1.02] transition-transform">
                     <span>{ctaText}</span>
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
+              ) : null}
+
+              <div className="text-[11px] text-brand-muted flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <span>Need sizing help? Free guidance available via WhatsApp</span>
               </div>
-            ) : null}
+            </div>
           </div>
         </div>
       </Container>

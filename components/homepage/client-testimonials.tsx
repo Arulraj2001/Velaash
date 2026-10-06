@@ -76,42 +76,56 @@ export function ClientTestimonials({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {displayItems.map((item, idx) => {
             const rating = Math.min(5, Math.max(1, Math.round(item.rating || 5)));
+            const initials = item.name
+              ? item.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase()
+              : "V";
+
             return (
               <div
                 key={item.id || idx}
-                className="p-5 sm:p-6 rounded-xl bg-white/95 border border-brand-border/60 hover:border-brand-gold/60 hover:shadow-luxury transition-all duration-300 flex flex-col justify-between"
+                className="group p-5 sm:p-6 rounded-2xl bg-white/95 border border-brand-border/60 hover:border-brand-gold/70 hover:shadow-gold-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
               >
-                <div className="space-y-3">
-                  {/* Rating Stars - Minimal */}
-                  <div className="flex items-center gap-1 text-amber-500">
-                    {Array.from({ length: rating }).map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    ))}
+                <div className="space-y-3.5">
+                  {/* Top Bar: Rating Stars + Verified Badge */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-amber-500">
+                      {Array.from({ length: rating }).map((_, i) => (
+                        <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[10px] font-semibold text-emerald-800">
+                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                      <span>Verified Patron</span>
+                    </div>
                   </div>
 
                   {/* Review Text */}
-                  <p className="text-xs sm:text-[13px] font-sans text-brand-dark/90 leading-relaxed">
+                  <p className="text-xs sm:text-[13px] font-sans text-brand-dark/90 leading-relaxed italic">
                     &ldquo;{item.review}&rdquo;
                   </p>
                 </div>
 
-                {/* Minimal Author & Verification */}
-                <div className="pt-4 mt-4 border-t border-brand-border/40 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-heading text-xs sm:text-sm font-semibold text-brand-dark">
+                {/* Author Info with Initial Monogram Avatar */}
+                <div className="pt-4 mt-4 border-t border-brand-border/40 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-brand-light/70 border border-brand-gold/40 flex items-center justify-center font-heading text-xs font-bold text-brand-dark shrink-0">
+                    {initials}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-heading text-xs sm:text-sm font-semibold text-brand-dark truncate">
                       {item.name}
                     </h3>
-                    <p className="text-[11px] text-brand-muted truncate max-w-[180px]">
+                    <p className="text-[11px] text-brand-muted truncate">
                       {item.location || "India"}
                       {item.productName || item.product_name
                         ? ` • ${item.productName || item.product_name}`
                         : ""}
                     </p>
-                  </div>
-
-                  <div className="flex items-center gap-1 text-[11px] text-emerald-700 shrink-0">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="font-medium text-[10px] tracking-wide uppercase">Verified</span>
                   </div>
                 </div>
               </div>

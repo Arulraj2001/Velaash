@@ -16,6 +16,7 @@ interface ProductCardProps {
   product: ProductListItem;
   priority?: boolean;
   showQuickAdd?: boolean;
+  size?: "default" | "medium";
   onWishlistChange?: (productId: string, isWishlisted: boolean) => void;
 }
 
@@ -23,8 +24,10 @@ export function ProductCard({
   product,
   priority = false,
   showQuickAdd = false,
+  size = "default",
   onWishlistChange,
 }: ProductCardProps) {
+  const isMedium = size === "medium";
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
@@ -149,7 +152,13 @@ export function ProductCard({
         className="focus-visible:ring-brand-gold block overflow-hidden rounded-xl focus-visible:ring-2 focus-visible:outline-none"
       >
         {/* Image Container with 4:5 Aspect Ratio and Height Cap */}
-        <div className="bg-brand-light/20 relative aspect-[4/5] max-h-[310px] sm:max-h-[340px] w-full overflow-hidden">
+        <div
+          className={`bg-brand-light/20 relative aspect-[4/5] w-full overflow-hidden ${
+            isMedium
+              ? "max-h-[220px] sm:max-h-[240px] md:max-h-[260px]"
+              : "max-h-[310px] sm:max-h-[340px]"
+          }`}
+        >
           {/* Primary Product Image */}
           {activeImageUrl ? (
             <Image
@@ -158,7 +167,11 @@ export function ProductCard({
               fill
               priority={priority}
               quality={72}
-              sizes="(max-width: 640px) calc((100vw - 2rem - 0.875rem) / 2), (max-width: 1024px) calc((100vw - 2rem - 2.5rem) / 3), 25vw"
+              sizes={
+                isMedium
+                  ? "(max-width: 640px) 48vw, (max-width: 768px) 32vw, (max-width: 1024px) 24vw, 19vw"
+                  : "(max-width: 640px) calc((100vw - 2rem - 0.875rem) / 2), (max-width: 1024px) calc((100vw - 2rem - 2.5rem) / 3), 25vw"
+              }
               className={`object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105 ${
                 isInactive ? "grayscale-30" : ""
               } ${
@@ -173,55 +186,91 @@ export function ProductCard({
             </div>
           )}
 
-          {/* Secondary Hover Image (Crossfade on desktop when no color swatch override) */}
+          {/* Secondary Hover Image (Crossfade on hover when no color swatch override) */}
           {secondaryImage && !selectedColor && !isInactive && (
             <Image
               src={secondaryImage.image_url}
               alt={secondaryImage.alt_text || `${product.name} back view`}
               fill
               quality={72}
-              sizes="(max-width: 640px) calc((100vw - 2rem - 0.875rem) / 2), (max-width: 1024px) calc((100vw - 2rem - 2.5rem) / 3), 25vw"
-              className="absolute inset-0 hidden object-cover object-top opacity-0 transition-all duration-500 ease-out group-hover:scale-105 group-hover:opacity-100 sm:block"
+              sizes={
+                isMedium
+                  ? "(max-width: 640px) 48vw, (max-width: 768px) 32vw, (max-width: 1024px) 24vw, 19vw"
+                  : "(max-width: 640px) calc((100vw - 2rem - 0.875rem) / 2), (max-width: 1024px) calc((100vw - 2rem - 2.5rem) / 3), 25vw"
+              }
+              className="absolute inset-0 object-cover object-top opacity-0 transition-all duration-500 ease-out group-hover:scale-105 group-hover:opacity-100"
             />
           )}
 
           {/* Stackable Badges (Top-Left) */}
-          <div className="pointer-events-none absolute top-2.5 left-2.5 z-10 flex flex-col items-start gap-1.5">
+          <div
+            className={`pointer-events-none absolute z-10 flex flex-col items-start ${
+              isMedium ? "top-2 left-2 gap-1" : "top-2.5 left-2.5 gap-1.5"
+            }`}
+          >
             {isInactive ? (
-              <span className="bg-zinc-800/90 text-white rounded-full px-2 py-0.5 text-[10px] font-medium tracking-wider uppercase shadow-sm backdrop-blur-xs">
+              <span
+                className={`bg-zinc-800/90 text-white rounded-full font-medium tracking-wider uppercase shadow-sm backdrop-blur-xs ${
+                  isMedium ? "px-1.5 py-0.5 text-[8.5px]" : "px-2 py-0.5 text-[10px]"
+                }`}
+              >
                 No Longer Available
               </span>
             ) : (
               <>
                 {festiveBadge && (
-                  <span className="rounded-full bg-emerald-900/90 text-amber-200 border border-emerald-600/50 px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold tracking-wide shadow-sm backdrop-blur-xs">
+                  <span
+                    className={`rounded-full bg-emerald-900/90 text-amber-200 border border-emerald-600/50 font-semibold tracking-wide shadow-sm backdrop-blur-xs ${
+                      isMedium ? "px-1.5 py-0.5 text-[8.5px] sm:text-[9px]" : "px-2 py-0.5 text-[9px] sm:text-[10px]"
+                    }`}
+                  >
                     {festiveBadge}
                   </span>
                 )}
                 {isNew && (
-                  <span className="bg-brand-dark/90 text-brand-gold rounded-full px-2 py-0.5 text-[10px] font-medium tracking-widest uppercase shadow-sm backdrop-blur-xs">
+                  <span
+                    className={`bg-brand-dark/90 text-brand-gold rounded-full font-medium tracking-widest uppercase shadow-sm backdrop-blur-xs ${
+                      isMedium ? "px-1.5 py-0.5 text-[8.5px] sm:text-[9px]" : "px-2 py-0.5 text-[10px]"
+                    }`}
+                  >
                     New
                   </span>
                 )}
                 {/* Bestseller badge — shows for is_featured products that aren't also "New" */}
                 {!isNew && product.is_featured && !isOutOfStock && (
-                  <span className="rounded-full bg-amber-600/90 text-white px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase shadow-sm backdrop-blur-xs flex items-center gap-1">
+                  <span
+                    className={`rounded-full bg-amber-600/90 text-white font-semibold tracking-wide uppercase shadow-sm backdrop-blur-xs flex items-center gap-1 ${
+                      isMedium ? "px-1.5 py-0.5 text-[8.5px] sm:text-[9px]" : "px-2 py-0.5 text-[10px]"
+                    }`}
+                  >
                     <span>🔥</span>
                     <span>Bestseller</span>
                   </span>
                 )}
                 {isSale && discountPercent && (
-                  <span className="rounded-full bg-rose-700 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-white uppercase shadow-sm">
+                  <span
+                    className={`rounded-full bg-rose-700 font-semibold tracking-wider text-white uppercase shadow-sm ${
+                      isMedium ? "px-1.5 py-0.5 text-[8.5px] sm:text-[9px]" : "px-2 py-0.5 text-[10px]"
+                    }`}
+                  >
                     {discountPercent}% OFF
                   </span>
                 )}
                 {isOutOfStock ? (
-                  <span className="rounded-full bg-zinc-700/90 px-2 py-0.5 text-[10px] font-medium tracking-wider text-white shadow-sm backdrop-blur-xs">
+                  <span
+                    className={`rounded-full bg-zinc-700/90 font-medium tracking-wider text-white shadow-sm backdrop-blur-xs ${
+                      isMedium ? "px-1.5 py-0.5 text-[8.5px] sm:text-[9px]" : "px-2 py-0.5 text-[10px]"
+                    }`}
+                  >
                     Out of Stock
                   </span>
                 ) : (
                   isLowStock && (
-                    <span className="rounded-full bg-amber-600/95 px-2 py-0.5 text-[10px] font-medium tracking-wider text-white shadow-sm backdrop-blur-xs">
+                    <span
+                      className={`rounded-full bg-amber-600/95 font-medium tracking-wider text-white shadow-sm backdrop-blur-xs ${
+                        isMedium ? "px-1.5 py-0.5 text-[8.5px] sm:text-[9px]" : "px-2 py-0.5 text-[10px]"
+                      }`}
+                    >
                       Only {product.total_stock} Left
                     </span>
                   )
@@ -236,10 +285,14 @@ export function ProductCard({
             onClick={handleWishlistToggle}
             aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             disabled={isTogglingWishlist}
-            className="text-brand-dark focus-visible:ring-brand-gold absolute top-2.5 right-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 shadow-sm backdrop-blur-xs transition-transform duration-200 hover:scale-110 hover:bg-white focus-visible:ring-2 focus-visible:ring-2 focus-visible:outline-none active:scale-95 disabled:opacity-70"
+            className={`text-brand-dark focus-visible:ring-brand-gold absolute z-20 flex items-center justify-center rounded-full bg-white/85 shadow-sm backdrop-blur-xs transition-transform duration-200 hover:scale-110 hover:bg-white focus-visible:ring-2 focus-visible:outline-none active:scale-95 disabled:opacity-70 ${
+              isMedium ? "top-2 right-2 h-7 w-7" : "top-2.5 right-2.5 h-8 w-8"
+            }`}
           >
             <Heart
-              className={`h-4 w-4 transition-colors ${
+              className={`transition-colors ${
+                isMedium ? "h-3.5 w-3.5" : "h-4 w-4"
+              } ${
                 isWishlisted
                   ? "fill-rose-600 text-rose-600"
                   : "text-brand-muted hover:text-brand-dark"
@@ -256,39 +309,65 @@ export function ProductCard({
         </div>
 
         {/* Product Details Section Below Image */}
-        <div className="space-y-1 p-2.5 sm:p-3">
+        <div className={isMedium ? "space-y-0.5 p-2 sm:p-2.5" : "space-y-1 p-2.5 sm:p-3"}>
           {/* Category Tag & Rating Row */}
-          <div className="text-brand-muted flex items-center justify-between text-[11px]">
-            <span className="text-brand-accent-dark truncate text-[11px] font-semibold tracking-wider uppercase">
+          <div
+            className={`text-brand-muted flex items-center justify-between ${
+              isMedium ? "text-[10px]" : "text-[11px]"
+            }`}
+          >
+            <span
+              className={`text-brand-accent-dark truncate font-semibold tracking-wider uppercase ${
+                isMedium ? "text-[10px]" : "text-[11px]"
+              }`}
+            >
               {product.category_name || "Velaash"}
             </span>
 
             {/* Star Rating Display (Omitted if no reviews) */}
             {product.rating && product.rating.count > 0 && (
               <div className="text-brand-dark flex items-center gap-1 font-medium">
-                <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                <Star
+                  className={
+                    isMedium
+                      ? "h-2.5 w-2.5 fill-amber-500 text-amber-500"
+                      : "h-3 w-3 fill-amber-500 text-amber-500"
+                  }
+                />
                 <span>{product.rating.average.toFixed(1)}</span>
-                <span className="text-brand-muted text-[10px]">({product.rating.count})</span>
+                <span className={`text-brand-muted ${isMedium ? "text-[9px]" : "text-[10px]"}`}>
+                  ({product.rating.count})
+                </span>
               </div>
             )}
           </div>
 
           {/* Product Name */}
           <h3
-            className="font-heading text-brand-dark group-hover:text-brand-accent line-clamp-1 text-sm font-medium leading-snug transition-colors sm:text-base"
+            className={`font-heading text-brand-dark group-hover:text-brand-accent line-clamp-1 font-medium leading-snug transition-colors ${
+              isMedium ? "text-xs sm:text-[13px]" : "text-sm sm:text-base"
+            }`}
             title={product.name}
           >
             {product.name}
           </h3>
 
           {/* Pricing Row */}
-          <div className="flex items-baseline gap-2 pt-0.5">
-            <span className="text-brand-dark text-sm font-semibold sm:text-base">
+          <div className="flex items-baseline gap-1.5 pt-0.5">
+            <span
+              className={`text-brand-dark font-semibold ${
+                isMedium ? "text-xs sm:text-sm" : "text-sm sm:text-base"
+              }`}
+            >
               {formatCurrency(product.base_price)}
             </span>
 
             {isSale && product.compare_at_price && (
-              <span className="text-brand-subtle text-xs line-through">
+              <span
+                className={`text-brand-subtle line-through ${
+                  isMedium ? "text-[10.5px] sm:text-xs" : "text-xs"
+                }`}
+              >
                 {formatCurrency(product.compare_at_price)}
               </span>
             )}
@@ -298,8 +377,14 @@ export function ProductCard({
 
       {/* Color Swatches (Rendered outside the Link to allow interactive swatch clicking) */}
       {product.colors.length > 0 && (
-        <div className="px-2.5 pt-0 pb-2.5 sm:px-3 sm:pb-3">
-          <div className="flex items-center gap-1.5">
+        <div
+          className={
+            isMedium
+              ? "px-2 pt-0 pb-2 sm:px-2.5 sm:pb-2.5"
+              : "px-2.5 pt-0 pb-2.5 sm:px-3 sm:pb-3"
+          }
+        >
+          <div className="flex items-center gap-1">
             {product.colors.slice(0, 4).map((swatch) => {
               const isSelected = selectedColor === swatch.color;
               return (
@@ -309,7 +394,9 @@ export function ProductCard({
                   onClick={(e) => handleSwatchClick(e, swatch.color)}
                   aria-label={`View ${swatch.color} color`}
                   title={swatch.color}
-                  className={`h-4 w-4 rounded-full border transition-all ${
+                  className={`rounded-full border transition-all ${
+                    isMedium ? "h-3 w-3 sm:h-3.5 sm:w-3.5" : "h-4 w-4"
+                  } ${
                     isSelected
                       ? "ring-brand-gold scale-110 border-transparent ring-2 ring-offset-1"
                       : "border-brand-border/80 hover:scale-105"
@@ -320,8 +407,12 @@ export function ProductCard({
             })}
 
             {product.colors.length > 4 && (
-              <span className="text-brand-muted pl-0.5 text-[10px] font-medium">
-                +{product.colors.length - 4} more
+              <span
+                className={`text-brand-muted pl-0.5 font-medium ${
+                  isMedium ? "text-[9px]" : "text-[10px]"
+                }`}
+              >
+                +{product.colors.length - 4}
               </span>
             )}
           </div>
@@ -330,12 +421,20 @@ export function ProductCard({
 
       {/* Quick Add Action (Visible on Wishlist Grid) */}
       {showQuickAdd && (
-        <div className="px-3 pb-3 sm:px-4 sm:pb-4 pt-1">
+        <div
+          className={
+            isMedium
+              ? "px-2 pb-2 sm:px-2.5 sm:pb-2.5 pt-0.5"
+              : "px-3 pb-3 sm:px-4 sm:pb-4 pt-1"
+          }
+        >
           {isInactive ? (
             <button
               type="button"
               disabled
-              className="w-full py-2.5 rounded-lg bg-zinc-200 text-zinc-500 text-xs font-medium cursor-not-allowed"
+              className={`w-full rounded-lg bg-zinc-200 text-zinc-500 font-medium cursor-not-allowed ${
+                isMedium ? "py-1.5 text-[11px]" : "py-2.5 text-xs"
+              }`}
             >
               Unavailable
             </button>
@@ -343,7 +442,9 @@ export function ProductCard({
             <button
               type="button"
               disabled
-              className="w-full py-2.5 rounded-lg bg-zinc-200 text-zinc-500 text-xs font-medium cursor-not-allowed"
+              className={`w-full rounded-lg bg-zinc-200 text-zinc-500 font-medium cursor-not-allowed ${
+                isMedium ? "py-1.5 text-[11px]" : "py-2.5 text-xs"
+              }`}
             >
               Out of Stock
             </button>
@@ -351,22 +452,26 @@ export function ProductCard({
             <button
               type="button"
               onClick={handleQuickAddToCart}
-              className={`w-full py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs transition-all duration-150 ${
+              className={`w-full rounded-lg font-semibold flex items-center justify-center gap-1 shadow-xs transition-all duration-150 ${
+                isMedium ? "py-1.5 sm:py-2 text-[11px] sm:text-xs" : "py-2.5 text-xs gap-1.5"
+              } ${
                 isAddedFeedback
                   ? "bg-emerald-700 text-white"
                   : "bg-brand-dark text-brand-cream hover:bg-brand-accent active:scale-98"
               }`}
             >
-              <ShoppingBag className="h-3.5 w-3.5" />
+              <ShoppingBag className={isMedium ? "h-3 w-3" : "h-3.5 w-3.5"} />
               <span>{isAddedFeedback ? "Added to Bag!" : "Add to Bag"}</span>
             </button>
           ) : (
             <Link
               href={`/products/${product.slug}`}
-              className="w-full py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border border-brand-dark text-brand-dark hover:bg-brand-dark hover:text-brand-cream transition-colors duration-150 shadow-xs"
+              className={`w-full rounded-lg font-semibold flex items-center justify-center gap-1 border border-brand-dark text-brand-dark hover:bg-brand-dark hover:text-brand-cream transition-colors duration-150 shadow-xs ${
+                isMedium ? "py-1.5 sm:py-2 text-[11px] sm:text-xs" : "py-2.5 text-xs gap-1.5"
+              }`}
             >
               <span>Select Options</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+              <ArrowRight className={isMedium ? "h-3 w-3" : "h-3.5 w-3.5"} />
             </Link>
           )}
         </div>

@@ -10,6 +10,10 @@ export interface CancelOrderResult {
   success: boolean;
   error?: string;
   orderNumber?: string;
+  refundInitiated?: boolean;
+  refundAmount?: number;
+  refundId?: string;
+  message?: string;
 }
 
 /**

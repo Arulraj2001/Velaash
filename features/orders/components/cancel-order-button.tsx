@@ -3,12 +3,15 @@
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
-import { XCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { XCircle, AlertTriangle, Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import { cancelCustomerOrderAction } from "../actions/cancel-order-action";
 
 interface CancelOrderButtonProps {
   orderNumber: string;
   className?: string;
+  totalAmount?: number;
+  paymentMethod?: "cod" | "razorpay";
+  paymentStatus?: "pending" | "paid" | "failed" | "refunded";
 }
 
 const CANCEL_REASONS = [
@@ -20,16 +23,27 @@ const CANCEL_REASONS = [
   "Other reason",
 ];
 
-export function CancelOrderButton({ orderNumber, className }: CancelOrderButtonProps) {
+export function CancelOrderButton({
+  orderNumber,
+  className,
+  totalAmount,
+  paymentMethod,
+  paymentStatus,
+}: CancelOrderButtonProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedReason, setSelectedReason] = useState(CANCEL_REASONS[0]);
   const [customReason, setCustomReason] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const isPrepaid = paymentMethod === "razorpay" && paymentStatus === "paid";
+  const isCod = paymentMethod === "cod";
 
   const handleOpen = () => {
     setErrorMsg(null);
+    setSuccessMsg(null);
     setIsOpen(true);
   };
 
@@ -49,8 +63,16 @@ export function CancelOrderButton({ orderNumber, className }: CancelOrderButtonP
     startTransition(async () => {
       const res = await cancelCustomerOrderAction(orderNumber, finalReason);
       if (res.success) {
-        setIsOpen(false);
-        router.refresh();
+        setSuccessMsg(
+          res.message ||
+            (isPrepaid
+              ? "Order cancelled. Full refund has been initiated to your original payment method."
+              : "Order cancelled successfully.")
+        );
+        setTimeout(() => {
+          setIsOpen(false);
+          router.refresh();
+        }, 1200);
       } else {
         setErrorMsg(res.error || "Failed to cancel order. Please try again.");
       }
@@ -88,6 +110,33 @@ export function CancelOrderButton({ orderNumber, className }: CancelOrderButtonP
                 </p>
               </div>
             </div>
+
+            {/* Refund Assurance Banner */}
+            {isPrepaid && typeof totalAmount === "number" && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 space-y-1.5 text-xs">
+                <div className="flex items-center gap-1.5 font-semibold text-emerald-900">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>100% Full Refund Guarantee</span>
+                </div>
+                <p className="text-[11px] text-emerald-800 leading-relaxed">
+                  You have paid <strong>₹{totalAmount.toLocaleString("en-IN")}</strong> online. A full refund will be automatically initiated to your original payment method (UPI / Card / NetBanking) and typically reflects in your bank account within <strong>5–7 business days</strong>.
+                </p>
+              </div>
+            )}
+
+            {isCod && (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-700 leading-relaxed">
+                <strong>Cash on Delivery (COD):</strong> No payment was collected for this order. No refund is required.
+              </div>
+            )}
+
+            {/* Success Message */}
+            {successMsg && (
+              <div className="rounded-lg bg-emerald-50 p-3 text-xs text-emerald-900 border border-emerald-200 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                <span>{successMsg}</span>
+              </div>
+            )}
 
             {/* Error Message */}
             {errorMsg && (

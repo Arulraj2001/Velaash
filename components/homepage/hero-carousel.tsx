@@ -166,21 +166,30 @@ export function HeroCarousel({
       aria-roledescription="carousel"
       aria-label="Featured Collections Carousel"
     >
-      {/* Background Images with smooth cross-fade */}
+      {/* Floating Heritage Capsule Seal */}
+      <div className="hidden sm:flex absolute top-6 right-6 z-20 items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-md text-[11px] font-medium text-brand-cream tracking-wide shadow-sm pointer-events-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
+        <span>Authentic Handloom Weaves</span>
+      </div>
+
+      {/* Background Images with smooth cross-fade & Ken Burns zoom */}
       {activeSlides.map((slide, idx) => {
         const hasMobileImage = Boolean(slide.bg_image_mobile && slide.bg_image_mobile.trim());
+        const isActive = idx === currentIndex;
 
         return (
           <div
             key={slide.id || idx}
             className={`absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out ${
-              idx === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105 pointer-events-none"
+              isActive ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
             }`}
-            style={{ transitionProperty: "opacity, transform" }}
           >
-            {hasMobileImage ? (
-              <>
-                {/* Mobile View Image (< 640px) */}
+            <div
+              className={`absolute inset-0 w-full h-full transform-gpu ${
+                isActive ? "animate-hero-kenburns" : "scale-100"
+              }`}
+            >
+              {hasMobileImage ? (
                 <HeroArtDirectedImage
                   desktopSrc={slide.bg_image.trim()}
                   mobileSrc={slide.bg_image_mobile!.trim()}
@@ -189,25 +198,38 @@ export function HeroCarousel({
                   onLoad={handleHeroLoad}
                   className="object-cover object-center brightness-95 contrast-100"
                 />
-              </>
-            ) : (
-              <Image
-                src={slide.bg_image.trim()}
-                alt={slide.headline}
-                fill
-                priority={idx === 0}
-                unoptimized={isSlideUnoptimized(slide.bg_image)}
-                onLoad={idx === 0 ? handleHeroLoad : undefined}
-                quality={72}
-                className="object-cover object-center brightness-95 contrast-100"
-                sizes="100vw"
-              />
-            )}
+              ) : (
+                <Image
+                  src={slide.bg_image.trim()}
+                  alt={slide.headline}
+                  fill
+                  priority={idx === 0}
+                  unoptimized={isSlideUnoptimized(slide.bg_image)}
+                  onLoad={idx === 0 ? handleHeroLoad : undefined}
+                  quality={72}
+                  className="object-cover object-center brightness-95 contrast-100"
+                  sizes="100vw"
+                />
+              )}
+            </div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20" />
             <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]" />
           </div>
         );
       })}
+
+      {/* Bottom Progress Countdown Bar */}
+      {totalSlides > 1 && (
+        <div className="absolute bottom-0 inset-x-0 h-[2.5px] bg-white/10 z-30 overflow-hidden pointer-events-none">
+          <div
+            key={currentIndex}
+            className={`h-full bg-brand-gold shadow-[0_0_8px_rgba(242,169,0,0.8)] ${
+              isPaused ? "" : "animate-slide-progress"
+            }`}
+            style={{ animationPlayState: isPaused ? "paused" : "running" }}
+          />
+        </div>
+      )}
 
       {/* Hero Slide Content */}
       <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
@@ -365,17 +387,17 @@ export function HeroCarousel({
 
       {/* Slide Indicators (Bottom) */}
       {totalSlides > 1 && (
-        <div className="absolute bottom-6 inset-x-0 z-20 flex items-center justify-center gap-2">
+        <div className="absolute bottom-6 inset-x-0 z-20 flex items-center justify-center gap-2.5">
           {activeSlides.map((_, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => setCurrentIndex(idx)}
               aria-label={`Go to slide ${idx + 1}`}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
+              className={`h-1.5 rounded-full transition-all duration-500 cursor-pointer ${
                 idx === currentIndex
-                  ? "w-8 bg-brand-gold shadow-xs"
-                  : "w-2 bg-white/40 hover:bg-white/70"
+                  ? "w-10 bg-brand-gold shadow-[0_0_10px_rgba(242,169,0,0.7)]"
+                  : "w-2.5 bg-white/35 hover:bg-white/70"
               }`}
             />
           ))}

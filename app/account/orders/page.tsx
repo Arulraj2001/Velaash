@@ -140,6 +140,23 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
                           #{order.orderNumber}
                         </span>
                         <OrderStatusBadge status={order.status} size="sm" />
+                        {order.status === "cancelled" && order.refundStatus && order.refundStatus !== "not_applicable" && (
+                          <span
+                            className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full border ${
+                              order.refundStatus === "processed"
+                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                : order.refundStatus === "failed"
+                                ? "bg-amber-50 text-amber-800 border-amber-200"
+                                : "bg-purple-50 text-purple-800 border-purple-200"
+                            }`}
+                          >
+                            {order.refundStatus === "processed"
+                              ? "Refunded"
+                              : order.refundStatus === "failed"
+                              ? "Refund Action"
+                              : "Refund Initiated"}
+                          </span>
+                        )}
                       </div>
 
                       <h4 className="text-xs font-medium text-brand-dark line-clamp-1">

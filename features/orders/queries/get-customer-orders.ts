@@ -184,6 +184,8 @@ export async function getCustomerOrders(
       itemCount: itemInfo.count,
       firstItemTitle: itemInfo.firstTitle,
       firstItemImage: itemInfo.firstImage,
+      refundStatus: ((order as Record<string, unknown>).refund_status as CustomerOrderListItem["refundStatus"]) ?? null,
+      refundAmount: (order as Record<string, unknown>).refund_amount != null ? Number((order as Record<string, unknown>).refund_amount) : null,
     };
   });
 

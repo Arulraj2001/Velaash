@@ -86,28 +86,33 @@ export function OccasionStrip({
             <Link
               key={item.id}
               href={item.href}
-              className="group relative w-full h-[220px] sm:h-[240px] lg:h-[262px] rounded-2xl overflow-hidden shadow-xs hover:shadow-luxury transition-all duration-300 border border-brand-border/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
+              className="group relative w-full h-[220px] sm:h-[240px] lg:h-[262px] rounded-2xl overflow-hidden shadow-xs hover:shadow-gold-md hover:-translate-y-1 transition-all duration-500 border border-brand-border/60 hover:border-brand-gold/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
             >
+              {/* Top Capsule Badge */}
+              <div className="absolute top-3 left-3 z-10 px-2.5 py-0.5 rounded-full bg-black/45 backdrop-blur-md border border-white/20 text-[9px] sm:text-[10px] font-semibold text-brand-gold tracking-widest uppercase">
+                Capsule
+              </div>
+
               <Image
                 src={item.image}
                 alt={item.name}
                 fill
                 quality={72}
-                className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-108"
                 sizes="(max-width: 640px) 50vw, 25vw"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/90 via-brand-dark/30 to-transparent transition-opacity duration-300 group-hover:from-brand-dark/95" />
+              <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/95 via-brand-dark/35 to-black/20 transition-opacity duration-300 group-hover:from-brand-dark" />
               
-              <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4.5 flex flex-col justify-end text-left">
-                <span className="text-[10px] sm:text-[11px] font-sans font-medium text-brand-gold/90 uppercase tracking-wider">
+              <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4.5 flex flex-col justify-end text-left z-10">
+                <span className="text-[10px] sm:text-[11px] font-sans font-medium text-brand-gold uppercase tracking-wider">
                   {item.subtitle}
                 </span>
-                <h3 className="font-heading text-sm sm:text-base font-semibold text-white tracking-tight mt-0.5">
+                <h3 className="font-heading text-sm sm:text-base md:text-lg font-semibold text-white tracking-tight mt-0.5">
                   {item.name}
                 </h3>
-                <div className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-white group-hover:text-brand-gold transition-colors">
+                <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-brand-light group-hover:text-brand-gold transition-colors">
                   <span>Explore Edit</span>
-                  <ArrowRight className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-1" />
+                  <ArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1.5" />
                 </div>
               </div>
             </Link>

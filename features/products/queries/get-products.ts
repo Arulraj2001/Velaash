@@ -147,6 +147,26 @@ async function fetchCategoryBySlug(slug: string): Promise<ProductCategoryMetadat
   }
 
   if (!data) {
+    if (slug.toLowerCase() === "women") {
+      return {
+        id: "virtual-women",
+        name: "Women's Collection",
+        slug: "women",
+        description:
+          "Handcrafted silhouettes in pure cottons, festive jewel tones, elegant sarees, and artisanal coordinated sets.",
+        image_url: "/categories/kurtas-sets.jpg",
+        banner_image_url: "/categories/kurtas-sets.jpg",
+        banner_badge: "Women's Collection",
+        banner_subtitle:
+          "Handcrafted silhouettes in pure cottons, festive jewel tones, elegant sarees, and artisanal coordinated sets.",
+        seo_title: "Women's Collection | Velaash",
+        seo_description:
+          "Explore the complete handcrafted women's collection at Velaash. Timeless sarees, kurta sets, contemporary dresses, artisanal tops, and easy loungewear.",
+        parent_id: null,
+        parent_name: null,
+        parent_slug: null,
+      };
+    }
     return null;
   }
 
@@ -235,7 +255,7 @@ async function fetchProducts(params: ProductFilterParams = {}): Promise<ProductQ
     const categoryPromise = params.category
       ? supabase
           .from("categories")
-          .select("id, slug, parent_id")
+          .select("id, name, slug, parent_id")
           .eq("is_active", true)
       : Promise.resolve({ data: null, error: null });
 
@@ -273,6 +293,34 @@ async function fetchProducts(params: ProductFilterParams = {}): Promise<ProductQ
           .filter((c) => c.parent_id === currentCat.id)
           .map((c) => c.id);
         targetCategoryIds = [currentCat.id, ...childIds];
+      } else if (params.category.toLowerCase() === "women") {
+        // Virtual "women" collection: aggregate all women apparel categories
+        // (all active categories except Men and Pooja & Brass hierarchies)
+        const menCat = allCategories.find(
+          (c) => c.slug === "men" || c.name?.toLowerCase() === "men"
+        );
+        const poojaCat = allCategories.find(
+          (c) =>
+            c.slug === "pooja-and-brass" ||
+            c.slug.includes("pooja") ||
+            c.name?.toLowerCase().includes("pooja") ||
+            c.name?.toLowerCase().includes("brass")
+        );
+
+        const excludedParentIds = new Set<string>();
+        if (menCat) excludedParentIds.add(menCat.id);
+        if (poojaCat) excludedParentIds.add(poojaCat.id);
+
+        const excludedIds = new Set<string>(excludedParentIds);
+        allCategories.forEach((c) => {
+          if (c.parent_id && excludedParentIds.has(c.parent_id)) {
+            excludedIds.add(c.id);
+          }
+        });
+
+        targetCategoryIds = allCategories
+          .filter((c) => !excludedIds.has(c.id))
+          .map((c) => c.id);
       } else {
         // Category slug does not exist in database
         return {

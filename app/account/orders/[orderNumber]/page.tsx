@@ -10,6 +10,7 @@ import {
   OrderTimeline,
   CourierTrackingBanner,
   CancelOrderButton,
+  CancellationRefundCard,
 } from "@/features/orders";
 import { Button, Badge } from "@/components/ui";
 import { getSiteSettings, getStoreContact } from "@/features/settings";
@@ -93,9 +94,30 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
         </Link>
 
         {order.canCancel && (
-          <CancelOrderButton orderNumber={order.orderNumber} />
+          <CancelOrderButton
+            orderNumber={order.orderNumber}
+            totalAmount={order.totalAmount}
+            paymentMethod={order.paymentMethod}
+            paymentStatus={order.paymentStatus}
+          />
         )}
       </div>
+
+      {/* Prominent Cancellation & Refund Card (if order is cancelled) */}
+      {order.status === "cancelled" && (
+        <CancellationRefundCard
+          orderNumber={order.orderNumber}
+          totalAmount={order.totalAmount}
+          paymentMethod={order.paymentMethod}
+          paymentStatus={order.paymentStatus}
+          refundStatus={order.refundStatus}
+          refundAmount={order.refundAmount}
+          refundArn={order.refundArn}
+          razorpayRefundId={order.razorpayRefundId}
+          refundedAt={order.refundedAt}
+          whatsappUrl={whatsappUrl}
+        />
+      )}
 
       {/* Main Order Header Card */}
       <div className="rounded-2xl border border-brand-border/70 bg-white p-6 sm:p-8 shadow-sm space-y-6">
@@ -131,6 +153,11 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
             currentStatus={order.status}
             history={order.statusHistory}
             createdAt={order.createdAt}
+            refundStatus={order.refundStatus}
+            refundAmount={order.refundAmount}
+            refundedAt={order.refundedAt}
+            paymentMethod={order.paymentMethod}
+            paymentStatus={order.paymentStatus}
           />
         </div>
 
@@ -316,12 +343,26 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
 
               <span
                 className={`text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full border ${
-                  isPaid
+                  order.paymentStatus === "refunded" || order.refundStatus === "processed"
+                    ? "bg-purple-50 text-purple-800 border-purple-200"
+                    : order.refundStatus === "initiated"
+                    ? "bg-brand-gold/20 text-brand-dark border-brand-gold/40"
+                    : isPaid
                     ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                    : order.paymentStatus === "failed"
+                    ? "bg-rose-50 text-rose-800 border-rose-200"
                     : "bg-amber-50 text-amber-800 border-amber-200"
                 }`}
               >
-                {isPaid ? "Paid" : "Pending"}
+                {order.paymentStatus === "refunded" || order.refundStatus === "processed"
+                  ? "Refunded"
+                  : order.refundStatus === "initiated"
+                  ? "Refund Initiated"
+                  : isPaid
+                  ? "Paid"
+                  : order.paymentStatus === "failed"
+                  ? "Failed"
+                  : "Pending"}
               </span>
             </div>
 

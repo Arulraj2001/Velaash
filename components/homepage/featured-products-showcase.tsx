@@ -12,6 +12,7 @@ interface FeaturedProductsShowcaseProps {
   subtitle?: string;
   products: ProductListItem[];
   showQuickAdd?: boolean;
+  cardSize?: "medium" | "default";
 }
 
 export function FeaturedProductsShowcase({
@@ -19,6 +20,7 @@ export function FeaturedProductsShowcase({
   subtitle = "Handpicked styles from our collection.",
   products = [],
   showQuickAdd = false,
+  cardSize = "medium",
 }: FeaturedProductsShowcaseProps) {
   const [activeTab, setActiveTab] = useState<string>("all");
 
@@ -79,10 +81,10 @@ export function FeaturedProductsShowcase({
 
           <Link
             href="/shop"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-dark hover:text-brand-accent transition-colors"
+            className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-dark hover:text-brand-accent transition-colors"
           >
             <span>View Full Catalog</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
         </div>
 
@@ -95,13 +97,14 @@ export function FeaturedProductsShowcase({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wide whitespace-nowrap transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${
                   isActive
-                    ? "bg-brand-dark text-white shadow-xs"
-                    : "bg-brand-cream/60 text-brand-dark hover:bg-brand-cream border border-brand-border/40"
+                    ? "bg-brand-dark text-white border border-brand-gold shadow-gold-sm"
+                    : "bg-brand-cream/70 text-brand-dark hover:bg-brand-cream border border-brand-border/60 hover:border-brand-gold/40"
                 }`}
               >
-                {tab.label}
+                {isActive && <span className="w-1.5 h-1.5 rounded-full bg-brand-gold" />}
+                <span>{tab.label}</span>
               </button>
             );
           })}
@@ -109,9 +112,20 @@ export function FeaturedProductsShowcase({
 
         {/* Products Grid */}
         {displayedProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-5 lg:gap-6 animate-in fade-in duration-300">
+          <div
+            className={
+              cardSize === "medium"
+                ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-4.5 animate-in fade-in duration-300"
+                : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-5 lg:gap-6 animate-in fade-in duration-300"
+            }
+          >
             {displayedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} showQuickAdd={showQuickAdd} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                showQuickAdd={showQuickAdd}
+                size={cardSize}
+              />
             ))}
           </div>
         ) : (

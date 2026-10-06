@@ -91,29 +91,57 @@ export function HeaderNav({ categories }: HeaderNavProps) {
                 <div className="grid grid-cols-4 gap-6">
                   {/* Category Columns */}
                   <div className="col-span-3 grid grid-cols-3 gap-6 border-r border-slate-100 pr-6">
-                    {pillar.sections?.map((section) => (
-                      <div key={section.title} className="space-y-3">
-                        <Link
-                          href={section.href || pillar.href}
-                          onClick={() => setActiveDropdown(null)}
-                          className="group inline-flex items-center gap-1 text-xs font-bold text-slate-900 tracking-wider uppercase hover:text-brand-accent transition-colors"
-                        >
-                          <span>{section.title}</span>
-                          <ArrowRight className="w-2.5 h-2.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-brand-accent" />
-                        </Link>
-
-                        <div className="space-y-1.5">
-                          {section.items.map((item) => (
-                            <Link
-                              key={item.id}
-                              href={item.href}
-                              onClick={() => setActiveDropdown(null)}
-                              className="block py-1 text-xs text-slate-600 hover:text-brand-accent transition-colors leading-snug"
+                    {(pillar.columns || [pillar.sections || []]).map((columnSections, colIdx) => (
+                      <div key={colIdx} className="space-y-4">
+                        {columnSections.map((section) => {
+                          const hasItems = section.items && section.items.length > 0;
+                          return (
+                            <div
+                              key={section.title}
+                              className={
+                                hasItems
+                                  ? "space-y-2.5"
+                                  : "rounded-xl border border-transparent p-2.5 hover:border-brand-border/60 hover:bg-brand-cream/50 transition-all group/item"
+                              }
                             >
-                              {item.name}
-                            </Link>
-                          ))}
-                        </div>
+                              <Link
+                                href={section.href || pillar.href}
+                                onClick={() => setActiveDropdown(null)}
+                                className={`flex items-center justify-between text-xs font-bold text-slate-900 tracking-wider uppercase hover:text-brand-accent transition-colors ${
+                                  hasItems ? "group inline-flex gap-1" : "w-full"
+                                }`}
+                              >
+                                <span>{section.title}</span>
+                                <ArrowRight
+                                  className={`w-3 h-3 text-brand-accent transition-all ${
+                                    hasItems
+                                      ? "opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0"
+                                      : "text-slate-400 group-hover/item:text-brand-accent group-hover/item:translate-x-0.5"
+                                  }`}
+                                />
+                              </Link>
+
+                              {hasItems ? (
+                                <div className="space-y-1.5 pl-0.5">
+                                  {section.items.map((item) => (
+                                    <Link
+                                      key={item.id}
+                                      href={item.href}
+                                      onClick={() => setActiveDropdown(null)}
+                                      className="block py-1 text-xs text-slate-600 hover:text-brand-accent transition-colors leading-snug"
+                                    >
+                                      {item.name}
+                                    </Link>
+                                  ))}
+                                </div>
+                              ) : section.description ? (
+                                <p className="text-[10px] text-slate-500 line-clamp-1 mt-1 font-normal">
+                                  {section.description}
+                                </p>
+                              ) : null}
+                            </div>
+                          );
+                        })}
                       </div>
                     ))}
                   </div>
@@ -156,11 +184,11 @@ export function HeaderNav({ categories }: HeaderNavProps) {
                     Handcrafted in pure cottons, linen, and artisanal weaves
                   </span>
                   <Link
-                    href="/shop"
+                    href="/collections/women"
                     onClick={() => setActiveDropdown(null)}
                     className="text-xs font-semibold text-brand-accent hover:underline flex items-center gap-1"
                   >
-                    <span>View All Collections</span>
+                    <span>View All Women&apos;s Wear</span>
                     <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
@@ -176,38 +204,54 @@ export function HeaderNav({ categories }: HeaderNavProps) {
               >
                 <div className="grid grid-cols-2 gap-5">
                   {/* Category Links Column */}
-                  <div className="space-y-3 border-r border-slate-100 pr-5">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
-                      Categories
-                    </span>
-                    <div className="space-y-1">
-                      {pillar.sections?.[0]?.items.map((item) => (
-                        <Link
-                          key={item.id}
-                          href={item.href}
-                          onClick={() => setActiveDropdown(null)}
-                          className="group block px-2.5 py-1.5 rounded-lg hover:bg-brand-cream/60 transition-colors"
-                        >
-                          <div className="text-xs font-medium text-slate-800 group-hover:text-brand-accent transition-colors">
-                            {item.name}
-                          </div>
-                          {item.description && (
-                            <div className="text-[10px] text-slate-400 truncate mt-0.5">
-                              {item.description}
-                            </div>
-                          )}
-                        </Link>
-                      ))}
-                    </div>
+                  <div className="flex flex-col justify-between border-r border-slate-100 pr-5">
+                    {pillar.sections?.[0]?.items && pillar.sections[0].items.length > 0 ? (
+                      <div className="space-y-3">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                          Categories
+                        </span>
+                        <div className="space-y-1">
+                          {pillar.sections[0].items.map((item) => (
+                            <Link
+                              key={item.id}
+                              href={item.href}
+                              onClick={() => setActiveDropdown(null)}
+                              className="group block px-2.5 py-1.5 rounded-lg hover:bg-brand-cream/60 transition-colors"
+                            >
+                              <div className="text-xs font-medium text-slate-800 group-hover:text-brand-accent transition-colors">
+                                {item.name}
+                              </div>
+                              {item.description && (
+                                <div className="text-[10px] text-slate-400 truncate mt-0.5">
+                                  {item.description}
+                                </div>
+                              )}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 py-1">
+                        <span className="text-[10px] font-bold text-brand-gold uppercase tracking-widest block">
+                          Curated Collection
+                        </span>
+                        <h4 className="font-heading text-base font-semibold text-slate-900 leading-snug">
+                          {pillar.sections?.[0]?.title || pillar.name}
+                        </h4>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          Handcrafted artisanal essentials curated for discerning tastes and timeless elegance.
+                        </p>
+                      </div>
+                    )}
 
-                    <div className="pt-2 border-t border-slate-100">
+                    <div className="pt-2 border-t border-slate-100 mt-3">
                       <Link
                         href={pillar.href}
                         onClick={() => setActiveDropdown(null)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-brand-accent hover:underline"
+                        className="inline-flex items-center justify-between w-full p-2 rounded-lg bg-brand-cream/60 text-brand-dark hover:bg-brand-dark hover:text-brand-cream transition-colors text-xs font-semibold"
                       >
                         <span>View All {pillar.name}</span>
-                        <ArrowRight className="w-3 h-3" />
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
                     </div>
                   </div>

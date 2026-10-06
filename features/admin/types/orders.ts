@@ -206,6 +206,11 @@ export interface AdminOrderDetail {
   shiprocketShipmentId?: string | null;
   razorpayPaymentId?: string | null;
   razorpayOrderId?: string | null;
+  razorpayRefundId?: string | null;
+  refundStatus?: string | null;
+  refundAmount?: number | null;
+  refundArn?: string | null;
+  refundedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   shippingAddress: {

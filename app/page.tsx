@@ -314,6 +314,7 @@ export default async function HomePage() {
                   subtitle={subtitle}
                   products={featuredProducts}
                   showQuickAdd
+                  cardSize="medium"
                 />
               );
             }
@@ -404,35 +405,37 @@ export default async function HomePage() {
               );
 
               return (
-                <section key={section.id} className="py-12 sm:py-16 bg-luxury-dots border-b border-brand-border/60 relative">
+                <section key={section.id} className="py-10 sm:py-14 bg-luxury-dots border-b border-brand-border/60 relative">
                   <Container size="xl">
-                    <div
-                      className={`grid grid-cols-2 ${
-                        items.length <= 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"
-                      } gap-6 sm:gap-8`}
-                    >
-                      {contactItems.map((item, idx) => {
-                        const iconKey = item.icon || "Truck";
-                        const IconComponent = TRUST_ICON_MAP[iconKey] || Truck;
-                        return (
-                          <div
-                            key={idx}
-                            className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3.5 p-4 rounded-xl transition-colors hover:bg-brand-cream/40"
-                          >
-                            <div className="w-12 h-12 rounded-full bg-brand-light/50 border border-brand-gold/30 flex items-center justify-center text-brand-dark shrink-0">
-                              <IconComponent className="w-5 h-5 text-brand-accent" />
+                    <div className="rounded-2xl border border-brand-border/70 bg-white/95 backdrop-blur-md p-5 sm:p-7 shadow-xs">
+                      <div
+                        className={`grid grid-cols-2 ${
+                          items.length <= 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"
+                        } gap-5 sm:gap-6`}
+                      >
+                        {contactItems.map((item, idx) => {
+                          const iconKey = item.icon || "Truck";
+                          const IconComponent = TRUST_ICON_MAP[iconKey] || Truck;
+                          return (
+                            <div
+                              key={idx}
+                              className="group flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3.5 p-3 rounded-xl transition-all duration-300 hover:bg-brand-cream/60 hover:-translate-y-0.5"
+                            >
+                              <div className="w-11 h-11 rounded-full bg-brand-light/60 border border-brand-gold/40 flex items-center justify-center text-brand-dark shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                                <IconComponent className="w-5 h-5 text-brand-accent" />
+                              </div>
+                              <div className="space-y-0.5">
+                                <h3 className="font-heading text-sm sm:text-base font-semibold text-brand-dark">
+                                  {item.title}
+                                </h3>
+                                <p className="text-brand-muted text-xs font-sans leading-relaxed">
+                                  {item.description}
+                                </p>
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <h3 className="font-heading text-base sm:text-lg font-semibold text-brand-dark">
-                                {item.title}
-                              </h3>
-                              <p className="text-brand-muted text-xs font-sans leading-relaxed">
-                                {item.description}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   </Container>
                 </section>

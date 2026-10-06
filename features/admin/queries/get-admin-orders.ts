@@ -357,6 +357,11 @@ export async function getAdminOrderDetail(
     shiprocketShipmentId: order.shiprocket_shipment_id ?? null,
     razorpayPaymentId: order.razorpay_payment_id,
     razorpayOrderId: order.razorpay_order_id,
+    razorpayRefundId: (order as unknown as Record<string, unknown>).razorpay_refund_id as string | null ?? null,
+    refundStatus: (order as unknown as Record<string, unknown>).refund_status as AdminOrderDetail["refundStatus"] ?? null,
+    refundAmount: (order as unknown as Record<string, unknown>).refund_amount ? Number((order as unknown as Record<string, unknown>).refund_amount) : null,
+    refundArn: (order as unknown as Record<string, unknown>).refund_arn as string | null ?? null,
+    refundedAt: (order as unknown as Record<string, unknown>).refunded_at as string | null ?? null,
     createdAt: order.created_at,
     updatedAt: order.updated_at,
     shippingAddress: {

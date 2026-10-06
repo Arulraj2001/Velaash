@@ -176,29 +176,46 @@ export function MobileNavDrawer({
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
 
-                      {pillar.sections?.map((sec) => (
-                        <div key={sec.title} className="space-y-1.5">
-                          <Link
-                            href={sec.href || pillar.href}
-                            onClick={onClose}
-                            className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider hover:text-brand-accent"
-                          >
-                            {sec.title}
-                          </Link>
-                          <div className="pl-2 space-y-1 border-l-2 border-brand-gold/30">
-                            {sec.items.map((item) => (
-                              <Link
-                                key={item.id}
-                                href={item.href}
-                                onClick={onClose}
-                                className="text-slate-600 hover:text-brand-accent block py-0.5 text-xs transition-colors"
-                              >
-                                {item.name}
-                              </Link>
-                            ))}
+                      {pillar.sections?.map((sec) => {
+                        const hasItems = sec.items && sec.items.length > 0;
+                        if (!hasItems) {
+                          return (
+                            <Link
+                              key={sec.title}
+                              href={sec.href || pillar.href}
+                              onClick={onClose}
+                              className="flex items-center justify-between py-2 px-1 text-xs font-semibold text-slate-800 hover:text-brand-accent transition-colors border-b border-brand-border/30 last:border-b-0"
+                            >
+                              <span>{sec.title}</span>
+                              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                            </Link>
+                          );
+                        }
+
+                        return (
+                          <div key={sec.title} className="space-y-1.5">
+                            <Link
+                              href={sec.href || pillar.href}
+                              onClick={onClose}
+                              className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider hover:text-brand-accent"
+                            >
+                              {sec.title}
+                            </Link>
+                            <div className="pl-2 space-y-1 border-l-2 border-brand-gold/30">
+                              {sec.items.map((item) => (
+                                <Link
+                                  key={item.id}
+                                  href={item.href}
+                                  onClick={onClose}
+                                  className="text-slate-600 hover:text-brand-accent block py-0.5 text-xs transition-colors"
+                                >
+                                  {item.name}
+                                </Link>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

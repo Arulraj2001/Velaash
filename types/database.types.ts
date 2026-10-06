@@ -490,6 +490,11 @@ export type Database = {
           shiprocket_order_id: string | null;
           shiprocket_shipment_id: string | null;
           idempotency_key: string | null;
+          razorpay_refund_id?: string | null;
+          refund_status?: string | null;
+          refund_amount?: number | null;
+          refund_arn?: string | null;
+          refunded_at?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -518,6 +523,11 @@ export type Database = {
           shiprocket_order_id?: string | null;
           shiprocket_shipment_id?: string | null;
           idempotency_key?: string | null;
+          razorpay_refund_id?: string | null;
+          refund_status?: string | null;
+          refund_amount?: number | null;
+          refund_arn?: string | null;
+          refunded_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -546,6 +556,11 @@ export type Database = {
           shiprocket_order_id?: string | null;
           shiprocket_shipment_id?: string | null;
           idempotency_key?: string | null;
+          razorpay_refund_id?: string | null;
+          refund_status?: string | null;
+          refund_amount?: number | null;
+          refund_arn?: string | null;
+          refunded_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
