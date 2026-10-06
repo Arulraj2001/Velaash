@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { getAdminUser, requireAdmin } from "@/features/auth";
+import { getAdminUser, hasAdminPermission } from "@/features/auth";
 import { redirect } from "next/navigation";
 import { getAdminOrders } from "@/features/admin/queries/get-admin-orders";
 import { OrdersTable } from "@/features/admin/components/orders-table";
 import type { OrderStatus, PaymentMethod, PaymentStatus } from "@/features/admin/types/orders";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Orders Management | Velaash Admin",
@@ -29,7 +31,13 @@ interface AdminOrdersPageProps {
 export default async function AdminOrdersPage({
   searchParams,
 }: AdminOrdersPageProps) {
-  const admin = await requireAdmin("view_orders");
+  const admin = await getAdminUser();
+  if (!admin) {
+    redirect("/admin/login?returnUrl=/admin/orders");
+  }
+  if (!hasAdminPermission(admin.role, "view_orders")) {
+    redirect("/admin");
+  }
 
   const resolvedParams = await searchParams;
 

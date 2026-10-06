@@ -6,6 +6,8 @@ import { canAccessAdminRoute } from "@/features/admin/permissions";
 import { AdminSidebar } from "@/features/admin/components/admin-sidebar";
 import { AdminTopbar } from "@/features/admin/components/admin-topbar";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Admin Dashboard | Velaash",
   robots: {

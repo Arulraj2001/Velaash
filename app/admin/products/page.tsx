@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getAdminUser, requireAdmin } from "@/features/auth";
+import { getAdminUser, hasAdminPermission } from "@/features/auth";
 import {
   getAdminProductsList,
   getCategoriesForSelect,
 } from "@/features/admin/queries/get-admin-products";
 import { ProductsTable } from "@/features/admin/components/products-table";
 import { Package, ShieldCheck } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Products & Inventory | Velaash Admin",
@@ -21,7 +23,13 @@ interface AdminProductsPageProps {
 }
 
 export default async function AdminProductsPage({ searchParams }: AdminProductsPageProps) {
-  const admin = await requireAdmin("view_products");
+  const admin = await getAdminUser();
+  if (!admin) {
+    redirect("/admin/login?returnUrl=/admin/products");
+  }
+  if (!hasAdminPermission(admin.role, "view_products")) {
+    redirect("/admin");
+  }
 
   const resolvedParams = searchParams ? await searchParams : {};
   const initialCategoryFilter = resolvedParams.category || "all";
