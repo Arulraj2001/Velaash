@@ -146,7 +146,6 @@ export function ProductCard({
       {/* Clickable Card Link Wrapper */}
       <Link
         href={`/products/${product.slug}`}
-        prefetch={true}
         className="focus-visible:ring-brand-gold block overflow-hidden rounded-xl focus-visible:ring-2 focus-visible:outline-none"
       >
         {/* Image Container with 4:5 Aspect Ratio and Height Cap */}
@@ -364,7 +363,6 @@ export function ProductCard({
           ) : (
             <Link
               href={`/products/${product.slug}`}
-              prefetch={true}
               className="w-full py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border border-brand-dark text-brand-dark hover:bg-brand-dark hover:text-brand-cream transition-colors duration-150 shadow-xs"
             >
               <span>Select Options</span>

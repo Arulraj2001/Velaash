@@ -13,26 +13,13 @@ import {
   deleteProductImagesFromStorage,
   ensureProductImagesBucket,
 } from "../utils/storage";
+import { revalidateProductCatalog } from "@/lib/revalidation";
 
 /**
  * Helper to revalidate all affected routes across admin and storefront
  */
 function revalidateProductPaths(slug?: string) {
-  try {
-    // Bust cross-request unstable_cache entries for products
-    revalidateTag("products", "max");
-    revalidatePath("/admin/products");
-    revalidatePath("/admin/dashboard");
-    revalidatePath("/shop");
-    revalidatePath("/category", "layout");
-    revalidatePath("/collections", "layout");
-    revalidatePath("/");
-    if (slug) {
-      revalidatePath(`/products/${slug}`);
-    }
-  } catch {
-    // Graceful no-op when executed outside a Next.js request context
-  }
+  revalidateProductCatalog(slug);
 }
 
 /**

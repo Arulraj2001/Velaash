@@ -118,7 +118,6 @@ const PRODUCT_SELECT = `
     title,
     comment,
     is_verified_purchase,
-    is_approved,
     created_at
   ),
   size_charts (
@@ -143,6 +142,9 @@ async function fetchProductBySlug(slug: string): Promise<ProductDetailItem | nul
       .select(PRODUCT_SELECT)
       .eq("slug", normalizedSlug)
       .eq("is_active", true)
+      .eq("reviews.is_approved", true)
+      .order("created_at", { foreignTable: "reviews", ascending: false })
+      .limit(50, { foreignTable: "reviews" })
       .maybeSingle();
 
     if (error) {
@@ -194,11 +196,38 @@ async function fetchProductBySlug(slug: string): Promise<ProductDetailItem | nul
       : (prod.stock_quantity ?? 999);
     const categoryData = Array.isArray(prod.categories) ? prod.categories[0] : prod.categories;
 
-    // Calculate reviews directly from the single joined query — zero separate roundtrips
-    const approvedReviews = ((prod.reviews || []) as ProductReviewItem[])
-      .filter((r) => r.is_approved)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    const reviewBreakdown = calculateReviewBreakdown(approvedReviews);
+    // Reviews are already filtered (is_approved = true), ordered (created_at DESC), and capped (max 50) at the DB query level.
+    const approvedReviews: ProductReviewItem[] = (prod.reviews || []).map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (r: any) => ({
+        id: r.id,
+        customer_name: r.customer_name,
+        rating: r.rating,
+        title: r.title,
+        comment: r.comment,
+        is_verified_purchase: Boolean(r.is_verified_purchase),
+        is_approved: true,
+        created_at: r.created_at,
+      })
+    );
+    let reviewBreakdown = calculateReviewBreakdown(approvedReviews);
+
+    // If review limit (50) is reached, calculate ratings breakdown from aggregate count
+    if (approvedReviews.length === 50) {
+      try {
+        const { data: allRatings } = await supabase
+          .from("reviews")
+          .select("rating")
+          .eq("product_id", prod.id)
+          .eq("is_approved", true);
+
+        if (allRatings && allRatings.length >= 50) {
+          reviewBreakdown = calculateReviewBreakdown(allRatings);
+        }
+      } catch (err) {
+        console.warn("[getProductBySlug] Error fetching full ratings aggregate:", err);
+      }
+    }
 
     // Resolve size chart from joined override or cached category default
     const hasSizeVariants = variants.some((v) => Boolean(v.size));

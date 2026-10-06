@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { revalidateProductCatalog } from "@/lib/revalidation";
 
 export interface SubmitReviewInput {
   productId: string;
@@ -70,6 +71,19 @@ export async function submitProductReview(input: SubmitReviewInput): Promise<Sub
         success: false,
         error: "Failed to submit your review. Please try again.",
       };
+    }
+
+    // Revalidate product catalog and PDP
+    try {
+      const { data: prod } = await supabase
+        .from("products")
+        .select("slug")
+        .eq("id", productId)
+        .maybeSingle();
+
+      revalidateProductCatalog(prod?.slug);
+    } catch {
+      revalidateProductCatalog();
     }
 
     return {
