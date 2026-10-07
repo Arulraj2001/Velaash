@@ -33,7 +33,7 @@ function PinterestIcon({ className = "h-4 w-4" }: { className?: string }) {
 
 export async function Footer() {
   const currentYear = new Date().getFullYear();
-  const [categories, { storeProfile, socialLinks }] = await Promise.all([
+  const [categories, { storeProfile, socialLinks, paymentSettings }] = await Promise.all([
     getNavigationCategories(),
     getSiteSettings(),
   ]);
@@ -184,9 +184,11 @@ export async function Footer() {
                 <CreditCard className="text-brand-gold h-3.5 w-3.5" /> Cards (Visa, Mastercard,
                 RuPay)
               </span>
-              <span className="flex items-center gap-1">
-                <Banknote className="text-brand-gold h-3.5 w-3.5" /> Cash on Delivery (COD)
-              </span>
+              {paymentSettings?.cod_enabled && (
+                <span className="flex items-center gap-1">
+                  <Banknote className="text-brand-gold h-3.5 w-3.5" /> Cash on Delivery (COD)
+                </span>
+              )}
             </div>
           </div>
         </Container>
