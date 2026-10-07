@@ -28,7 +28,7 @@ function HeroArtDirectedImage({
     alt,
     width: 2000,
     height: 1400,
-    quality: 72,
+    quality: 85,
     sizes: "100vw",
   });
   const mobile = getImageProps({
@@ -36,7 +36,7 @@ function HeroArtDirectedImage({
     alt,
     width: 900,
     height: 1200,
-    quality: 72,
+    quality: 85,
     sizes: "100vw",
   });
 
@@ -110,7 +110,6 @@ export function HeroCarousel({
         ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   const totalSlides = activeSlides.length;
@@ -123,12 +122,12 @@ export function HeroCarousel({
     setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
   }, [totalSlides]);
 
-  // Auto-play interval
+  // Continuous auto-play interval (slides smoothly every 5.5 seconds without pausing)
   useEffect(() => {
-    if (isPaused || totalSlides <= 1) return;
-    const interval = setInterval(nextSlide, 6500);
+    if (totalSlides <= 1) return;
+    const interval = setInterval(nextSlide, 5500);
     return () => clearInterval(interval);
-  }, [isPaused, nextSlide, totalSlides]);
+  }, [nextSlide, totalSlides]);
 
   // Touch handlers for mobile swipe
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -159,8 +158,6 @@ export function HeroCarousel({
   return (
     <section
       className="relative w-full min-h-[85vh] sm:min-h-[88vh] flex items-center justify-center overflow-hidden bg-black select-none"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       aria-roledescription="carousel"
@@ -196,7 +193,7 @@ export function HeroCarousel({
                   alt={slide.headline}
                   priority={idx === 0}
                   onLoad={handleHeroLoad}
-                  className="object-cover object-center brightness-95 contrast-100"
+                  className="object-cover object-center"
                 />
               ) : (
                 <Image
@@ -206,14 +203,14 @@ export function HeroCarousel({
                   priority={idx === 0}
                   unoptimized={isSlideUnoptimized(slide.bg_image)}
                   onLoad={idx === 0 ? handleHeroLoad : undefined}
-                  quality={72}
-                  className="object-cover object-center brightness-95 contrast-100"
+                  quality={85}
+                  className="object-cover object-center"
                   sizes="100vw"
                 />
               )}
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20" />
-            <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px]" />
+            {/* Minimal bottom-to-top subtle dark fade keeping original photo vibrant while retaining text legibility */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent pointer-events-none" />
           </div>
         );
       })}
@@ -223,10 +220,7 @@ export function HeroCarousel({
         <div className="absolute bottom-0 inset-x-0 h-[2.5px] bg-white/10 z-30 overflow-hidden pointer-events-none">
           <div
             key={currentIndex}
-            className={`h-full bg-brand-gold shadow-[0_0_8px_rgba(242,169,0,0.8)] ${
-              isPaused ? "" : "animate-slide-progress"
-            }`}
-            style={{ animationPlayState: isPaused ? "paused" : "running" }}
+            className="h-full bg-brand-gold shadow-[0_0_8px_rgba(242,169,0,0.8)] animate-slide-progress"
           />
         </div>
       )}

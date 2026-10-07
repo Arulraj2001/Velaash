@@ -416,6 +416,8 @@ export async function markOrderAsRefundedAction(
       .update({
         status: nextStatus,
         payment_status: "refunded",
+        refund_status: "processed",
+        refunded_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq("id", order.id);
@@ -434,6 +436,8 @@ export async function markOrderAsRefundedAction(
 
     revalidatePath("/admin/orders");
     revalidatePath(`/admin/orders/${orderNumber}`);
+    revalidatePath("/account/orders");
+    revalidatePath(`/account/orders/${orderNumber}`);
     return { success: true, orderNumber };
   } catch (error) {
     console.error("Error in markOrderAsRefundedAction:", error);

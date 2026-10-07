@@ -98,7 +98,10 @@ export function OrderTimeline({
     const isPrepaid = paymentMethod === "razorpay" || paymentStatus === "refunded" || !!refundStatus;
     const isProcessed = refundStatus === "processed";
     const isFailed = refundStatus === "failed";
-    const isInitiated = refundStatus === "initiated" || paymentStatus === "refunded" || (!isProcessed && !isFailed && isPrepaid);
+    const isInitiated = refundStatus === "initiated" || paymentStatus === "refunded";
+    const isPendingReview =
+      refundStatus === "pending_review" ||
+      (!isProcessed && !isFailed && !isInitiated && isPrepaid);
 
     return (
       <div className="space-y-3">
@@ -124,18 +127,19 @@ export function OrderTimeline({
           </div>
         </div>
 
-        {/* Refund Status Journey for Prepaid Orders */}
+        {/* Resolution / Refund Journey for Prepaid Orders */}
         {isPrepaid && (
           <div className={cn(
             "rounded-xl border p-5 transition-all",
             isProcessed ? "border-emerald-200 bg-emerald-50/40" :
             isFailed ? "border-amber-200 bg-amber-50/50" :
+            isInitiated ? "border-emerald-200 bg-emerald-50/30" :
             "border-brand-accent/20 bg-brand-light/30"
           )}>
             <div className="flex items-start gap-3.5">
               <div className={cn(
                 "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-                isProcessed ? "bg-emerald-100 text-emerald-700" :
+                isProcessed || isInitiated ? "bg-emerald-100 text-emerald-700" :
                 isFailed ? "bg-amber-100 text-amber-700" :
                 "bg-brand-gold/20 text-brand-accent"
               )}>
@@ -151,13 +155,15 @@ export function OrderTimeline({
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <h4 className={cn(
                     "font-heading text-sm font-semibold",
-                    isProcessed ? "text-emerald-950" : isFailed ? "text-amber-950" : "text-brand-dark"
+                    isProcessed || isInitiated ? "text-emerald-950" : isFailed ? "text-amber-950" : "text-brand-dark"
                   )}>
                     {isProcessed
                       ? "Refund Successfully Processed"
                       : isFailed
                       ? "Refund Attention Required"
-                      : "100% Refund Initiated to Original Payment Source"}
+                      : isInitiated
+                      ? "Refund Initiated by Store"
+                      : "Concierge Resolution & Review"}
                   </h4>
                   {refundAmount ? (
                     <span className="font-heading text-sm font-bold text-brand-dark">
@@ -167,13 +173,15 @@ export function OrderTimeline({
                 </div>
                 <p className={cn(
                   "text-xs leading-relaxed",
-                  isProcessed ? "text-emerald-800" : isFailed ? "text-amber-800" : "text-brand-muted"
+                  isProcessed || isInitiated ? "text-emerald-800" : isFailed ? "text-amber-800" : "text-brand-muted"
                 )}>
                   {isProcessed
                     ? "Your refund has been completed by our banking network and credited back to your original source account."
                     : isFailed
-                    ? "Our automated refund system encountered a bank delay. Our finance concierge has been notified to assist you."
-                    : "The refund request was automatically sent to Razorpay. Banking clearing typically credits funds to your UPI/Card/Bank within 5–7 business days."}
+                    ? "The reversal encountered a bank delay. Our care concierge has been notified to assist you."
+                    : isInitiated
+                    ? "A manual refund was lodged with Razorpay. Banking clearing typically credits funds to your UPI/Card/Bank within 5–7 business days."
+                    : "Your order is cancelled and inventory restocked. In accordance with our replacement policy, our Care Concierge is available on WhatsApp for priority size replacement, store credit, or rare refund review."}
                 </p>
                 {refundedAt && (
                   <p className="font-mono text-[11px] text-brand-muted pt-0.5">

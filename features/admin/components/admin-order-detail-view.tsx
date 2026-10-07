@@ -89,6 +89,9 @@ export function AdminOrderDetailView({
   // Shiprocket push state
   const [shiprocketPushing, setShiprocketPushing] = useState(false);
 
+  // Invoice Download State
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
+
   // Transitions available for current status
   const allowedNextTransitions = (VALID_ORDER_STATUS_TRANSITIONS[order.status] || []).filter(
     (nextStatus) =>
@@ -302,6 +305,41 @@ export function AdminOrderDetailView({
     }
   };
 
+  // Download Invoice Handler
+  const handleDownloadInvoice = async () => {
+    if (isDownloadingInvoice) return;
+    setIsDownloadingInvoice(true);
+    setNotification(null);
+    try {
+      const res = await fetch(`/api/admin/orders/${order.orderNumber}/invoice`);
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => "");
+        throw new Error(errorText || `Failed to download invoice (HTTP ${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Invoice-${order.orderNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setNotification({
+        type: "success",
+        message: `Invoice for order #${order.orderNumber} downloaded successfully.`,
+      });
+    } catch (err) {
+      console.error("Failed to download invoice:", err);
+      setNotification({
+        type: "error",
+        message: err instanceof Error ? err.message : "Failed to download invoice.",
+      });
+    } finally {
+      setIsDownloadingInvoice(false);
+    }
+  };
+
   const statusStyle = ORDER_STATUS_STYLES[order.status] || ORDER_STATUS_STYLES.pending;
   const payStyle = PAYMENT_STATUS_STYLES[order.paymentStatus] || PAYMENT_STATUS_STYLES.pending;
 
@@ -320,14 +358,22 @@ export function AdminOrderDetailView({
         {/* Action Buttons: Invoice, Resend Email, Cancel */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Download Invoice Button */}
-          <a
-            href={`/api/admin/orders/${order.orderNumber}/invoice`}
-            download
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-2xs"
+          <button
+            type="button"
+            disabled={isDownloadingInvoice}
+            onClick={handleDownloadInvoice}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50 transition-colors shadow-2xs cursor-pointer"
           >
-            <Download className="h-3.5 w-3.5 text-slate-500" />
-            Download Invoice
-          </a>
+            {isDownloadingInvoice ? (
+              <svg className="h-3.5 w-3.5 animate-spin text-slate-500" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <Download className="h-3.5 w-3.5 text-slate-500" />
+            )}
+            {isDownloadingInvoice ? "Downloading..." : "Download Invoice"}
+          </button>
 
           {/* Resend Confirmation Email */}
           <button
@@ -383,7 +429,7 @@ export function AdminOrderDetailView({
               className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 transition-colors shadow-2xs"
             >
               <RotateCcw className="h-3.5 w-3.5 text-emerald-600" />
-              Mark as Refunded
+              Issue Refund (Rare Exception)
             </button>
           )}
 
@@ -750,10 +796,28 @@ export function AdminOrderDetailView({
                 <div className="pt-2 border-t border-slate-100 space-y-2 bg-purple-50/50 p-2.5 rounded-lg border border-purple-100">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-purple-900 uppercase">
-                      Refund Status
+                      Resolution / Refund Status
                     </span>
-                    <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-purple-100 text-purple-800">
-                      {order.refundStatus || "Initiated"}
+                    <span
+                      className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded ${
+                        order.refundStatus === "processed"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : order.refundStatus === "pending_review"
+                          ? "bg-amber-100 text-amber-900 border border-amber-300"
+                          : order.refundStatus === "failed"
+                          ? "bg-rose-100 text-rose-800"
+                          : "bg-purple-100 text-purple-800"
+                      }`}
+                    >
+                      {order.refundStatus === "pending_review"
+                        ? "Review Queued (Replacements First)"
+                        : order.refundStatus === "processed"
+                        ? "Refund Processed"
+                        : order.refundStatus === "failed"
+                        ? "Refund Failed"
+                        : order.refundStatus === "initiated"
+                        ? "Refund Initiated"
+                        : order.refundStatus || "Initiated"}
                     </span>
                   </div>
 
@@ -970,15 +1034,15 @@ export function AdminOrderDetailView({
         </div>
       </AdminModal>
 
-      {/* OWNER ONLY: MARK AS REFUNDED MODAL */}
+      {/* OWNER ONLY: RECORD REFUND EXCEPTION MODAL */}
       {isOwner && (
         <AdminModal
           isOpen={showRefundModal}
           onClose={() => setShowRefundModal(false)}
           maxWidth="md"
           icon={<RotateCcw className="h-5 w-5 text-emerald-700" />}
-          title="Record Manual Refund"
-          description="Owner Only: Updates payment status and internal audit trail."
+          title="Record Refund Exception (Rare Case)"
+          description="Owner Only: Updates payment status and internal audit trail for verified refund exceptions."
           footer={
             <>
               <button
@@ -994,7 +1058,7 @@ export function AdminOrderDetailView({
                 onClick={handleConfirmRefund}
                 className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 shadow-sm transition-colors"
               >
-                {isPending ? "Recording..." : "Confirm & Record Refund"}
+                {isPending ? "Recording..." : "Confirm & Record Refund Exception"}
               </button>
             </>
           }
@@ -1004,10 +1068,13 @@ export function AdminOrderDetailView({
             <div className="rounded-2xl bg-amber-50 p-3.5 text-xs text-amber-900 border border-amber-200 space-y-1">
               <div className="flex items-center gap-1.5 font-bold">
                 <ShieldAlert className="h-4 w-4 text-amber-700 shrink-0" />
-                <span>Notice regarding Razorpay Refunds</span>
+                <span>Store Policy: Replacements First, Rare Cash Refunds</span>
               </div>
               <p className="leading-relaxed text-[11px]">
-                This action does <strong>NOT</strong> automatically initiate a financial refund via Razorpay. You must first issue the refund through your official <strong>Razorpay Merchant Dashboard</strong>. This button simply updates payment status to &lsquo;refunded&rsquo; and logs the audit trail on our platform.
+                Under standard store policy, customers receive doorstep replacements or store credit. Cash refunds are strictly rare exceptions (e.g. irreparable manufacturing defect or out-of-stock piece).
+              </p>
+              <p className="leading-relaxed text-[11px] pt-1 border-t border-amber-200/60 font-medium">
+                Note: This button does <strong>NOT</strong> automatically initiate a financial refund via Razorpay. You must first issue the refund through your official <strong>Razorpay Merchant Dashboard</strong>. This logs the audit trail and marks payment status as &lsquo;refunded&rsquo;.
               </p>
             </div>
 

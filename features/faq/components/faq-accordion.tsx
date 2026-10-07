@@ -75,7 +75,7 @@ export function FaqAccordion({ settings }: FaqAccordionProps) {
           id: "op-4",
           question: "Can I cancel or modify my order after placing it?",
           answer:
-            "Orders can be cancelled directly from your Account Orders page while their status is 'Confirmed' (prior to warehouse processing and courier dispatch). Once dispatched, cancellations are no longer possible, but you may initiate a return upon delivery.",
+            "Orders can be cancelled directly from your Account Orders page while their status is 'Confirmed' (prior to warehouse processing and courier dispatch). Once dispatched, cancellations are no longer possible, but you may request a doorstep replacement or size exchange upon delivery.",
         },
       ],
     },
@@ -111,24 +111,24 @@ export function FaqAccordion({ settings }: FaqAccordionProps) {
     },
     {
       id: "returns-exchanges",
-      name: "Returns & Exchanges",
+      name: "Replacements & Exchanges",
       icon: RotateCcw,
       items: [
         {
           id: "re-1",
-          question: "What is your return policy and time window?",
-          answer: `We offer a ${returnDays}-day return window from the date of delivery for unworn, unwashed items in their original condition with all tags attached.`,
+          question: "What is your replacement and size exchange policy?",
+          answer: `We provide a ${returnDays}-day doorstep replacement and size exchange window from the date of delivery for unworn items in their original condition with all tags attached and continuous uncut unboxing video.`,
         },
         {
           id: "re-2",
-          question: "How do I initiate a return or exchange?",
-          answer: `To initiate a return or exchange, please reach out to our Customer Care team on WhatsApp at ${whatsappNum} or via email at ${contactEmail} quoting your Order Number. Since there is currently no self-service return portal, our team will personally assist you with return pickup and verification.`,
+          question: "How do I exchange my size or request a replacement?",
+          answer: `You can easily request a size exchange or replacement directly from your Account Orders page, or reach out to our Customer Care team on WhatsApp at ${whatsappNum}. Our team will arrange a doorstep reverse pickup and dispatch your replacement piece.`,
         },
         {
           id: "re-3",
-          question: "When will I receive my refund?",
+          question: "Can I get a monetary cash refund?",
           answer:
-            "Refunds are processed within 5 to 7 business days following the physical receipt and quality inspection of the returned garment at our facility.",
+            "Our primary policy is doorstep replacement or size exchange. In rare instances where an item is defective and an identical replacement size is permanently out of stock, our accounts team will verify your unboxing video and approve a refund. For refund inquiries, please contact our support team directly on WhatsApp with your Order ID.",
         },
       ],
     },

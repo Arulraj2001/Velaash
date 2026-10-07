@@ -66,7 +66,7 @@ export function CancelOrderButton({
         setSuccessMsg(
           res.message ||
             (isPrepaid
-              ? "Order cancelled. Full refund has been initiated to your original payment method."
+              ? "Order cancelled. Please connect with our Care Concierge for size replacement, store credit, or refund assistance."
               : "Order cancelled successfully.")
         );
         setTimeout(() => {
@@ -111,15 +111,15 @@ export function CancelOrderButton({
               </div>
             </div>
 
-            {/* Refund Assurance Banner */}
+            {/* Replacement & Resolution Support Banner */}
             {isPrepaid && typeof totalAmount === "number" && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 space-y-1.5 text-xs">
-                <div className="flex items-center gap-1.5 font-semibold text-emerald-900">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <span>100% Full Refund Guarantee</span>
+              <div className="rounded-xl border border-brand-gold/40 bg-brand-cream/60 p-3.5 space-y-1.5 text-xs">
+                <div className="flex items-center gap-1.5 font-semibold text-brand-dark">
+                  <ShieldCheck className="h-4 w-4 text-brand-accent shrink-0" />
+                  <span>Replacement &amp; Concierge Support</span>
                 </div>
-                <p className="text-[11px] text-emerald-800 leading-relaxed">
-                  You have paid <strong>₹{totalAmount.toLocaleString("en-IN")}</strong> online. A full refund will be automatically initiated to your original payment method (UPI / Card / NetBanking) and typically reflects in your bank account within <strong>5–7 business days</strong>.
+                <p className="text-[11px] text-brand-muted leading-relaxed">
+                  You paid <strong>₹{totalAmount.toLocaleString("en-IN")}</strong> online. Once cancelled, your items are restocked immediately. In accordance with store policy, our Care Concierge will assist you on WhatsApp with priority size exchange, instant store credit, or rare refund verification.
                 </p>
               </div>
             )}

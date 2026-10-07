@@ -18,8 +18,8 @@ import {
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
-  const title = `Shipping & Returns Policy | ${settings.storeProfile.name || "Velaash"}`;
-  const description = `Read our comprehensive domestic shipping terms and ${settings.returnsPolicy.return_window_days}-day return guidelines across India.`;
+  const title = `Shipping & Replacements Policy | ${settings.storeProfile.name || "Velaash"}`;
+  const description = `Read our comprehensive domestic shipping terms and ${settings.returnsPolicy.return_window_days}-day doorstep replacement & size exchange guidelines across India.`;
 
   return {
     title,
@@ -49,15 +49,15 @@ export default async function ShippingReturnsPage() {
       {/* 1. Universal Page Header Banner (Minimal by default; letterbox hero if image configured) */}
       <PageHeaderBanner
         badge="Store Policies & Guidelines"
-        title={shippingBanner?.headline?.trim() || "Shipping & Returns Policy"}
+        title={shippingBanner?.headline?.trim() || "Shipping & Replacements Policy"}
         description={
           shippingBanner?.subtitle?.trim() ||
-          `Complete, authoritative details regarding order dispatch, domestic delivery across India, and our ${returnDays}-day return policy.`
+          `Complete, authoritative details regarding order dispatch, domestic delivery across India, and our ${returnDays}-day doorstep replacement policy.`
         }
         imageUrl={shippingBanner?.image_url}
         breadcrumbs={[
           { label: "Home", href: "/" },
-          { label: "Shipping & Returns" },
+          { label: "Shipping & Replacements" },
         ]}
       />
 
@@ -87,7 +87,7 @@ export default async function ShippingReturnsPage() {
 
             <div className="p-3 space-y-1 border-t md:border-t-0 md:border-l border-brand-border/50">
               <span className="text-[11px] font-bold text-brand-gold uppercase tracking-wider block">
-                Return Window
+                Replacement Window
               </span>
               <p className="font-heading text-lg sm:text-xl font-semibold text-brand-dark">
                 {`${returnDays} Days`}
@@ -198,10 +198,10 @@ export default async function ShippingReturnsPage() {
                 </div>
                 <div>
                   <h2 className="font-heading text-2xl font-semibold text-brand-dark">
-                    Returns, Replacement &amp; Refund Policy
+                    Doorstep Replacement &amp; Size Exchange Policy
                   </h2>
                   <p className="text-xs text-brand-muted">
-                    Strict {returnDays}-day return window, mandatory video requirement, and quality inspection guidelines
+                    Strict {returnDays}-day replacement window, mandatory video requirement, and doorstep size exchange guidelines
                   </p>
                 </div>
               </div>
@@ -218,10 +218,10 @@ export default async function ShippingReturnsPage() {
                     <div>
                       <h3 className="font-heading text-base font-semibold text-brand-dark mb-1.5 flex items-center gap-2">
                         <Clock className="w-4 h-4 text-brand-gold" />
-                        <span>1. {returnDays}-Day Return Window</span>
+                        <span>1. {returnDays}-Day Doorstep Replacement Window</span>
                       </h3>
                       <p>
-                        All return, exchange, or replacement requests must be initiated within strictly <strong>{returnDays} calendar days</strong> from the official date and timestamp of delivery confirmed by our courier partner. Requests raised after this {returnDays}-day period will not be eligible for return or refund.
+                        All replacement, size exchange, or defect claims must be initiated within strictly <strong>{returnDays} calendar days</strong> from the official date and timestamp of delivery confirmed by our courier partner. Requests raised after this {returnDays}-day period will not be eligible for replacement.
                       </p>
                     </div>
 
@@ -232,7 +232,7 @@ export default async function ShippingReturnsPage() {
                         <span>2. Mandatory Unboxing &amp; Product Video Requirement</span>
                       </div>
                       <p className="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
-                        To ensure complete authenticity and fair evaluation for both customers and our team, a <strong>clear, uncut, continuous video recording</strong> of the parcel opening and product inspection is <strong>strictly mandatory</strong> for all return, replacement, defect, or damage claims.
+                        To ensure complete authenticity and fair evaluation for both customers and our team, a <strong>clear, uncut, continuous video recording</strong> of the parcel opening and product inspection is <strong>strictly mandatory</strong> for all replacement, defect, or damage claims.
                       </p>
                       <div className="bg-white/90 rounded-lg p-4 border border-amber-200/80 space-y-2 text-xs text-amber-950">
                         <p className="font-semibold text-amber-900">Your video must clearly show:</p>
@@ -240,11 +240,11 @@ export default async function ShippingReturnsPage() {
                           <li>The <strong>unopened outer shipping package</strong> from all angles, with the courier shipping label and tracking number clearly visible and readable.</li>
                           <li>The <strong>entire unboxing process</strong> in one single, continuous, unedited take (videos that are paused, cut, edited, or recorded after opening the parcel will not be accepted).</li>
                           <li>The <strong>product being taken out</strong>, showing all brand tags, barcode labels, and packaging intact.</li>
-                          <li>A clear, close-up view of the <strong>exact damage, defect, or incorrect item</strong> being reported.</li>
+                          <li>A clear, close-up view of the <strong>exact damage, defect, size mismatch, or incorrect item</strong> being reported.</li>
                         </ul>
                       </div>
                       <p className="text-[11px] text-amber-900/80 italic">
-                        ⚠️ Note: Requests submitted without a valid, uncut unboxing video cannot be approved for return, replacement, or refund.
+                        ⚠️ Note: Requests submitted without a valid, uncut unboxing video cannot be approved for replacement or review.
                       </p>
                     </div>
 
@@ -269,54 +269,54 @@ export default async function ShippingReturnsPage() {
                         </div>
                         <div className="flex items-start gap-2.5">
                           <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                          <span><strong>Disqualification:</strong> Products with perfume or deodorant scents, makeup stains, body odor, pet hair, wash marks, or detached tags fail inspection and will be returned to the customer without a refund.</span>
+                          <span><strong>Disqualification:</strong> Products with perfume or deodorant scents, makeup stains, body odor, pet hair, wash marks, or detached tags fail inspection and will be returned to the customer without replacement.</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* 4. Decision: Refund vs. Replacement */}
+                    {/* 4. Decision: Replacement-First Policy & Rare Refunds */}
                     <div className="p-5 rounded-xl bg-brand-light/30 border border-brand-border/70 space-y-3">
                       <h3 className="font-heading text-base font-semibold text-brand-dark flex items-center gap-2">
                         <FileCheck2 className="w-4 h-4 text-brand-gold" />
-                        <span>4. Dual Inspection &amp; Final Resolution Decision (Refund or Replacement)</span>
+                        <span>4. Replacement-First Policy &amp; Rare Refund Clause</span>
                       </h3>
                       <p className="text-xs sm:text-sm text-brand-muted leading-relaxed">
-                        Once your return request is logged and the physical package reaches our fulfillment facility, our Quality Assurance team conducts a thorough <strong>two-step verification</strong>:
+                        Once your replacement request is logged and the physical package reaches our fulfillment facility, our Quality Assurance team conducts a thorough <strong>two-step verification</strong>:
                       </p>
                       <ol className="list-decimal list-inside space-y-1.5 text-xs sm:text-sm text-brand-dark font-medium pl-1">
                         <li>Verification of the initial unboxing video submitted by the customer.</li>
                         <li>Physical hands-on inspection of the received product condition at our warehouse.</li>
                       </ol>
                       <p className="text-xs sm:text-sm text-brand-muted leading-relaxed pt-1">
-                        <strong>Upon satisfactory evaluation of both the video and the received product condition, Velaash will decide whether to provide a replacement or a refund:</strong>
+                        <strong>All verified claims are resolved in accordance with our store policy:</strong>
                       </p>
                       <ul className="list-disc list-inside space-y-1.5 text-xs text-brand-dark pl-2">
                         <li>
-                          <strong>Replacement:</strong> If the product is defective, damaged in transit, or the wrong item was sent, a fresh replacement piece will be dispatched promptly at no additional shipping fee (subject to stock availability).
+                          <strong>Doorstep Size Exchange &amp; Defect Replacement (Standard):</strong> If you need a different size, or if the product has a genuine defect, an identical or exchange piece in your requested size will be dispatched promptly at zero additional shipping fee.
                         </li>
                         <li>
-                          <strong>Refund:</strong> If an identical replacement is unavailable or if the customer prefers a refund following a verified valid claim, a refund will be issued to the original payment source (Credit/Debit Card, UPI, NetBanking via Razorpay) or direct NEFT/UPI bank transfer for Cash on Delivery (COD) orders within <strong>5 to 7 business days</strong> of physical inspection approval.
+                          <strong>Monetary Cash Refunds (Rare Exceptions Only):</strong> A monetary refund is issued strictly in rare situations where an identical replacement size/product is permanently out of stock in our inventory. To request an exceptional refund evaluation, customers must contact our customer support team directly on WhatsApp with their Order ID and uncut unboxing video.
                         </li>
                         <li>
-                          <strong>Rejection:</strong> If the physically received product does not match the unboxing video, shows signs of usage, or fails our condition criteria, the claim will be rejected and the product returned to the customer.
+                          <strong>Rejection:</strong> If the physically received product does not match the unboxing video, shows signs of usage, or fails our condition criteria, the replacement claim will be rejected and the original product returned to the customer.
                         </li>
                       </ul>
                     </div>
                   </>
                 )}
 
-                {/* 5. How to Initiate a Return */}
+                {/* 5. How to Initiate a Replacement */}
                 <div className="p-5 rounded-xl bg-brand-cream/60 border border-brand-border/80 space-y-3">
                   <h3 className="font-heading text-base font-semibold text-brand-dark flex items-center gap-2">
                     <MessageCircle className="w-4 h-4 text-emerald-700" />
-                    <span>5. How to Initiate Your Request</span>
+                    <span>5. How to Initiate Your Replacement</span>
                   </h3>
                   <p className="text-xs text-brand-muted leading-relaxed">
                     Please follow these simple steps within <strong>7 days of delivery</strong>:
                   </p>
                   <ol className="list-decimal list-inside space-y-2 text-xs sm:text-sm text-brand-dark font-medium pl-1">
                     <li>
-                      Contact our support team on WhatsApp at <strong>{whatsappNum}</strong> or email <strong>{contactEmail}</strong>.
+                      Visit your <strong>Account Orders</strong> page, select your order, and tap <strong>&apos;Request Replacement / Size Exchange&apos;</strong>, or contact our support team on WhatsApp at <strong>{whatsappNum}</strong>.
                     </li>
                     <li>
                       Provide your <strong>Order Number</strong> (e.g., ORD-2026-XXXX) and your registered contact details.
@@ -335,7 +335,7 @@ export default async function ShippingReturnsPage() {
             {/* Need Assistance Banner */}
             <div className="rounded-2xl border border-brand-border/60 bg-brand-cream/30 p-8 text-center space-y-4">
               <h3 className="font-heading text-xl sm:text-2xl font-semibold text-brand-dark">
-                Questions About Your Shipment or Return?
+                Questions About Your Shipment or Replacement?
               </h3>
               <p className="text-xs sm:text-sm text-brand-muted max-w-md mx-auto leading-relaxed">
                 Our customer care team is available to assist via WhatsApp or email, typically responding within 24 hours.

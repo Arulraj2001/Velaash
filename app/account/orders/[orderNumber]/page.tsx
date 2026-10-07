@@ -11,6 +11,7 @@ import {
   CourierTrackingBanner,
   CancelOrderButton,
   CancellationRefundCard,
+  RequestReplacementModal,
 } from "@/features/orders";
 import { Button, Badge } from "@/components/ui";
 import { getSiteSettings, getStoreContact } from "@/features/settings";
@@ -66,7 +67,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
     minute: "2-digit",
   });
 
-  const { storeProfile } = await getSiteSettings();
+  const { storeProfile, returnsPolicy } = await getSiteSettings();
   const { whatsappNumber } = getStoreContact(storeProfile);
   const contactEmail = storeProfile.email;
   const isCod = order.paymentMethod === "cod";
@@ -93,14 +94,26 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
           Back to all orders
         </Link>
 
-        {order.canCancel && (
-          <CancelOrderButton
-            orderNumber={order.orderNumber}
-            totalAmount={order.totalAmount}
-            paymentMethod={order.paymentMethod}
-            paymentStatus={order.paymentStatus}
-          />
-        )}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {order.canCancel && (
+            <CancelOrderButton
+              orderNumber={order.orderNumber}
+              totalAmount={order.totalAmount}
+              paymentMethod={order.paymentMethod}
+              paymentStatus={order.paymentStatus}
+            />
+          )}
+
+          {order.status === "delivered" && (
+            <RequestReplacementModal
+              orderNumber={order.orderNumber}
+              items={order.items}
+              whatsappUrl={whatsappUrl}
+              contactEmail={contactEmail}
+              returnWindowDays={returnsPolicy.return_window_days}
+            />
+          )}
+        </div>
       </div>
 
       {/* Prominent Cancellation & Refund Card (if order is cancelled) */}
@@ -347,6 +360,8 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
                     ? "bg-purple-50 text-purple-800 border-purple-200"
                     : order.refundStatus === "initiated"
                     ? "bg-brand-gold/20 text-brand-dark border-brand-gold/40"
+                    : order.status === "cancelled" && order.refundStatus === "pending_review"
+                    ? "bg-brand-gold/20 text-brand-dark border-brand-gold/40"
                     : isPaid
                     ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                     : order.paymentStatus === "failed"
@@ -358,6 +373,8 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
                   ? "Refunded"
                   : order.refundStatus === "initiated"
                   ? "Refund Initiated"
+                  : order.status === "cancelled" && order.refundStatus === "pending_review"
+                  ? "Resolution Review"
                   : isPaid
                   ? "Paid"
                   : order.paymentStatus === "failed"

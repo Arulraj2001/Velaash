@@ -162,7 +162,7 @@ body {
 }
 
 .animate-slide-progress {
-  animation: slideTimerProgress 6.5s linear infinite;
+  animation: slideTimerProgress 5.5s linear infinite;
 }
 
 /* Subtle Golden Pulse */

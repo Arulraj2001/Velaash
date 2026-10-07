@@ -484,7 +484,7 @@ export default async function PrivacyPolicyPage() {
                 &larr; View Terms &amp; Conditions
               </Link>
               <Link href="/shipping-returns" className="hover:text-brand-accent underline">
-                View Shipping &amp; Returns Policy &rarr;
+                View Shipping &amp; Replacements Policy &rarr;
               </Link>
             </div>
           </div>

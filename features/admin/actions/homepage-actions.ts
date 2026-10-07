@@ -245,8 +245,8 @@ const DEFAULT_INITIAL_SECTIONS: Omit<AdminHomepageSection, "id">[] = [
         },
         {
           icon: "RotateCcw",
-          title: "Easy Returns",
-          description: "Hassle-free return and exchange assistance for unworn items.",
+          title: "Doorstep Replacements",
+          description: "Hassle-free size exchange and replacement assistance for unworn items.",
         },
         {
           icon: "ShieldCheck",
@@ -783,7 +783,7 @@ export async function createHomepageSectionAction(
         title: "Our Commitments",
         items: [
           { icon: "Truck", title: "Pan-India Delivery", description: "Reliable domestic shipping across all serviceable PIN codes." },
-          { icon: "RotateCcw", title: "Easy Returns", description: "Hassle-free return and exchange assistance." },
+          { icon: "RotateCcw", title: "Doorstep Replacements", description: "Hassle-free size exchange and replacement assistance." },
           { icon: "ShieldCheck", title: "Secure Payments", description: "100% encrypted & protected checkout." },
           { icon: "MessageCircle", title: "WhatsApp Support", description: "Personal assistance on WhatsApp." },
         ],

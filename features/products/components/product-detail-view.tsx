@@ -629,7 +629,7 @@ export function ProductDetailView({
               ) : (
                 <div className="border-brand-border/60 text-brand-muted flex items-center gap-2 rounded-lg border bg-white p-2.5 text-[11px]">
                   <RotateCcw className="text-brand-accent h-4 w-4 shrink-0" />
-                  <span>{`${returnWindowDays}-Day Returns`}</span>
+                  <span>{`${returnWindowDays}-Day Replacement`}</span>
                 </div>
               )}
             </div>

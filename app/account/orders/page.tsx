@@ -147,6 +147,8 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
                                 ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                                 : order.refundStatus === "failed"
                                 ? "bg-amber-50 text-amber-800 border-amber-200"
+                                : order.refundStatus === "pending_review"
+                                ? "bg-brand-gold/20 text-brand-dark border-brand-gold/40"
                                 : "bg-purple-50 text-purple-800 border-purple-200"
                             }`}
                           >
@@ -154,6 +156,8 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
                               ? "Refunded"
                               : order.refundStatus === "failed"
                               ? "Refund Action"
+                              : order.refundStatus === "pending_review"
+                              ? "Resolution Review"
                               : "Refund Initiated"}
                           </span>
                         )}

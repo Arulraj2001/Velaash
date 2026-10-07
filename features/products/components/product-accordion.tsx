@@ -149,7 +149,7 @@ export function ProductAccordion({
         </div>
       )}
 
-      {/* 3. Shipping & Returns */}
+      {/* 3. Shipping & Replacements */}
       <div>
         <button
           type="button"
@@ -160,7 +160,7 @@ export function ProductAccordion({
           <div className="flex items-center gap-2.5">
             <Truck className="h-4 w-4 text-brand-accent" />
             <span className="font-heading text-lg font-semibold text-brand-dark">
-              Shipping & Returns
+              Shipping &amp; Replacements
             </span>
           </div>
           <ChevronDown
@@ -195,16 +195,16 @@ export function ProductAccordion({
             ) : (
               <div className="space-y-1.5 pt-1">
                 <p>
-                  <strong className="text-brand-dark">{`${returnWindowDays}-Day Returns: `}</strong>
+                  <strong className="text-brand-dark">{`${returnWindowDays}-Day Doorstep Replacement: `}</strong>
                   {returnsShortSummary ||
-                    `Returns and exchanges are accepted within ${returnWindowDays} days of delivery for unworn items with tags attached.`}
+                    `Doorstep size exchanges and defect replacements are accepted within ${returnWindowDays} days of delivery for unworn items with tags attached and uncut unboxing video.`}
                 </p>
                 <div className="pt-0.5">
                   <Link
                     href="/shipping-returns"
                     className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-gold hover:text-brand-dark transition-colors"
                   >
-                    <span>Read full Shipping &amp; Returns Policy</span>
+                    <span>Read full Shipping &amp; Replacements Policy</span>
                     <span aria-hidden="true">&rarr;</span>
                   </Link>
                 </div>

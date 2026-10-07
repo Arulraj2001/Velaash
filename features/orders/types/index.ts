@@ -11,7 +11,7 @@ export type OrderStatus =
 
 export type PaymentMethod = "cod" | "razorpay";
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
-export type RefundStatus = "not_applicable" | "initiated" | "processed" | "failed";
+export type RefundStatus = "not_applicable" | "pending_review" | "initiated" | "processed" | "failed";
 
 export interface CustomerOrderListItem {
   id: string;

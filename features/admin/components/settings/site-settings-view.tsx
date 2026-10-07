@@ -978,7 +978,7 @@ function ReturnsSettingsForm({
   const handleLoadDefaultTemplate = () => {
     if (
       window.confirm(
-        "Load standard legal return policy template? This will replace the full policy editor content with the verified store standard."
+        "Load standard legal replacement policy template? This will replace the full policy editor content with the verified store standard."
       )
     ) {
       setForm((prev) => ({
@@ -1016,9 +1016,9 @@ function ReturnsSettingsForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div>
-        <h2 className="text-lg font-heading font-semibold text-slate-900">Returns &amp; Exchange Policy</h2>
+        <h2 className="text-lg font-heading font-semibold text-slate-900">Replacements &amp; Size Exchange Policy</h2>
         <p className="text-xs text-slate-500">
-          Single source of truth controlling the return period badges, product page accordion summary, and the comprehensive /shipping-returns policy page.
+          Single source of truth controlling the replacement period badges, product page accordion summary, and the comprehensive /shipping-returns policy page.
         </p>
       </div>
 
@@ -1032,7 +1032,7 @@ function ReturnsSettingsForm({
       {/* 1. Return Window Duration */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs space-y-3">
         <label className="block text-xs font-semibold text-slate-900">
-          Return Window Period (Calendar Days)
+          Doorstep Replacement Window Period (Calendar Days)
         </label>
         <div className="w-full sm:w-48">
           <input
@@ -1057,14 +1057,14 @@ function ReturnsSettingsForm({
             Short Policy Summary (Shown Under Every Product)
           </label>
           <p className="text-[11px] text-slate-500 mb-3">
-            Displayed inside the &ldquo;Shipping &amp; Returns&rdquo; accordion on each product page and cart drawer. Keep it concise, transparent, and direct (2 to 3 sentences).
+            Displayed inside the &ldquo;Shipping &amp; Replacements&rdquo; accordion on each product page and cart drawer. Keep it concise, transparent, and direct (2 to 3 sentences).
           </p>
           <textarea
             rows={3}
             required
             value={form.short_summary}
             onChange={(e) => setForm({ ...form, short_summary: e.target.value })}
-            placeholder="e.g. Returns and exchanges are accepted within 7 days of delivery for unworn items with tags attached. A continuous unboxing video is mandatory for all claims."
+            placeholder="e.g. Doorstep replacements and size exchanges are accepted within 7 days of delivery for unworn items with tags attached. A continuous unboxing video is mandatory for all claims."
             className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-900"
           />
         </div>
@@ -1076,18 +1076,18 @@ function ReturnsSettingsForm({
             <span>Storefront PDP Accordion Preview</span>
           </div>
           <div className="text-xs text-slate-600 leading-relaxed pl-5 border-l-2 border-amber-500">
-            <strong className="text-slate-900">{`${form.return_window_days}-Day Returns: `}</strong>
+            <strong className="text-slate-900">{`${form.return_window_days}-Day Replacement: `}</strong>
             {form.short_summary || "No short summary entered."}
           </div>
         </div>
       </div>
 
-      {/* 3. Full Return Policy Page Content (Rich Text) */}
+      {/* 3. Full Replacement Policy Page Content (Rich Text) */}
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
             <label className="block text-xs font-semibold text-slate-900">
-              Full Return Policy Page Content (/shipping-returns)
+              Full Replacement Policy Page Content (/shipping-returns)
             </label>
             <p className="text-[11px] text-slate-500">
               Powers Part B of the public /shipping-returns page. Use rich headings, bullet points, and conditions.
@@ -2141,10 +2141,10 @@ const BANNER_PAGES: BannerPageConfig[] = [
   },
   {
     key: "shipping_returns",
-    label: "Shipping & Returns",
+    label: "Shipping & Replacements",
     route: "/shipping-returns",
-    defaultTitle: "Delivery & Returns",
-    defaultSubtitle: "Seamless, insured doorstep delivery across India and transparent returns.",
+    defaultTitle: "Delivery & Replacements",
+    defaultSubtitle: "Seamless, insured doorstep delivery across India and transparent replacements.",
   },
   {
     key: "track_order",

@@ -51,8 +51,8 @@ export default async function AboutPage() {
     },
     {
       icon: RotateCcw,
-      title: "Hassle-Free Returns",
-      description: `${settings.returnsPolicy.return_window_days}-day return window for unworn items in original packaging.`,
+      title: "Doorstep Replacements",
+      description: `${settings.returnsPolicy.return_window_days}-day replacement & size exchange window for unworn items with tags intact.`,
     },
     {
       icon: ShieldCheck,

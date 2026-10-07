@@ -211,8 +211,8 @@ export const DEFAULT_LIVE_HOMEPAGE_SECTIONS: LiveHomepageSection[] = [
         },
         {
           icon: "RotateCcw",
-          title: "Easy Returns",
-          description: "Hassle-free return and exchange assistance for unworn items.",
+          title: "Doorstep Replacements",
+          description: "Hassle-free size exchange and replacement assistance for unworn items.",
         },
         {
           icon: "ShieldCheck",

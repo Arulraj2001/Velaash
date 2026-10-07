@@ -113,6 +113,46 @@ export async function updateSession(request: NextRequest) {
   }
 
   // ==========================================
+  // 1B. ADMIN API ROUTE PROTECTION (/api/admin/*)
+  // ==========================================
+  if (pathname.startsWith("/api/admin")) {
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized: Admin session required." },
+        { status: 401 }
+      );
+    }
+
+    const { data: adminRecord } = await supabase
+      .from("admin_users")
+      .select("id, role, full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!adminRecord) {
+      return NextResponse.json(
+        { error: "Forbidden: Insufficient privileges." },
+        { status: 403 }
+      );
+    }
+
+    requestHeaders.set("x-admin-user-id", adminRecord.id);
+    requestHeaders.set("x-admin-user-role", adminRecord.role);
+    requestHeaders.set("x-admin-user-email", user.email || "");
+    requestHeaders.set("x-admin-user-name", adminRecord.full_name || "");
+
+    const authenticatedAdminResponse = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+    supabaseResponse.cookies.getAll().forEach((c) => {
+      authenticatedAdminResponse.cookies.set(c.name, c.value);
+    });
+    return authenticatedAdminResponse;
+  }
+
+  // ==========================================
   // 2. CUSTOMER ACCOUNT ROUTE PROTECTION (/account/*)
   // ==========================================
   if (pathname.startsWith("/account")) {

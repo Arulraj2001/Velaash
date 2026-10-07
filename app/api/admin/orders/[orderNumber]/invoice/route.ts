@@ -4,6 +4,9 @@ import { getAdminOrderDetail } from "@/features/admin/queries/get-admin-orders";
 import { generateInvoicePdfBuffer } from "@/features/admin/services/invoice-pdf";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 interface RouteParams {
   params: Promise<{
     orderNumber: string;
@@ -71,12 +74,13 @@ export async function GET(request: NextRequest, context: RouteParams) {
 
     const pdfBuffer = await generateInvoicePdfBuffer(order, gstEnabled, gstin, storeProfile);
 
-    // Return PDF stream
-    return new NextResponse(pdfBuffer as unknown as BodyInit, {
+    // Return binary PDF stream using standard Response & Uint8Array
+    return new Response(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="Invoice-${order.orderNumber}.pdf"`,
+        "Content-Length": String(pdfBuffer.length),
         "Cache-Control": "private, no-cache, no-store, must-revalidate",
       },
     });

@@ -188,7 +188,7 @@ export function OrderReviewSidebar({
         </div>
         <div className="flex items-center gap-2 text-[11px] text-brand-muted">
           <RotateCcw className="h-4 w-4 text-brand-accent shrink-0" />
-          <span>{returnWindowDays}-Day Easy Returns</span>
+          <span>{returnWindowDays}-Day Easy Replacement</span>
         </div>
       </div>
     </div>

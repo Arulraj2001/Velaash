@@ -121,7 +121,7 @@ export default async function TermsConditionsPage() {
                   These Terms and Conditions (&quot;Terms&quot;) constitute a legally binding agreement between you (&quot;Customer&quot;, &quot;User&quot;, &quot;you&quot;) and <strong>{legalName}</strong> (&quot;Velaash&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), a sole proprietorship registered in Tamil Nadu, India, governing your access to and use of the <strong>{storeName}</strong> website and services.
                 </p>
                 <p>
-                  By accessing, browsing, registering an account, or placing an order on our platform, you confirm that you have read, understood, and agreed to be bound by these Terms, as well as our <Link href="/privacy-policy" className="text-brand-accent hover:underline font-medium">Privacy Policy</Link> and <Link href="/shipping-returns" className="text-brand-accent hover:underline font-medium">Shipping &amp; Returns Policy</Link>. If you do not agree with any part of these Terms, you must discontinue use of the platform immediately.
+                  By accessing, browsing, registering an account, or placing an order on our platform, you confirm that you have read, understood, and agreed to be bound by these Terms, as well as our <Link href="/privacy-policy" className="text-brand-accent hover:underline font-medium">Privacy Policy</Link> and <Link href="/shipping-returns" className="text-brand-accent hover:underline font-medium">Shipping &amp; Replacements Policy</Link>. If you do not agree with any part of these Terms, you must discontinue use of the platform immediately.
                 </p>
               </div>
             </article>
@@ -230,36 +230,36 @@ export default async function TermsConditionsPage() {
                   <strong>Complimentary Shipping:</strong> Domestic orders meeting or exceeding <strong>{freeShippingThreshold}</strong> qualify for complimentary standard shipping. Orders below this threshold incur our standard flat shipping fee, clearly itemized prior to payment.
                 </p>
                 <p>
-                  <strong>Policy Incorporation:</strong> Full shipping timelines, processing windows (1 to 2 business days), and courier tracking terms are governed by our canonical <Link href="/shipping-returns" className="text-brand-accent hover:underline font-medium">Shipping &amp; Returns Policy</Link>, which is incorporated by reference herein.
+                  <strong>Policy Incorporation:</strong> Full shipping timelines, processing windows (1 to 2 business days), and courier tracking terms are governed by our canonical <Link href="/shipping-returns" className="text-brand-accent hover:underline font-medium">Shipping &amp; Replacements Policy</Link>, which is incorporated by reference herein.
                 </p>
               </div>
             </article>
 
-            {/* Section 6: Cancellations, Returns & Refunds */}
+            {/* Section 6: Cancellations, Replacements & Exchanges */}
             <article className="rounded-2xl border border-brand-border/80 bg-white p-6 sm:p-8 shadow-xs space-y-4">
               <div className="flex items-center gap-3 pb-2 border-b border-brand-border/50">
                 <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center text-brand-accent">
                   <RotateCcw className="w-4 h-4" />
                 </div>
                 <h2 className="font-heading text-xl sm:text-2xl font-semibold text-brand-dark">
-                  6. Cancellations, Returns &amp; Refunds
+                  6. Cancellations, Replacements &amp; Exchanges
                 </h2>
               </div>
               <div className="space-y-3 text-xs sm:text-sm text-brand-muted leading-relaxed">
                 <p>
-                  <strong>Order Cancellation:</strong> You may cancel an order directly from your <Link href="/account/orders" className="text-brand-accent hover:underline font-medium">Account Orders</Link> dashboard as long as its status remains &quot;Confirmed&quot;. Once an order transitions to warehouse dispatch or courier transit, cancellations cannot be accepted mid-route; you may instead request a return following delivery.
+                  <strong>Order Cancellation:</strong> You may cancel an order directly from your <Link href="/account/orders" className="text-brand-accent hover:underline font-medium">Account Orders</Link> dashboard as long as its status remains &quot;Confirmed&quot;. Once an order transitions to warehouse dispatch or courier transit, cancellations cannot be accepted mid-route; you may instead request a replacement or size exchange following delivery.
                 </p>
                 <p>
-                  <strong>Strict {returnWindowDays}-Day Return Window:</strong> All return, exchange, or replacement requests must be registered within strictly <strong>{returnWindowDays} calendar days</strong> from the official courier delivery confirmation date. Requests received beyond this window cannot be processed.
+                  <strong>Strict {returnWindowDays}-Day Replacement Window:</strong> All replacement or size exchange requests must be registered within strictly <strong>{returnWindowDays} calendar days</strong> from the official courier delivery confirmation date. Requests received beyond this window cannot be processed.
                 </p>
                 <p>
-                  <strong>Mandatory Unboxing Video:</strong> To qualify for return, exchange, replacement, or damage claims, customers must provide a <strong>clear, continuous, and uncut video recording</strong> of the parcel opening. The video must start prior to opening the box/courier bag, showing the sealed packaging, intact shipping label with tracking details, brand tags attached, and the condition or defect being reported. Claims submitted without an uncut unboxing video cannot be approved.
+                  <strong>Mandatory Unboxing Video:</strong> To qualify for replacement, size exchange, or defect claims, customers must provide a <strong>clear, continuous, and uncut video recording</strong> of the parcel opening. The video must start prior to opening the box/courier bag, showing the sealed packaging, intact shipping label with tracking details, brand tags attached, and the condition or defect being reported. Claims submitted without an uncut unboxing video cannot be approved.
                 </p>
                 <p>
-                  <strong>Decision (Replacement vs. Refund):</strong> Following verification of the customer&apos;s unboxing video and subsequent physical quality inspection of the received product at our fulfillment facility (confirming it is unworn, unwashed, and retaining original tags and packaging), Velaash reserves the right to determine whether an approved claim is fulfilled via <strong>replacement</strong> (dispatching an identical replacement item) or <strong>refund</strong> (credited to the original payment source or via bank transfer for COD within 5 to 7 business days).
+                  <strong>Replacement-First Policy &amp; Rare Refunds:</strong> In accordance with Velaash store policy, all approved claims are fulfilled via <strong>doorstep size exchange or replacement</strong> (dispatching an identical or requested size replacement piece). <strong>Monetary cash refunds are restricted strictly to rare exceptional cases</strong> where an identical replacement size or product is permanently out of stock in our inventory, and must be initiated through direct contact with our customer support concierge.
                 </p>
                 <p>
-                  Please review our canonical <Link href="/shipping-returns" className="text-brand-accent hover:underline font-medium">Shipping &amp; Returns Policy</Link> for detailed inspection criteria and initiation steps.
+                  Please review our canonical <Link href="/shipping-returns" className="text-brand-accent hover:underline font-medium">Shipping &amp; Replacements Policy</Link> for detailed inspection criteria and initiation steps.
                 </p>
               </div>
             </article>
@@ -371,7 +371,7 @@ export default async function TermsConditionsPage() {
                 &larr; View Privacy Policy
               </Link>
               <Link href="/shipping-returns" className="hover:text-brand-accent underline">
-                View Shipping &amp; Returns Policy &rarr;
+                View Shipping &amp; Replacements Policy &rarr;
               </Link>
             </div>
           </div>

@@ -75,9 +75,9 @@ function numberToIndianWords(num: number): string {
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 32,
-    paddingBottom: 48,
-    paddingHorizontal: 32,
+    paddingTop: 28,
+    paddingBottom: 40,
+    paddingHorizontal: 28,
     fontSize: 8.5,
     fontFamily: "Helvetica",
     color: "#27272a",
@@ -92,8 +92,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     borderBottomWidth: 1.5,
     borderBottomColor: "#e4e4e7",
-    paddingBottom: 14,
-    marginBottom: 14,
+    paddingBottom: 12,
+    marginBottom: 12,
   },
   brandBlock: {
     flexDirection: "row",
@@ -101,8 +101,8 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   brandLogo: {
-    width: 52,
-    height: 52,
+    width: 44,
+    height: 44,
     borderRadius: 6,
     marginRight: 10,
     borderWidth: 1,
@@ -112,32 +112,34 @@ const styles = StyleSheet.create({
     flexDirection: "column",
   },
   brandName: {
-    fontSize: 16,
+    fontSize: 15.5,
     fontFamily: "Helvetica-Bold",
     color: "#4d2a00",
     letterSpacing: 1.2,
+    marginBottom: 3,
   },
   brandTagline: {
     fontSize: 7.5,
     fontFamily: "Helvetica",
     color: "#7a5233",
-    marginTop: 1,
+    marginTop: 2.5,
+    marginBottom: 2,
   },
   brandWebsite: {
     fontSize: 8,
     fontFamily: "Helvetica-Bold",
     color: "#cc6f00",
-    marginTop: 1.5,
+    marginTop: 2,
   },
   legalEntity: {
     fontSize: 7.5,
     color: "#52525b",
-    marginTop: 1.5,
+    marginTop: 2,
   },
   brandContact: {
     fontSize: 7,
     color: "#71717a",
-    marginTop: 1,
+    marginTop: 1.5,
   },
 
   /* Header Right: Compliance & Title */
@@ -278,6 +280,14 @@ const styles = StyleSheet.create({
   },
 
   /* --- TABLE STYLING --- */
+  sectionTitle: {
+    fontSize: 8.5,
+    fontFamily: "Helvetica-Bold",
+    color: "#3f3f46",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 5,
+  },
   tableContainer: {
     marginBottom: 12,
     borderWidth: 1,
@@ -326,14 +336,20 @@ const styles = StyleSheet.create({
     color: "#71717a",
     marginTop: 1,
   },
+  variantText: {
+    fontSize: 7.2,
+    color: "#52525b",
+    fontFamily: "Helvetica",
+    lineHeight: 1.25,
+  },
 
   /* Exact Proportional Columns (Total = 100%) */
   colNo: { width: "5%" },
-  colItem: { width: "44%" },
-  colVariant: { width: "15%" },
+  colItem: { width: "41%" },
+  colVariant: { width: "22%" },
   colQty: { width: "8%" },
-  colRate: { width: "14%" },
-  colAmount: { width: "14%" },
+  colRate: { width: "12%" },
+  colAmount: { width: "12%" },
 
   /* Alignment Helpers */
   alignLeft: { textAlign: "left" },
@@ -655,8 +671,9 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
         </View>
 
         {/* ========================================================
-            3. ITEMIZED PRODUCTS TABLE: Rebalanced & Aligned
+            3. ITEMIZED PRODUCTS TABLE: Items in Your Order
            ======================================================== */}
+        <Text style={styles.sectionTitle}>Items in Your Order</Text>
         <View style={styles.tableContainer}>
           {/* Header Row */}
           <View style={styles.tableHeader}>
@@ -701,10 +718,11 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
                     <Text style={styles.itemSku}>SKU: {item.sku}</Text>
                   ) : null}
                 </View>
-                <Text style={[styles.tableCell, styles.colVariant, styles.alignLeft]}>
-                  {item.size || "Standard"}
-                  {item.color ? ` • ${item.color}` : ""}
-                </Text>
+                <View style={[styles.colVariant, styles.alignLeft]}>
+                  <Text style={styles.variantText}>
+                    Size: {item.size || "Standard"} • Color: {item.color || "Default"}
+                  </Text>
+                </View>
                 <Text style={[styles.tableCell, styles.colQty, styles.alignCenter]}>
                   {qty}
                 </Text>
@@ -720,7 +738,7 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
         </View>
 
         {/* ========================================================
-            4. BOTTOM SUMMARY: Amount in Words & Totals Breakdown
+            4. BOTTOM SUMMARY: Amount in Words & Totals Breakdown (Right Side)
            ======================================================== */}
         <View style={styles.bottomSection}>
           {/* Left Column: Amount in Words & Statutory Notes */}
@@ -738,15 +756,15 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
                   : "• Bill of Supply issued under GST composition / non-liable provisions."}
               </Text>
               <Text style={styles.statutoryItem}>
-                • Returns &amp; exchanges accepted within 7 days in original condition with tags intact.
+                • 7-Day easy doorstep replacement policy for size adjustments &amp; defects with tags intact.
               </Text>
               <Text style={styles.statutoryItem}>
-                • For support, visit www.velaash.in/shipping-returns or call {supportPhone}.
+                • For support &amp; replacement inquiries, visit www.velaash.in/shipping-returns or call {supportPhone}.
               </Text>
             </View>
           </View>
 
-          {/* Right Column: Pricing Summary Card */}
+          {/* Right Column: Pricing Summary Card (Right-Aligned) */}
           <View style={styles.summaryCol}>
             <View style={styles.summaryLine}>
               <Text style={styles.summaryLabel}>
@@ -765,14 +783,14 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
             ) : null}
 
             <View style={styles.summaryLine}>
-              <Text style={styles.summaryLabel}>Shipping Charges:</Text>
+              <Text style={styles.summaryLabel}>Shipping:</Text>
               <Text style={styles.summaryVal}>
                 {shippingFee === 0 ? "FREE" : `Rs. ${shippingFee.toFixed(2)}`}
               </Text>
             </View>
 
             <View style={[styles.summaryLine, styles.totalDivider]}>
-              <Text style={styles.grandTotalLabel}>Grand Total:</Text>
+              <Text style={styles.grandTotalLabel}>Total Amount:</Text>
               <Text style={styles.grandTotalVal}>Rs. {totalAmount.toFixed(2)}</Text>
             </View>
           </View>
@@ -803,15 +821,30 @@ function getLogoDataUri(): string | null {
   if (cachedLogoDataUri !== undefined) {
     return cachedLogoDataUri;
   }
-  try {
-    const logoPath = path.join(process.cwd(), "public", "logo.png");
-    if (fs.existsSync(logoPath)) {
-      const buf = fs.readFileSync(logoPath);
-      cachedLogoDataUri = `data:image/png;base64,${buf.toString("base64")}`;
-      return cachedLogoDataUri;
+  const candidateFiles = [
+    "invoice-logo.jpg",
+    "invoice-logo.png",
+    "apple-touch-icon.png",
+    "logo.png",
+  ];
+  for (const filename of candidateFiles) {
+    try {
+      const filePath = path.join(process.cwd(), "public", filename);
+      if (fs.existsSync(filePath)) {
+        const buf = fs.readFileSync(filePath);
+        // Prioritize lightweight files under 300KB to keep invoice minimal size
+        if (buf.length <= 300000 || filename === candidateFiles[candidateFiles.length - 1]) {
+          const mime =
+            filename.endsWith(".jpg") || filename.endsWith(".jpeg")
+              ? "image/jpeg"
+              : "image/png";
+          cachedLogoDataUri = `data:${mime};base64,${buf.toString("base64")}`;
+          return cachedLogoDataUri;
+        }
+      }
+    } catch (err) {
+      console.warn(`Notice: could not load logo from public/${filename} for invoice:`, err);
     }
-  } catch (err) {
-    console.warn("Notice: could not load logo from public/logo.png for invoice:", err);
   }
   cachedLogoDataUri = null;
   return null;

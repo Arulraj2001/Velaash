@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
   const title = `Frequently Asked Questions | ${settings.storeProfile.name || "Velaash"}`;
   const description =
-    "Find answers to common questions about orders, payments, domestic shipping rates, return policy, and sizing at Velaash.";
+    "Find answers to common questions about orders, payments, domestic shipping rates, doorstep replacement policy, and sizing at Velaash.";
 
   return {
     title,
@@ -33,7 +33,7 @@ export default async function FaqPage() {
         title={faqBanner?.headline?.trim() || "Frequently Asked Questions"}
         description={
           faqBanner?.subtitle?.trim() ||
-          `Clear, reliable answers regarding ordering, payments, domestic shipping, garment care, and our ${settings.returnsPolicy.return_window_days}-day return policy.`
+          `Clear, reliable answers regarding ordering, payments, domestic shipping, garment care, and our ${settings.returnsPolicy.return_window_days}-day doorstep replacement policy.`
         }
         imageUrl={faqBanner?.image_url}
         breadcrumbs={[
