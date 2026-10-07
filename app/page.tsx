@@ -78,7 +78,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       images: [
         {
-          url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80",
+          url: "/og-image.jpg",
           width: 1200,
           height: 630,
           alt: `${brandName} — Everyday essentials for every home`,
@@ -89,6 +89,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title,
       description,
+      images: ["/og-image.jpg"],
     },
   };
 }

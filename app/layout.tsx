@@ -106,6 +106,20 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: brandName,
       locale: "en_IN",
       type: "website",
+      images: [
+        {
+          url: "/og-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: `${brandName} — Everyday essentials for every home`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: titleDefault,
+      description: descriptionDefault,
+      images: ["/og-image.jpg"],
     },
     // Google Search Console HTML-tag verification.
     verification: {
