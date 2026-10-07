@@ -3,9 +3,12 @@ import type {
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
+  ReplacementStatus,
+  OrderReplacementRecord,
 } from "@/features/orders/types";
 
-export type { OrderStatus, PaymentMethod, PaymentStatus };
+export type { OrderStatus, PaymentMethod, PaymentStatus, ReplacementStatus, OrderReplacementRecord };
+
 
 /**
  * Valid order fulfillment status state machine transitions.
@@ -239,7 +242,22 @@ export interface AdminOrderDetail {
   statusHistory: AdminOrderStatusHistoryItem[];
   canCancel: boolean;
   canRefund: boolean;
+  replacement?: OrderReplacementRecord | null;
+  replacements?: OrderReplacementRecord[];
 }
+
+export interface UpdateReplacementStatusInput {
+  replacementId: string;
+  orderNumber: string;
+  status: ReplacementStatus;
+  rejectionReason?: string;
+  storeCreditAmount?: number;
+  storeCreditCode?: string;
+  replacementCourier?: string;
+  replacementTrackingNumber?: string;
+  adminNotes?: string;
+}
+
 
 /**
  * Zod validation schema for updating order status.

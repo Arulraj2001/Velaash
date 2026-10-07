@@ -12,7 +12,9 @@ import {
   CancelOrderButton,
   CancellationRefundCard,
   RequestReplacementModal,
+  ReplacementStatusCard,
 } from "@/features/orders";
+
 import { Button, Badge } from "@/components/ui";
 import { getSiteSettings, getStoreContact } from "@/features/settings";
 import {
@@ -104,17 +106,30 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
             />
           )}
 
-          {order.status === "delivered" && (
-            <RequestReplacementModal
-              orderNumber={order.orderNumber}
-              items={order.items}
-              whatsappUrl={whatsappUrl}
-              contactEmail={contactEmail}
-              returnWindowDays={returnsPolicy.return_window_days}
-            />
-          )}
+          {order.status === "delivered" &&
+            (!order.replacement ||
+              ["completed", "rejected"].includes(order.replacement.status)) && (
+              <RequestReplacementModal
+                orderNumber={order.orderNumber}
+                items={order.items}
+                whatsappUrl={whatsappUrl}
+                contactEmail={contactEmail}
+                returnWindowDays={returnsPolicy.return_window_days}
+                shippingPhone={order.shippingAddress.phone}
+              />
+            )}
         </div>
       </div>
+
+      {/* Prominent Replacement Tracking Card (if replacement requested) */}
+      {order.replacement && (
+        <ReplacementStatusCard
+          replacement={order.replacement}
+          items={order.items}
+          whatsappUrl={whatsappUrl}
+          orderNumber={order.orderNumber}
+        />
+      )}
 
       {/* Prominent Cancellation & Refund Card (if order is cancelled) */}
       {order.status === "cancelled" && (
@@ -131,6 +146,7 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
           whatsappUrl={whatsappUrl}
         />
       )}
+
 
       {/* Main Order Header Card */}
       <div className="rounded-2xl border border-brand-border/70 bg-white p-6 sm:p-8 shadow-sm space-y-6">

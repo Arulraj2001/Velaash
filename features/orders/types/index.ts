@@ -102,6 +102,54 @@ export interface CustomerOrderDetail {
   items: CustomerOrderItem[];
   statusHistory: OrderStatusHistoryRecord[];
   canCancel: boolean;
+  replacement?: OrderReplacementRecord | null;
+  replacements?: OrderReplacementRecord[];
+}
+
+export type ReplacementStatus =
+  | "pending_video_review"
+  | "video_verified"
+  | "approved"
+  | "store_credit_issued"
+  | "refund_approved"
+  | "rejected"
+  | "completed";
+
+export interface OrderReplacementRecord {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  customerId?: string | null;
+  orderItemId?: string | null;
+  itemTitle: string;
+  currentSize?: string | null;
+  currentColor?: string | null;
+  desiredSize?: string | null;
+  desiredColor?: string | null;
+  reason: string;
+  customerPhone: string;
+  customerNotes?: string | null;
+  status: ReplacementStatus;
+  videoReviewed: boolean;
+  videoReviewedAt?: string | null;
+  rejectionReason?: string | null;
+  storeCreditCode?: string | null;
+  storeCreditAmount?: number | null;
+  replacementCourier?: string | null;
+  replacementTrackingNumber?: string | null;
+  adminNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateReplacementInput {
+  orderNumber: string;
+  orderItemId: string;
+  reason: string;
+  desiredSize?: string;
+  desiredColor?: string;
+  customerPhone: string;
+  customerNotes?: string;
 }
 
 export interface CustomerOrdersFilter {
@@ -116,3 +164,4 @@ export interface CustomerOrdersResponse {
   totalPages: number;
   currentPage: number;
 }
+

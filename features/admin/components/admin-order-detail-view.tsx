@@ -23,6 +23,7 @@ import {
   resendOrderConfirmationEmailAction,
   pushToShiprocketAction,
 } from "../actions/order-actions";
+import { updateReplacementStatusAction } from "@/features/orders/actions/replacement-actions";
 import { formatCurrency } from "@/lib/utils";
 import { AdminModal } from "./admin-modal";
 import {
@@ -41,7 +42,15 @@ import {
   Save,
   ShieldAlert,
   Info,
+  Tag,
+  ArrowLeftRight,
+
+  Video,
+  Phone,
+  MessageCircle,
+  ExternalLink,
 } from "lucide-react";
+
 
 interface AdminOrderDetailViewProps {
   order: AdminOrderDetail;
@@ -91,6 +100,20 @@ export function AdminOrderDetailView({
 
   // Invoice Download State
   const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
+
+  // Replacement Desk State
+  const [activeReplacement, setActiveReplacement] = useState(order.replacement);
+  const [showRepApproveModal, setShowRepApproveModal] = useState(false);
+  const [showRepCreditModal, setShowRepCreditModal] = useState(false);
+  const [showRepDeclineModal, setShowRepDeclineModal] = useState(false);
+  const [repCourier, setRepCourier] = useState(order.courierName || "");
+  const [repTracking, setRepTracking] = useState(order.trackingNumber || "");
+  const [repCreditAmount, setRepCreditAmount] = useState(order.totalAmount.toString());
+  const [repCreditCode, setRepCreditCode] = useState("");
+  const [repDeclineReason, setRepDeclineReason] = useState("");
+  const [repAdminNotes, setRepAdminNotes] = useState("");
+  const [repActionError, setRepActionError] = useState("");
+
 
   // Transitions available for current status
   const allowedNextTransitions = (VALID_ORDER_STATUS_TRANSITIONS[order.status] || []).filter(
@@ -240,8 +263,165 @@ export function AdminOrderDetailView({
     });
   };
 
+  // Submit Replacement Actions
+  const handleMarkVideoVerified = () => {
+    if (!activeReplacement) return;
+    startTransition(async () => {
+      const res = await updateReplacementStatusAction({
+        replacementId: activeReplacement.id,
+        orderNumber: order.orderNumber,
+        status: "video_verified",
+      });
+      if (res.success) {
+        setActiveReplacement((prev) =>
+          prev ? { ...prev, status: "video_verified", videoReviewed: true } : null
+        );
+        setNotification({
+          type: "success",
+          message: "Unboxing video marked as verified on WhatsApp! Proceed with dispatch or voucher.",
+        });
+      } else {
+        setNotification({
+          type: "error",
+          message: res.error || "Failed to update replacement status.",
+        });
+      }
+    });
+  };
+
+  const handleConfirmRepApprove = () => {
+    if (!activeReplacement) return;
+    setRepActionError("");
+    startTransition(async () => {
+      const res = await updateReplacementStatusAction({
+        replacementId: activeReplacement.id,
+        orderNumber: order.orderNumber,
+        status: "approved",
+        replacementCourier: repCourier.trim() || undefined,
+        replacementTrackingNumber: repTracking.trim() || undefined,
+        adminNotes: repAdminNotes.trim() || undefined,
+      });
+      if (res.success) {
+        setActiveReplacement((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: "approved",
+                replacementCourier: repCourier.trim() || null,
+                replacementTrackingNumber: repTracking.trim() || null,
+              }
+            : null
+        );
+        setShowRepApproveModal(false);
+        setNotification({
+          type: "success",
+          message: "Replacement approved and scheduled for reverse pickup/dispatch!",
+        });
+      } else {
+        setRepActionError(res.error || "Failed to approve replacement.");
+      }
+    });
+  };
+
+  const handleConfirmRepCredit = () => {
+    if (!activeReplacement) return;
+    setRepActionError("");
+    const amountNum = Number(repCreditAmount) || order.totalAmount;
+    startTransition(async () => {
+      const res = await updateReplacementStatusAction({
+        replacementId: activeReplacement.id,
+        orderNumber: order.orderNumber,
+        status: "store_credit_issued",
+        storeCreditAmount: amountNum,
+        storeCreditCode: repCreditCode.trim() || undefined,
+        adminNotes: repAdminNotes.trim() || undefined,
+      });
+      if (res.success) {
+        setActiveReplacement((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: "store_credit_issued",
+                storeCreditCode: res.storeCreditCode || prev.storeCreditCode,
+                storeCreditAmount: amountNum,
+              }
+            : null
+        );
+        setShowRepCreditModal(false);
+        setNotification({
+          type: "success",
+          message: `Store credit voucher (${res.storeCreditCode}) issued successfully!`,
+        });
+      } else {
+        setRepActionError(res.error || "Failed to issue store credit.");
+      }
+    });
+  };
+
+  const handleConfirmRepDecline = () => {
+    if (!activeReplacement) return;
+    if (!repDeclineReason.trim()) {
+      setRepActionError("A decline reason is required for customer visibility.");
+      return;
+    }
+    setRepActionError("");
+    startTransition(async () => {
+      const res = await updateReplacementStatusAction({
+        replacementId: activeReplacement.id,
+        orderNumber: order.orderNumber,
+        status: "rejected",
+        rejectionReason: repDeclineReason.trim(),
+        adminNotes: repAdminNotes.trim() || undefined,
+      });
+      if (res.success) {
+        setActiveReplacement((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: "rejected",
+                rejectionReason: repDeclineReason.trim(),
+              }
+            : null
+        );
+        setShowRepDeclineModal(false);
+        setNotification({
+          type: "success",
+          message: "Replacement request marked as declined.",
+        });
+      } else {
+        setRepActionError(res.error || "Failed to decline replacement.");
+      }
+    });
+  };
+
+  const handleCompleteReplacement = () => {
+    if (!activeReplacement) return;
+    startTransition(async () => {
+      const res = await updateReplacementStatusAction({
+        replacementId: activeReplacement.id,
+        orderNumber: order.orderNumber,
+        status: "completed",
+      });
+      if (res.success) {
+        setActiveReplacement((prev) =>
+          prev ? { ...prev, status: "completed" } : null
+        );
+        setNotification({
+          type: "success",
+          message: "Replacement marked as fulfilled and completed.",
+        });
+      } else {
+        setNotification({
+          type: "error",
+          message: res.error || "Failed to mark replacement as completed.",
+        });
+      }
+    });
+  };
+
   // Save Internal Admin Notes
   const handleSaveNotes = () => {
+
     startTransition(async () => {
       const res = await updateOrderAdminNotesAction(order.orderNumber, adminNotes);
       if (res.success) {
@@ -588,8 +768,271 @@ export function AdminOrderDetailView({
         </div>
       </div>
 
+      {/* DOORSTEP REPLACEMENT & WHATSAPP VIDEO DESK */}
+      {activeReplacement && (
+        <div className="rounded-2xl border border-amber-300 bg-gradient-to-br from-amber-50/90 via-white to-amber-50/40 p-5 sm:p-6 shadow-sm space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/80 pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-800">
+                <ArrowLeftRight className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-heading text-base font-bold text-slate-900 flex items-center gap-2">
+                  Doorstep Replacement Desk
+                  <span className="text-xs font-mono font-normal text-slate-500">
+                    #{activeReplacement.id.slice(0, 8)}
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Requested on {new Date(activeReplacement.createdAt).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span
+                className={`text-xs font-semibold px-3 py-1 rounded-full border ${
+                  activeReplacement.status === "video_verified"
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                    : activeReplacement.status === "approved"
+                    ? "bg-purple-100 text-purple-800 border-purple-300"
+                    : activeReplacement.status === "store_credit_issued"
+                    ? "bg-indigo-100 text-indigo-800 border-indigo-300"
+                    : activeReplacement.status === "refund_approved"
+                    ? "bg-purple-100 text-purple-800 border-purple-300"
+                    : activeReplacement.status === "rejected"
+                    ? "bg-rose-100 text-rose-800 border-rose-300"
+                    : activeReplacement.status === "completed"
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                    : "bg-amber-100 text-amber-900 border-amber-300"
+                }`}
+              >
+                {activeReplacement.status === "pending_video_review"
+                  ? "Unboxing Video Verification Pending"
+                  : activeReplacement.status === "video_verified"
+                  ? "Video Proof Verified"
+                  : activeReplacement.status === "approved"
+                  ? "Replacement Approved & Scheduled"
+                  : activeReplacement.status === "store_credit_issued"
+                  ? "Store Credit Issued"
+                  : activeReplacement.status === "refund_approved"
+                  ? "Rare Refund Approved"
+                  : activeReplacement.status === "rejected"
+                  ? "Declined"
+                  : "Completed"}
+              </span>
+            </div>
+          </div>
+
+          {/* Grid: Requested Item + WhatsApp Video Outreach */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Item Details */}
+            <div className="rounded-xl bg-white p-4 border border-amber-200/70 space-y-2 text-xs">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                Item &amp; Exchange Specification
+              </span>
+              <p className="font-semibold text-slate-900 text-sm">
+                {activeReplacement.itemTitle}
+              </p>
+              <div className="flex items-center gap-2 text-slate-600 flex-wrap">
+                <span>Current: <strong>{activeReplacement.currentSize || "Free Size"}</strong></span>
+                {activeReplacement.desiredSize && (
+                  <>
+                    <span>→</span>
+                    <span className="text-purple-700 font-bold">
+                      Requested Size: {activeReplacement.desiredSize}
+                    </span>
+                  </>
+                )}
+              </div>
+              <p className="text-slate-600">
+                Reason: <strong className="capitalize">{activeReplacement.reason.replace(/_/g, " ")}</strong>
+              </p>
+              {activeReplacement.customerNotes && (
+                <div className="pt-1 text-[11px] text-slate-600 bg-slate-50 p-2 rounded border border-slate-100">
+                  <span className="font-semibold text-slate-700">Customer Note: </span>
+                  &ldquo;{activeReplacement.customerNotes}&rdquo;
+                </div>
+              )}
+            </div>
+
+            {/* WhatsApp Outreach & Verification Box */}
+            <div className="rounded-xl bg-white p-4 border border-amber-200/70 space-y-3 text-xs flex flex-col justify-between">
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Video className="h-3.5 w-3.5 text-amber-700" />
+                  Owner Unboxing Video Verification
+                </span>
+                <p className="text-slate-700 text-xs leading-relaxed">
+                  Customer WhatsApp: <strong className="font-mono text-slate-900">+91 {activeReplacement.customerPhone}</strong>
+                </p>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Per store policy, unboxing video is received directly on WhatsApp. Click below to open chat with pre-filled video request.
+                </p>
+              </div>
+
+              {/* 1-Click WhatsApp Button */}
+              {(() => {
+                const phoneDigits = (activeReplacement.customerPhone || order.shippingAddress.phone || "").replace(/\D/g, "");
+                const customerName = order.shippingAddress.fullName || "Customer";
+                const waText = encodeURIComponent(
+                  `Hi ${customerName}, this is Velaash regarding your replacement request for Order #${order.orderNumber} (${activeReplacement.itemTitle}). Please share your continuous uncut unboxing video proof with us here so we can verify and process your exchange.`
+                );
+                const waUrl = phoneDigits ? `https://wa.me/91${phoneDigits.replace(/^91/, "")}?text=${waText}` : "#";
+
+                return (
+                  <a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-4 text-xs transition-colors shadow-2xs w-full"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Open WhatsApp to Request / Review Video
+                    <ExternalLink className="h-3.5 w-3.5 opacity-80" />
+                  </a>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/* Special Result Banners */}
+          {activeReplacement.status === "store_credit_issued" && activeReplacement.storeCreditCode && (
+            <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-950 flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <span className="font-bold">Store Credit Voucher: </span>
+                <span className="font-mono font-bold bg-white px-2 py-0.5 rounded border border-indigo-200 ml-1">
+                  {activeReplacement.storeCreditCode}
+                </span>
+                <span className="ml-2 font-medium">
+                  Amount: ₹{(activeReplacement.storeCreditAmount || order.totalAmount).toLocaleString("en-IN")}
+                </span>
+              </div>
+              <span className="text-[11px] text-indigo-700">Valid for 12 months</span>
+            </div>
+          )}
+
+          {activeReplacement.status === "approved" && (activeReplacement.replacementCourier || activeReplacement.replacementTrackingNumber) && (
+            <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 text-xs text-purple-950 flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <span className="font-bold">Dispatched via: </span>
+                <span>{activeReplacement.replacementCourier || "Standard Surface Express"}</span>
+                {activeReplacement.replacementTrackingNumber && (
+                  <span className="font-mono font-medium ml-2 bg-white px-2 py-0.5 rounded border border-purple-200">
+                    AWB: {activeReplacement.replacementTrackingNumber}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeReplacement.status === "rejected" && activeReplacement.rejectionReason && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-950">
+              <span className="font-bold">Declined Reason: </span>
+              <span>{activeReplacement.rejectionReason}</span>
+            </div>
+          )}
+
+          {/* Owner Action Buttons Toolbar */}
+          <div className="flex items-center justify-between pt-2 border-t border-amber-200/80 flex-wrap gap-2">
+            <span className="text-xs font-semibold text-slate-700">
+              Desk Decisions:
+            </span>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {activeReplacement.status === "pending_video_review" && (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={handleMarkVideoVerified}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors shadow-2xs"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Mark Video as Verified
+                </button>
+              )}
+
+              {["pending_video_review", "video_verified"].includes(activeReplacement.status) && (
+                <>
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => {
+                      setRepActionError("");
+                      setShowRepApproveModal(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50 transition-colors shadow-2xs"
+                  >
+                    <Truck className="h-3.5 w-3.5" />
+                    Approve &amp; Dispatch
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => {
+                      setRepActionError("");
+                      setRepCreditAmount(order.totalAmount.toString());
+                      setShowRepCreditModal(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-2xs"
+                  >
+                    <Tag className="h-3.5 w-3.5" />
+                    Issue Store Credit
+                  </button>
+
+                  {isOwner && (
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => setShowRefundModal(true)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 disabled:opacity-50 transition-colors shadow-2xs"
+                    >
+                      <CreditCard className="h-3.5 w-3.5" />
+                      Rare Refund Exception
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => {
+                      setRepActionError("");
+                      setShowRepDeclineModal(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1.5 text-xs font-semibold hover:bg-rose-100 disabled:opacity-50 transition-colors shadow-2xs"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                    Decline Request
+                  </button>
+                </>
+              )}
+
+              {activeReplacement.status === "approved" && (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={handleCompleteReplacement}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-50 transition-colors shadow-2xs"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Mark as Fulfilled &amp; Closed
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Two Column Layout: Details Left & Sidebar Right */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
         {/* Left Column: Order Items & Pricing Breakdown */}
         <div className="lg:col-span-2 space-y-6">
           {/* Order Items Table */}
@@ -1099,6 +1542,216 @@ export function AdminOrderDetailView({
           </div>
         </AdminModal>
       )}
+
+      {/* REPLACEMENT: APPROVE & DISPATCH MODAL */}
+      <AdminModal
+        isOpen={showRepApproveModal}
+        onClose={() => setShowRepApproveModal(false)}
+        maxWidth="md"
+        icon={<Truck className="h-5 w-5 text-purple-700" />}
+        title="Approve Replacement &amp; Schedule Dispatch"
+        description="Verify unboxing video proof and schedule reverse pickup or replacement dispatch."
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowRepApproveModal(false)}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleConfirmRepApprove}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50 shadow-sm transition-colors"
+            >
+              {isPending ? "Approving..." : "Confirm & Approve"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3 text-xs">
+          {repActionError && (
+            <div className="rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-200">
+              {repActionError}
+            </div>
+          )}
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">
+              Replacement Courier Partner (Optional)
+            </label>
+            <input
+              type="text"
+              value={repCourier}
+              onChange={(e) => setRepCourier(e.target.value)}
+              placeholder="e.g. Delhivery Surface, BlueDart, DTDC"
+              className="w-full rounded-xl border border-slate-200 py-2 px-3 text-xs text-slate-900 focus:border-purple-500 focus:outline-none transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">
+              Tracking / AWB Number (Optional)
+            </label>
+            <input
+              type="text"
+              value={repTracking}
+              onChange={(e) => setRepTracking(e.target.value)}
+              placeholder="e.g. 1284719283"
+              className="w-full rounded-xl border border-slate-200 py-2 px-3 text-xs text-slate-900 focus:border-purple-500 focus:outline-none transition-all font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">
+              Internal Dispatch Notes (Optional)
+            </label>
+            <textarea
+              rows={2}
+              value={repAdminNotes}
+              onChange={(e) => setRepAdminNotes(e.target.value)}
+              placeholder="e.g. Video proof verified on WhatsApp. Replacement piece packed from Shelf B."
+              className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-900 focus:border-purple-500 focus:outline-none transition-all resize-none"
+            />
+          </div>
+        </div>
+      </AdminModal>
+
+      {/* REPLACEMENT: ISSUE STORE CREDIT MODAL */}
+      <AdminModal
+        isOpen={showRepCreditModal}
+        onClose={() => setShowRepCreditModal(false)}
+        maxWidth="md"
+        icon={<Tag className="h-5 w-5 text-indigo-700" />}
+        title="Issue Store Credit Voucher"
+        description="Creates a live, single-use coupon code in the system for the customer to use on their next purchase."
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowRepCreditModal(false)}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleConfirmRepCredit}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 shadow-sm transition-colors"
+            >
+              {isPending ? "Generating..." : "Generate & Issue Credit"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3 text-xs">
+          {repActionError && (
+            <div className="rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-200">
+              {repActionError}
+            </div>
+          )}
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">
+              Credit Voucher Amount (₹) <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="number"
+              required
+              value={repCreditAmount}
+              onChange={(e) => setRepCreditAmount(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 py-2 px-3 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none transition-all font-mono"
+            />
+            <p className="text-[11px] text-slate-500 mt-1">
+              Defaults to full order value. Customer can apply this coupon code at checkout.
+            </p>
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">
+              Custom Voucher Code (Optional)
+            </label>
+            <input
+              type="text"
+              value={repCreditCode}
+              onChange={(e) => setRepCreditCode(e.target.value.toUpperCase())}
+              placeholder="e.g. EXCHANGE-ORD-1234 (leave blank to auto-generate)"
+              className="w-full rounded-xl border border-slate-200 py-2 px-3 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none transition-all font-mono uppercase"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">
+              Internal Notes (Optional)
+            </label>
+            <textarea
+              rows={2}
+              value={repAdminNotes}
+              onChange={(e) => setRepAdminNotes(e.target.value)}
+              placeholder="e.g. Size out of stock, customer agreed to store shopping credit."
+              className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none transition-all resize-none"
+            />
+          </div>
+        </div>
+      </AdminModal>
+
+      {/* REPLACEMENT: DECLINE REQUEST MODAL */}
+      <AdminModal
+        isOpen={showRepDeclineModal}
+        onClose={() => setShowRepDeclineModal(false)}
+        maxWidth="md"
+        icon={<XCircle className="h-5 w-5 text-rose-700" />}
+        title="Decline Replacement Request"
+        description="Provide a clear, polite explanation that will be displayed to the customer on their order tracking page."
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowRepDeclineModal(false)}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleConfirmRepDecline}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50 shadow-sm transition-colors"
+            >
+              {isPending ? "Declining..." : "Confirm Decline"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3 text-xs">
+          {repActionError && (
+            <div className="rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-200">
+              {repActionError}
+            </div>
+          )}
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">
+              Reason for Declining <span className="text-rose-500">*</span>
+            </label>
+            <textarea
+              rows={3}
+              required
+              value={repDeclineReason}
+              onChange={(e) => setRepDeclineReason(e.target.value)}
+              placeholder="e.g. Continuous unboxing video was not provided within the policy window, or original brand tags were removed."
+              className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-900 focus:border-rose-500 focus:outline-none transition-all resize-none"
+            />
+            <p className="text-[11px] text-slate-500 mt-1">
+              This note is visible to the customer on their order details page.
+            </p>
+          </div>
+        </div>
+      </AdminModal>
     </div>
   );
 }
+

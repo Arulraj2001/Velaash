@@ -673,7 +673,98 @@ export type Database = {
         ];
       };
 
+      order_replacements: {
+        Row: {
+          id: string;
+          order_id: string;
+          order_number: string;
+          customer_id: string | null;
+          order_item_id: string | null;
+          item_title: string;
+          current_size: string | null;
+          current_color: string | null;
+          desired_size: string | null;
+          desired_color: string | null;
+          reason: string;
+          customer_phone: string;
+          customer_notes: string | null;
+          status: string;
+          video_reviewed: boolean;
+          video_reviewed_at: string | null;
+          rejection_reason: string | null;
+          store_credit_code: string | null;
+          store_credit_amount: number | null;
+          replacement_courier: string | null;
+          replacement_tracking_number: string | null;
+          admin_notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          order_number: string;
+          customer_id?: string | null;
+          order_item_id?: string | null;
+          item_title: string;
+          current_size?: string | null;
+          current_color?: string | null;
+          desired_size?: string | null;
+          desired_color?: string | null;
+          reason: string;
+          customer_phone: string;
+          customer_notes?: string | null;
+          status?: string;
+          video_reviewed?: boolean;
+          video_reviewed_at?: string | null;
+          rejection_reason?: string | null;
+          store_credit_code?: string | null;
+          store_credit_amount?: number | null;
+          replacement_courier?: string | null;
+          replacement_tracking_number?: string | null;
+          admin_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_id?: string;
+          order_number?: string;
+          customer_id?: string | null;
+          order_item_id?: string | null;
+          item_title?: string;
+          current_size?: string | null;
+          current_color?: string | null;
+          desired_size?: string | null;
+          desired_color?: string | null;
+          reason?: string;
+          customer_phone?: string;
+          customer_notes?: string | null;
+          status?: string;
+          video_reviewed?: boolean;
+          video_reviewed_at?: string | null;
+          rejection_reason?: string | null;
+          store_credit_code?: string | null;
+          store_credit_amount?: number | null;
+          replacement_courier?: string | null;
+          replacement_tracking_number?: string | null;
+          admin_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_replacements_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
       coupons: {
+
         Row: {
           id: string;
           code: string;

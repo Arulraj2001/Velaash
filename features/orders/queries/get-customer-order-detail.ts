@@ -9,6 +9,8 @@ import type {
 } from "../types";
 import { extractTrackingInfo, extractCustomerNotes } from "@/features/admin/utils/order-metadata";
 import { deduplicateOrderStatusHistory } from "../utils/order-history-dedup";
+import { getReplacementForOrderQuery } from "../actions/replacement-actions";
+
 
 /**
  * Retrieves full details for a customer's specific order.
@@ -222,6 +224,11 @@ export async function getCustomerOrderDetail(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const billAddr = (order.billing_address as any) || null;
 
+  const { activeReplacement, allReplacements } = await getReplacementForOrderQuery(
+    order.id,
+    order.order_number
+  );
+
   return {
     id: order.id,
     orderNumber: order.order_number,
@@ -276,5 +283,9 @@ export async function getCustomerOrderDetail(
     items,
     statusHistory,
     canCancel,
+    replacement: activeReplacement,
+    replacements: allReplacements,
   };
 }
+
+

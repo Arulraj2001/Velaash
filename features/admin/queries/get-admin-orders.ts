@@ -15,6 +15,8 @@ import {
   extractCustomerNotes,
 } from "../utils/order-metadata";
 import { deduplicateOrderStatusHistory } from "@/features/orders/utils/order-history-dedup";
+import { getReplacementForOrderQuery } from "@/features/orders/actions/replacement-actions";
+
 
 export interface GetAdminOrdersParams {
   search?: string;
@@ -336,6 +338,11 @@ export async function getAdminOrderDetail(
     ["cancelled", "delivered"].includes(currentStatus) &&
     currentPaymentStatus === "paid";
 
+  const { activeReplacement, allReplacements } = await getReplacementForOrderQuery(
+    order.id,
+    order.order_number
+  );
+
   return {
     id: order.id,
     orderNumber: order.order_number,
@@ -392,5 +399,8 @@ export async function getAdminOrderDetail(
     statusHistory: mappedHistory,
     canCancel,
     canRefund,
+    replacement: activeReplacement,
+    replacements: allReplacements,
   };
 }
+
