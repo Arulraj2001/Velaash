@@ -110,8 +110,8 @@ export function OrderInvoicePrintable({
   return (
     <div className="min-h-screen bg-slate-100/60 print:bg-white text-slate-900 font-sans selection:bg-amber-100 print:min-h-0">
       {/* Top Controls Bar (Hidden during printing) */}
-      <div className="no-print sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-md px-6 py-3 shadow-xs">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
+      <div className="no-print sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-md px-6 py-3.5 shadow-xs">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
           <Link
             href={`/admin/orders/${order.orderNumber}`}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
@@ -140,13 +140,13 @@ export function OrderInvoicePrintable({
       </div>
 
       {/* Main Invoice Document Canvas */}
-      <div className="mx-auto my-4 max-w-3xl p-3 sm:p-5 print:m-0 print:p-0 print:max-w-none print:w-full">
-        <div className="invoice-sheet rounded-xl border border-slate-200 bg-white p-6 sm:p-7 shadow-xs print:shadow-none print:border-none print:p-0 space-y-3.5">
+      <div className="mx-auto my-6 max-w-4xl p-4 sm:p-6 print:m-0 print:p-0 print:max-w-none print:w-full">
+        <div className="invoice-sheet rounded-xl border border-slate-200 bg-white p-7 sm:p-9 shadow-xs print:shadow-none print:border-none print:p-0 space-y-5">
           {/* 1. Header: Brand Info & Document Classification */}
-          <div className="avoid-break flex items-start justify-between gap-4 border-b border-slate-200 pb-3">
+          <div className="avoid-break flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
             {/* Brand Logo & Details */}
-            <div className="flex items-start gap-3">
-              <div className="relative h-12 w-12 shrink-0 rounded-lg overflow-hidden border border-amber-200/80 bg-amber-50">
+            <div className="flex items-start gap-3.5">
+              <div className="relative h-13 w-13 shrink-0 rounded-lg overflow-hidden border border-amber-200/80 bg-amber-50">
                 <Image
                   src={INVOICE_LOGO_BASE64}
                   alt={brandDisplayName}
@@ -159,10 +159,10 @@ export function OrderInvoicePrintable({
                 <h1 className="font-heading text-lg font-bold tracking-wider text-amber-950 uppercase leading-none">
                   {brandDisplayName}
                 </h1>
-                <p className="text-[10px] font-semibold text-amber-900/80 tracking-wide">
+                <p className="text-[10.5px] font-semibold text-amber-900/80 tracking-wide">
                   Contemporary Everyday Luxury
                 </p>
-                <p className="text-[10px] text-slate-600">
+                <p className="text-[10.5px] text-slate-600">
                   M/S {legalEntityName}
                 </p>
                 <p className="text-[10px] text-slate-500">
@@ -175,8 +175,8 @@ export function OrderInvoicePrintable({
             </div>
 
             {/* Classification & GST Details */}
-            <div className="text-right space-y-0.5">
-              <span className="inline-block rounded-md bg-slate-900 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+            <div className="text-right space-y-1">
+              <span className="inline-block rounded-md bg-slate-900 px-3 py-0.5 text-[10.5px] font-bold uppercase tracking-wider text-white">
                 {gstEnabled ? "TAX INVOICE" : "BILL OF SUPPLY"}
               </span>
               <p className="text-[10px] text-slate-500">
@@ -189,20 +189,20 @@ export function OrderInvoicePrintable({
                   GSTIN: {gstin}
                 </p>
               )}
-              <p className="text-[10px] text-slate-600">
+              <p className="text-[10.5px] text-slate-600">
                 Place of Supply: <strong className="text-slate-800">{destinationState}</strong>
               </p>
             </div>
           </div>
 
           {/* 2. Side-by-Side: Particulars & Billed Address */}
-          <div className="avoid-break grid grid-cols-2 gap-3">
+          <div className="avoid-break grid grid-cols-2 gap-4">
             {/* Invoice & Order Particulars */}
-            <div className="rounded-lg border border-slate-200/90 bg-slate-50/50 p-2.5 space-y-1 text-[11px]">
-              <h2 className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200/80 pb-1">
+            <div className="rounded-lg border border-slate-200/90 bg-slate-50/50 p-3.5 space-y-1.5 text-[11px]">
+              <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200/80 pb-1">
                 Invoice &amp; Order Particulars
               </h2>
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pt-0.5 text-[10.5px]">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-0.5 text-[11px]">
                 <div>
                   <span className="text-slate-500 text-[10px] block">Invoice No:</span>
                   <span className="font-mono font-bold text-slate-900">
@@ -234,7 +234,7 @@ export function OrderInvoicePrintable({
                 {order.trackingNumber && (
                   <div>
                     <span className="text-slate-500 text-[10px] block">Tracking No:</span>
-                    <span className="font-mono font-semibold text-slate-800 text-[10px]">
+                    <span className="font-mono font-semibold text-slate-800 text-[10.5px]">
                       {order.courierName ? `${order.courierName}: ` : ""}
                       {order.trackingNumber}
                     </span>
@@ -244,25 +244,25 @@ export function OrderInvoicePrintable({
             </div>
 
             {/* Billed To / Shipped To Address */}
-            <div className="rounded-lg border border-slate-200/90 bg-slate-50/50 p-2.5 space-y-1 text-[11px]">
-              <h2 className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200/80 pb-1">
+            <div className="rounded-lg border border-slate-200/90 bg-slate-50/50 p-3.5 space-y-1.5 text-[11px]">
+              <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200/80 pb-1">
                 Billed To &amp; Delivery Destination
               </h2>
-              <div className="pt-0.5 space-y-0.5 text-[10.5px]">
-                <p className="font-bold text-slate-900">
+              <div className="pt-0.5 space-y-1 text-[11px]">
+                <p className="font-bold text-slate-900 text-xs">
                   {order.shippingAddress.fullName}
                 </p>
-                <p className="text-slate-700 leading-tight">
+                <p className="text-slate-700 leading-snug">
                   {order.shippingAddress.addressLine1}
                   {order.shippingAddress.addressLine2
                     ? `, ${order.shippingAddress.addressLine2}`
                     : ""}
                 </p>
-                <p className="text-slate-700 leading-tight">
+                <p className="text-slate-700 leading-snug">
                   {order.shippingAddress.city}, {order.shippingAddress.state} –{" "}
                   <span className="font-mono font-medium">{order.shippingAddress.pincode}</span>
                 </p>
-                <p className="text-[10px] text-slate-500 pt-0.5">
+                <p className="text-[10.5px] text-slate-500 pt-0.5">
                   Ph: <strong className="text-slate-800">{order.shippingAddress.phone || "—"}</strong>
                   {order.shippingAddress.email && (
                     <> • Email: <strong className="text-slate-800">{order.shippingAddress.email}</strong></>
@@ -273,48 +273,48 @@ export function OrderInvoicePrintable({
           </div>
 
           {/* 3. Itemized Products Table */}
-          <div className="space-y-1.5">
-            <h2 className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500">
+          <div className="space-y-2">
+            <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
               Particulars of Supply
             </h2>
             <div className="overflow-hidden rounded-lg border border-slate-200">
               <table className="w-full text-left text-[11px] border-collapse">
                 <thead>
                   <tr className="bg-slate-100/90 border-b border-slate-200 text-slate-700">
-                    <th className="py-1.5 px-2 font-bold w-9 text-center">#</th>
-                    <th className="py-1.5 px-2 font-bold">Item Description</th>
-                    <th className="py-1.5 px-2 font-bold text-center w-16">Size</th>
-                    <th className="py-1.5 px-2 font-bold text-center w-16">Color</th>
-                    <th className="py-1.5 px-2 font-bold text-center w-12">Qty</th>
-                    <th className="py-1.5 px-2 font-bold text-right w-24">Unit Price</th>
-                    <th className="py-1.5 px-2 font-bold text-right w-24">Total (₹)</th>
+                    <th className="py-2 px-3 font-bold w-10 text-center">#</th>
+                    <th className="py-2 px-3 font-bold">Item Description</th>
+                    <th className="py-2 px-3 font-bold text-center w-20">Size</th>
+                    <th className="py-2 px-3 font-bold text-center w-20">Color</th>
+                    <th className="py-2 px-3 font-bold text-center w-14">Qty</th>
+                    <th className="py-2 px-3 font-bold text-right w-28">Unit Price</th>
+                    <th className="py-2 px-3 font-bold text-right w-28">Total (₹)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {order.items.map((item, idx) => (
                     <tr key={item.id} className="hover:bg-slate-50/50">
-                      <td className="py-1.5 px-2 text-center text-slate-500 font-mono text-[10px]">
+                      <td className="py-2.5 px-3 text-center text-slate-500 font-mono text-[10.5px]">
                         {idx + 1}
                       </td>
-                      <td className="py-1.5 px-2">
-                        <p className="font-semibold text-slate-900 leading-tight">{item.productName}</p>
+                      <td className="py-2.5 px-3">
+                        <p className="font-semibold text-slate-900 leading-snug">{item.productName}</p>
                         {item.sku && (
-                          <p className="text-[9px] font-mono text-slate-400">SKU: {item.sku}</p>
+                          <p className="text-[9.5px] font-mono text-slate-400">SKU: {item.sku}</p>
                         )}
                       </td>
-                      <td className="py-1.5 px-2 text-center text-slate-700 text-[10px]">
+                      <td className="py-2.5 px-3 text-center text-slate-700 text-[10.5px]">
                         {item.size || "Standard"}
                       </td>
-                      <td className="py-1.5 px-2 text-center text-slate-700 text-[10px]">
+                      <td className="py-2.5 px-3 text-center text-slate-700 text-[10.5px]">
                         {item.color || "Default"}
                       </td>
-                      <td className="py-1.5 px-2 text-center font-bold text-slate-900 font-mono">
+                      <td className="py-2.5 px-3 text-center font-bold text-slate-900 font-mono">
                         {item.quantity}
                       </td>
-                      <td className="py-1.5 px-2 text-right font-mono text-slate-700">
+                      <td className="py-2.5 px-3 text-right font-mono text-slate-700">
                         ₹{item.unitPrice.toLocaleString("en-IN")}
                       </td>
-                      <td className="py-1.5 px-2 text-right font-mono font-bold text-slate-900">
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900">
                         ₹{item.subtotal.toLocaleString("en-IN")}
                       </td>
                     </tr>
@@ -325,25 +325,25 @@ export function OrderInvoicePrintable({
           </div>
 
           {/* 4. Side-by-Side: Amount in Words & Financial Breakdown */}
-          <div className="avoid-break grid grid-cols-12 gap-3 items-stretch">
+          <div className="avoid-break grid grid-cols-12 gap-4 items-stretch">
             {/* Amount in Words (Left) */}
-            <div className="col-span-7 rounded-lg border border-amber-200/80 bg-amber-50/30 p-2.5 flex flex-col justify-between text-[11px]">
-              <div className="space-y-0.5">
-                <span className="text-[9.5px] font-bold uppercase tracking-wider text-amber-900 block">
+            <div className="col-span-7 rounded-lg border border-amber-200/80 bg-amber-50/30 p-3.5 flex flex-col justify-between text-[11px]">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900 block">
                   Invoice Total in Words:
                 </span>
-                <p className="font-semibold text-slate-900 italic text-[11px] leading-snug">
+                <p className="font-semibold text-slate-900 italic text-xs leading-relaxed">
                   {amountInWords}
                 </p>
               </div>
-              <div className="pt-1.5 border-t border-amber-200/60 flex items-center gap-1.5 text-emerald-800 text-[10px] font-medium">
+              <div className="pt-2 border-t border-amber-200/60 flex items-center gap-1.5 text-emerald-800 text-[10.5px] font-medium">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                 <span>Includes all standard applicable taxes and delivery charges.</span>
               </div>
             </div>
 
             {/* Calculations Box (Right) */}
-            <div className="col-span-5 rounded-lg border border-slate-200 bg-slate-50/50 p-2.5 space-y-1 text-[11px]">
+            <div className="col-span-5 rounded-lg border border-slate-200 bg-slate-50/50 p-3.5 space-y-1.5 text-[11px]">
               <div className="flex justify-between text-slate-600">
                 <span>Items Subtotal:</span>
                 <span className="font-mono font-medium">
@@ -373,9 +373,9 @@ export function OrderInvoicePrintable({
                 </span>
               </div>
 
-              <div className="border-t border-slate-300 pt-1 flex justify-between items-baseline font-bold text-slate-900">
-                <span className="text-xs">Total Payable:</span>
-                <span className="font-heading text-sm font-bold text-slate-900">
+              <div className="border-t border-slate-300 pt-2 flex justify-between items-baseline font-bold text-slate-900">
+                <span className="text-xs font-bold uppercase tracking-wide">Total Payable:</span>
+                <span className="font-heading text-base font-bold text-slate-900">
                   ₹{order.totalAmount.toLocaleString("en-IN")}
                 </span>
               </div>
@@ -383,37 +383,37 @@ export function OrderInvoicePrintable({
           </div>
 
           {/* 5. Compact Terms & Disclaimer Footer */}
-          <div className="avoid-break border-t border-slate-200 pt-2.5 space-y-1.5 text-[10px] text-slate-500">
-            <div className="grid grid-cols-2 gap-3 items-end">
+          <div className="avoid-break border-t border-slate-200 pt-3.5 space-y-2 text-[10.5px] text-slate-500">
+            <div className="grid grid-cols-2 gap-4 items-end">
               <div>
-                <h3 className="font-bold uppercase tracking-wider text-[9px] text-slate-700 mb-0.5">
+                <h3 className="font-bold uppercase tracking-wider text-[9.5px] text-slate-700 mb-1">
                   Exchange &amp; Replacement Policy
                 </h3>
-                <ul className="list-disc list-inside space-y-0.2 text-[9.5px] text-slate-600 leading-tight">
+                <ul className="list-disc list-inside space-y-0.5 text-[10px] text-slate-600 leading-snug">
                   <li>Doorstep replacement &amp; size exchanges valid within 7 days of delivery.</li>
                   <li>Continuous, uncut unboxing video proof is mandatory for exchange.</li>
                   <li>Original brand tags and garment conditions must remain intact.</li>
                 </ul>
               </div>
 
-              <div className="text-right space-y-0.5">
-                <p className="font-bold text-slate-800 text-[10.5px] uppercase">
+              <div className="text-right space-y-1">
+                <p className="font-bold text-slate-800 text-[11px] uppercase">
                   For {brandDisplayName.toUpperCase()}
                 </p>
-                <p className="text-[9.5px] text-slate-500 italic">
+                <p className="text-[10px] text-slate-500 italic">
                   Computer-Generated Document • No Signature Required
                 </p>
               </div>
             </div>
 
-            <div className="border-t border-slate-100 pt-1 text-center text-[9px] text-slate-400">
+            <div className="border-t border-slate-100 pt-2 text-center text-[9.5px] text-slate-400">
               {brandDisplayName.toUpperCase()} • Care: {supportPhone} • {supportEmail} • All disputes subject to Chennai jurisdiction.
             </div>
           </div>
         </div>
       </div>
 
-      {/* Global Print Isolation & Page-Fitting Stylesheet */}
+      {/* Global Print Isolation & Balanced Page Margins */}
       <style jsx global>{`
         @media print {
           /* Strict Isolation: hide all headers, footers, topbars, sidebars, buttons */
@@ -424,10 +424,10 @@ export function OrderInvoicePrintable({
             display: none !important;
           }
 
-          /* Force exact A4 portrait with standard packing slip margins */
+          /* Balanced A4 portrait margins: 12mm top/bottom, 16mm left/right for comfortable breathing room */
           @page {
             size: A4 portrait;
-            margin: 8mm 10mm;
+            margin: 12mm 16mm;
           }
 
           html,
@@ -441,7 +441,7 @@ export function OrderInvoicePrintable({
             print-color-adjust: exact !important;
           }
 
-          /* Remove card shadows and ensure sheet fits within page bounds */
+          /* Remove card shadows and ensure sheet fits gracefully within page margins */
           .invoice-sheet {
             width: 100% !important;
             max-width: 100% !important;
