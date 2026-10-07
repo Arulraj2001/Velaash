@@ -1,6 +1,5 @@
 import React from "react";
-import fs from "fs";
-import path from "path";
+import { INVOICE_LOGO_BASE64 } from "./invoice-logo-data";
 import {
   Document,
   Page,
@@ -814,40 +813,8 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
   );
 };
 
-// In-memory cache for the brand logo data URI so disk reads happen only once
-let cachedLogoDataUri: string | null | undefined = undefined;
-
 function getLogoDataUri(): string | null {
-  if (cachedLogoDataUri !== undefined) {
-    return cachedLogoDataUri;
-  }
-  const candidateFiles = [
-    "invoice-logo.jpg",
-    "invoice-logo.png",
-    "apple-touch-icon.png",
-    "logo.png",
-  ];
-  for (const filename of candidateFiles) {
-    try {
-      const filePath = path.join(process.cwd(), "public", filename);
-      if (fs.existsSync(filePath)) {
-        const buf = fs.readFileSync(filePath);
-        // Prioritize lightweight files under 300KB to keep invoice minimal size
-        if (buf.length <= 300000 || filename === candidateFiles[candidateFiles.length - 1]) {
-          const mime =
-            filename.endsWith(".jpg") || filename.endsWith(".jpeg")
-              ? "image/jpeg"
-              : "image/png";
-          cachedLogoDataUri = `data:${mime};base64,${buf.toString("base64")}`;
-          return cachedLogoDataUri;
-        }
-      }
-    } catch (err) {
-      console.warn(`Notice: could not load logo from public/${filename} for invoice:`, err);
-    }
-  }
-  cachedLogoDataUri = null;
-  return null;
+  return INVOICE_LOGO_BASE64;
 }
 
 /**

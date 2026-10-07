@@ -74,8 +74,8 @@ export async function GET(request: NextRequest, context: RouteParams) {
 
     const pdfBuffer = await generateInvoicePdfBuffer(order, gstEnabled, gstin, storeProfile);
 
-    // Return binary PDF stream using standard Response & Uint8Array
-    return new Response(new Uint8Array(pdfBuffer), {
+    // Return binary PDF stream using NextResponse
+    return new NextResponse(pdfBuffer as unknown as BodyInit, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
