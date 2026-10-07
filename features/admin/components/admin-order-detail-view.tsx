@@ -30,6 +30,7 @@ import {
   ArrowLeft,
   Package,
   Download,
+  Printer,
   Mail,
   Truck,
   RotateCcw,
@@ -97,9 +98,6 @@ export function AdminOrderDetailView({
 
   // Shiprocket push state
   const [shiprocketPushing, setShiprocketPushing] = useState(false);
-
-  // Invoice Download State
-  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
 
   // Replacement Desk State
   const [activeReplacement, setActiveReplacement] = useState(order.replacement);
@@ -485,41 +483,6 @@ export function AdminOrderDetailView({
     }
   };
 
-  // Download Invoice Handler
-  const handleDownloadInvoice = async () => {
-    if (isDownloadingInvoice) return;
-    setIsDownloadingInvoice(true);
-    setNotification(null);
-    try {
-      const res = await fetch(`/api/admin/orders/${order.orderNumber}/invoice`);
-      if (!res.ok) {
-        const errorText = await res.text().catch(() => "");
-        throw new Error(errorText || `Failed to download invoice (HTTP ${res.status})`);
-      }
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Invoice-${order.orderNumber}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      setNotification({
-        type: "success",
-        message: `Invoice for order #${order.orderNumber} downloaded successfully.`,
-      });
-    } catch (err) {
-      console.error("Failed to download invoice:", err);
-      setNotification({
-        type: "error",
-        message: err instanceof Error ? err.message : "Failed to download invoice.",
-      });
-    } finally {
-      setIsDownloadingInvoice(false);
-    }
-  };
-
   const statusStyle = ORDER_STATUS_STYLES[order.status] || ORDER_STATUS_STYLES.pending;
   const payStyle = PAYMENT_STATUS_STYLES[order.paymentStatus] || PAYMENT_STATUS_STYLES.pending;
 
@@ -537,23 +500,16 @@ export function AdminOrderDetailView({
 
         {/* Action Buttons: Invoice, Resend Email, Cancel */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Download Invoice Button */}
-          <button
-            type="button"
-            disabled={isDownloadingInvoice}
-            onClick={handleDownloadInvoice}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50 transition-colors shadow-2xs cursor-pointer"
+          {/* Print / Save Invoice Link */}
+          <Link
+            href={`/admin/orders/${order.orderNumber}/invoice?autoPrint=true`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-2xs cursor-pointer"
           >
-            {isDownloadingInvoice ? (
-              <svg className="h-3.5 w-3.5 animate-spin text-slate-500" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            ) : (
-              <Download className="h-3.5 w-3.5 text-slate-500" />
-            )}
-            {isDownloadingInvoice ? "Downloading..." : "Download Invoice"}
-          </button>
+            <Printer className="h-3.5 w-3.5 text-slate-500" />
+            Print / Save Invoice
+          </Link>
 
           {/* Resend Confirmation Email */}
           <button
