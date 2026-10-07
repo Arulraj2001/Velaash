@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/features/auth";
 import { getCustomerOrders, OrderStatusBadge } from "@/features/orders";
 import { Card, Button, Badge } from "@/components/ui";
+import { formatDateIST } from "@/lib/utils";
 import {
   Package,
   ArrowRight,
@@ -185,10 +186,8 @@ export default async function AccountPage() {
         ) : (
           <div className="divide-y divide-brand-border/60">
             {orders.map((order) => {
-              const formattedDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
-                day: "numeric",
+              const formattedDate = formatDateIST(order.createdAt, {
                 month: "short",
-                year: "numeric",
               });
 
               return (

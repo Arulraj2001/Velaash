@@ -8,6 +8,7 @@ import type { AdminOrderDetail } from "@/features/admin/types/orders";
 import { INVOICE_LOGO_BASE64 } from "@/features/admin/services/invoice-logo-data";
 import { BRAND } from "@/lib/constants";
 import { Button } from "@/components/ui";
+import { formatDateIST } from "@/lib/utils";
 
 export interface OrderInvoicePrintableProps {
   order: AdminOrderDetail;
@@ -98,11 +99,7 @@ export function OrderInvoicePrintable({
   const supportEmail = storeProfile?.email || "care@velaash.in";
   const supportPhone = storeProfile?.phone || "+91 98765 43210";
 
-  const formattedDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const formattedDate = formatDateIST(order.createdAt);
 
   const destinationState = order.shippingAddress?.state || "Tamil Nadu";
   const amountInWords = numberToIndianWords(order.totalAmount);

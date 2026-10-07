@@ -21,6 +21,7 @@ import {
 import { getOrderByNumber } from "@/features/checkout/queries/get-order-by-number";
 import { OrderConfirmationTracker } from "@/features/analytics";
 import { getSiteSettings } from "@/features/settings";
+import { formatDateIST } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Order Confirmed | Velaash",
@@ -80,12 +81,8 @@ export default async function OrderConfirmationPage({
 
   const { storeProfile } = await getSiteSettings();
 
-  // Format order date
-  const orderDateFormatted = new Date(order.createdAt).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  // Format order date in IST
+  const orderDateFormatted = formatDateIST(order.createdAt);
 
   // Calculate estimated delivery window (5–7 business days from order placement)
   const estDeliveryMin = new Date(order.createdAt);
@@ -93,10 +90,10 @@ export default async function OrderConfirmationPage({
   const estDeliveryMax = new Date(order.createdAt);
   estDeliveryMax.setDate(estDeliveryMax.getDate() + 7);
 
-  const deliveryWindowFormatted = `${estDeliveryMin.toLocaleDateString("en-IN", {
+  const deliveryWindowFormatted = `${formatDateIST(estDeliveryMin, {
     day: "numeric",
     month: "short",
-  })} – ${estDeliveryMax.toLocaleDateString("en-IN", {
+  })} – ${formatDateIST(estDeliveryMax, {
     day: "numeric",
     month: "short",
     year: "numeric",

@@ -24,7 +24,7 @@ import {
   pushToShiprocketAction,
 } from "../actions/order-actions";
 import { updateReplacementStatusAction } from "@/features/orders/actions/replacement-actions";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDateTimeIST } from "@/lib/utils";
 import { AdminModal } from "./admin-modal";
 import {
   ArrowLeft,
@@ -635,12 +635,8 @@ export function AdminOrderDetailView({
             </div>
             <p className="text-xs text-slate-500 flex items-center gap-2">
               <Calendar className="h-3.5 w-3.5 text-slate-400" />
-              Placed on {new Date(order.createdAt).toLocaleDateString("en-IN", {
-                day: "numeric",
+              Placed on {formatDateTimeIST(order.createdAt, {
                 month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
               })}
             </p>
           </div>
@@ -740,13 +736,7 @@ export function AdminOrderDetailView({
                   </span>
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Requested on {new Date(activeReplacement.createdAt).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  Requested on {formatDateTimeIST(activeReplacement.createdAt)}
                 </p>
               </div>
             </div>
@@ -1104,12 +1094,7 @@ export function AdminOrderDetailView({
                             {ORDER_STATUS_LABELS[h.status] || h.status}
                           </span>
                           <span className="text-[11px] text-slate-400 font-mono">
-                            {new Date(h.createdAt).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            {formatDateTimeIST(h.createdAt)}
                           </span>
                         </div>
                         {h.note && (

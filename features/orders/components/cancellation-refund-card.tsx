@@ -17,7 +17,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTimeIST } from "@/lib/utils";
 import type { RefundStatus } from "../types";
 
 export interface CancellationRefundCardProps {
@@ -66,13 +66,7 @@ export function CancellationRefundCard({
   };
 
   const formattedRefundDate = refundedAt
-    ? new Date(refundedAt).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+    ? formatDateTimeIST(refundedAt)
     : null;
 
   // Custom WhatsApp deep link for resolution choice

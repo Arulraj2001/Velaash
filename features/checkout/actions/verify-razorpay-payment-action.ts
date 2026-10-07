@@ -16,6 +16,7 @@ import {
   type VerifyRazorpayPaymentInput,
   type VerifyRazorpayPaymentResponse,
 } from "../types";
+import { formatDateIST } from "@/lib/utils";
 
 
 export async function verifyRazorpayPaymentAction(
@@ -313,11 +314,7 @@ export async function verifyRazorpayPaymentAction(
         react: React.createElement(OrderConfirmationEmail, {
           orderNumber,
           customerName: mockOrder.shippingAddress.fullName,
-          orderDate: new Date().toLocaleDateString("en-IN", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          }),
+          orderDate: formatDateIST(mockOrder.createdAt || new Date()),
           paymentMethod: "razorpay",
           paymentStatus: "paid",
           items: mockOrder.items.map((it) => ({

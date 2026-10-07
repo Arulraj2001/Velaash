@@ -17,6 +17,7 @@ import {
 
 import { Button, Badge } from "@/components/ui";
 import { getSiteSettings, getStoreContact } from "@/features/settings";
+import { formatDateTimeIST } from "@/lib/utils";
 import {
   ArrowLeft,
   Package,
@@ -61,12 +62,8 @@ export default async function CustomerOrderDetailPage(props: OrderDetailPageProp
     notFound();
   }
 
-  const formattedDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
-    day: "numeric",
+  const formattedDate = formatDateTimeIST(order.createdAt, {
     month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 
   const { storeProfile, returnsPolicy } = await getSiteSettings();

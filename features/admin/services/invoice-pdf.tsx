@@ -12,6 +12,7 @@ import {
 } from "@react-pdf/renderer";
 import type { AdminOrderDetail } from "../types/orders";
 import { BRAND } from "@/lib/constants";
+import { formatDateIST } from "@/lib/utils";
 
 // Register hyphenation callback to prevent runtime issues with dynamic hyphenation files
 Font.registerHyphenationCallback((word) => [word]);
@@ -501,10 +502,8 @@ export const InvoiceDocument: React.FC<InvoicePdfProps> = ({
   const supportEmail = storeProfile?.email || "";
   const supportPhone = storeProfile?.phone || "";
 
-  const formattedDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
-    day: "numeric",
+  const formattedDate = formatDateIST(order.createdAt, {
     month: "short",
-    year: "numeric",
   });
 
   const totalAmount = Number(order.totalAmount || 0);

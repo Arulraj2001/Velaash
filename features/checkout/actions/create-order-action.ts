@@ -17,6 +17,7 @@ import { MOCK_ORDERS_STORE } from "../queries/get-order-by-number";
 import { MOCK_ONLINE_PENDING_ORDERS } from "../services/order-cleanup";
 import { CreateOrderInputSchema, type CreateOrderInput, type CreateOrderResponse } from "../types";
 import { revalidateProductCatalog } from "@/lib/revalidation";
+import { formatDateIST } from "@/lib/utils";
 
 export async function createOrderAction(rawInput: CreateOrderInput): Promise<CreateOrderResponse> {
   // 1. Check for empty cart
@@ -954,11 +955,7 @@ export async function createOrderAction(rawInput: CreateOrderInput): Promise<Cre
           react: React.createElement(OrderConfirmationEmail, {
             orderNumber: orderNumber!,
             customerName: input.shippingAddress.fullName,
-            orderDate: new Date().toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            }),
+            orderDate: formatDateIST(new Date()),
             paymentMethod: "cod",
             paymentStatus: "pending",
             items: verifiedItems.map((it) => ({

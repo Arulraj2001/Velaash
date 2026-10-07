@@ -9,6 +9,7 @@ import type {
   LowStockAlertItem,
   DailySalesData,
 } from "../types";
+import { formatDateIST } from "@/lib/utils";
 
 /**
  * Shape returned by the get_admin_dashboard_metrics Postgres RPC (migration 031).
@@ -152,8 +153,7 @@ export async function getAdminDashboardData(
 
     // RPC returns ISO date strings (YYYY-MM-DD); format them for the chart
     const salesTrend14Days: DailySalesData[] = (fin.salesTrend14Days ?? []).map((row) => {
-      const d = new Date(row.date);
-      const formattedDate = d.toLocaleDateString("en-IN", {
+      const formattedDate = formatDateIST(row.date, {
         month: "short",
         day: "numeric",
       });

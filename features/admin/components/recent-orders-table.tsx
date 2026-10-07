@@ -9,7 +9,7 @@ import {
   createColumnHelper,
 } from "@tanstack/react-table";
 import type { RecentOrderRow } from "../types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDateTimeIST } from "@/lib/utils";
 import { ExternalLink, ShoppingBag } from "lucide-react";
 
 
@@ -105,13 +105,7 @@ export function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
       columnHelper.accessor("createdAt", {
         header: "Date",
         cell: (info) => {
-          const date = new Date(info.getValue());
-          const formatted = date.toLocaleDateString("en-IN", {
-            day: "numeric",
-            month: "short",
-            hour: "2-digit",
-            minute: "2-digit",
-          });
+          const formatted = formatDateTimeIST(info.getValue());
           return <span className="text-[11px] text-slate-500">{formatted}</span>;
         },
       }),

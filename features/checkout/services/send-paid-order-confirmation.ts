@@ -7,6 +7,7 @@ import { getSiteSettings } from "@/features/settings";
 import { OrderConfirmationEmail } from "../emails/order-confirmation-email";
 import { generateOrderAccessToken } from "../utils/order-access-token";
 import type { createAdminClient } from "@/lib/supabase/admin";
+import { formatDateIST } from "@/lib/utils";
 
 export async function sendPaidOrderConfirmationEmail(
   adminSupabase: ReturnType<typeof createAdminClient>,
@@ -65,11 +66,7 @@ export async function sendPaidOrderConfirmationEmail(
       react: React.createElement(OrderConfirmationEmail, {
         orderNumber,
         customerName: shippingAddress.fullName || "Customer",
-        orderDate: new Date(order.created_at).toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }),
+        orderDate: formatDateIST(order.created_at),
         paymentMethod: "razorpay",
         paymentStatus: "paid",
         items: orderItems.map((item) => {

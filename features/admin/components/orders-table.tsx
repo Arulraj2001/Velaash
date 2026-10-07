@@ -24,7 +24,7 @@ import {
   PAYMENT_STATUS_STYLES,
 } from "../types/orders";
 import { bulkUpdateOrderStatusAction } from "../actions/order-actions";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDateIST, formatTimeIST } from "@/lib/utils";
 import {
   Search,
   Filter,
@@ -340,21 +340,16 @@ export function OrdersTable({
       columnHelper.accessor("createdAt", {
         header: "Date Placed",
         cell: (info) => {
-          const date = new Date(info.getValue());
+          const val = info.getValue();
           return (
             <div className="space-y-0.5">
               <p className="text-xs text-slate-700">
-                {date.toLocaleDateString("en-IN", {
-                  day: "numeric",
+                {formatDateIST(val, {
                   month: "short",
-                  year: "numeric",
                 })}
               </p>
               <p className="text-[10px] text-slate-400 font-mono">
-                {date.toLocaleTimeString("en-IN", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {formatTimeIST(val)}
               </p>
             </div>
           );

@@ -1,7 +1,7 @@
 import React from "react";
 import { Check, Clock, Package, Truck, Home, XCircle, RotateCcw, ShieldCheck, AlertCircle } from "lucide-react";
 import type { OrderStatus, OrderStatusHistoryRecord, RefundStatus } from "../types";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTimeIST } from "@/lib/utils";
 
 interface OrderTimelineProps {
   currentStatus: OrderStatus;
@@ -78,19 +78,9 @@ export function OrderTimeline({
   else if (currentStatus === "shipped" || currentStatus === "out_for_delivery") currentStepIdx = 2;
   else if (currentStatus === "delivered") currentStepIdx = 3;
 
-  // Format date helper
+  // Format date helper in IST
   const formatDate = (iso: string) => {
-    try {
-      const d = new Date(iso);
-      return d.toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return "";
-    }
+    return formatDateTimeIST(iso);
   };
 
   if (isCancelled) {

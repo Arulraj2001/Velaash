@@ -22,6 +22,7 @@ import { env } from "@/lib/env";
 import type { Database } from "@/types/database.types";
 import { getSiteSettings } from "@/features/settings";
 import { revalidateProductCatalog } from "@/lib/revalidation";
+import { formatDateIST } from "@/lib/utils";
 
 export interface OrderActionResult {
   success: boolean;
@@ -603,11 +604,7 @@ export async function resendOrderConfirmationEmailAction(
     const { storeProfile } = await getSiteSettings();
     const orderViewUrl = `${appUrl}/account/orders/${order.order_number}`;
 
-    const formattedDate = new Date(order.created_at).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+    const formattedDate = formatDateIST(order.created_at);
 
     // 3. Dispatch email using transactional template
     const emailResult = await sendTransactionalEmail({

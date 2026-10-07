@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/features/auth";
 import { getCustomerOrders, OrderStatusBadge, BuyAgainButton } from "@/features/orders";
 import { Button } from "@/components/ui";
 import { OrderStatusFilter } from "./components/order-status-filter";
+import { formatDateIST } from "@/lib/utils";
 import {
   Package,
   ShoppingBag,
@@ -103,10 +104,8 @@ export default async function OrdersHistoryPage(props: OrdersPageProps) {
         ) : (
           <div className="space-y-4">
             {orders.map((order) => {
-              const formattedDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
-                day: "numeric",
+              const formattedDate = formatDateIST(order.createdAt, {
                 month: "short",
-                year: "numeric",
               });
 
               const isCod = order.paymentMethod === "cod";

@@ -20,6 +20,7 @@ import {
 import { OrderStatusBadge } from "./order-status-badge";
 import { OrderTimeline } from "./order-timeline";
 import { CourierTrackingBanner } from "./courier-tracking-banner";
+import { formatDateIST } from "@/lib/utils";
 
 export function GuestTrackingForm() {
   const [orderNumber, setOrderNumber] = React.useState("");
@@ -210,12 +211,7 @@ export function GuestTrackingForm() {
                     <OrderStatusBadge status={result.order.status} size="md" />
                   </div>
                   <p className="text-xs text-brand-muted">
-                    Placed on{" "}
-                    {new Date(result.order.createdAt).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
+                    Placed on {formatDateIST(result.order.createdAt)}
                   </p>
                 </div>
 
