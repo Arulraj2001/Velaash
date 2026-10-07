@@ -11,7 +11,8 @@ export const VerifyOtpSchema = z.object({
   token: z
     .string()
     .trim()
-    .length(6, "Verification code must be exactly 6 digits")
+    .min(6, "Verification code must be at least 6 digits")
+    .max(8, "Verification code must be at most 8 digits")
     .regex(/^\d+$/, "Verification code must contain digits only"),
   fullName: z.string().trim().optional(),
 });

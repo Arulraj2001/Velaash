@@ -122,7 +122,7 @@ export function CustomerLoginForm() {
         return;
       }
 
-      setSuccessMessage(res.message || "A 6-digit code has been sent to your email.");
+      setSuccessMessage(res.message || "A verification code has been sent to your email.");
       setStep("OTP");
       setResendCooldown(60);
     } catch {
@@ -242,7 +242,7 @@ export function CustomerLoginForm() {
           {step === "PROFILE_NAME"
             ? "Tell us your name so we can personalize your account."
             : step === "OTP"
-              ? `We sent a 6-digit access code to ${email}`
+              ? `We sent a verification code to ${email}`
               : "Enter your email — we'll sign you in, or create your account if you're new here."}
         </CardDescription>
       </CardHeader>
@@ -278,7 +278,7 @@ export function CustomerLoginForm() {
               autoFocus
               autoComplete="email"
               leftIcon={<Mail className="h-4 w-4" />}
-              helperText="We will send a fast 6-digit access code to your inbox — no password needed"
+              helperText="We will send a fast verification code to your inbox — no password needed"
             />
 
             <Button
@@ -359,14 +359,14 @@ export function CustomerLoginForm() {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              maxLength={6}
-              label="6-Digit Verification Code"
-              placeholder="000000"
+              maxLength={8}
+              label="Verification Code"
+              placeholder="Enter code"
               value={otpToken}
-              onChange={(e) => setOtpToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              onChange={(e) => setOtpToken(e.target.value.replace(/\D/g, "").slice(0, 8))}
               required
               autoFocus
-              className="text-center font-mono text-xl font-bold tracking-[0.5em]"
+              className="text-center font-mono text-xl font-bold tracking-[0.35em]"
               leftIcon={<KeyRound className="h-4 w-4" />}
             />
 
@@ -376,7 +376,7 @@ export function CustomerLoginForm() {
               size="lg"
               className="w-full"
               isLoading={isLoading}
-              disabled={otpToken.length !== 6}
+              disabled={otpToken.length < 6}
             >
               Verify & Continue
             </Button>

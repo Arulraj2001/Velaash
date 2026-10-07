@@ -1,9 +1,14 @@
 "use server";
 
+import * as React from "react";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { sendTransactionalEmail } from "@/lib/email/resend";
+import { CustomerOtpEmail } from "../emails/customer-otp-email";
+import { getSiteSettings } from "@/features/settings";
 import { env } from "@/lib/env";
 import {
   SendOtpSchema,
@@ -43,7 +48,9 @@ function mapAuthError(error: unknown): string {
 }
 
 /**
- * Sends a 6-digit OTP code to the customer's email.
+ * Generates an OTP verification code and dispatches a branded email via Resend.
+ * Uses elevated service role client to generate the OTP token without triggering
+ * Supabase's built-in default email template (which omits the OTP token code).
  */
 export async function sendOtpAction(input: SendOtpInput): Promise<AuthActionResult> {
   const parsed = SendOtpSchema.safeParse(input);
@@ -55,24 +62,73 @@ export async function sendOtpAction(input: SendOtpInput): Promise<AuthActionResu
   }
 
   try {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email: parsed.data.email,
+    const email = parsed.data.email.toLowerCase();
+
+    // Determine return / redirect URL for fallback 1-click button
+    const headerList = await headers();
+    const host = headerList.get("host") || "velaash.in";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const origin = env.NEXT_PUBLIC_APP_URL
+      ? env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
+      : `${protocol}://${host}`;
+    const redirectTo = `${origin}/account/auth/callback?returnUrl=/account`;
+
+    // Security Justification: The elevated service-role admin client is strictly required
+    // here to invoke `admin.generateLink({ type: "magiclink" })`. This generates the raw OTP
+    // verification token without triggering Supabase's built-in mailer pool (which sends generic
+    // magic links without OTP codes). It also securely provisions new customer auth accounts.
+    const adminSupabase = createAdminClient();
+    const { data, error } = await adminSupabase.auth.admin.generateLink({
+      type: "magiclink",
+      email,
       options: {
-        shouldCreateUser: true,
+        redirectTo,
       },
     });
 
-    if (error) {
+    if (error || !data?.properties?.email_otp) {
       return {
         success: false,
-        error: mapAuthError(error),
+        error: mapAuthError(error || new Error("Failed to generate verification code")),
+      };
+    }
+
+    const otpCode = data.properties.email_otp;
+    const magicLinkUrl = data.properties.action_link;
+
+    // Fetch site settings for concierge contact info
+    let supportEmail = "care@velaash.in";
+    try {
+      const { storeProfile } = await getSiteSettings();
+      if (storeProfile?.email) {
+        supportEmail = storeProfile.email;
+      }
+    } catch {
+      // Non-blocking fallback to default
+    }
+
+    // Dispatch branded transactional email via Resend
+    const emailResult = await sendTransactionalEmail({
+      to: email,
+      subject: `${otpCode} is your Velaash verification code`,
+      react: React.createElement(CustomerOtpEmail, {
+        otpCode,
+        magicLinkUrl,
+        supportEmail,
+      }),
+      text: `Your Velaash verification code is: ${otpCode}. It expires in 10 minutes. If you did not request this, please ignore this email.`,
+    });
+
+    if (!emailResult.success) {
+      return {
+        success: false,
+        error: "Failed to dispatch verification email. Please check your address or try again shortly.",
       };
     }
 
     return {
       success: true,
-      message: `A 6-digit verification code has been sent to ${parsed.data.email}.`,
+      message: `A verification code has been sent to ${email}.`,
     };
   } catch (err) {
     return {
@@ -83,7 +139,7 @@ export async function sendOtpAction(input: SendOtpInput): Promise<AuthActionResu
 }
 
 /**
- * Verifies the customer's 6-digit OTP code and ensures customer profile exists.
+ * Verifies the customer's OTP code and ensures customer profile exists.
  */
 export async function verifyOtpAction(input: VerifyOtpInput): Promise<AuthActionResult> {
   const parsed = VerifyOtpSchema.safeParse(input);
@@ -100,7 +156,7 @@ export async function verifyOtpAction(input: VerifyOtpInput): Promise<AuthAction
       data: { user },
       error,
     } = await supabase.auth.verifyOtp({
-      email: parsed.data.email,
+      email: parsed.data.email.toLowerCase(),
       token: parsed.data.token,
       type: "email",
     });
