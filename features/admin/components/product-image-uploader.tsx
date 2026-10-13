@@ -4,6 +4,8 @@ import React, { useState, useRef } from "react";
 import Image from "next/image";
 import type { AdminProductImageFormItem } from "../types/products";
 import { uploadProductImageAction } from "../actions/upload-actions";
+import { getMediaGalleryDataAction, type MediaItem } from "../actions/media-actions";
+import { compressProductImageClientSide } from "../utils/image-compression";
 import {
   UploadCloud,
   Link2,
@@ -15,6 +17,10 @@ import {
   AlertCircle,
   Loader2,
   ImageIcon,
+  Check,
+  Search,
+  RefreshCw,
+  Sparkles,
 } from "lucide-react";
 
 interface ProductImageUploaderProps {
@@ -54,12 +60,32 @@ export function ProductImageUploader({
 }: ProductImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Tab mode state: "upload" (file picker) or "url" (pasting URLs)
-  const [inputMode, setInputMode] = useState<"upload" | "url">("upload");
+  // Tab mode state: "upload" (file picker), "url" (pasting URLs), or "gallery" (storage library)
+  const [inputMode, setInputMode] = useState<"upload" | "url" | "gallery">("upload");
 
   // Upload state
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Storage Gallery state
+  const [galleryItems, setGalleryItems] = useState<MediaItem[]>([]);
+  const [isGalleryLoading, setIsGalleryLoading] = useState(false);
+  const [gallerySearch, setGallerySearch] = useState("");
+
+  const loadGallery = async () => {
+    setIsGalleryLoading(true);
+    try {
+      const res = await getMediaGalleryDataAction();
+      if (res.success && res.data) {
+        setGalleryItems(res.data.items);
+      }
+    } catch {
+      // Non-blocking fallback
+    } finally {
+      setIsGalleryLoading(false);
+    }
+  };
 
   // URL state
   const [urlInput, setUrlInput] = useState("");
@@ -73,7 +99,7 @@ export function ProductImageUploader({
       .filter(Boolean).length;
   }, [urlInput]);
 
-  // File upload handler
+  // File upload handler with automatic client-side WebP compression
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setUploadError(null);
@@ -86,20 +112,33 @@ export function ProductImageUploader({
         const file = files[i];
 
         // 1. Client-side file validation
-        const allowed = ["image/jpeg", "image/png", "image/webp"];
+        const allowed = ["image/jpeg", "image/png", "image/webp", "image/avif"];
         if (!allowed.includes(file.type)) {
           setUploadError(`"${file.name}" is not a valid format. Please upload JPG, PNG, or WebP.`);
           continue;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-          setUploadError(`"${file.name}" exceeds the 5MB size limit.`);
+        // Allow selection up to 15MB since client-side compression will optimize it down to ~150KB
+        if (file.size > 15 * 1024 * 1024) {
+          setUploadError(`"${file.name}" exceeds the 15MB size limit.`);
           continue;
         }
 
-        // 2. Upload via server action
+        setUploadStatus(`Optimizing "${file.name}" for crystal-clear resolution...`);
+
+        // 2. High-quality client-side compression (resizes to max 1600px & encodes to WebP @ 83%)
+        const { file: compressedFile, reductionPercentage } =
+          await compressProductImageClientSide(file, 1600, 0.83);
+
+        setUploadStatus(
+          reductionPercentage > 0
+            ? `Uploading (${reductionPercentage}% compressed)...`
+            : "Uploading to storage..."
+        );
+
+        // 3. Upload compressed WebP via server action
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", compressedFile);
 
         const res = await uploadProductImageAction(formData);
         if (!res.success || !res.url) {
@@ -119,9 +158,20 @@ export function ProductImageUploader({
       onChange(newImages);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Upload failed.";
-      setUploadError(msg);
+      if (
+        msg.includes("unexpected response") ||
+        msg.includes("UNAUTHORIZED") ||
+        msg.includes("redirect")
+      ) {
+        setUploadError(
+          "Your admin session may have expired. Please refresh the page or sign in again to continue."
+        );
+      } else {
+        setUploadError(msg);
+      }
     } finally {
       setIsUploading(false);
+      setUploadStatus(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -264,7 +314,22 @@ export function ProductImageUploader({
             }`}
           >
             <UploadCloud className="h-3.5 w-3.5" />
-            <span>Upload Files</span>
+            <span>Upload & Compress</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setInputMode("gallery");
+              loadGallery();
+            }}
+            className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+              inputMode === "gallery"
+                ? "bg-white text-indigo-700 shadow-2xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <ImageIcon className="h-3.5 w-3.5" />
+            <span>Storage Gallery</span>
           </button>
           <button
             type="button"
@@ -281,7 +346,7 @@ export function ProductImageUploader({
         </div>
 
         <span className="text-[11px] text-slate-500 hidden sm:inline">
-          {images.length} {images.length === 1 ? "image" : "images"} in gallery
+          {images.length} {images.length === 1 ? "image" : "images"} attached
         </span>
       </div>
 
@@ -301,16 +366,21 @@ export function ProductImageUploader({
               ref={fileInputRef}
               type="file"
               multiple
-              accept="image/jpeg,image/png,image/webp"
+              accept="image/jpeg,image/png,image/webp,image/avif"
               className="hidden"
               onChange={(e) => handleFiles(e.target.files)}
             />
 
             {isUploading ? (
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-2 py-3">
                 <Loader2 className="h-7 w-7 animate-spin text-indigo-600" />
-                <p className="text-xs font-semibold text-slate-800">Uploading image to storage...</p>
-                <p className="text-[11px] text-slate-500">Validating format and storage limits</p>
+                <p className="text-xs font-semibold text-slate-800">
+                  {uploadStatus || "Uploading image to storage..."}
+                </p>
+                <p className="text-[11px] text-slate-500 flex items-center gap-1">
+                  <Sparkles className="h-3 w-3 text-indigo-500" />
+                  Auto-compressing to 1600px WebP to preserve free tier storage
+                </p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
@@ -322,7 +392,7 @@ export function ProductImageUploader({
                     Click to upload images <span className="text-slate-400">or drag &amp; drop</span>
                   </p>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    JPG, PNG, or WebP &bull; Maximum 5MB per image &bull; Multiple files supported
+                    JPG, PNG, or WebP up to 15MB &bull; Auto-optimized to crisp WebP &bull; Multi-file supported
                   </p>
                 </div>
               </div>
@@ -330,9 +400,114 @@ export function ProductImageUploader({
           </div>
 
           {uploadError && (
-            <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
+            <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 animate-in fade-in">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{uploadError}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Mode B: Pick from Storage Gallery */}
+      {inputMode === "gallery" && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50/40 p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <span className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                <ImageIcon className="h-3.5 w-3.5 text-indigo-600" />
+                Select from Storage Gallery
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Reuse images previously uploaded to Supabase Storage without uploading again.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={gallerySearch}
+                  onChange={(e) => setGallerySearch(e.target.value)}
+                  placeholder="Filter by name..."
+                  className="rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 py-1 text-xs text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={loadGallery}
+                disabled={isGalleryLoading}
+                className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 transition-colors shadow-2xs"
+                title="Refresh gallery"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isGalleryLoading ? "animate-spin text-indigo-600" : ""}`} />
+              </button>
+            </div>
+          </div>
+
+          {isGalleryLoading ? (
+            <div className="flex items-center justify-center p-8 text-xs text-slate-400 gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+              <span>Scanning storage files...</span>
+            </div>
+          ) : galleryItems.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-slate-200 bg-white p-6 text-center text-xs text-slate-400">
+              No images found in storage. Upload some images first!
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 max-h-60 overflow-y-auto p-1 bg-white rounded-lg border border-slate-200">
+              {galleryItems
+                .filter((item) =>
+                  item.name.toLowerCase().includes(gallerySearch.toLowerCase())
+                )
+                .map((item) => {
+                  const isAttached = images.some((img) => img.image_url === item.publicUrl);
+                  return (
+                    <button
+                      key={item.path}
+                      type="button"
+                      onClick={() => {
+                        if (isAttached) {
+                          onChange(images.filter((img) => img.image_url !== item.publicUrl));
+                        } else {
+                          const isFirst = images.length === 0;
+                          onChange([
+                            ...images,
+                            {
+                              image_url: item.publicUrl,
+                              alt_text: generateAltTextFromUrl(item.publicUrl, images.length, productName),
+                              is_primary: isFirst,
+                              display_order: images.length,
+                            },
+                          ]);
+                        }
+                      }}
+                      className={`group relative aspect-square rounded-md overflow-hidden border transition-all ${
+                        isAttached
+                          ? "border-indigo-600 ring-2 ring-indigo-600/30"
+                          : "border-slate-200 hover:border-slate-400"
+                      }`}
+                    >
+                      <Image
+                        src={item.publicUrl}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                      {isAttached && (
+                        <div className="absolute inset-0 bg-indigo-900/30 flex items-center justify-center">
+                          <div className="rounded-full bg-indigo-600 text-white p-1 shadow-xs">
+                            <Check className="h-3 w-3" />
+                          </div>
+                        </div>
+                      )}
+                      <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] px-1 py-0.5 truncate text-left">
+                        {item.name}
+                      </span>
+                    </button>
+                  );
+                })}
             </div>
           )}
         </div>

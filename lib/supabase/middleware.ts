@@ -63,8 +63,17 @@ export async function updateSession(request: NextRequest) {
   if (pathname.startsWith("/admin")) {
     const isAdminLogin = pathname === "/admin/login";
 
+    const isActionRequest = request.headers.has("next-action");
+
     if (!user) {
       if (!isAdminLogin) {
+        // If this is a Server Action POST request, DO NOT return an HTTP 307 redirect.
+        // A redirect response to a Server Action breaks the Next.js runtime and triggers
+        // "An unexpected response was received from the server."
+        // Letting it pass allows requireAdmin() in the Server Action to return a structured error.
+        if (isActionRequest) {
+          return supabaseResponse;
+        }
         const loginUrl = new URL("/admin/login", request.url);
         loginUrl.searchParams.set("returnUrl", fullPath);
         return NextResponse.redirect(loginUrl);
@@ -82,6 +91,9 @@ export async function updateSession(request: NextRequest) {
     if (!adminRecord) {
       // User is logged in as a regular customer but attempting to access /admin
       if (!isAdminLogin) {
+        if (isActionRequest) {
+          return supabaseResponse;
+        }
         const loginUrl = new URL("/admin/login", request.url);
         loginUrl.searchParams.set("error", "unauthorized");
         return NextResponse.redirect(loginUrl);
@@ -119,6 +131,7 @@ export async function updateSession(request: NextRequest) {
   if (pathname.startsWith("/account")) {
     const isCustomerLogin = pathname === "/account/login";
     const isAuthCallback = pathname.startsWith("/account/auth/callback");
+    const isActionRequest = request.headers.has("next-action");
 
     if (isAuthCallback) {
       return supabaseResponse;
@@ -126,6 +139,9 @@ export async function updateSession(request: NextRequest) {
 
     if (!user) {
       if (!isCustomerLogin) {
+        if (isActionRequest) {
+          return supabaseResponse;
+        }
         const loginUrl = new URL("/account/login", request.url);
         loginUrl.searchParams.set("returnUrl", fullPath);
         return NextResponse.redirect(loginUrl);

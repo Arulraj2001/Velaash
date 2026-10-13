@@ -79,7 +79,8 @@ export interface AdminNavItem {
     | "Sliders"
     | "Settings"
     | "Users"
-    | "BookOpen";
+    | "BookOpen"
+    | "Image";
   requiredPermission: AdminPermissionKey;
   ownerOnly?: boolean;
   badgeText?: string;
@@ -109,6 +110,12 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
     href: "/admin/categories",
     iconName: "FolderTree",
     requiredPermission: "view_categories",
+  },
+  {
+    title: "Media Storage",
+    href: "/admin/media",
+    iconName: "Image",
+    requiredPermission: "manage_products",
   },
   {
     title: "Coupons",
@@ -192,6 +199,9 @@ export function canAccessAdminRoute(role: AdminRole, pathname: string): boolean 
   }
   if (pathname.startsWith("/admin/categories")) {
     return hasAdminPermission(role, "view_categories");
+  }
+  if (pathname.startsWith("/admin/media")) {
+    return hasAdminPermission(role, "manage_products");
   }
 
   return true;

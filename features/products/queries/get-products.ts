@@ -142,7 +142,7 @@ async function fetchCategoryBySlug(slug: string): Promise<ProductCategoryMetadat
     .maybeSingle();
 
   if (error) {
-    console.error("Database error in getCategoryBySlug:", error);
+    console.error("Database error in getCategoryBySlug:", error.message, `(${error.code})`, error.details);
     throw new Error(`Database error fetching category: ${error.message} (${error.code || "UNKNOWN"})`);
   }
 

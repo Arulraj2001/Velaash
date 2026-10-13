@@ -30,17 +30,142 @@ const RETAIL_SIZES_S_XL = ["S", "M", "L", "XL"];
 const ALL_COMMON_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "Free Size"];
 
 const LUXURY_COLOR_PALETTES = [
-  { name: "Ivory", hex: "#FDFBF7" },
+  // Royal & Jewel Tones
   { name: "Ruby Red", hex: "#9B1B30" },
   { name: "Maroon", hex: "#5B1425" },
+  { name: "Wine / Plum", hex: "#4A154B" },
+  { name: "Rani Pink", hex: "#E0115F" },
   { name: "Emerald Green", hex: "#1B4D3E" },
+  { name: "Bottle Green", hex: "#0B3B24" },
   { name: "Royal Navy", hex: "#002366" },
+  { name: "Peacock Blue", hex: "#005F73" },
+  { name: "Royal Purple", hex: "#5E2750" },
+
+  // Festive, Silk & Warm Tones
   { name: "Mustard Gold", hex: "#E1AD01" },
+  { name: "Haldi Yellow", hex: "#F5B041" },
   { name: "Rust Orange", hex: "#C85A17" },
+  { name: "Coral Peach", hex: "#FF7F50" },
+  { name: "Terracotta", hex: "#A94A42" },
+  { name: "Copper Bronze", hex: "#B87333" },
+
+  // Pastels & Soft Weaves
   { name: "Blush Rose", hex: "#E8C5C8" },
-  { name: "Jet Black", hex: "#1A1A1A" },
+  { name: "Powder Blue", hex: "#B0C4DE" },
   { name: "Sage Mint", hex: "#7D9D8B" },
+  { name: "Pista Green", hex: "#93C572" },
+  { name: "Lavender", hex: "#B39DDB" },
+  { name: "Lilac Mauve", hex: "#C8A2C8" },
+
+  // Classics, Neutrals & Metallics
+  { name: "Ivory / Off-White", hex: "#FDFBF7" },
+  { name: "Pure White", hex: "#FFFFFF" },
+  { name: "Beige / Cream", hex: "#E8D8C8" },
+  { name: "Antique Gold", hex: "#D4AF37" },
+  { name: "Silver Zari", hex: "#C0C0C0" },
+  { name: "Charcoal Grey", hex: "#374151" },
+  { name: "Jet Black", hex: "#1A1A1A" },
 ];
+
+/**
+ * Intelligent dictionary for auto-detecting hex colors from common fashion and ethnic names
+ */
+const COLOR_NAME_DICTIONARY: Record<string, string> = {
+  // Pinks & Reds
+  red: "#DC2626",
+  "ruby red": "#9B1B30",
+  maroon: "#5B1425",
+  wine: "#4A154B",
+  burgundy: "#800020",
+  pink: "#EC4899",
+  "rani pink": "#E0115F",
+  magenta: "#D946EF",
+  fuchsia: "#C026D3",
+  rose: "#F43F5E",
+  "blush pink": "#E8C5C8",
+  "blush rose": "#E8C5C8",
+  coral: "#FF7F50",
+  peach: "#FDBA74",
+
+  // Blues
+  blue: "#2563EB",
+  navy: "#002366",
+  "royal navy": "#002366",
+  "royal blue": "#1D4ED8",
+  "peacock blue": "#005F73",
+  peacock: "#005F73",
+  "sky blue": "#38BDF8",
+  "powder blue": "#B0C4DE",
+  teal: "#0D9488",
+  turquoise: "#06B6D4",
+  cyan: "#06B6D4",
+  indigo: "#4F46E5",
+
+  // Greens
+  green: "#16A34A",
+  "emerald green": "#1B4D3E",
+  emerald: "#1B4D3E",
+  "bottle green": "#0B3B24",
+  "forest green": "#166534",
+  olive: "#65A30D",
+  "olive green": "#556B2F",
+  mint: "#86EFAC",
+  "sage mint": "#7D9D8B",
+  sage: "#7D9D8B",
+  "pista green": "#93C572",
+  pista: "#93C572",
+  "rama green": "#0D9488",
+
+  // Yellows & Oranges
+  yellow: "#FACC15",
+  "mustard gold": "#E1AD01",
+  mustard: "#E1AD01",
+  "haldi yellow": "#F5B041",
+  haldi: "#F5B041",
+  orange: "#EA580C",
+  "rust orange": "#C85A17",
+  rust: "#C85A17",
+  terracotta: "#A94A42",
+  amber: "#D97706",
+
+  // Purples & Violets
+  purple: "#9333EA",
+  "royal purple": "#5E2750",
+  violet: "#7C3AED",
+  lavender: "#B39DDB",
+  lilac: "#C8A2C8",
+  mauve: "#C8A2C8",
+  plum: "#4A154B",
+
+  // Neutrals & Metallics
+  white: "#FFFFFF",
+  "pure white": "#FFFFFF",
+  ivory: "#FDFBF7",
+  "off white": "#FDFBF7",
+  "off-white": "#FDFBF7",
+  cream: "#FFFDD0",
+  beige: "#E8D8C8",
+  nude: "#E8D8C8",
+  gold: "#D4AF37",
+  "antique gold": "#D4AF37",
+  copper: "#B87333",
+  brass: "#B5A642",
+  silver: "#C0C0C0",
+  grey: "#6B7280",
+  gray: "#6B7280",
+  charcoal: "#374151",
+  black: "#1A1A1A",
+  "jet black": "#1A1A1A",
+  brown: "#78350F",
+  chocolate: "#4E3629",
+  tan: "#D2B48C",
+};
+
+function autoDetectColorHex(colorName: string): string | null {
+  const normalized = colorName.trim().toLowerCase();
+  if (!normalized) return null;
+  return COLOR_NAME_DICTIONARY[normalized] || null;
+}
 
 export function ProductVariantsManager({
   productName,
@@ -54,6 +179,7 @@ export function ProductVariantsManager({
     { name: variants[0]?.color || "Ivory", hex: variants[0]?.color_hex || "#FDFBF7" },
   ]);
   const [newColorInput, setNewColorInput] = useState("");
+  const [customColorHex, setCustomColorHex] = useState("#9B1B30");
   const [matrixSelectedSizes, setMatrixSelectedSizes] = useState<string[]>(["S", "M", "L", "XL"]);
   const [matrixDefaultStock, setMatrixDefaultStock] = useState<number>(10);
   const [matrixMode, setMatrixMode] = useState<"append" | "replace">("append");
@@ -61,23 +187,44 @@ export function ProductVariantsManager({
   // Bulk Actions State
   const [bulkStockValue, setBulkStockValue] = useState<string>("");
   const [bulkPriceValue, setBulkPriceValue] = useState<string>("");
+  const [bulkSkuPrefix, setBulkSkuPrefix] = useState<string>("");
+  const [appliedRowIdx, setAppliedRowIdx] = useState<number | null>(null);
   const [activeColorPaletteIndex, setActiveColorPaletteIndex] = useState<number | null>(null);
 
-  // Generate standardized SKU codes
-  const generateSku = (color: string, size: string) => {
-    const slugPart = (productSlug || productName || "PROD")
-      .slice(0, 8)
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
-    const colorPart = (color || "CLR")
-      .slice(0, 4)
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
+  // Format color segment to prevent collisions between colors sharing word prefixes (e.g. Royal Navy vs Royal Purple)
+  const formatColorPart = (colorName: string): string => {
+    const clean = (colorName || "CLR").trim();
+    const words = clean.split(/[\s/_-]+/).filter(Boolean);
+    if (words.length >= 2) {
+      const w1 = words[0].slice(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const w2 = words[1].slice(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, "");
+      return `${w1}${w2}`;
+    }
+    return clean.slice(0, 5).toUpperCase().replace(/[^A-Z0-9]/g, "") || "CLR";
+  };
+
+  // Generate standardized SKU codes with optional custom prefix
+  const generateSku = (color: string, size: string, customPrefix?: string) => {
+    let prefix = customPrefix?.trim();
+    if (!prefix) {
+      const slugPart = (productSlug || productName || "PROD")
+        .slice(0, 8)
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "");
+      prefix = `VEL-${slugPart || "ITEM"}`;
+    } else {
+      prefix = prefix.toUpperCase().replace(/[^A-Z0-9-]/g, "");
+      if (!prefix.startsWith("VEL-")) {
+        prefix = `VEL-${prefix}`;
+      }
+    }
+
+    const colorPart = formatColorPart(color);
     const sizePart = (size || "SZ")
       .slice(0, 4)
       .toUpperCase()
       .replace(/[^A-Z0-9]/g, "");
-    return `VEL-${slugPart}-${colorPart}-${sizePart}`;
+    return `${prefix}-${colorPart}-${sizePart}`;
   };
 
   // Total inventory stats
@@ -98,6 +245,20 @@ export function ProductVariantsManager({
       }
     }
     return Array.from(dupes);
+  }, [variants]);
+
+  // Check for duplicate SKUs in the current list
+  const duplicateSkuWarnings = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const v of variants) {
+      const s = v.sku.trim().toUpperCase();
+      if (s) counts.set(s, (counts.get(s) || 0) + 1);
+    }
+    const dupes: string[] = [];
+    counts.forEach((cnt, sku) => {
+      if (cnt > 1) dupes.push(sku);
+    });
+    return dupes;
   }, [variants]);
 
   // Add a single variant row
@@ -230,7 +391,7 @@ export function ProductVariantsManager({
     setBulkPriceValue("");
   };
 
-  // Refresh / Regenerate all SKUs at once
+  // Refresh / Reset all SKUs using current product name/slug
   const handleRegenerateAllSkus = () => {
     onChange(
       variants.map((v) => ({
@@ -238,6 +399,54 @@ export function ProductVariantsManager({
         sku: generateSku(v.color, v.size),
       }))
     );
+  };
+
+  // Bulk Apply Custom SKU Prefix to all variants
+  const handleApplyBulkSkuPrefix = () => {
+    const trimmed = bulkSkuPrefix.trim();
+    if (!trimmed) return;
+    onChange(
+      variants.map((v) => ({
+        ...v,
+        sku: generateSku(v.color, v.size, trimmed),
+      }))
+    );
+  };
+
+  // Generate 100% collision-free Unique SKUs by adding a short random hex hash
+  const handleGenerateUniqueSkus = () => {
+    const slugPart = (productSlug || productName || "PROD")
+      .slice(0, 7)
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+    const randomHash = Math.random().toString(36).substring(2, 5).toUpperCase();
+    const uniquePrefix = `VEL-${slugPart || "ITEM"}-${randomHash}`;
+    setBulkSkuPrefix(uniquePrefix);
+    onChange(
+      variants.map((v) => ({
+        ...v,
+        sku: generateSku(v.color, v.size, uniquePrefix),
+      }))
+    );
+  };
+
+  // Extract prefix from a specific variant row and apply pattern to all rows
+  const handleApplyRowPrefixToAll = (rowSku: string, rowIdx: number) => {
+    const trimmed = rowSku.trim().toUpperCase();
+    if (!trimmed) return;
+    const parts = trimmed.split("-");
+    const extractedPrefix =
+      parts.length >= 3 ? parts.slice(0, parts.length - 2).join("-") : parts[0];
+
+    setBulkSkuPrefix(extractedPrefix);
+    onChange(
+      variants.map((v) => ({
+        ...v,
+        sku: generateSku(v.color, v.size, extractedPrefix),
+      }))
+    );
+    setAppliedRowIdx(rowIdx);
+    setTimeout(() => setAppliedRowIdx(null), 1800);
   };
 
   // Matrix Generator: Add a color
@@ -486,25 +695,42 @@ export function ProductVariantsManager({
                 </div>
               </div>
 
-              {/* Custom Color Input */}
+              {/* Custom Color Input with Live Picker & Smart Detection */}
               <div className="flex items-center gap-1.5 pt-1">
+                <div className="relative flex items-center shrink-0">
+                  <input
+                    type="color"
+                    value={customColorHex}
+                    onChange={(e) => setCustomColorHex(e.target.value)}
+                    className="h-7 w-7 rounded-md border border-slate-300 p-0.5 cursor-pointer bg-white"
+                    title="Click to select exact hex color"
+                  />
+                </div>
                 <input
                   type="text"
                   value={newColorInput}
-                  onChange={(e) => setNewColorInput(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewColorInput(val);
+                    const detected = autoDetectColorHex(val);
+                    if (detected) {
+                      setCustomColorHex(detected);
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      handleAddMatrixColor(newColorInput, "#4D2A00");
+                      handleAddMatrixColor(newColorInput, customColorHex);
                     }
                   }}
-                  placeholder="Or type custom color (e.g. Peacock Blue)"
+                  placeholder="Type color (e.g. Peacock Blue, Rani Pink, Gold)"
                   className="flex-1 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
                 />
                 <button
                   type="button"
-                  onClick={() => handleAddMatrixColor(newColorInput, "#4D2A00")}
-                  className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  onClick={() => handleAddMatrixColor(newColorInput, customColorHex)}
+                  disabled={!newColorInput.trim()}
+                  className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
                 >
                   Add
                 </button>
@@ -639,7 +865,7 @@ export function ProductVariantsManager({
         </div>
       )}
 
-      {/* 3. Duplicate Warning Notice */}
+      {/* 3. Duplicate Warning Notices */}
       {duplicateWarnings.length > 0 && (
         <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 flex items-start gap-2">
           <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
@@ -647,6 +873,18 @@ export function ProductVariantsManager({
             <strong>Notice: Duplicate variant combinations detected</strong>
             <p className="mt-0.5 text-amber-800 text-[11px]">
               The following combinations are duplicated: {duplicateWarnings.join(", ")}. Please ensure each variant has a unique color and size pair so customers can select it accurately.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {duplicateSkuWarnings.length > 0 && (
+        <div className="rounded-lg border border-rose-300 bg-rose-50 p-3 text-xs text-rose-900 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
+          <div>
+            <strong>Error: Duplicate SKUs detected ({duplicateSkuWarnings.length})</strong>
+            <p className="mt-0.5 text-rose-800 text-[11px]">
+              The following SKUs are assigned to multiple rows: <strong>{duplicateSkuWarnings.join(", ")}</strong>. Every variant must have a strictly unique SKU. Click &quot;Unique SKUs&quot; above or adjust the highlighted rows to resolve.
             </p>
           </div>
         </div>
@@ -698,18 +936,55 @@ export function ProductVariantsManager({
               Apply to All
             </button>
           </div>
+
+          <span className="text-slate-300">|</span>
+
+          {/* Bulk SKU Prefix Input */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-semibold text-slate-700">SKU Prefix:</span>
+            <input
+              type="text"
+              placeholder="e.g. VEL-KTN2"
+              value={bulkSkuPrefix}
+              onChange={(e) => setBulkSkuPrefix(e.target.value.toUpperCase())}
+              className="w-28 rounded border border-slate-200 bg-white px-2 py-0.5 text-xs font-mono font-medium text-slate-900 focus:border-indigo-500 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleApplyBulkSkuPrefix}
+              disabled={!bulkSkuPrefix.trim()}
+              className="rounded border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-40 transition-colors"
+              title="Apply this SKU prefix to all variants"
+            >
+              Apply to All
+            </button>
+          </div>
         </div>
 
-        {/* Regenerate All SKUs */}
-        <button
-          type="button"
-          onClick={handleRegenerateAllSkus}
-          className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-100 hover:text-indigo-600 transition-colors"
-          title="Regenerate all SKU codes based on current product slug, color, and size"
-        >
-          <RefreshCw className="h-3 w-3 text-slate-500" />
-          <span>Refresh All SKUs</span>
-        </button>
+        {/* Right side SKU action buttons */}
+        <div className="flex items-center gap-1.5">
+          {/* Unique Collision-Free SKUs */}
+          <button
+            type="button"
+            onClick={handleGenerateUniqueSkus}
+            className="inline-flex items-center gap-1 rounded border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors shadow-2xs"
+            title="Generate guaranteed collision-free unique SKUs with a unique product tag"
+          >
+            <Sparkles className="h-3 w-3 text-emerald-600" />
+            <span>Unique SKUs</span>
+          </button>
+
+          {/* Regenerate All SKUs */}
+          <button
+            type="button"
+            onClick={handleRegenerateAllSkus}
+            className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-100 hover:text-indigo-600 transition-colors"
+            title="Regenerate all SKU codes based on current product slug, color, and size"
+          >
+            <RefreshCw className="h-3 w-3 text-slate-500" />
+            <span>Reset SKUs</span>
+          </button>
+        </div>
       </div>
 
       {/* 5. Main Variants Table */}
@@ -775,7 +1050,7 @@ export function ProductVariantsManager({
 
                       {/* Dropdown with Luxury Colors */}
                       {activeColorPaletteIndex === idx && (
-                        <div className="absolute left-0 top-full z-50 mt-1 w-48 rounded-xl border border-slate-200 bg-white p-2 shadow-lg space-y-1">
+                        <div className="absolute left-0 top-full z-50 mt-1 w-56 max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg space-y-1">
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block px-1">
                             Curated Palettes
                           </span>
@@ -815,17 +1090,37 @@ export function ProductVariantsManager({
                       value={variant.sku}
                       onChange={(e) => handleUpdate(idx, "sku", e.target.value.toUpperCase())}
                       placeholder="VEL-ITEM-S"
-                      className="w-36 rounded-md border border-slate-200 px-2 py-1 text-xs font-mono text-slate-900 focus:border-indigo-500 focus:outline-none"
+                      className={`w-36 rounded-md border px-2 py-1 text-xs font-mono text-slate-900 focus:outline-none ${
+                        duplicateSkuWarnings.includes(variant.sku.trim().toUpperCase())
+                          ? "border-rose-400 bg-rose-50 text-rose-900 font-bold focus:border-rose-600 ring-1 ring-rose-300"
+                          : "border-slate-200 focus:border-indigo-500"
+                      }`}
                     />
                     <button
                       type="button"
                       onClick={() =>
-                        handleUpdate(idx, "sku", generateSku(variant.color, variant.size))
+                        handleUpdate(idx, "sku", generateSku(variant.color, variant.size, bulkSkuPrefix || undefined))
                       }
                       title="Auto-suggest SKU for this row"
                       className="rounded p-1 text-slate-400 hover:text-indigo-600 transition-colors"
                     >
                       <Wand2 className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyRowPrefixToAll(variant.sku, idx)}
+                      title="Apply this row's prefix to all variant rows"
+                      className={`rounded p-1 transition-colors ${
+                        appliedRowIdx === idx
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "text-slate-400 hover:text-indigo-600 hover:bg-slate-100"
+                      }`}
+                    >
+                      {appliedRowIdx === idx ? (
+                        <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
                     </button>
                   </div>
                 </td>

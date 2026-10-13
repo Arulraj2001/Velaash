@@ -21,6 +21,7 @@ export function AdminTopbar({ admin }: AdminTopbarProps) {
     if (pathname.startsWith("/admin/orders")) return "Orders Management";
     if (pathname.startsWith("/admin/products")) return "Products & Inventory";
     if (pathname.startsWith("/admin/categories")) return "Categories";
+    if (pathname.startsWith("/admin/media")) return "Media Storage & Gallery";
     if (pathname.startsWith("/admin/coupons")) return "Promotions & Coupons";
     if (pathname.startsWith("/admin/homepage")) return "Homepage Builder";
     if (pathname.startsWith("/admin/settings")) return "Store Settings";

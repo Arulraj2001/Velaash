@@ -154,12 +154,39 @@ export async function createProductAction(data: AdminProductFormData) {
 
   // 2. Insert variants (only if product has variants)
   if (hasVariants && valid.variants.length > 0) {
+    // Pre-flight check for internal duplicate SKUs or (color, size) pairs
+    const seenPayloadSkus = new Set<string>();
+    for (const v of valid.variants) {
+      const norm = v.sku.trim().toUpperCase();
+      if (seenPayloadSkus.has(norm)) {
+        await adminClient.from("products").delete().eq("id", newProduct.id);
+        return {
+          success: false,
+          error: `Duplicate SKU "${norm}" in submitted variants. Every variant row must have a unique SKU code.`,
+        };
+      }
+      seenPayloadSkus.add(norm);
+    }
+
+    const seenPayloadCombos = new Set<string>();
+    for (const v of valid.variants) {
+      const combo = `${v.color.trim().toLowerCase()}__${v.size.trim().toLowerCase()}`;
+      if (seenPayloadCombos.has(combo)) {
+        await adminClient.from("products").delete().eq("id", newProduct.id);
+        return {
+          success: false,
+          error: `Duplicate variant combination "${v.color} (${v.size})". A product cannot have multiple variants with identical color and size.`,
+        };
+      }
+      seenPayloadCombos.add(combo);
+    }
+
     const variantsToInsert = valid.variants.map((v) => ({
       product_id: newProduct.id,
       size: v.size,
       color: v.color,
       color_hex: v.color_hex || null,
-      sku: v.sku,
+      sku: v.sku.trim().toUpperCase(),
       stock_quantity: v.stock_quantity,
       price_override: v.price_override || null,
       is_active: v.is_active,
@@ -173,8 +200,19 @@ export async function createProductAction(data: AdminProductFormData) {
       console.error("Failed to insert variants:", variantErr);
       // Cleanup product on critical variant insertion failure
       await adminClient.from("products").delete().eq("id", newProduct.id);
-      if (variantErr.code === "23505" || variantErr.message?.includes("sku")) {
-        return { success: false, error: "One or more variant SKUs already exist in the catalog." };
+      const msg = variantErr.message || "";
+      const detail = (variantErr as any).details || (variantErr as any).detail || "";
+      if (variantErr.code === "23505" || msg.includes("23505")) {
+        if (msg.includes("uq_product_size_color") || detail.includes("size") || detail.includes("color")) {
+          return {
+            success: false,
+            error: `Duplicate variant combination: ${detail || "A product cannot have multiple variants with identical color and size."}`,
+          };
+        }
+        return {
+          success: false,
+          error: `SKU collision: ${detail || "One or more variant SKUs already exist in the catalog."}`,
+        };
       }
       return { success: false, error: `Failed to create product variants: ${variantErr.message}` };
     }
@@ -385,6 +423,31 @@ export async function updateProductAction(
       }
     }
   } else {
+    // Pre-flight check for internal duplicate SKUs or (color, size) pairs
+    const seenPayloadSkus = new Set<string>();
+    for (const v of valid.variants) {
+      const norm = v.sku.trim().toUpperCase();
+      if (seenPayloadSkus.has(norm)) {
+        return {
+          success: false,
+          error: `Duplicate SKU "${norm}" in submitted variants. Every variant row must have a unique SKU code.`,
+        };
+      }
+      seenPayloadSkus.add(norm);
+    }
+
+    const seenPayloadCombos = new Set<string>();
+    for (const v of valid.variants) {
+      const combo = `${v.color.trim().toLowerCase()}__${v.size.trim().toLowerCase()}`;
+      if (seenPayloadCombos.has(combo)) {
+        return {
+          success: false,
+          error: `Duplicate variant combination "${v.color} (${v.size})". A product cannot have multiple variants with identical color and size.`,
+        };
+      }
+      seenPayloadCombos.add(combo);
+    }
+
     // Normal variant sync
     const incomingVariantIds = new Set(
       valid.variants.map((v) => v.id).filter(Boolean) as string[]
@@ -456,10 +519,21 @@ export async function updateProductAction(
       await Promise.all(variantOps);
     } catch (err: any) {
       console.error("Failed to sync variants:", err);
-      if (err.code === "23505" || err.message?.includes("sku")) {
-        return { success: false, error: `SKU is already in use by another product variant.` };
+      const msg = err.message || "";
+      const detail = err.details || err.detail || "";
+      if (err.code === "23505" || msg.includes("23505")) {
+        if (msg.includes("uq_product_size_color") || detail.includes("size") || detail.includes("color")) {
+          return {
+            success: false,
+            error: `Duplicate variant combination detected: ${detail || "A variant with this color and size already exists."}`,
+          };
+        }
+        return {
+          success: false,
+          error: `SKU collision: ${detail || "One of the variant SKUs is already in use by another product variant."}`,
+        };
       }
-      return { success: false, error: `Failed to update variants: ${err.message || err}` };
+      return { success: false, error: `Failed to update variants: ${msg || err}` };
     }
   }
 

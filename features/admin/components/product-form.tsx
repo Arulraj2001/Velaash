@@ -153,7 +153,7 @@ export function ProductForm({
             size: "M",
             color: "Ivory",
             color_hex: "#FDFBF7",
-            sku: "VEL-NEW-IVR-M",
+            sku: "VEL-DRAFT-IVR-M",
             stock_quantity: 10,
             price_override: null,
             is_active: true,
@@ -297,6 +297,44 @@ export function ProductForm({
       return_override_note: returnOverrideNote || null,
     };
 
+
+    // Pre-flight check for duplicate SKUs and combinations in variants list
+    if (hasVariants && variants.length > 0) {
+      const skuMap = new Map<string, number>();
+      for (const v of variants) {
+        const s = v.sku.trim().toUpperCase();
+        if (s) skuMap.set(s, (skuMap.get(s) || 0) + 1);
+      }
+      const duplicateSkus: string[] = [];
+      skuMap.forEach((count, sku) => {
+        if (count > 1) duplicateSkus.push(sku);
+      });
+      if (duplicateSkus.length > 0) {
+        setErrorMsg(
+          `Duplicate SKU detected: "${duplicateSkus.join('", "')}". Every variant row must have a unique SKU code. Click "Unique SKUs" or adjust the highlighted rows.`
+        );
+        return;
+      }
+
+      const comboMap = new Map<string, number>();
+      for (const v of variants) {
+        const key = `${v.color.trim().toLowerCase()}__${v.size.trim().toLowerCase()}`;
+        comboMap.set(key, (comboMap.get(key) || 0) + 1);
+      }
+      const duplicateCombos: string[] = [];
+      comboMap.forEach((count, key) => {
+        if (count > 1) {
+          const [c, s] = key.split("__");
+          duplicateCombos.push(`${c.toUpperCase()} (${s.toUpperCase()})`);
+        }
+      });
+      if (duplicateCombos.length > 0) {
+        setErrorMsg(
+          `Duplicate variant combination detected: ${duplicateCombos.join(", ")}. A product cannot have multiple variants with identical color and size.`
+        );
+        return;
+      }
+    }
 
     const validation = AdminProductFormSchema.safeParse(payload);
     if (!validation.success) {
