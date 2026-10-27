@@ -5,6 +5,7 @@ import { sendTransactionalEmail } from "@/lib/email/resend";
 import { env } from "@/lib/env";
 import { getSiteSettings } from "@/features/settings";
 import { OrderConfirmationEmail } from "../emails/order-confirmation-email";
+import { sendAdminOrderNotificationEmail } from "./send-admin-order-notification";
 import { generateOrderAccessToken } from "../utils/order-access-token";
 import type { createAdminClient } from "@/lib/supabase/admin";
 import { formatDateIST } from "@/lib/utils";
@@ -39,10 +40,6 @@ export async function sendPaidOrderConfirmationEmail(
 
     const storedAddress = (order.shipping_address || {}) as Record<string, unknown>;
     const recipientEmail = typeof storedAddress.email === "string" ? storedAddress.email : "";
-    if (!recipientEmail) {
-      console.error(`[Email:Error] Paid order ${orderNumber} has no customer email address.`);
-      return;
-    }
 
     const shippingAddress = {
       fullName: typeof storedAddress.fullName === "string" ? storedAddress.fullName : "Customer",
@@ -59,38 +56,74 @@ export async function sendPaidOrderConfirmationEmail(
     const appUrl = (env.NEXT_PUBLIC_APP_URL || "https://velaash.in").replace(/\/$/, "");
     const orderViewUrl = `${appUrl}/order-confirmation/${orderNumber}?token=${accessToken}`;
 
-    await sendTransactionalEmail({
-      to: recipientEmail,
-      subject: `Payment Confirmed: ${orderNumber} - Velaash`,
-      orderNumber,
-      react: React.createElement(OrderConfirmationEmail, {
+    const formattedOrderItems = orderItems.map((item) => {
+      const variant = (item.variant_details_snapshot || {}) as Record<string, string>;
+      return {
+        title: item.product_name_snapshot,
+        size: variant.size || "Standard",
+        color: variant.color || "Default",
+        quantity: item.quantity,
+        unitPrice: Number(item.unit_price),
+        lineSubtotal: Number(item.subtotal),
+      };
+    });
+
+    // 1. Dispatch Customer Confirmation Email (if customer provided an email address)
+    if (recipientEmail) {
+      try {
+        await sendTransactionalEmail({
+          to: recipientEmail,
+          subject: `Payment Confirmed: ${orderNumber} - Velaash`,
+          orderNumber,
+          react: React.createElement(OrderConfirmationEmail, {
+            orderNumber,
+            customerName: shippingAddress.fullName || "Customer",
+            orderDate: formatDateIST(order.created_at),
+            paymentMethod: "razorpay",
+            paymentStatus: "paid",
+            items: formattedOrderItems,
+            subtotal: Number(order.subtotal),
+            discountAmount: Number(order.discount_amount),
+            couponCode: order.coupon_code || undefined,
+            shippingCharge: Number(order.shipping_charge),
+            codHandlingFee: 0,
+            totalAmount: Number(order.total_amount),
+            shippingAddress,
+            orderViewUrl,
+            supportEmail: storeProfile.email,
+          }),
+        });
+      } catch (custErr) {
+        console.error(`[Email:Error] Customer confirmation email dispatch failed for ${orderNumber}:`, custErr);
+      }
+    } else {
+      console.warn(`[Email:Warning] Paid order ${orderNumber} has no customer email address; skipping customer email.`);
+    }
+
+    // 2. Dispatch Store Admin Notification Email
+    try {
+      await sendAdminOrderNotificationEmail({
         orderNumber,
-        customerName: shippingAddress.fullName || "Customer",
         orderDate: formatDateIST(order.created_at),
         paymentMethod: "razorpay",
         paymentStatus: "paid",
-        items: orderItems.map((item) => {
-          const variant = (item.variant_details_snapshot || {}) as Record<string, string>;
-          return {
-            title: item.product_name_snapshot,
-            size: variant.size || "Standard",
-            color: variant.color || "Default",
-            quantity: item.quantity,
-            unitPrice: Number(item.unit_price),
-            lineSubtotal: Number(item.subtotal),
-          };
-        }),
+        items: formattedOrderItems,
         subtotal: Number(order.subtotal),
         discountAmount: Number(order.discount_amount),
         couponCode: order.coupon_code || undefined,
         shippingCharge: Number(order.shipping_charge),
         codHandlingFee: 0,
         totalAmount: Number(order.total_amount),
+        customer: {
+          fullName: shippingAddress.fullName,
+          email: recipientEmail,
+          phone: shippingAddress.phone,
+        },
         shippingAddress,
-        orderViewUrl,
-        supportEmail: storeProfile.email,
-      }),
-    });
+      });
+    } catch (adminErr) {
+      console.error(`[Email:Error] Admin notification email dispatch failed for ${orderNumber}:`, adminErr);
+    }
   } catch (error) {
     console.error(`[Email:Error] Paid order confirmation failed for ${orderNumber}:`, error);
   }

@@ -10,6 +10,7 @@ import { sendTransactionalEmail } from "@/lib/email/resend";
 import { OrderConfirmationEmail } from "../emails/order-confirmation-email";
 import { env } from "@/lib/env";
 import { sendPaidOrderConfirmationEmail } from "../services/send-paid-order-confirmation";
+import { sendAdminOrderNotificationEmail } from "../services/send-admin-order-notification";
 import { getSiteSettings } from "@/features/settings";
 import {
   VerifyRazorpayPaymentSchema,
@@ -335,6 +336,33 @@ export async function verifyRazorpayPaymentAction(
           orderViewUrl,
           supportEmail: (await getSiteSettings()).storeProfile.email,
         }),
+      });
+
+      await sendAdminOrderNotificationEmail({
+        orderNumber,
+        orderDate: formatDateIST(mockOrder.createdAt || new Date()),
+        paymentMethod: "razorpay",
+        paymentStatus: "paid",
+        items: mockOrder.items.map((it) => ({
+          title: it.title,
+          size: it.size,
+          color: it.color,
+          quantity: it.quantity,
+          unitPrice: it.unitPrice,
+          lineSubtotal: it.subtotal,
+        })),
+        subtotal: mockOrder.subtotal,
+        discountAmount: mockOrder.discountAmount,
+        couponCode: mockOrder.couponCode,
+        shippingCharge: mockOrder.shippingCharge,
+        codHandlingFee: 0,
+        totalAmount: mockOrder.totalAmount,
+        customer: {
+          fullName: mockOrder.shippingAddress.fullName,
+          email: mockOrder.shippingAddress.email,
+          phone: mockOrder.shippingAddress.phone,
+        },
+        shippingAddress: mockOrder.shippingAddress,
       });
 
     } catch (emailErr) {

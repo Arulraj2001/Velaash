@@ -12,6 +12,7 @@ import { checkCodRateLimit } from "@/lib/rate-limit";
 import { sendTransactionalEmail } from "@/lib/email/resend";
 import { OrderConfirmationEmail } from "../emails/order-confirmation-email";
 import { AccountWelcomeEmail } from "../emails/account-welcome-email";
+import { sendAdminOrderNotificationEmail } from "../services/send-admin-order-notification";
 import { generateOrderAccessToken } from "../utils/order-access-token";
 import { MOCK_ORDERS_STORE } from "../queries/get-order-by-number";
 import { MOCK_ONLINE_PENDING_ORDERS } from "../services/order-cleanup";
@@ -984,6 +985,41 @@ export async function createOrderAction(rawInput: CreateOrderInput): Promise<Cre
           emailErr
         );
         // Non-blocking: Order creation must not fail if email fails
+      }
+
+      // Dispatch automated order notification to store admin / owner
+      try {
+        await sendAdminOrderNotificationEmail({
+          orderNumber: orderNumber!,
+          orderDate: formatDateIST(new Date()),
+          paymentMethod: "cod",
+          paymentStatus: "pending",
+          items: verifiedItems.map((it) => ({
+            title: it.title,
+            size: it.size || "",
+            color: it.color || "",
+            quantity: it.quantity,
+            unitPrice: it.unitPrice,
+            lineSubtotal: it.lineSubtotal,
+          })),
+          subtotal,
+          discountAmount,
+          couponCode: validatedCouponCode,
+          shippingCharge,
+          codHandlingFee,
+          totalAmount,
+          customer: {
+            fullName: input.shippingAddress.fullName,
+            email: input.contact.email,
+            phone: input.shippingAddress.phone,
+          },
+          shippingAddress: shippingAddressSnapshot,
+        });
+      } catch (adminEmailErr) {
+        console.error(
+          `[Email:Error] Failed to send admin order notification for ${orderNumber!}:`,
+          adminEmailErr
+        );
       }
     }
 
