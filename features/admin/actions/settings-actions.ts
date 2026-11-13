@@ -3,11 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/features/auth/queries/get-admin-user";
 import { createAdminClient } from "@/lib/supabase/admin";
-import {
-  PRODUCT_IMAGES_BUCKET,
-  MAX_IMAGE_SIZE_BYTES,
-  ensureProductImagesBucket,
-} from "../utils/storage";
+import { processAndUploadImage, type ImageUploadProfile } from "../utils/image-processor";
 import {
   StoreProfileSchema,
   SocialLinksSchema,
@@ -471,13 +467,15 @@ export async function updateShiprocketSettingsAction(
 }
 
 /**
- * Upload brand logo or favicon to Supabase Storage.
+ * Upload brand logo, favicon, or site setting page banners to Supabase Storage.
  * Permission: manage_settings (Owner only).
+ * Logos and favicons: PNG, max 512px, alpha preserved (for PDF invoice and email compatibility).
+ * Page banners: WebP, max 1920px.
  */
 export async function uploadBrandAssetAction(
   formData: FormData,
   assetType: "logo" | "favicon" | "banner" = "banner"
-): Promise<{ success: boolean; url?: string; error?: string }> {
+): Promise<{ success: boolean; url?: string; path?: string; sizeBytes?: number; error?: string }> {
   try {
     await requireAdmin("manage_settings");
 
@@ -486,37 +484,26 @@ export async function uploadBrandAssetAction(
       return { success: false, error: "No asset file provided." };
     }
 
-    if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      return { success: false, error: "File size exceeds the 5MB maximum limit." };
+    let profile: ImageUploadProfile = "page-banner";
+    if (assetType === "logo") profile = "brand-logo";
+    else if (assetType === "favicon") profile = "brand-favicon";
+
+    const result = await processAndUploadImage({
+      file,
+      folder: "brand",
+      profile,
+    });
+
+    if (!result.success) {
+      return { success: false, error: result.error };
     }
 
-    await ensureProductImagesBucket();
-    const adminClient = createAdminClient();
-
-    const ext = file.name.split(".").pop()?.toLowerCase() || (assetType === "favicon" ? "ico" : "png");
-    const filename = `${assetType}-${Date.now()}.${ext}`;
-    const storagePath = `brand/${filename}`;
-
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const { error: uploadErr } = await adminClient.storage
-      .from(PRODUCT_IMAGES_BUCKET)
-      .upload(storagePath, buffer, {
-        contentType: file.type || "application/octet-stream",
-        upsert: true,
-      });
-
-    if (uploadErr) {
-      console.error("Storage upload failed:", uploadErr);
-      return { success: false, error: "Failed to upload asset to storage." };
-    }
-
-    const {
-      data: { publicUrl },
-    } = adminClient.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(storagePath);
-
-    return { success: true, url: publicUrl };
+    return {
+      success: true,
+      url: result.url,
+      path: result.path,
+      sizeBytes: result.sizeBytes,
+    };
   } catch (err: unknown) {
     return {
       success: false,

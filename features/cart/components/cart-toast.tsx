@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
+import { ThumbnailImage } from "@/components/ui/thumbnail-image";
 import Link from "next/link";
 import { Check, X, ArrowRight } from "lucide-react";
 import { useCartStore } from "../store/cart-store";
@@ -38,7 +38,7 @@ export function CartToast() {
 
         {/* Thumbnail preview */}
         <div className="border-brand-border bg-brand-light relative h-14 w-12 shrink-0 overflow-hidden rounded-md border">
-          <Image
+          <ThumbnailImage
             src={lastAddedItem.image}
             alt={lastAddedItem.title}
             fill

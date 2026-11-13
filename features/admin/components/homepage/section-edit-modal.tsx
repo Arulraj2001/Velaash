@@ -34,6 +34,7 @@ import {
   updateHomepageSectionAction,
   uploadHomepageImageAction,
 } from "../../actions/homepage-actions";
+import { compressProductImageClientSide } from "../../utils/image-compression";
 import type { ProductListItem } from "@/features/products";
 import { AdminModal } from "../admin-modal";
 
@@ -409,8 +410,13 @@ function SectionEditModalInner({
       setIsUploading(true);
       setErrorMessage(null);
 
+      const isMobile = targetField === "bg_image_mobile";
+      const maxDim = isMobile ? 1080 : 1920;
+      const { file: compressedFile } = await compressProductImageClientSide(file, maxDim, 0.82);
+
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressedFile);
+      formData.append("type", isMobile ? "mobile" : "desktop");
 
       const res = await uploadHomepageImageAction(formData);
       if (res.success && res.url) {
@@ -437,8 +443,11 @@ function SectionEditModalInner({
       setIsUploading(true);
       setErrorMessage(null);
 
+      const { file: compressedFile } = await compressProductImageClientSide(file, 1920, 0.82);
+
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressedFile);
+      formData.append("type", "desktop");
 
       const res = await uploadHomepageImageAction(formData);
       if (res.success && res.url) {
@@ -541,8 +550,11 @@ function SectionEditModalInner({
       setIsUploading(true);
       setErrorMessage(null);
 
+      const { file: compressedFile } = await compressProductImageClientSide(file, 1600, 0.82);
+
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressedFile);
+      formData.append("type", "desktop");
 
       const res = await uploadHomepageImageAction(formData);
       if (res.success && res.url) {

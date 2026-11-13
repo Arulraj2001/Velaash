@@ -18,7 +18,8 @@ export interface CompressionResult {
 export async function compressProductImageClientSide(
   file: File,
   maxDimension = 1600,
-  quality = 0.83
+  quality = 0.83,
+  format: "webp" | "png" = "webp"
 ): Promise<CompressionResult> {
   const originalSizeBytes = file.size;
 
@@ -81,6 +82,39 @@ export async function compressProductImageClientSide(
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(img, 0, 0, width, height);
 
+      // Handle PNG format request (e.g. brand logo)
+      if (format === "png") {
+        canvas.toBlob(
+          (pngBlob) => {
+            if (!pngBlob) {
+              return resolve({
+                file,
+                originalSizeBytes,
+                compressedSizeBytes: originalSizeBytes,
+                reductionPercentage: 0,
+              });
+            }
+            const baseName = file.name.replace(/\.[^/.]+$/, "");
+            const pngFile = new File([pngBlob], `${baseName}.png`, {
+              type: "image/png",
+              lastModified: Date.now(),
+            });
+            const reduction = Math.round(
+              ((originalSizeBytes - pngFile.size) / originalSizeBytes) * 100
+            );
+            resolve({
+              file: pngFile,
+              originalSizeBytes,
+              compressedSizeBytes: pngFile.size,
+              reductionPercentage: Math.max(0, reduction),
+            });
+          },
+          "image/png"
+        );
+        return;
+      }
+
+      // Default: WebP encoding
       canvas.toBlob(
         (blob) => {
           if (!blob) {
@@ -90,6 +124,40 @@ export async function compressProductImageClientSide(
               compressedSizeBytes: originalSizeBytes,
               reductionPercentage: 0,
             });
+          }
+
+          // Safari check: if browser cannot encode WebP (silently returns image/png),
+          // fall back to JPEG to avoid sending heavy uncompressed PNGs
+          if (blob.type !== "image/webp") {
+            canvas.toBlob(
+              (jpegBlob) => {
+                if (!jpegBlob) {
+                  return resolve({
+                    file,
+                    originalSizeBytes,
+                    compressedSizeBytes: originalSizeBytes,
+                    reductionPercentage: 0,
+                  });
+                }
+                const baseName = file.name.replace(/\.[^/.]+$/, "");
+                const jpegFile = new File([jpegBlob], `${baseName}.jpg`, {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                });
+                const reduction = Math.round(
+                  ((originalSizeBytes - jpegFile.size) / originalSizeBytes) * 100
+                );
+                resolve({
+                  file: jpegFile,
+                  originalSizeBytes,
+                  compressedSizeBytes: jpegFile.size,
+                  reductionPercentage: Math.max(0, reduction),
+                });
+              },
+              "image/jpeg",
+              Math.max(0.78, quality)
+            );
+            return;
           }
 
           // If compressed is somehow larger than original (rare), keep original

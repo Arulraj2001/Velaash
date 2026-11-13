@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { ArrowUpDown } from "lucide-react";
 
 const SORT_OPTIONS = [
+  { value: "all", label: "All" },
   { value: "featured", label: "Featured" },
   { value: "newest", label: "Newest Arrivals" },
   { value: "price-asc", label: "Price: Low to High" },
@@ -17,13 +18,13 @@ export function ProductSort() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const currentSort = searchParams.get("sort") || "featured";
+  const currentSort = searchParams.get("sort") || "all";
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const params = new URLSearchParams(searchParams.toString());
     const nextSort = e.target.value;
 
-    if (nextSort === "featured") {
+    if (nextSort === "all") {
       params.delete("sort");
     } else {
       params.set("sort", nextSort);

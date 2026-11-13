@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useTransition, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { ThumbnailImage } from "@/components/ui/thumbnail-image";
 import { useRouter } from "next/navigation";
 import {
   useReactTable,
@@ -280,7 +280,7 @@ export function ProductsTable({
             <div className="flex items-center gap-3">
               {p.thumbnail_url ? (
                 <div className="relative h-11 w-9 shrink-0 overflow-hidden rounded-md bg-slate-100 border border-slate-200">
-                  <Image
+                  <ThumbnailImage
                     src={p.thumbnail_url}
                     alt={p.name}
                     fill

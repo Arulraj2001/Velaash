@@ -25,6 +25,7 @@ import {
   updateCategoryAction,
   uploadCategoryImageAction,
 } from "../actions/category-actions";
+import { compressProductImageClientSide } from "../utils/image-compression";
 import { CategorySizeChartEditor } from "./category-size-chart-editor";
 import { getCategoryBannerConfig } from "@/features/products/constants/category-banners";
 import { AdminModal } from "./admin-modal";
@@ -97,6 +98,8 @@ export function CategoryFormModal({
 
   const [isPending, startTransition] = useTransition();
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [bannerUploadStatus, setBannerUploadStatus] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -113,18 +116,29 @@ export function CategoryFormModal({
     if (!file) return;
 
     setIsUploading(true);
+    setUploadStatus("Optimizing image...");
     setErrorMsg(null);
 
-    const formData = new FormData();
-    formData.append("file", file);
+    try {
+      const { file: compressedFile } = await compressProductImageClientSide(file, 512, 0.82);
+      setUploadStatus("Uploading to storage...");
 
-    const res = await uploadCategoryImageAction(formData);
-    setIsUploading(false);
+      const formData = new FormData();
+      formData.append("file", compressedFile);
+      formData.append("type", "thumbnail");
 
-    if (res.success && res.url) {
-      setImageUrl(res.url);
-    } else {
-      setErrorMsg(res.error || "Failed to upload image.");
+      const res = await uploadCategoryImageAction(formData);
+
+      if (res.success && res.url) {
+        setImageUrl(res.url);
+      } else {
+        setErrorMsg(res.error || "Failed to upload image.");
+      }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Image processing failed.");
+    } finally {
+      setIsUploading(false);
+      setUploadStatus(null);
     }
   };
 
@@ -133,18 +147,29 @@ export function CategoryFormModal({
     if (!file) return;
 
     setIsUploadingBanner(true);
+    setBannerUploadStatus("Optimizing banner...");
     setErrorMsg(null);
 
-    const formData = new FormData();
-    formData.append("file", file);
+    try {
+      const { file: compressedFile } = await compressProductImageClientSide(file, 1920, 0.82);
+      setBannerUploadStatus("Uploading to storage...");
 
-    const res = await uploadCategoryImageAction(formData);
-    setIsUploadingBanner(false);
+      const formData = new FormData();
+      formData.append("file", compressedFile);
+      formData.append("type", "banner");
 
-    if (res.success && res.url) {
-      setBannerImageUrl(res.url);
-    } else {
-      setErrorMsg(res.error || "Failed to upload banner image.");
+      const res = await uploadCategoryImageAction(formData);
+
+      if (res.success && res.url) {
+        setBannerImageUrl(res.url);
+      } else {
+        setErrorMsg(res.error || "Failed to upload banner image.");
+      }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Banner processing failed.");
+    } finally {
+      setIsUploadingBanner(false);
+      setBannerUploadStatus(null);
     }
   };
 
@@ -440,7 +465,7 @@ export function CategoryFormModal({
                       ) : (
                         <UploadCloud className="h-3.5 w-3.5 text-slate-500" />
                       )}
-                      <span>{isUploading ? "Uploading..." : "Upload New Image"}</span>
+                      <span>{uploadStatus || (isUploading ? "Uploading..." : "Upload New Image")}</span>
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
@@ -534,7 +559,7 @@ export function CategoryFormModal({
                         ) : (
                           <UploadCloud className="h-3.5 w-3.5 text-slate-500" />
                         )}
-                        <span>{isUploadingBanner ? "Uploading..." : "Upload Banner"}</span>
+                        <span>{bannerUploadStatus || (isUploadingBanner ? "Uploading..." : "Upload Banner")}</span>
                         <input
                           type="file"
                           accept="image/jpeg,image/png,image/webp"

@@ -63,18 +63,30 @@ export function extractStoragePathFromUrl(url: string): string | null {
 
 /**
  * Deletes orphaned image files from Supabase Storage.
+ * When a main .webp file is deleted, automatically deletes its -thumb.webp companion too.
+ * Deleting a -thumb.webp file directly does NOT delete its main file.
  */
 export async function deleteProductImagesFromStorage(imageUrlsOrPaths: string[]): Promise<void> {
   if (!imageUrlsOrPaths || imageUrlsOrPaths.length === 0) return;
 
-  const paths = imageUrlsOrPaths
+  const rawPaths = imageUrlsOrPaths
     .map((item) => (item.startsWith("http") ? extractStoragePathFromUrl(item) : item))
     .filter((p): p is string => Boolean(p));
 
-  if (paths.length === 0) return;
+  if (rawPaths.length === 0) return;
+
+  const allPathsToDelete = new Set<string>();
+  for (const p of rawPaths) {
+    allPathsToDelete.add(p);
+    if (p.endsWith(".webp") && !p.endsWith("-thumb.webp")) {
+      allPathsToDelete.add(p.replace(/\.webp$/i, "-thumb.webp"));
+    }
+  }
 
   const adminClient = createAdminClient();
-  const { error } = await adminClient.storage.from(PRODUCT_IMAGES_BUCKET).remove(paths);
+  const { error } = await adminClient.storage
+    .from(PRODUCT_IMAGES_BUCKET)
+    .remove(Array.from(allPathsToDelete));
   if (error) {
     console.warn("Notice: Could not delete orphaned storage images:", error.message);
   }

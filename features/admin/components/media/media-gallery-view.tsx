@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { ThumbnailImage } from "@/components/ui/thumbnail-image";
 import {
   HardDrive,
   Trash2,
@@ -405,7 +406,7 @@ export function MediaGalleryView() {
                   className="relative aspect-square w-full bg-slate-50 cursor-pointer overflow-hidden"
                   onClick={() => toggleSelect(item.path)}
                 >
-                  <Image
+                  <ThumbnailImage
                     src={item.publicUrl}
                     alt={item.name}
                     fill

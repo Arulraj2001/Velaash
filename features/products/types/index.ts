@@ -189,7 +189,7 @@ export function getProductFestiveShippingBadge(
 /**
  * Sort options supported by the product catalog
  */
-export type ProductSortOption = "featured" | "newest" | "price-asc" | "price-desc" | "rating";
+export type ProductSortOption = "all" | "featured" | "newest" | "price-asc" | "price-desc" | "rating";
 
 /**
  * Parsed filter parameters from URL SearchParams

@@ -70,7 +70,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   };
 
   const page = resolvedParams.page ? Number(resolvedParams.page) : 1;
-  const sort = (resolvedParams.sort as ProductSortOption) || "featured";
+  const sort = (resolvedParams.sort as ProductSortOption) || "all";
   const size = toArray(resolvedParams.size);
   const color = toArray(resolvedParams.color);
   const minPrice = resolvedParams.minPrice ? Number(resolvedParams.minPrice) : undefined;

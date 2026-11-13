@@ -3,12 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdmin } from "@/features/auth/queries/get-admin-user";
 import { createAdminClient } from "@/lib/supabase/admin";
-import {
-  PRODUCT_IMAGES_BUCKET,
-  MAX_IMAGE_SIZE_BYTES,
-  ALLOWED_IMAGE_TYPES,
-  ensureProductImagesBucket,
-} from "../utils/storage";
+import { processAndUploadImage } from "../utils/image-processor";
 import type { HomepageSectionType, Json } from "@/types/database.types";
 import {
   HOMEPAGE_SECTION_TYPES,
@@ -874,10 +869,11 @@ export async function deleteHomepageSectionAction(id: string): Promise<HomepageA
 /**
  * Uploads an image for hero banner or homepage sections.
  * Permission: manage_homepage (Owner only).
+ * Authoritative Sharp optimization: auto-rotate, strip EXIF, WebP (1920px desktop, 1080px mobile).
  */
 export async function uploadHomepageImageAction(
   formData: FormData
-): Promise<{ success: boolean; url?: string; error?: string }> {
+): Promise<{ success: boolean; url?: string; path?: string; sizeBytes?: number; error?: string }> {
   try {
     await requireAdmin("manage_homepage");
 
@@ -886,44 +882,25 @@ export async function uploadHomepageImageAction(
       return { success: false, error: "No image file provided." };
     }
 
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      return {
-        success: false,
-        error: "Invalid file type. Please upload a JPG, PNG, or WebP image.",
-      };
+    const type = (formData.get("type") as string) || "desktop";
+    const profile = type === "mobile" ? "hero-mobile" : "hero-desktop";
+
+    const result = await processAndUploadImage({
+      file,
+      folder: "homepage",
+      profile,
+    });
+
+    if (!result.success) {
+      return { success: false, error: result.error };
     }
 
-    if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      return { success: false, error: "File size exceeds the 5MB maximum limit." };
-    }
-
-    await ensureProductImagesBucket();
-    const adminClient = createAdminClient();
-
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const filename = `hero-${crypto.randomUUID()}.${ext}`;
-    const storagePath = `homepage/${filename}`;
-
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const { error: uploadErr } = await adminClient.storage
-      .from(PRODUCT_IMAGES_BUCKET)
-      .upload(storagePath, buffer, {
-        contentType: file.type,
-        upsert: false,
-      });
-
-    if (uploadErr) {
-      console.error("Homepage image upload failed:", uploadErr);
-      return { success: false, error: uploadErr.message || "Failed to upload image to storage." };
-    }
-
-    const {
-      data: { publicUrl },
-    } = adminClient.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(storagePath);
-
-    return { success: true, url: publicUrl };
+    return {
+      success: true,
+      url: result.url,
+      path: result.path,
+      sizeBytes: result.sizeBytes,
+    };
   } catch (err: unknown) {
     return {
       success: false,

@@ -90,6 +90,7 @@ export function ProductImageUploader({
   // URL state
   const [urlInput, setUrlInput] = useState("");
   const [urlError, setUrlError] = useState<string | null>(null);
+  const [imageSizeMap, setImageSizeMap] = useState<Record<string, string>>({});
 
   // Count parsed URLs for button label
   const parsedUrlCount = React.useMemo(() => {
@@ -144,6 +145,11 @@ export function ProductImageUploader({
         if (!res.success || !res.url) {
           setUploadError(res.error || `Failed to upload "${file.name}".`);
           continue;
+        }
+
+        if (res.sizeBytes) {
+          const formatted = `${Math.round(res.sizeBytes / 1024)} KB`;
+          setImageSizeMap((prev) => ({ ...prev, [res.url!]: formatted }));
         }
 
         const isFirst = newImages.length === 0;
@@ -593,6 +599,20 @@ export function ProductImageUploader({
       {/* Images Gallery Grid */}
       {images.length > 0 && (
         <div className="space-y-2 pt-2">
+          {images.length > 10 && (
+            <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/90 p-3 text-xs text-amber-900">
+              <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <p className="font-semibold text-amber-900">
+                  Notice: High Image Count ({images.length} images)
+                </p>
+                <p className="text-amber-800 text-[11px] leading-relaxed">
+                  Products with more than 10 images increase customer page load times, mobile data usage, and storage egress costs. We recommend keeping 5–8 high-quality angles for the best balance of detail and speed.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Product Gallery ({images.length} images)</span>
             <span className="text-[11px]">Alt text required for every image</span>
@@ -602,6 +622,7 @@ export function ProductImageUploader({
             {images.map((img, idx) => {
               const isMissingAlt = !img.alt_text || img.alt_text.trim().length === 0;
               const isSupabaseStorage = img.image_url.includes("/product-images/");
+              const fileSize = imageSizeMap[img.image_url];
 
               return (
                 <div
@@ -644,12 +665,12 @@ export function ProductImageUploader({
                       {isSupabaseStorage ? (
                         <>
                           <ImageIcon className="h-2.5 w-2.5" />
-                          Storage
+                          <span>Storage{fileSize ? ` • ${fileSize}` : ""}</span>
                         </>
                       ) : (
                         <>
                           <Link2 className="h-2.5 w-2.5" />
-                          URL
+                          <span>URL</span>
                         </>
                       )}
                     </span>

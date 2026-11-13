@@ -46,6 +46,7 @@ import {
   updateCheckoutPolicySettingsAction,
   uploadBrandAssetAction,
 } from "../../actions/settings-actions";
+import { compressProductImageClientSide } from "../../utils/image-compression";
 
 type SettingsTab =
   | "store_profile"
@@ -285,8 +286,11 @@ function StoreProfileForm({
       else setUploadingFavicon(true);
       setErrorMsg(null);
 
+      // Pre-compress brand assets in browser as PNG (preserving alpha transparency, max 512px)
+      const { file: compressedFile } = await compressProductImageClientSide(file, 512, 1.0, "png");
+
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", compressedFile);
 
       const res = await uploadBrandAssetAction(fd, type);
       if (res.success && res.url) {
@@ -2182,8 +2186,11 @@ function PageBannersForm({
       setUploadingKey(key);
       setErrorMsg(null);
 
+      // Pre-compress page hero banner in browser as WebP (max 1920px)
+      const { file: compressedFile } = await compressProductImageClientSide(file, 1920, 0.82, "webp");
+
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", compressedFile);
 
       const res = await uploadBrandAssetAction(fd, "banner");
       if (res.success && res.url) {

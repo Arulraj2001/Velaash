@@ -419,10 +419,13 @@ async function fetchProducts(params: ProductFilterParams = {}): Promise<ProductQ
         q = q.order("created_at", { ascending: false });
         break;
       case "featured":
-      default:
         q = q
           .order("is_featured", { ascending: false })
           .order("created_at", { ascending: false });
+        break;
+      case "all":
+      default:
+        q = q.order("created_at", { ascending: false });
         break;
     }
 

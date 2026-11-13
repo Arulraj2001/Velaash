@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { ThumbnailImage } from "@/components/ui/thumbnail-image";
 import { Minus, Plus, Trash2, AlertCircle, Info } from "lucide-react";
 import type { CartItem } from "../types";
 
@@ -39,7 +39,7 @@ export function CartItemRow({ item, onUpdateQuantity, onRemove }: CartItemRowPro
       {/* 1. Thumbnail Image */}
       <div className="relative h-28 w-24 sm:h-32 sm:w-28 shrink-0 overflow-hidden rounded-md bg-brand-light border border-brand-border/60">
         <Link href={`/products/${item.slug}`} className="block h-full w-full">
-          <Image
+          <ThumbnailImage
             src={item.image}
             alt={item.title}
             fill

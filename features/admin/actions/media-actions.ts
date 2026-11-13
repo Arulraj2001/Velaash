@@ -140,6 +140,11 @@ export async function getMediaGalleryDataAction(params?: GetMediaGalleryParams):
         const size = (f.metadata?.size as number) || 0;
         totalSizeBytes += size;
 
+        // Group companion thumbnails under their parent image: do not show as separate items
+        if (f.name.endsWith("-thumb.webp")) {
+          continue;
+        }
+
         const {
           data: { publicUrl },
         } = adminClient.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(path);
@@ -226,10 +231,20 @@ export async function deleteMediaFilesAction(
       return { success: false, error: "No files specified for deletion." };
     }
 
+    // Automatically delete companion -thumb.webp when main .webp image is deleted.
+    // Deleting a -thumb.webp directly does NOT delete the main file.
+    const pathsToDelete = new Set<string>();
+    for (const p of paths) {
+      pathsToDelete.add(p);
+      if (p.endsWith(".webp") && !p.endsWith("-thumb.webp")) {
+        pathsToDelete.add(p.replace(/\.webp$/i, "-thumb.webp"));
+      }
+    }
+
     const adminClient = createAdminClient();
     const { error: deleteErr } = await adminClient.storage
       .from(PRODUCT_IMAGES_BUCKET)
-      .remove(paths);
+      .remove(Array.from(pathsToDelete));
 
     if (deleteErr) {
       console.error("Storage deletion error:", deleteErr);
