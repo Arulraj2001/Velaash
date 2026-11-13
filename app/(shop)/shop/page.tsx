@@ -17,6 +17,8 @@ import { env } from "@/lib/env";
 
 const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 
+export const revalidate = 300;
+
 export async function generateMetadata(): Promise<Metadata> {
   const siteSettings = await getSiteSettings();
   const brandName = siteSettings.storeProfile.name || BRAND.name;

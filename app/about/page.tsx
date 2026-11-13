@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 86400;
 
 export default async function AboutPage() {
   const settings = await getSiteSettings();

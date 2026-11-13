@@ -9,7 +9,7 @@
  */
 
 import type { MetadataRoute } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 
 // Revalidate every 6 hours — newly added/removed products appear promptly
@@ -84,7 +84,7 @@ const STATIC_PAGES: MetadataRoute.Sitemap = [
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     // Fetch active categories ordered by display position
     const { data: categories } = await supabase

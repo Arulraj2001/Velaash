@@ -51,7 +51,12 @@ function revalidateSettingsPaths() {
   revalidatePath("/cart");
   revalidatePath("/checkout");
   revalidatePath("/shop");
+  revalidatePath("/about");
+  revalidatePath("/contact");
+  revalidatePath("/faq");
+  revalidatePath("/privacy-policy");
   revalidatePath("/shipping-returns");
+  revalidatePath("/terms-conditions");
 }
 
 /**

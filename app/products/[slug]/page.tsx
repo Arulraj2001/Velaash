@@ -78,6 +78,9 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
             "Velaash",
             "VELAASH TRADER'S",
           ],
+    alternates: {
+      canonical: `${BASE_URL}/products/${product.slug}`,
+    },
     openGraph: {
       title,
       description,
@@ -105,10 +108,8 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const startT = Date.now();
 
   const product = await getProductBySlug(slug);
-  const productDuration = Date.now() - startT;
 
   // If slug doesn't match any active product, render 404
   if (!product) {
@@ -116,18 +117,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   }
 
   // Concurrently fetch related products and site settings
-  const subStartT = Date.now();
   const [relatedProducts, siteSettings] = await Promise.all([
     getRelatedProducts(product.id, product.category_id, 8),
     getSiteSettings(),
   ]);
-  const subDuration = Date.now() - subStartT;
-
-  if (process.env.NODE_ENV !== "production") {
-    console.log(
-      `[PDP Server-Timing] /products/${slug} -> product: ${productDuration}ms | related+settings: ${subDuration}ms | total: ${Date.now() - startT}ms`
-    );
-  }
 
   // JSON-LD Schema.org Structured Data
   const jsonLd = {

@@ -46,6 +46,17 @@ export function ProductCard({
   const primaryImage = product.images.find((img) => img.is_primary) || product.images[0];
   const secondaryImage = product.images.length > 1 ? product.images[1] : null;
 
+  // On-demand hover image loading (desktop with hover capability only)
+  const [shouldLoadSecondary, setShouldLoadSecondary] = React.useState(false);
+  const [isSecondaryLoaded, setIsSecondaryLoaded] = React.useState(false);
+
+  const handleCardInteraction = React.useCallback(() => {
+    if (shouldLoadSecondary) return;
+    if (typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches) {
+      setShouldLoadSecondary(true);
+    }
+  }, [shouldLoadSecondary]);
+
   // If a color swatch with a specific image is selected, display that
   const activeColorObj = selectedColor
     ? product.colors.find((c) => c.color === selectedColor)
@@ -142,6 +153,8 @@ export function ProductCard({
 
   return (
     <div
+      onMouseEnter={handleCardInteraction}
+      onFocus={handleCardInteraction}
       className={`group bg-brand-cream/40 hover:shadow-luxury relative flex flex-col justify-between rounded-xl font-sans transition-all duration-300 ${
         isInactive ? "opacity-85" : ""
       }`}
@@ -169,13 +182,13 @@ export function ProductCard({
               quality={72}
               sizes={
                 isMedium
-                  ? "(max-width: 640px) 48vw, (max-width: 768px) 32vw, (max-width: 1024px) 24vw, 19vw"
-                  : "(max-width: 640px) calc((100vw - 2rem - 0.875rem) / 2), (max-width: 1024px) calc((100vw - 2rem - 2.5rem) / 3), 25vw"
+                  ? "(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                  : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 300px"
               }
               className={`object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105 ${
                 isInactive ? "grayscale-30" : ""
               } ${
-                secondaryImage && !selectedColor
+                secondaryImage && !selectedColor && shouldLoadSecondary && isSecondaryLoaded
                   ? "transition-opacity duration-500 group-hover:opacity-0"
                   : ""
               }`}
@@ -186,8 +199,8 @@ export function ProductCard({
             </div>
           )}
 
-          {/* Secondary Hover Image (Crossfade on hover when no color swatch override) */}
-          {secondaryImage && !selectedColor && !isInactive && (
+          {/* Secondary Hover Image (Loaded on-demand on desktop hover/focus; never loaded on touch devices) */}
+          {secondaryImage && !selectedColor && !isInactive && shouldLoadSecondary && (
             <Image
               src={secondaryImage.image_url}
               alt={secondaryImage.alt_text || `${product.name} back view`}
@@ -195,10 +208,13 @@ export function ProductCard({
               quality={72}
               sizes={
                 isMedium
-                  ? "(max-width: 640px) 48vw, (max-width: 768px) 32vw, (max-width: 1024px) 24vw, 19vw"
-                  : "(max-width: 640px) calc((100vw - 2rem - 0.875rem) / 2), (max-width: 1024px) calc((100vw - 2rem - 2.5rem) / 3), 25vw"
+                  ? "(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                  : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 300px"
               }
-              className="absolute inset-0 object-cover object-top opacity-0 transition-all duration-500 ease-out group-hover:scale-105 group-hover:opacity-100"
+              onLoad={() => setIsSecondaryLoaded(true)}
+              className={`absolute inset-0 object-cover object-top transition-all duration-500 ease-out group-hover:scale-105 ${
+                isSecondaryLoaded ? "opacity-0 group-hover:opacity-100" : "opacity-0"
+              }`}
             />
           )}
 

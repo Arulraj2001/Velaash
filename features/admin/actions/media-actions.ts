@@ -31,6 +31,17 @@ export interface MediaGalleryData {
   totalCount: number;
   inUseCount: number;
   orphanCount: number;
+  page: number;
+  pageSize: number;
+  totalFilteredCount: number;
+  totalPages: number;
+}
+
+export interface GetMediaGalleryParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  tab?: "all" | "in_use" | "orphaned";
 }
 
 function formatBytes(bytes: number): string {
@@ -47,7 +58,7 @@ const SUPABASE_FREE_TIER_QUOTA_BYTES = 1024 * 1024 * 1024; // 1 GB (1,073,741,82
  * Retrieves all files stored in the product-images bucket,
  * cross-referenced against active database records to identify orphans.
  */
-export async function getMediaGalleryDataAction(): Promise<{
+export async function getMediaGalleryDataAction(params?: GetMediaGalleryParams): Promise<{
   success: boolean;
   data?: MediaGalleryData;
   error?: string;
@@ -163,10 +174,27 @@ export async function getMediaGalleryDataAction(): Promise<{
     const orphanCount = items.length - inUseCount;
     const percentUsed = Math.min(100, Math.round((totalSizeBytes / SUPABASE_FREE_TIER_QUOTA_BYTES) * 1000) / 10);
 
+    // Apply server-side filter and search
+    const page = Math.max(1, params?.page || 1);
+    const pageSize = Math.max(1, params?.pageSize || 24);
+    const search = params?.search?.trim().toLowerCase();
+    const tab = params?.tab || "all";
+
+    const filtered = items.filter((item) => {
+      if (search && !item.name.toLowerCase().includes(search)) return false;
+      if (tab === "in_use") return item.inUse;
+      if (tab === "orphaned") return !item.inUse;
+      return true;
+    });
+
+    const totalFilteredCount = filtered.length;
+    const totalPages = Math.ceil(totalFilteredCount / pageSize) || 1;
+    const paginatedItems = filtered.slice((page - 1) * pageSize, page * pageSize);
+
     return {
       success: true,
       data: {
-        items,
+        items: paginatedItems,
         totalSizeBytes,
         formattedTotalSize: formatBytes(totalSizeBytes),
         quotaSizeBytes: SUPABASE_FREE_TIER_QUOTA_BYTES,
@@ -174,6 +202,10 @@ export async function getMediaGalleryDataAction(): Promise<{
         totalCount: items.length,
         inUseCount,
         orphanCount,
+        page,
+        pageSize,
+        totalFilteredCount,
+        totalPages,
       },
     };
   } catch (error: unknown) {

@@ -31,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 86400;
 
 export default async function ShippingReturnsPage() {
   const settings = await getSiteSettings();
@@ -40,7 +40,7 @@ export default async function ShippingReturnsPage() {
   const freeThresholdStr = `₹${shippingPolicy.free_shipping_threshold.toLocaleString("en-IN")}`;
   const standardFeeStr = `₹${shippingPolicy.standard_shipping_fee.toLocaleString("en-IN")}`;
   const returnDays = returnsPolicy.return_window_days;
-  const { whatsappNumber: whatsappNum, whatsappUrl, email: contactEmail } =
+  const { whatsappNumber: whatsappNum, whatsappUrl } =
     getStoreContact(storeProfile);
   const shippingBanner = settings.pageBanners?.shipping_returns;
 

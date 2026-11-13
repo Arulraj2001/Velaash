@@ -47,45 +47,6 @@ export function ProductGallery({
     setActiveIndex(0);
   }
 
-  // Idle-time prefetching of remaining gallery & variant images
-  // Once the primary hero image loads, prefetch all other images in idle time
-  const prefetchedUrls = React.useRef(new Set<string>());
-
-  const prefetchOtherImages = React.useCallback(() => {
-    if (typeof window === "undefined") return;
-
-    const runPrefetch = () => {
-      const screenW = window.innerWidth;
-      const targetW = screenW <= 640 ? 640 : screenW <= 1024 ? 750 : 828;
-
-      allImages.forEach((img) => {
-        if (!img.image_url || prefetchedUrls.current.has(img.image_url)) return;
-        prefetchedUrls.current.add(img.image_url);
-
-        // 1. Prefetch Next.js optimized variant image at the exact matching quality and size
-        const nextUrl = `/_next/image?url=${encodeURIComponent(img.image_url)}&w=${targetW}&q=75`;
-        const preloader = new window.Image();
-        preloader.src = nextUrl;
-
-        // 2. Also prefetch raw source image
-        const rawPreloader = new window.Image();
-        rawPreloader.src = img.image_url;
-      });
-    };
-
-    if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(() => runPrefetch(), { timeout: 2000 });
-    } else {
-      setTimeout(runPrefetch, 250);
-    }
-  }, [allImages]);
-
-  // Fallback trigger if onLoad already fired or for cached initial renders
-  React.useEffect(() => {
-    const timer = setTimeout(prefetchOtherImages, 500);
-    return () => clearTimeout(timer);
-  }, [prefetchOtherImages]);
-
   // Handle keyboard events for lightbox
   React.useEffect(() => {
     if (!isLightboxOpen) return;
@@ -131,6 +92,12 @@ export function ProductGallery({
   };
 
   // Cursor zoom calculations
+  const handleMouseEnter = () => {
+    if (typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches) {
+      setIsHoveringZoom(true);
+    }
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
     const x = Math.max(0, Math.min(100, ((e.clientX - left) / width) * 100));
@@ -139,13 +106,17 @@ export function ProductGallery({
   };
 
   const currentImage = galleryImages[activeIndex] || allImages[0];
+  const zoomImageUrl =
+    isHoveringZoom && currentImage?.image_url
+      ? `/_next/image?url=${encodeURIComponent(currentImage.image_url)}&w=1200&q=75`
+      : null;
 
   return (
     <div className="flex flex-col gap-4 font-sans">
       {/* Main Image Stage */}
       <div
         className="group border-brand-border/70 bg-brand-light/30 relative aspect-[4/5] w-full max-h-[380px] sm:max-h-[460px] lg:max-h-[520px] mx-auto cursor-crosshair overflow-hidden rounded-2xl border shadow-xs select-none"
-        onMouseEnter={() => setIsHoveringZoom(true)}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setIsHoveringZoom(false)}
         onMouseMove={handleMouseMove}
         onClick={() => setIsLightboxOpen(true)}
@@ -158,21 +129,34 @@ export function ProductGallery({
             src={currentImage.image_url}
             alt={currentImage.alt_text || `${productName} view ${activeIndex + 1}`}
             fill
-            priority
-            fetchPriority="high"
+            priority={activeIndex === 0}
+            fetchPriority={activeIndex === 0 ? "high" : "auto"}
             quality={75}
-            onLoad={prefetchOtherImages}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 600px"
             className="object-cover object-top transition-opacity duration-300"
           />
         )}
 
-        {/* Desktop Cursor Lens Magnifier (2.2x Zoom) */}
-        {isHoveringZoom && currentImage && (
+        {/* Preload only the immediate next image in sequence via Next.js optimizer */}
+        {galleryImages.length > 1 && (
+          <div className="hidden" aria-hidden="true">
+            <Image
+              src={galleryImages[(activeIndex + 1) % galleryImages.length].image_url}
+              alt=""
+              width={600}
+              height={750}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 600px"
+              loading="lazy"
+            />
+          </div>
+        )}
+
+        {/* Desktop Cursor Lens Magnifier (2.2x Zoom) - only loads optimized variant on active hover */}
+        {isHoveringZoom && zoomImageUrl && (
           <div
             className="pointer-events-none absolute inset-0 hidden md:block"
             style={{
-              backgroundImage: `url(${currentImage.image_url})`,
+              backgroundImage: `url("${zoomImageUrl}")`,
               backgroundPosition: `${zoomCoords.x}% ${zoomCoords.y}%`,
               backgroundSize: "230%",
               backgroundRepeat: "no-repeat",
@@ -275,7 +259,7 @@ export function ProductGallery({
                 src={img.image_url}
                 alt={img.alt_text || `${productName} thumbnail ${idx + 1}`}
                 fill
-                sizes="80px"
+                sizes="(max-width: 640px) 56px, 64px"
                 loading="lazy"
                 className="object-cover object-top"
               />

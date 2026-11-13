@@ -61,6 +61,37 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async headers() {
+    return [
+      {
+        source: "/shop",
+        headers: [
+          {
+            key: "Netlify-CDN-Cache-Control",
+            value: "public, s-maxage=300, stale-while-revalidate=600",
+          },
+        ],
+      },
+      {
+        source: "/category/:slug*",
+        headers: [
+          {
+            key: "Netlify-CDN-Cache-Control",
+            value: "public, s-maxage=300, stale-while-revalidate=600",
+          },
+        ],
+      },
+      {
+        source: "/collections/:slug*",
+        headers: [
+          {
+            key: "Netlify-CDN-Cache-Control",
+            value: "public, s-maxage=300, stale-while-revalidate=600",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default withSentryConfig(nextConfig, {

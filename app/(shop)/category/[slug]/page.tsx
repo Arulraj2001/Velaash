@@ -17,6 +17,33 @@ import {
 import { Container, PageHeaderBanner } from "@/components/ui";
 import { BRAND } from "@/lib/constants";
 import { env } from "@/lib/env";
+import { createPublicClient } from "@/lib/supabase/server";
+
+export const dynamicParams = true;
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  try {
+    const supabase = createPublicClient();
+    const { data: categories } = await supabase
+      .from("categories")
+      .select("slug")
+      .eq("is_active", true);
+
+    if (categories && categories.length > 0) {
+      return categories.map((c) => ({ slug: c.slug }));
+    }
+  } catch (err) {
+    console.error("[generateStaticParams] Error fetching category slugs:", err);
+  }
+
+  return [
+    { slug: "sarees" },
+    { slug: "kurtas-sets" },
+    { slug: "pooja-essentials" },
+    { slug: "brass-essentials" },
+  ];
+}
 
 const BASE_URL = (env.NEXT_PUBLIC_APP_URL ?? "https://velaash.in").replace(/\/$/, "");
 

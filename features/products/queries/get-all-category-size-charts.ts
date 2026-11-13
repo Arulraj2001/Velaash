@@ -1,4 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
+import { safeUnstableCache } from "@/lib/safe-cache";
+import { cache } from "react";
 
 export interface CategorySizeChartItem {
   id: string;
@@ -250,9 +252,9 @@ export const FALLBACK_CATEGORY_SIZE_CHARTS: CategorySizeChartItem[] = [
  * Fetch all category-level size charts from the size_charts table.
  * Includes category names, slugs, and ordering.
  */
-export async function getAllCategorySizeCharts(): Promise<CategorySizeChartItem[]> {
+async function fetchAllCategorySizeCharts(): Promise<CategorySizeChartItem[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     const { data: dbCharts, error } = await supabase
       .from("size_charts")
@@ -328,3 +330,15 @@ export async function getAllCategorySizeCharts(): Promise<CategorySizeChartItem[
 
   return FALLBACK_CATEGORY_SIZE_CHARTS;
 }
+
+/**
+ * Cached category size charts: revalidates every 1 hour (3600 seconds).
+ * Bust with revalidateTag('size-charts') from admin actions if updated.
+ */
+const getCachedAllCategorySizeCharts = safeUnstableCache(
+  fetchAllCategorySizeCharts,
+  ["all-category-size-charts"],
+  { tags: ["size-charts"], revalidate: 3600 }
+);
+
+export const getAllCategorySizeCharts = cache(getCachedAllCategorySizeCharts);

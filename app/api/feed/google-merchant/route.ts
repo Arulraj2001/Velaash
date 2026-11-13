@@ -27,7 +27,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 
 // Revalidate every 6 hours — keeps price/stock data fresh without hammering DB
@@ -71,7 +71,7 @@ interface FeedProduct {
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
 
     // Query active products with their primary image and category slug
     const { data: rawProducts, error } = await supabase

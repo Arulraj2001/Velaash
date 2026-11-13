@@ -50,12 +50,24 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
     let isMounted = true;
 
     if (!initialUser) {
-      supabase.auth.getUser().then(({ data: { user: fetchedUser } }) => {
-        if (isMounted) {
-          setUser(fetchedUser);
-          setIsLoading(false);
-        }
-      });
+      // Check if a Supabase auth token cookie or storage entry exists before making a network request.
+      // For the vast majority of visitors (guests), skipping getUser() saves an auth roundtrip on every page load.
+      const hasAuthCookie =
+        typeof document !== "undefined" &&
+        (document.cookie.includes("-auth-token") ||
+          (typeof localStorage !== "undefined" &&
+            Object.keys(localStorage).some(
+              (k) => k.startsWith("sb-") && k.includes("-auth-token")
+            )));
+
+      if (hasAuthCookie) {
+        supabase.auth.getUser().then(({ data: { user: fetchedUser } }) => {
+          if (isMounted) {
+            setUser(fetchedUser);
+            setIsLoading(false);
+          }
+        });
+      }
     }
 
     const {
